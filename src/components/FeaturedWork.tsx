@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { commissions as staticCommissions } from "@/data/site";
-import ShowcaseCard from "@/components/ShowcaseCard";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export default function FeaturedWork() {
-  const [items, setItems] = useState(staticCommissions);
+  const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,16 +16,16 @@ export default function FeaturedWork() {
           if (stored) {
             try {
               const data = JSON.parse(stored);
-              if (data.commissions && data.commissions.length > 0) {
-                setItems(data.commissions);
+              if (data.portfolioImages && data.portfolioImages.length > 0) {
+                setImages(data.portfolioImages.slice(0, 4));
               }
             } catch (e) {}
           }
           setLoading(false);
           return;
         }
-        const { data } = await supabase.from("portfolio_items").select("*").order("sort_order", { ascending: true }).limit(4);
-        if (data && data.length > 0) setItems(data);
+        const { data } = await supabase.from("portfolio_images").select("url").order("sort_order", { ascending: true }).limit(4);
+        if (data && data.length > 0) setImages(data.map((img) => img.url));
       } catch (e) {
         console.error("Failed to load featured work:", e);
       } finally {
@@ -56,23 +54,22 @@ export default function FeaturedWork() {
           <p className="text-[var(--text-secondary)] max-w-xl">Recent commissions and avatar customisations.</p>
         </div>
 
-        {items.length > 0 ? (
+        {images.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {items.slice(0, 4).map((item, i) => (
-                <ShowcaseCard key={item.id || i} item={item} index={i} />
+              {images.map((url, i) => (
+                <div key={i} className="group relative aspect-video rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]">
+                  <img src={url} alt={`Work ${i + 1}`} className="w-full h-full object-cover" />
+                </div>
               ))}
             </div>
 
             <div className="text-center mt-10">
-              <a href="/gallery" className="btn-secondary inline-flex mr-3">
-                View Gallery
+              <a href="/portfolio" className="btn-secondary inline-flex">
+                View All Work
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
-              </a>
-              <a href="/portfolio" className="btn-secondary inline-flex">
-                View Portfolio
               </a>
             </div>
           </>

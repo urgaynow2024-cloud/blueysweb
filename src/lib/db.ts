@@ -32,8 +32,8 @@ async function fetchSiteConfig() {
   return result;
 }
 
-export async function getPortfolioItems() {
-  return fetchAll("portfolio_items", []);
+export async function getPortfolioImages() {
+  return fetchAll("portfolio_images", []);
 }
 
 export async function getReviews() {
@@ -59,7 +59,7 @@ export async function getSiteConfig() {
 export async function uploadImage(file: File, path?: string): Promise<string | null> {
   if (!isSupabaseConfigured || !supabase) return null;
   const ext = file.name.split(".").pop();
-  const fileName = `${path || "gallery"}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const fileName = `${path || "portfolio"}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const { data, error } = await supabase.storage.from("portfolio-images").upload(fileName, file, {
     cacheControl: "3600",
     upsert: true,
@@ -78,18 +78,21 @@ export async function deleteImage(path: string): Promise<boolean> {
   return !error;
 }
 
-export async function getGalleryImages() {
-  return fetchAll("gallery_images", []);
-}
-
-export async function addGalleryImage(url: string) {
+export async function addPortfolioImage(url: string) {
   if (!isSupabaseConfigured || !supabase) return null;
-  const { data, error } = await supabase.from("gallery_images").insert([{ url }]).select();
+  const { data, error } = await supabase.from("portfolio_images").insert([{ url }]).select();
   return error ? null : data?.[0];
 }
 
-export async function removeGalleryImage(id: string) {
+export async function removePortfolioImage(id: string) {
   if (!isSupabaseConfigured || !supabase) return false;
-  const { error } = await supabase.from("gallery_images").delete().eq("id", id);
+  const { error } = await supabase.from("portfolio_images").delete().eq("id", id);
   return !error;
+}
+
+export async function reorderPortfolioImages(urls: string[]) {
+  if (!isSupabaseConfigured || !supabase) return;
+  for (let i = 0; i < urls.length; i++) {
+    await supabase.from("portfolio_images").update({ sort_order: i }).eq("url", urls[i]);
+  }
 }

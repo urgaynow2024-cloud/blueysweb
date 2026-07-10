@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import ShowcaseCard from "@/components/ShowcaseCard";
-import SectionTitle from "@/components/SectionTitle";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export default function PortfolioPage() {
-  const [items, setItems] = useState<any[]>([]);
+  const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,37 +16,16 @@ export default function PortfolioPage() {
           if (stored) {
             try {
               const data = JSON.parse(stored);
-              if (data.commissions && data.commissions.length > 0) {
-                setItems(data.commissions);
+              if (data.portfolioImages && data.portfolioImages.length > 0) {
+                setImages(data.portfolioImages);
               }
             } catch (e) {}
           }
           setLoading(false);
           return;
         }
-        const [portfolioRes, galleryRes] = await Promise.all([
-          supabase.from("portfolio_items").select("*").order("sort_order", { ascending: true }),
-          supabase.from("gallery_images").select("*").order("sort_order", { ascending: true }),
-        ]);
-        const portfolioItems = portfolioRes.data || [];
-        const galleryImages = galleryRes.data || [];
-        if (portfolioItems.length > 0) {
-          setItems(portfolioItems);
-        } else if (galleryImages.length > 0) {
-          const galleryItems = galleryImages.map((img, i) => ({
-            id: `gallery-${i}`,
-            name: "",
-            description: "",
-            tags: [],
-            platforms: [],
-            blenderWork: false,
-            unityWork: false,
-            primaryRender: "🖼️",
-            image_url: img.url,
-            gallery_images: [],
-          }));
-          setItems(galleryItems);
-        }
+        const { data } = await supabase.from("portfolio_images").select("url").order("sort_order", { ascending: true });
+        if (data && data.length > 0) setImages(data.map((img) => img.url));
       } catch (e) {
         console.error("Failed to load portfolio:", e);
       } finally {
@@ -63,35 +40,29 @@ export default function PortfolioPage() {
       <section className="page relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-dots opacity-40" />
         <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <SectionTitle title="Portfolio" subtitle="Browse completed avatar commissions and edits" />
+          <div className="text-center mb-12 page-head">
+            <span className="section-label justify-center">Portfolio</span>
+            <h2 className="display-lg text-white mb-3">My Work</h2>
+            <p className="text-[var(--text-secondary)] max-w-md mx-auto">Browse avatar commissions and edits.</p>
+          </div>
 
           {loading ? (
             <div className="text-center py-20 text-[var(--text-dim)]">Loading...</div>
-          ) : items.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {items.map((item, i) => (
-                  <ShowcaseCard key={item.id || i} item={item} index={i} />
-                ))}
-              </div>
-              <div className="text-center mt-14">
-                <a href="/contact" className="btn-primary inline-flex">
-                  Commission a piece →
-                </a>
-              </div>
-            </>
+          ) : images.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {images.map((url, i) => (
+                <div key={i} className="aspect-square rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] group">
+                  <img src={url} alt={`Portfolio ${i + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="text-center py-20">
               <div className="relative inline-block mb-6">
                 <div className="absolute inset-0 bg-[var(--accent)] opacity-20 blur-3xl rounded-full" />
                 <div className="relative text-6xl">🎨</div>
               </div>
-              <p className="text-[var(--text-dim)] text-lg">
-                Portfolio pieces will appear here after client approval.
-              </p>
-              <a href="/contact" className="btn-primary mt-8 inline-flex">
-                Commission a piece →
-              </a>
+              <p className="text-[var(--text-dim)] text-lg">Portfolio images will appear here after upload.</p>
             </div>
           )}
         </div>
