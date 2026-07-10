@@ -22,8 +22,6 @@ CREATE TABLE IF NOT EXISTS portfolio_images (
 );
 
 -- Client reviews with approval workflow
--- Migration: if you already have a reviews table, run the migration below first
--- DROP TABLE IF EXISTS reviews;
 CREATE TABLE IF NOT EXISTS reviews (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   display_name TEXT NOT NULL,
@@ -86,6 +84,31 @@ CREATE TABLE IF NOT EXISTS site_images (
 );
 
 -- =============================================================================
+-- MIGRATIONS
+-- =============================================================================
+
+-- Migrate reviews table to new schema if it already exists
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'reviews') THEN
+    -- Drop old columns if they exist
+    BEGIN ALTER TABLE reviews DROP COLUMN IF EXISTS name; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE reviews DROP COLUMN IF EXISTS text; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE reviews DROP COLUMN IF EXISTS star_rating; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE reviews DROP COLUMN IF EXISTS approved; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE reviews DROP COLUMN IF EXISTS project; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE reviews DROP COLUMN IF EXISTS avatar; EXCEPTION WHEN others THEN NULL; END;
+
+    -- Add new columns if they do not exist
+    BEGIN ALTER TABLE reviews ADD COLUMN IF NOT EXISTS display_name TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE reviews ADD COLUMN IF NOT EXISTS rating INTEGER DEFAULT 5; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE reviews ADD COLUMN IF NOT EXISTS review_text TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE reviews ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending'; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE reviews ADD COLUMN IF NOT EXISTS image_url TEXT; EXCEPTION WHEN others THEN NULL; END;
+  END IF;
+END $$;
+
+-- =============================================================================
 -- ROW LEVEL SECURITY
 -- =============================================================================
 
@@ -95,6 +118,7 @@ ALTER TABLE pricing_tiers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE faq_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workflow_steps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
+ALTER TABLE site_images ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies before recreating
 DO $$ BEGIN
@@ -159,3 +183,10 @@ INSERT INTO site_config (key, value) VALUES
   ('description', 'Clean, stylish, performance-friendly avatars built for VRChat.'),
   ('discord', 'BlueyBarks')
 ON CONFLICT (key) DO NOTHING;
+
+-- Force PostgREST to reload schema cache after migrations
+DO $$
+BEGIN
+  PERFORM pg_notify('pgrst', 'reload schema');
+EXCEPTION WHEN others THEN NULL;
+END $$;
