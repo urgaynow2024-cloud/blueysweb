@@ -76,6 +76,15 @@ CREATE TABLE IF NOT EXISTS site_config (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Managed site images
+CREATE TABLE IF NOT EXISTS site_images (
+  key TEXT PRIMARY KEY,
+  url TEXT NOT NULL,
+  path TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =============================================================================
 -- ROW LEVEL SECURITY
 -- =============================================================================
@@ -101,6 +110,8 @@ DO $$ BEGIN
   DROP POLICY IF EXISTS "Authenticated write workflow_steps" ON workflow_steps;
   DROP POLICY IF EXISTS "Public read site_config" ON site_config;
   DROP POLICY IF EXISTS "Authenticated write site_config" ON site_config;
+  DROP POLICY IF EXISTS "Public read site_images" ON site_images;
+  DROP POLICY IF EXISTS "Authenticated write site_images" ON site_images;
 END $$;
 
 -- Public read access for all tables
@@ -110,6 +121,7 @@ CREATE POLICY "Public read pricing_tiers" ON pricing_tiers FOR SELECT USING (tru
 CREATE POLICY "Public read faq_items" ON faq_items FOR SELECT USING (true);
 CREATE POLICY "Public read workflow_steps" ON workflow_steps FOR SELECT USING (true);
 CREATE POLICY "Public read site_config" ON site_config FOR SELECT USING (true);
+CREATE POLICY "Public read site_images" ON site_images FOR SELECT USING (true);
 
 -- Allow authenticated users to modify
 CREATE POLICY "Authenticated write portfolio_images" ON portfolio_images FOR ALL USING (auth.role() = 'authenticated');
@@ -118,6 +130,7 @@ CREATE POLICY "Authenticated write pricing_tiers" ON pricing_tiers FOR ALL USING
 CREATE POLICY "Authenticated write faq_items" ON faq_items FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write workflow_steps" ON workflow_steps FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write site_config" ON site_config FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write site_images" ON site_images FOR ALL USING (auth.role() = 'authenticated');
 
 -- =============================================================================
 -- STORAGE POLICIES

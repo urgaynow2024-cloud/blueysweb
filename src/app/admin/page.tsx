@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import PortfolioAdmin from "@/components/PortfolioAdmin";
 import { Star, CheckCircle2, Trash2, Edit2, ChevronRight, Settings, ImageIcon, Tag, HelpCircle, BarChart3, Save, RotateCcw, LogOut } from "lucide-react";
 import StarRating from "@/components/StarRating";
+import SiteImagesAdmin from "@/components/SiteImagesAdmin";
 import { uploadImage, approveReview, updateReview, deleteReview } from "@/lib/db";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -139,7 +140,7 @@ const defaultWorkflow = [
 
 const defaultReviews: any[] = [];
 
-type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site";
+type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site" | "site-images";
 
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "portfolio", label: "Portfolio", icon: <ImageIcon className="w-4 h-4" /> },
@@ -147,7 +148,8 @@ const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "faq", label: "FAQ", icon: <HelpCircle className="w-4 h-4" /> },
   { id: "workflow", label: "Process", icon: <ChevronRight className="w-4 h-4" /> },
   { id: "reviews", label: "Reviews", icon: <Star className="w-4 h-4" /> },
-  { id: "site", label: "Site", icon: <Settings className="w-4 h-4" /> },
+  { id: "site-images", label: "Site Images", icon: <ImageIcon className="w-4 h-4" /> },
+  { id: "site", label: "Site Info", icon: <Settings className="w-4 h-4" /> },
 ];
 
 export default function AdminPage() {
@@ -468,6 +470,8 @@ export default function AdminPage() {
                 </div>
               </div>
             )}
+
+            {tab === "site-images" && <SiteImagesAdmin />}
           </main>
         </div>
       </div>

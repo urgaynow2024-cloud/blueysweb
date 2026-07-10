@@ -70,6 +70,17 @@ export async function getSiteConfig() {
   return fetchSiteConfig();
 }
 
+export async function getSiteImages() {
+  if (!isSupabaseConfigured || !supabase) return {};
+  const { data, error } = await supabase.from("site_images").select("*");
+  if (error || !data) return {};
+  const result: Record<string, { url: string; path?: string }> = {};
+  data.forEach((item: any) => {
+    result[item.key] = { url: item.url, path: item.path };
+  });
+  return result;
+}
+
 export async function uploadImage(file: File, path?: string): Promise<string | null> {
   if (!isSupabaseConfigured || !supabase) return null;
   const ext = file.name.split(".").pop();

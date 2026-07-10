@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Hero from "@/components/Hero";
 import FeaturedWork from "@/components/FeaturedWork";
-import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews } from "@/lib/db";
+import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages } from "@/lib/db";
 import Link from "next/link";
 import { Star } from "lucide-react";
 import ClientReviewForm from "@/components/ClientReviewForm";
@@ -14,24 +14,27 @@ export default function Home() {
   const [pricing, setPricing] = useState<any[]>([]);
   const [faq, setFaq] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [siteImages, setSiteImages] = useState<Record<string, { url: string }>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-        const [s, w, p, f, r] = await Promise.all([
-          getSiteConfig(),
-          getWorkflowSteps(),
-          getPricingTiers(),
-          getFaqItems(),
-          getApprovedReviews(),
-        ]);
-        setSite(s);
-        setWorkflow(w);
-        setPricing(p);
-        setFaq(f);
-        setReviews(r);
+      const [s, w, p, f, r, images] = await Promise.all([
+        getSiteConfig(),
+        getWorkflowSteps(),
+        getPricingTiers(),
+        getFaqItems(),
+        getApprovedReviews(),
+        getSiteImages(),
+      ]);
+      setSite(s);
+      setWorkflow(w);
+      setPricing(p);
+      setFaq(f);
+      setReviews(r);
+      setSiteImages(images);
       } catch (e) {
         console.error("Failed to load home data:", e);
       } finally {
@@ -102,10 +105,14 @@ export default function Home() {
                 </div>
                 <div className="lg:col-span-7 order-1 lg:order-2">
                   <div className="aspect-[16/10] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-center overflow-hidden relative">
-                    <div className="text-center">
-                      <div className="text-6xl opacity-10 mb-2">🎨</div>
-                      <p className="text-xs text-[var(--text-dim)]">Avatar editing render placeholder</p>
-                    </div>
+                    {siteImages.avatar_editing?.url ? (
+                      <img src={siteImages.avatar_editing.url} alt="Avatar Editing" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-center">
+                        <div className="text-6xl opacity-10 mb-2">🎨</div>
+                        <p className="text-xs text-[var(--text-dim)]">Avatar editing render placeholder</p>
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
                   </div>
                 </div>
@@ -115,10 +122,14 @@ export default function Home() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                 <div className="lg:col-span-7">
                   <div className="aspect-[16/10] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-center overflow-hidden relative">
-                    <div className="text-center">
-                      <div className="text-6xl opacity-10 mb-2">🔧</div>
-                      <p className="text-xs text-[var(--text-dim)]">Blender viewport placeholder</p>
-                    </div>
+                    {siteImages.blender_work?.url ? (
+                      <img src={siteImages.blender_work.url} alt="Blender Work" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-center">
+                        <div className="text-6xl opacity-10 mb-2">🔧</div>
+                        <p className="text-xs text-[var(--text-dim)]">Blender viewport placeholder</p>
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
                   </div>
                 </div>
@@ -158,10 +169,14 @@ export default function Home() {
                 </div>
                 <div className="lg:col-span-7 order-1 lg:order-2">
                   <div className="aspect-[16/10] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-center overflow-hidden relative">
-                    <div className="text-center">
-                      <div className="text-6xl opacity-10 mb-2">⚙️</div>
-                      <p className="text-xs text-[var(--text-dim)]">Unity component placeholder</p>
-                    </div>
+                    {siteImages.unity_work?.url ? (
+                      <img src={siteImages.unity_work.url} alt="Unity Setup" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-center">
+                        <div className="text-6xl opacity-10 mb-2">⚙️</div>
+                        <p className="text-xs text-[var(--text-dim)]">Unity component placeholder</p>
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
                   </div>
                 </div>
