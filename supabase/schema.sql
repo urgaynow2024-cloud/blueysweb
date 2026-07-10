@@ -2,6 +2,12 @@
 -- Run this in: Supabase Dashboard → SQL Editor → New query → Paste → Run
 
 -- =============================================================================
+-- CLEANUP OLD TABLES (optional - uncomment if you had the old system)
+-- =============================================================================
+-- DROP TABLE IF EXISTS gallery_images;
+-- DROP TABLE IF EXISTS portfolio_items;
+
+-- =============================================================================
 -- STORAGE BUCKET (create manually first)
 -- =============================================================================
 -- Go to: Supabase Dashboard → Storage → New bucket
