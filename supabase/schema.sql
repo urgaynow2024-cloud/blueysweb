@@ -1,10 +1,19 @@
--- Run this in your Supabase SQL editor (supabase.com -> your project -> SQL Editor)
+-- Supabase schema for Bluey's Avatar Commissions
+-- Run this in: Supabase Dashboard → SQL Editor → New query → Paste → Run
 
--- Storage bucket for portfolio images
--- Create this manually in Supabase Dashboard -> Storage -> New bucket
--- Name: portfolio-images, Public: ON
+-- =============================================================================
+-- STORAGE BUCKET (create manually first)
+-- =============================================================================
+-- Go to: Supabase Dashboard → Storage → New bucket
+-- Name: portfolio-images
+-- Public bucket: ON
+-- Then come back and run the storage policy section below
 
--- Portfolio / Commission items
+-- =============================================================================
+-- TABLES
+-- =============================================================================
+
+-- Portfolio / commission items
 CREATE TABLE IF NOT EXISTS portfolio_items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -57,17 +66,17 @@ CREATE TABLE IF NOT EXISTS faq_items (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Workflow / Process steps
+-- Workflow / process steps
 CREATE TABLE IF NOT EXISTS workflow_steps (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   emoji TEXT DEFAULT '📝',
   title TEXT NOT NULL,
-  "desc" TEXT NOT NULL,
+  description TEXT NOT NULL,
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Site configuration (key-value store)
+-- Site config key-value store
 CREATE TABLE IF NOT EXISTS site_config (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   key TEXT UNIQUE NOT NULL,
@@ -76,7 +85,10 @@ CREATE TABLE IF NOT EXISTS site_config (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RLS Policies
+-- =============================================================================
+-- ROW LEVEL SECURITY
+-- =============================================================================
+
 ALTER TABLE portfolio_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pricing_tiers ENABLE ROW LEVEL SECURITY;
@@ -84,7 +96,7 @@ ALTER TABLE faq_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workflow_steps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
 
--- Public read access
+-- Public read access for all tables
 CREATE POLICY "Public read" ON portfolio_items FOR SELECT USING (true);
 CREATE POLICY "Public read" ON reviews FOR SELECT USING (true);
 CREATE POLICY "Public read" ON pricing_tiers FOR SELECT USING (true);
@@ -92,29 +104,45 @@ CREATE POLICY "Public read" ON faq_items FOR SELECT USING (true);
 CREATE POLICY "Public read" ON workflow_steps FOR SELECT USING (true);
 CREATE POLICY "Public read" ON site_config FOR SELECT USING (true);
 
--- Allow all operations for anon key (client-side)
--- WARNING: For production, add Supabase Auth and restrict writes to authenticated users only
-CREATE POLICY "Allow all" ON portfolio_items FOR ALL USING (true);
-CREATE POLICY "Allow all" ON reviews FOR ALL USING (true);
-CREATE POLICY "Allow all" ON pricing_tiers FOR ALL USING (true);
-CREATE POLICY "Allow all" ON faq_items FOR ALL USING (true);
-CREATE POLICY "Allow all" ON workflow_steps FOR ALL USING (true);
-CREATE POLICY "Allow all" ON site_config FOR ALL USING (true);
+-- Allow authenticated users to modify (replace with proper auth in production)
+CREATE POLICY "Authenticated write" ON portfolio_items FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write" ON reviews FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write" ON pricing_tiers FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write" ON faq_items FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write" ON workflow_steps FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write" ON site_config FOR ALL USING (auth.role() = 'authenticated');
 
--- Storage policies for portfolio-images bucket
--- Run these in Storage -> Policies after creating the bucket
-CREATE POLICY "Public uploads" ON storage.objects FOR INSERT 
+-- =============================================================================
+-- STORAGE POLICIES (run after creating the bucket in Storage)
+-- =============================================================================
+-- Go to Storage → portfolio-images → Policies → New policy
+-- Or run these in SQL Editor AFTER the bucket exists:
+
+-- Enable RLS on storage.objects
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+-- Allow public uploads to portfolio-images
+CREATE POLICY "Public uploads" ON storage.objects FOR INSERT
   WITH CHECK (bucket_id = 'portfolio-images');
-CREATE POLICY "Public reads" ON storage.objects FOR SELECT 
-  USING (bucket_id = 'portfolio-images');
-CREATE POLICY "Public updates" ON storage.objects FOR UPDATE 
-  USING (bucket_id = 'portfolio-images');
-CREATE POLICY "Public deletes" ON storage.objects FOR DELETE 
+
+-- Allow public reads from portfolio-images
+CREATE POLICY "Public reads" ON storage.objects FOR SELECT
   USING (bucket_id = 'portfolio-images');
 
--- Seed with default data (will only work if tables are empty)
+-- Allow public updates in portfolio-images
+CREATE POLICY "Public updates" ON storage.objects FOR UPDATE
+  USING (bucket_id = 'portfolio-images');
+
+-- Allow public deletes in portfolio-images
+CREATE POLICY "Public deletes" ON storage.objects FOR DELETE
+  USING (bucket_id = 'portfolio-images');
+
+-- =============================================================================
+-- DEFAULT DATA
+-- =============================================================================
+
 INSERT INTO site_config (key, value) VALUES
-  ('name', 'Bluey' || chr(39) || 's Avatar Commissions'),
+  ('name', 'Bluey''s Avatar Commissions'),
   ('tagline', 'VRChat Avatar Edits • Blender Work • Unity Setup'),
   ('description', 'Clean, stylish, performance-friendly avatars built for VRChat.'),
   ('discord', 'BlueyBarks')
