@@ -2,7 +2,8 @@
 
 import { useState, useRef } from "react";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
-import { uploadImage, deleteImage, isSupabaseConfigured } from "@/lib/db";
+import { uploadImage } from "@/lib/db";
+import { isSupabaseConfigured } from "@/lib/supabase";
 
 interface Props {
   value?: string | null;
