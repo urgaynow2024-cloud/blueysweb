@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 
 export default function ContactCommissionForm() {
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(false);
   const nameId = useId();
   const discordId = useId();
   const descId = useId();
@@ -11,6 +12,37 @@ export default function ContactCommissionForm() {
   const deadlineId = useId();
   const refsId = useId();
   const notesId = useId();
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(false);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const data = {
+      name: formData.get("name"),
+      discord: formData.get("discord"),
+      description: formData.get("description"),
+      budget: formData.get("budget"),
+      deadline: formData.get("deadline"),
+      references: formData.get("references"),
+      notes: formData.get("notes"),
+    };
+
+    try {
+      const res = await fetch("/api/commission", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        setSubmitted(true);
+      } else {
+        setError(true);
+      }
+    } catch {
+      setError(true);
+    }
+  }
 
   if (submitted) {
     return (
@@ -39,7 +71,12 @@ export default function ContactCommissionForm() {
       <p className="text-sm text-[var(--text-secondary)] mb-7">
         Tell me about the avatar work you need
       </p>
-      <form onSubmit={(e) => { e.preventDefault(); setSubmitted(true); }} className="space-y-5">
+      {error && (
+        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+          Failed to send request. Please try again or contact me directly on Discord.
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <label htmlFor={nameId} className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">
@@ -146,3 +183,4 @@ export default function ContactCommissionForm() {
     </div>
   );
 }
+
