@@ -1,65 +1,353 @@
-import Image from "next/image";
+import { commissions, workflowSteps, pricingTiers, faqItems, siteConfig, reviews } from "@/data/site";
+import ShowcaseCard from "@/components/ShowcaseCard";
+import Hero from "@/components/Hero";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="relative">
+      <Hero />
+
+      <div className="relative z-10">
+        {/* Featured Work */}
+        <section id="work" className="section">
+          <div className="max-w-7xl mx-auto px-4 md:px-6">
+            <div className="mb-10 md:mb-14">
+              <span className="section-label">Portfolio</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Featured Work</h2>
+              <p className="text-[var(--text-secondary)] max-w-xl">Recent commissions and avatar customisations.</p>
+            </div>
+
+            {commissions.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {commissions.slice(0, 4).map((item, i) => (
+                  <ShowcaseCard key={item.id} item={item} index={i} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-24">
+                <div className="text-8xl mb-6 opacity-10">🎨</div>
+                <p className="text-[var(--text-dim)] text-lg md:text-xl mb-8 max-w-md mx-auto">
+                  Portfolio pieces will appear here after client approval.
+                </p>
+                <a href="/contact" className="btn-primary inline-flex">
+                  Commission a piece
+                </a>
+              </div>
+            )}
+
+            {commissions.length > 0 && (
+              <div className="text-center mt-10">
+                <a href="/portfolio" className="btn-secondary inline-flex">
+                  View All Work
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </a>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <div className="divider" />
+
+        {/* Services */}
+        <section className="section section-alt">
+          <div className="max-w-7xl mx-auto px-4 md:px-6">
+            <div className="mb-10 md:mb-14">
+              <span className="section-label">Services</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">What I provide</h2>
+              <p className="text-[var(--text-secondary)] max-w-xl">I work on VRChat avatars in a few different ways. Here&rsquo;s what I can help with.</p>
+            </div>
+
+            <div className="space-y-20">
+              {/* Avatar Editing */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <div className="lg:col-span-5 order-2 lg:order-1">
+                  <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-3 block">Avatar Editing</span>
+                  <h3 className="text-2xl font-bold text-white mb-4">Avatar Editing</h3>
+                  <p className="text-[var(--text-secondary)] mb-6 leading-relaxed">
+                    Texture recolours, accessory additions, clothing fitting, hair combinations, and minor geometry tweaks to existing bases.
+                  </p>
+                  <ul className="space-y-2.5">
+                    {["Texture recolours", "Accessory additions", "Clothing fitting", "Hair combinations", "Minor fixes"].map((item) => (
+                      <li key={item} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="lg:col-span-7 order-1 lg:order-2">
+                  <div className="aspect-[16/10] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-center overflow-hidden relative">
+                    <div className="text-center">
+                      <div className="text-6xl opacity-10 mb-2">🎨</div>
+                      <p className="text-xs text-[var(--text-dim)]">Avatar editing render placeholder</p>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Blender Work */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <div className="lg:col-span-7">
+                  <div className="aspect-[16/10] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-center overflow-hidden relative">
+                    <div className="text-center">
+                      <div className="text-6xl opacity-10 mb-2">🔧</div>
+                      <p className="text-xs text-[var(--text-dim)]">Blender viewport placeholder</p>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
+                  </div>
+                </div>
+                <div className="lg:col-span-5">
+                  <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-3 block">Blender</span>
+                  <h3 className="text-2xl font-bold text-white mb-4">Blender Work</h3>
+                  <p className="text-[var(--text-secondary)] mb-6 leading-relaxed">
+                    Asset creation, retopology, UV work, material setup, and mesh adjustments for clean avatar bases.
+                  </p>
+                  <ul className="space-y-2.5">
+                    {["Asset creation", "Retopology", "UV & material work", "Mesh adjustments", "Clean topology"].map((item) => (
+                      <li key={item} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Unity Setup */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <div className="lg:col-span-5 order-2 lg:order-1">
+                  <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-3 block">Unity</span>
+                  <h3 className="text-2xl font-bold text-white mb-4">Unity Setup</h3>
+                  <p className="text-[var(--text-secondary)] mb-6 leading-relaxed">
+                    Material configuration, toggles, optimisation, viseme setup, and VRChat-ready packaging.
+                  </p>
+                  <ul className="space-y-2.5">
+                    {["Material config", "Toggle systems", "Performance tuning", "Viseme setup", "VRChat packaging"].map((item) => (
+                      <li key={item} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="lg:col-span-7 order-1 lg:order-2">
+                  <div className="aspect-[16/10] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-center overflow-hidden relative">
+                    <div className="text-center">
+                      <div className="text-6xl opacity-10 mb-2">⚙️</div>
+                      <p className="text-xs text-[var(--text-dim)]">Unity component placeholder</p>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="divider" />
+
+        {/* Process */}
+        <section className="section">
+          <div className="max-w-7xl mx-auto px-4 md:px-6">
+            <div className="text-center mb-12 md:mb-16">
+              <span className="section-label justify-center">Process</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">How it works</h2>
+              <p className="text-[var(--text-secondary)]">Simple, transparent workflow from request to delivery.</p>
+            </div>
+
+            <div className="max-w-4xl mx-auto">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-4">
+                {workflowSteps.map((step, i) => (
+                  <div key={step.title} className="relative text-center">
+                    <div className="w-14 h-14 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center text-2xl mx-auto mb-4 relative z-10 hover:border-[var(--accent)]/30 hover:shadow-lg hover:shadow-[var(--accent)]/5 transition-all duration-500">
+                      {step.emoji}
+                    </div>
+                    <h3 className="text-sm font-bold text-white mb-1.5">{step.title}</h3>
+                    <p className="text-xs text-[var(--text-dim)] leading-relaxed px-1">{step.desc}</p>
+                    {i < workflowSteps.length - 1 && (
+                      <div className="hidden md:block absolute top-7 left-[60%] w-[80%] h-px bg-gradient-to-r from-[var(--border)] to-transparent" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="divider" />
+
+        {/* Reviews */}
+        <section className="section section-alt">
+          <div className="max-w-7xl mx-auto px-4 md:px-6">
+            <div className="mb-10 md:mb-14">
+              <span className="section-label">Client Feedback</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Reviews</h2>
+              <p className="text-[var(--text-secondary)]">What clients say about working with me.</p>
+            </div>
+
+            {reviews.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {reviews.map((review, i) => (
+                  <div key={i} className="glass rounded-2xl p-6 md:p-8 border border-[var(--border)] relative overflow-hidden group hover:border-[var(--border-hover)] transition-all duration-500">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] opacity-[0.02] blur-3xl rounded-full pointer-events-none group-hover:opacity-[0.05] transition-opacity" />
+                    <div className="relative">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="text-4xl">{review.avatar}</div>
+                        <div>
+                          <p className="font-bold text-white">{review.name}</p>
+                          <p className="text-xs text-[var(--text-dim)] uppercase tracking-wider">{review.project}</p>
+                        </div>
+                      </div>
+                      <p className="text-[var(--text-secondary)] leading-relaxed italic">"{review.text}"</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <div className="text-5xl mb-4 opacity-20">💬</div>
+                <p className="text-[var(--text-dim)] text-lg max-w-md mx-auto">
+                  Client reviews will appear here after commissions are completed.
+                </p>
+                <a href="/contact" className="btn-secondary mt-6 inline-flex">
+                  Start a Commission
+                </a>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <div className="divider" />
+
+        {/* FAQ */}
+        <section className="section">
+          <div className="max-w-3xl mx-auto px-4 md:px-6">
+            <div className="text-center mb-10 md:mb-14">
+              <span className="section-label justify-center">FAQ</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Common questions</h2>
+              <p className="text-[var(--text-secondary)]">Quick answers to things you might be wondering.</p>
+            </div>
+
+            <div className="space-y-2.5">
+              {faqItems.map((item, i) => (
+                <div
+                  key={item.question}
+                  className="border border-[var(--border)] rounded-xl p-5 md:p-6 hover:border-[var(--border-hover)] hover:bg-[var(--bg-elevated)]/50 transition-all duration-300 cursor-pointer group"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <h3 className="text-sm font-bold text-white group-hover:text-[var(--accent)] transition-colors">{item.question}</h3>
+                    <span className="text-[var(--text-dim)] mt-0.5 text-lg leading-none">+</span>
+                  </div>
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed mt-3">
+                    {item.answer}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center mt-12">
+              <a href="/contact" className="btn-secondary inline-flex">
+                Have more questions?
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <div className="divider" />
+
+        {/* Pricing */}
+        <section className="section section-alt">
+          <div className="max-w-7xl mx-auto px-4 md:px-6">
+            <div className="text-center mb-10 md:mb-14">
+              <span className="section-label justify-center">Rates</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Pricing</h2>
+              <p className="text-[var(--text-secondary)] max-w-lg mx-auto">
+                Prices vary depending on avatar complexity, optimisation requirements, and assets used.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
+              {pricingTiers.map((tier) => (
+                <div
+                  key={tier.id}
+                  className={`relative p-6 md:p-8 h-full flex flex-col border rounded-xl transition-all duration-500 ${
+                    tier.popular
+                      ? "border-[var(--accent)] bg-[var(--accent-soft)] shadow-xl shadow-[var(--accent)]/5"
+                      : "border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--border-hover)]"
+                  }`}
+                >
+                  {tier.badge && (
+                    <div className="text-[10px] font-bold tracking-wider uppercase text-[var(--accent)] mb-4">
+                      {tier.badge}
+                    </div>
+                  )}
+                  <h3 className="text-base font-semibold text-white mb-2">
+                    {tier.emoji} {tier.name}
+                  </h3>
+                  <p className="text-3xl md:text-4xl font-bold text-white mb-6 tracking-tight">
+                    {tier.price}
+                  </p>
+                  <ul className="space-y-3 mb-8 flex-1">
+                    {tier.features.map((feat) => (
+                      <li key={feat} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-1.5 flex-shrink-0" />
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <a
+                    href="/contact"
+                    className={`block text-center py-3 rounded-xl text-sm font-bold transition-all ${
+                      tier.popular
+                        ? "bg-white text-black hover:bg-gray-100"
+                        : "border border-[var(--border)] text-white hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                    }`}
+                  >
+                    Request
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <div className="divider" />
+
+        {/* CTA */}
+        <section className="section relative overflow-hidden">
+          <div className="absolute inset-0 -z-10">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[var(--accent)] opacity-[0.04] blur-[120px] rounded-full" />
+          </div>
+          <div className="max-w-4xl mx-auto px-4 md:px-6">
+            <div className="text-center">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
+                Ready to commission?
+              </h2>
+              <p className="text-[var(--text-secondary)] max-w-lg mx-auto mb-8 text-base leading-relaxed">
+                Send me a message on Discord at{" "}
+                <strong className="text-white font-semibold">{siteConfig.discord}</strong> or
+                submit a request and I&rsquo;ll get back to you.
+              </p>
+              <div className="flex flex-wrap gap-4 justify-center">
+                <a href="/contact" className="btn-primary inline-flex">
+                  Start a Commission
+                </a>
+                <a
+                  href="https://discord.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary inline-flex"
+                >
+                  Open Discord
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
