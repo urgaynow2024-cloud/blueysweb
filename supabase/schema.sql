@@ -88,18 +88,20 @@ ALTER TABLE workflow_steps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies before recreating
-DROP POLICY IF EXISTS "Public read" ON portfolio_images;
-DROP POLICY IF EXISTS "Authenticated write" ON portfolio_images;
-DROP POLICY IF EXISTS "Public read" ON reviews;
-DROP POLICY IF EXISTS "Authenticated write" ON reviews;
-DROP POLICY IF EXISTS "Public read" ON pricing_tiers;
-DROP POLICY IF EXISTS "Authenticated write" ON pricing_tiers;
-DROP POLICY IF EXISTS "Public read" ON faq_items;
-DROP POLICY IF EXISTS "Authenticated write" ON faq_items;
-DROP POLICY IF EXISTS "Public read" ON workflow_steps;
-DROP POLICY IF EXISTS "Authenticated write" ON workflow_steps;
-DROP POLICY IF EXISTS "Public read" ON site_config;
-DROP POLICY IF EXISTS "Authenticated write" ON site_config;
+DO $$ BEGIN
+  DROP POLICY IF EXISTS "Public read" ON portfolio_images;
+  DROP POLICY IF EXISTS "Authenticated write" ON portfolio_images;
+  DROP POLICY IF EXISTS "Public read" ON reviews;
+  DROP POLICY IF EXISTS "Authenticated write" ON reviews;
+  DROP POLICY IF EXISTS "Public read" ON pricing_tiers;
+  DROP POLICY IF EXISTS "Authenticated write" ON pricing_tiers;
+  DROP POLICY IF EXISTS "Public read" ON faq_items;
+  DROP POLICY IF EXISTS "Authenticated write" ON faq_items;
+  DROP POLICY IF EXISTS "Public read" ON workflow_steps;
+  DROP POLICY IF EXISTS "Authenticated write" ON workflow_steps;
+  DROP POLICY IF EXISTS "Public read" ON site_config;
+  DROP POLICY IF EXISTS "Authenticated write" ON site_config;
+END $$;
 
 -- Public read access for all tables
 CREATE POLICY "Public read" ON portfolio_images FOR SELECT USING (true);
@@ -118,32 +120,24 @@ CREATE POLICY "Authenticated write" ON workflow_steps FOR ALL USING (auth.role()
 CREATE POLICY "Authenticated write" ON site_config FOR ALL USING (auth.role() = 'authenticated');
 
 -- =============================================================================
--- STORAGE POLICIES (run after creating the bucket in Storage)
+-- STORAGE POLICIES
 -- =============================================================================
--- Enable RLS on storage.objects
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- IMPORTANT: storage.objects is a system table owned by Supabase.
+-- You must create storage policies through the Dashboard UI, not SQL Editor.
+--
+-- Go to: Supabase Dashboard → Storage → portfolio-images → Policies → New policy
+--
+-- Create these 4 policies manually:
+-- 1. "Public uploads"   - INSERT   - bucket_id = 'portfolio-images'
+-- 2. "Public reads"     - SELECT   - bucket_id = 'portfolio-images'
+-- 3. "Public updates"   - UPDATE   - bucket_id = 'portfolio-images'
+-- 4. "Public deletes"   - DELETE   - bucket_id = 'portfolio-images'
+--
+-- For each policy:
+-- - Allowed operation: select the operation type
+-- - Policy definition: bucket_id = 'portfolio-images'
+-- - Enable: Yes
 
--- Drop existing storage policies before recreating
-DROP POLICY IF EXISTS "Public uploads" ON storage.objects;
-DROP POLICY IF EXISTS "Public reads" ON storage.objects;
-DROP POLICY IF EXISTS "Public updates" ON storage.objects;
-DROP POLICY IF EXISTS "Public deletes" ON storage.objects;
-
--- Allow public uploads to portfolio-images
-CREATE POLICY "Public uploads" ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'portfolio-images');
-
--- Allow public reads from portfolio-images
-CREATE POLICY "Public reads" ON storage.objects FOR SELECT
-  USING (bucket_id = 'portfolio-images');
-
--- Allow public updates in portfolio-images
-CREATE POLICY "Public updates" ON storage.objects FOR UPDATE
-  USING (bucket_id = 'portfolio-images');
-
--- Allow public deletes in portfolio-images
-CREATE POLICY "Public deletes" ON storage.objects FOR DELETE
-  USING (bucket_id = 'portfolio-images');
 
 -- =============================================================================
 -- DEFAULT DATA
