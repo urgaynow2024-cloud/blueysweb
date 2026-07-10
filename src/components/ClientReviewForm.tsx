@@ -8,6 +8,7 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 export default function ClientReviewForm() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [starRating, setStarRating] = useState(5);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -17,14 +18,14 @@ export default function ClientReviewForm() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(false);
+    setErrorMessage(null);
 
     const form = e.currentTarget;
     const formData = new FormData(form);
-    const name = (formData.get("name") as string).trim();
-    const text = (formData.get("text") as string).trim();
-    const project = (formData.get("project") as string).trim();
+    const display_name = (formData.get("display_name") as string).trim();
+    const review_text = (formData.get("review_text") as string).trim();
 
-    if (!name || !text) {
+    if (!display_name || !review_text) {
       setError(true);
       return;
     }
@@ -35,21 +36,24 @@ export default function ClientReviewForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
-          text,
-          star_rating: starRating,
+          display_name,
+          review_text,
+          rating: starRating,
           image_url: imagePreview,
-          project: project || null,
         }),
       });
+
+      const result = await res.json();
 
       if (res.ok) {
         setSubmitted(true);
       } else {
         setError(true);
+        setErrorMessage(result.error || "Failed to submit review");
       }
     } catch {
       setError(true);
+      setErrorMessage("Network error. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -109,33 +113,21 @@ export default function ClientReviewForm() {
 
       {error && (
         <div className="mb-5 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
-          Please fill in all required fields correctly.
+          {errorMessage || "Please fill in all required fields correctly."}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">
-              Your name <span className="text-[#ff6b6b]">*</span>
-            </label>
-            <input
-              name="name"
-              required
-              placeholder="e.g. VRC Fan"
-              className="field"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">
-              Commission type (optional)
-            </label>
-            <input
-              name="project"
-              placeholder="e.g. Avatar Customisation"
-              className="field"
-            />
-          </div>
+        <div>
+          <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">
+            Your name <span className="text-[#ff6b6b]">*</span>
+          </label>
+          <input
+            name="display_name"
+            required
+            placeholder="e.g. VRC Fan"
+            className="field"
+          />
         </div>
 
         <div>
@@ -150,7 +142,7 @@ export default function ClientReviewForm() {
             Your review <span className="text-[#ff6b6b]">*</span>
           </label>
           <textarea
-            name="text"
+            name="review_text"
             required
             rows={4}
             placeholder="What was your experience like?"

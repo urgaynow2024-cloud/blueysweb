@@ -4,10 +4,10 @@ import { supabaseAdmin } from "@/lib/supabase";
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const { name, avatar, text, project, star_rating, image_url } = data;
+    const { display_name, review_text, rating, image_url } = data;
 
-    if (!name || !text) {
-      return NextResponse.json({ error: "Name and text are required" }, { status: 400 });
+    if (!display_name || !review_text) {
+      return NextResponse.json({ error: "Name and review text are required" }, { status: 400 });
     }
 
     if (!supabaseAdmin) {
@@ -15,18 +15,16 @@ export async function POST(request: Request) {
     }
 
     const { error } = await supabaseAdmin.from("reviews").insert([{
-      name,
-      avatar: avatar || "🎭",
-      text,
-      project: project || null,
-      star_rating: star_rating || 5,
+      display_name,
+      review_text,
+      rating: typeof rating === "number" ? rating : 5,
+      status: "pending",
       image_url: image_url || null,
-      approved: false,
     }]);
 
     if (error) {
       console.error("Review insert error:", error);
-      return NextResponse.json({ error: "Failed to save review" }, { status: 500 });
+      return NextResponse.json({ error: error.message || "Failed to save review" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

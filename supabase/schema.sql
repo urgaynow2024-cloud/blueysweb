@@ -22,15 +22,15 @@ CREATE TABLE IF NOT EXISTS portfolio_images (
 );
 
 -- Client reviews with approval workflow
+-- Migration: if you already have a reviews table, run the migration below first
+-- DROP TABLE IF EXISTS reviews;
 CREATE TABLE IF NOT EXISTS reviews (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  avatar TEXT DEFAULT '🎭',
-  text TEXT NOT NULL,
-  project TEXT,
-  star_rating INTEGER DEFAULT 5,
+  display_name TEXT NOT NULL,
+  rating INTEGER DEFAULT 5,
+  review_text TEXT NOT NULL,
+  status TEXT DEFAULT 'pending',
   image_url TEXT,
-  approved BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

@@ -10,12 +10,12 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 function ReviewCard({ review, index, reviews, setReviews }: { review: any; index: number; reviews: any[]; setReviews: React.Dispatch<React.SetStateAction<any[]>> }) {
   const [editing, setEditing] = useState(false);
-  const [editData, setEditData] = useState({ name: review.name, text: review.text, star_rating: review.star_rating, project: review.project });
+  const [editData, setEditData] = useState({ display_name: review.display_name, review_text: review.review_text, rating: review.rating });
 
   async function handleApprove() {
     const result = await approveReview(review.id);
     if (result) {
-      setReviews(reviews.map((r) => (r.id === review.id ? { ...r, approved: true } : r)));
+      setReviews(reviews.map((r) => (r.id === review.id ? { ...r, status: "approved" } : r)));
     }
   }
 
@@ -38,12 +38,12 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
   return (
     <div className="bg-[var(--bg-card)] rounded-2xl p-6 space-y-4 border border-[var(--border)] hover:border-[var(--border-hover)] transition-all duration-300">
       <div className="flex justify-between items-start">
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${review.approved ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"}`}>
-          {review.approved ? <CheckCircle2 className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-current animate-pulse" />}
-          {review.approved ? "Approved" : "Pending"}
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${review.status === "approved" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"}`}>
+          {review.status === "approved" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-current animate-pulse" />}
+          {review.status === "approved" ? "Approved" : "Pending"}
         </span>
         <div className="flex gap-2">
-          {!review.approved && (
+          {review.status !== "approved" && (
             <button onClick={handleApprove} className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/5 hover:bg-emerald-500/10 px-3 py-1.5 rounded-lg transition-all">
               <CheckCircle2 className="w-3.5 h-3.5" /> Approve
             </button>
@@ -62,20 +62,16 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Name</label>
-              <input value={editData.name} onChange={(e) => setEditData({ ...editData, name: e.target.value })} className="field" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Project</label>
-              <input value={editData.project || ""} onChange={(e) => setEditData({ ...editData, project: e.target.value })} className="field" />
+              <input value={editData.display_name} onChange={(e) => setEditData({ ...editData, display_name: e.target.value })} className="field" />
             </div>
           </div>
           <div>
             <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Rating</label>
-            <StarRating value={editData.star_rating || 5} onChange={(val) => setEditData({ ...editData, star_rating: val })} />
+            <StarRating value={editData.rating || 5} onChange={(val) => setEditData({ ...editData, rating: val })} />
           </div>
           <div>
             <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Review</label>
-            <textarea rows={3} value={editData.text} onChange={(e) => setEditData({ ...editData, text: e.target.value })} className="field resize-y" />
+            <textarea rows={3} value={editData.review_text} onChange={(e) => setEditData({ ...editData, review_text: e.target.value })} className="field resize-y" />
           </div>
           <div className="flex gap-2">
             <button onClick={handleEdit} className="btn-primary !text-sm !py-2 !px-5">Save</button>
@@ -87,16 +83,15 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
           <div className="flex items-center gap-3 mb-3">
             <div className="text-2xl">🎭</div>
             <div>
-              <p className="font-bold text-white text-sm">{review.name}</p>
-              {review.project && <p className="text-xs text-[var(--text-dim)]">{review.project}</p>}
+              <p className="font-bold text-white text-sm">{review.display_name}</p>
               <div className="flex gap-0.5 mt-0.5">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} className={`w-3.5 h-3.5 ${i <= (review.star_rating || 5) ? "text-[var(--accent)] fill-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
+                  <Star key={i} className={`w-3.5 h-3.5 ${i <= (review.rating || 5) ? "text-[var(--accent)] fill-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
                 ))}
               </div>
             </div>
           </div>
-          <p className="text-sm text-[var(--text-secondary)] leading-relaxed">"{review.text}"</p>
+          <p className="text-sm text-[var(--text-secondary)] leading-relaxed">"{review.review_text}"</p>
           {review.image_url && (
             <div className="mt-3">
               <img src={review.image_url} alt="Review" className="w-full h-40 object-cover rounded-xl border border-[var(--border)]" />
@@ -418,10 +413,10 @@ export default function AdminPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-xs font-bold text-[var(--text-secondary)] mb-4 uppercase tracking-wider">Pending Approval ({reviews.filter((r: any) => !r.approved).length})</h3>
+                  <h3 className="text-xs font-bold text-[var(--text-secondary)] mb-4 uppercase tracking-wider">Pending ({reviews.filter((r: any) => r.status === "pending").length})</h3>
                   <div className="space-y-4">
-                    {reviews.filter((r: any) => !r.approved).length > 0 ? (
-                      reviews.filter((r: any) => !r.approved).map((review, idx) => (
+                    {reviews.filter((r: any) => r.status === "pending").length > 0 ? (
+                      reviews.filter((r: any) => r.status === "pending").map((review, idx) => (
                         <ReviewCard key={review.id || idx} review={review} index={idx} reviews={reviews} setReviews={setReviews} />
                       ))
                     ) : (
@@ -433,10 +428,10 @@ export default function AdminPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-xs font-bold text-[var(--text-secondary)] mb-4 uppercase tracking-wider">Approved ({reviews.filter((r: any) => r.approved).length})</h3>
+                  <h3 className="text-xs font-bold text-[var(--text-secondary)] mb-4 uppercase tracking-wider">Approved ({reviews.filter((r: any) => r.status === "approved").length})</h3>
                   <div className="space-y-4">
-                    {reviews.filter((r: any) => r.approved).length > 0 ? (
-                      reviews.filter((r: any) => r.approved).map((review, idx) => (
+                    {reviews.filter((r: any) => r.status === "approved").length > 0 ? (
+                      reviews.filter((r: any) => r.status === "approved").map((review, idx) => (
                         <ReviewCard key={review.id || idx} review={review} index={idx} reviews={reviews} setReviews={setReviews} />
                       ))
                     ) : (

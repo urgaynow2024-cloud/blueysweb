@@ -38,14 +38,14 @@ export async function getPortfolioImages() {
 
 export async function getApprovedReviews() {
   if (!isSupabaseConfigured || !supabase) return [];
-  const { data, error } = await supabase.from("reviews").select("*").eq("approved", true).order("created_at", { ascending: false });
+  const { data, error } = await supabase.from("reviews").select("*").eq("status", "approved").order("created_at", { ascending: false });
   if (error || !data) return [];
   return data;
 }
 
 export async function getPendingReviews() {
   if (!isSupabaseConfigured || !supabase) return [];
-  const { data, error } = await supabase.from("reviews").select("*").eq("approved", false).order("created_at", { ascending: false });
+  const { data, error } = await supabase.from("reviews").select("*").eq("status", "pending").order("created_at", { ascending: false });
   if (error || !data) return [];
   return data;
 }
@@ -148,15 +148,15 @@ export async function reorderPortfolioImages(items: { id: string; sort_order: nu
   }
 }
 
-export async function submitReview(data: { name: string; text: string; star_rating: number; image_url?: string; project?: string }) {
+export async function submitReview(data: { display_name: string; review_text: string; rating: number; image_url?: string }) {
   if (!isSupabaseConfigured || !supabase) return null;
-  const { data: result, error } = await supabase.from("reviews").insert([{ ...data, approved: false }]).select();
+  const { data: result, error } = await supabase.from("reviews").insert([{ ...data, status: "pending" }]).select();
   return error ? null : result?.[0];
 }
 
 export async function approveReview(id: string) {
   if (!isSupabaseConfigured || !supabase) return false;
-  const { error } = await supabase.from("reviews").update({ approved: true }).eq("id", id);
+  const { error } = await supabase.from("reviews").update({ status: "approved" }).eq("id", id);
   return !error;
 }
 

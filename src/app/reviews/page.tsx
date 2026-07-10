@@ -66,20 +66,17 @@ export default function ReviewsPage() {
                   <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] opacity-[0.02] blur-3xl rounded-full pointer-events-none group-hover:opacity-[0.05] transition-opacity" />
                   <div className="relative">
                     <div className="flex items-center gap-4 mb-4">
-                      <div className="text-4xl">{review.avatar || "🎭"}</div>
+                      <div className="text-4xl">🎭</div>
                       <div>
-                        <p className="font-bold text-white">{review.name}</p>
+                        <p className="font-bold text-white">{review.display_name}</p>
                         <div className="flex gap-0.5 mt-0.5">
                           {[1, 2, 3, 4, 5].map((star) => (
-                            <Star key={star} className={`w-4 h-4 ${star <= (review.star_rating || 5) ? "text-[var(--accent)] fill-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
+                            <Star key={star} className={`w-4 h-4 ${star <= (review.rating || 5) ? "text-[var(--accent)] fill-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
                           ))}
                         </div>
                       </div>
                     </div>
-                    {review.project && (
-                      <p className="text-xs text-[var(--text-dim)] uppercase tracking-wider mb-2">{review.project}</p>
-                    )}
-                    <p className="text-[var(--text-secondary)] leading-relaxed italic">"{review.text}"</p>
+                    <p className="text-[var(--text-secondary)] leading-relaxed italic">"{review.review_text}"</p>
                     {review.image_url && (
                       <div className="mt-4">
                         <img src={review.image_url} alt="Review image" className="w-full h-48 object-cover rounded-xl border border-[var(--border)]" />
