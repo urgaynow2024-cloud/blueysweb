@@ -58,8 +58,8 @@ export async function getSiteConfig() {
 
 export async function uploadImage(file: File, path?: string): Promise<string | null> {
   if (!isSupabaseConfigured || !supabase) return null;
-  const fileExt = file.name.split(".").pop();
-  const fileName = `${path || "general"}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+  const ext = file.name.split(".").pop();
+  const fileName = `${path || "gallery"}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const { data, error } = await supabase.storage.from("portfolio-images").upload(fileName, file, {
     cacheControl: "3600",
     upsert: true,
@@ -75,5 +75,21 @@ export async function uploadImage(file: File, path?: string): Promise<string | n
 export async function deleteImage(path: string): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) return false;
   const { error } = await supabase.storage.from("portfolio-images").remove([path]);
+  return !error;
+}
+
+export async function getGalleryImages() {
+  return fetchAll("gallery_images", []);
+}
+
+export async function addGalleryImage(url: string) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data, error } = await supabase.from("gallery_images").insert([{ url }]).select();
+  return error ? null : data?.[0];
+}
+
+export async function removeGalleryImage(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("gallery_images").delete().eq("id", id);
   return !error;
 }

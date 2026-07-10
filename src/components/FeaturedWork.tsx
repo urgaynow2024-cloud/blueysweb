@@ -65,11 +65,14 @@ export default function FeaturedWork() {
             </div>
 
             <div className="text-center mt-10">
-              <a href="/portfolio" className="btn-secondary inline-flex">
-                View All Work
+              <a href="/gallery" className="btn-secondary inline-flex mr-3">
+                View Gallery
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
+              </a>
+              <a href="/portfolio" className="btn-secondary inline-flex">
+                View Portfolio
               </a>
             </div>
           </>

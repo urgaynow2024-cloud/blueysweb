@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { commissions } from "@/data/site";
 import ShowcaseCard from "@/components/ShowcaseCard";
 import SectionTitle from "@/components/SectionTitle";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export default function PortfolioPage() {
-  const [items, setItems] = useState(commissions);
+  const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,8 +26,29 @@ export default function PortfolioPage() {
           setLoading(false);
           return;
         }
-        const { data } = await supabase.from("portfolio_items").select("*").order("sort_order", { ascending: true });
-        if (data && data.length > 0) setItems(data);
+        const [portfolioRes, galleryRes] = await Promise.all([
+          supabase.from("portfolio_items").select("*").order("sort_order", { ascending: true }),
+          supabase.from("gallery_images").select("*").order("sort_order", { ascending: true }),
+        ]);
+        const portfolioItems = portfolioRes.data || [];
+        const galleryImages = galleryRes.data || [];
+        if (portfolioItems.length > 0) {
+          setItems(portfolioItems);
+        } else if (galleryImages.length > 0) {
+          const galleryItems = galleryImages.map((img, i) => ({
+            id: `gallery-${i}`,
+            name: "",
+            description: "",
+            tags: [],
+            platforms: [],
+            blenderWork: false,
+            unityWork: false,
+            primaryRender: "🖼️",
+            image_url: img.url,
+            gallery_images: [],
+          }));
+          setItems(galleryItems);
+        }
       } catch (e) {
         console.error("Failed to load portfolio:", e);
       } finally {
@@ -54,7 +74,6 @@ export default function PortfolioPage() {
                   <ShowcaseCard key={item.id || i} item={item} index={i} />
                 ))}
               </div>
-
               <div className="text-center mt-14">
                 <a href="/contact" className="btn-primary inline-flex">
                   Commission a piece →

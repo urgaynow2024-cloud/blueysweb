@@ -86,6 +86,49 @@ CREATE TABLE IF NOT EXISTS site_config (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Simple gallery table — just images, no naming required
+CREATE TABLE IF NOT EXISTS gallery_images (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  url TEXT NOT NULL,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ROW LEVEL SECURITY
+ALTER TABLE portfolio_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pricing_tiers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE faq_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE workflow_steps ENABLE ROW LEVEL SECURITY;
+ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
+ALTER TABLE gallery_images ENABLE ROW LEVEL SECURITY;
+
+-- Public read access for all tables
+CREATE POLICY "Public read" ON portfolio_items FOR SELECT USING (true);
+CREATE POLICY "Public read" ON reviews FOR SELECT USING (true);
+CREATE POLICY "Public read" ON pricing_tiers FOR SELECT USING (true);
+CREATE POLICY "Public read" ON faq_items FOR SELECT USING (true);
+CREATE POLICY "Public read" ON workflow_steps FOR SELECT USING (true);
+CREATE POLICY "Public read" ON site_config FOR SELECT USING (true);
+CREATE POLICY "Public read" ON gallery_images FOR SELECT USING (true);
+
+-- Allow authenticated users to modify (replace with proper auth in production)
+CREATE POLICY "Authenticated write" ON portfolio_items FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write" ON reviews FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write" ON pricing_tiers FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write" ON faq_items FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write" ON workflow_steps FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write" ON site_config FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write" ON gallery_images FOR ALL USING (auth.role() = 'authenticated');
+
+-- Simple gallery table — just images, no naming required
+CREATE TABLE IF NOT EXISTS gallery_images (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  url TEXT NOT NULL,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =============================================================================
 -- ROW LEVEL SECURITY
 -- =============================================================================

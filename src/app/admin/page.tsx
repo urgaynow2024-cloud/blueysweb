@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import ImageUpload from "@/components/ImageUpload";
 import GalleryUpload from "@/components/GalleryUpload";
+import GalleryBulkUpload from "@/components/GalleryBulkUpload";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 const ADMIN_PASSWORD = "blueyadmin";
@@ -41,7 +42,7 @@ const defaultWorkflow = [
 
 const defaultReviews: any[] = [];
 
-type Tab = "site" | "commissions" | "pricing" | "faq" | "workflow" | "reviews";
+type Tab = "site" | "commissions" | "gallery" | "pricing" | "faq" | "workflow" | "reviews";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -56,6 +57,7 @@ export default function AdminPage() {
   const [faq, setFaq] = useState<any[]>(defaultFaq);
   const [workflow, setWorkflow] = useState<any[]>(defaultWorkflow);
   const [reviews, setReviews] = useState<any[]>(defaultReviews);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
 
   useEffect(() => {
     if (authed) loadAllData();
@@ -75,19 +77,21 @@ export default function AdminPage() {
             if (data.faq) setFaq(data.faq);
             if (data.workflow) setWorkflow(data.workflow);
             if (data.reviews) setReviews(data.reviews);
+      if (data.galleryImages) setGalleryImages(data.galleryImages);
           } catch (e) {}
         }
         setLoading(false);
         return;
       }
 
-      const [{ data: siteData }, { data: portfolio }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }] = await Promise.all([
+      const [{ data: siteData }, { data: portfolio }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: galleryData }] = await Promise.all([
         supabase.from("site_config").select("*"),
         supabase.from("portfolio_items").select("*").order("sort_order", { ascending: true }),
         supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }),
         supabase.from("faq_items").select("*").order("sort_order", { ascending: true }),
         supabase.from("workflow_steps").select("*").order("sort_order", { ascending: true }),
         supabase.from("reviews").select("*").order("created_at", { ascending: false }),
+        supabase.from("gallery_images").select("*").order("sort_order", { ascending: true }),
       ]);
 
       if (siteData && siteData.length > 0) {
@@ -100,6 +104,7 @@ export default function AdminPage() {
       if (faqData && faqData.length > 0) setFaq(faqData);
       if (workflowData && workflowData.length > 0) setWorkflow(workflowData);
       if (reviewsData && reviewsData.length > 0) setReviews(reviewsData);
+      if (galleryData && galleryData.length > 0) setGalleryImages(galleryData.map((g: any) => g.url));
     } catch (e) {
       console.error("Failed to load data:", e);
     } finally {
@@ -111,7 +116,7 @@ export default function AdminPage() {
     setSaved(false);
     try {
       if (!isSupabaseConfigured || !supabase) {
-        localStorage.setItem("adminData", JSON.stringify({ site, commissions, pricing, faq, workflow, reviews, updatedAt: new Date().toISOString() }));
+        localStorage.setItem("adminData", JSON.stringify({ site, commissions, pricing, faq, workflow, reviews, galleryImages, updatedAt: new Date().toISOString() }));
         setSaved(true);
         setTimeout(() => setSaved(false), 2500);
         return;
@@ -151,6 +156,12 @@ export default function AdminPage() {
         await supabase.from("reviews").upsert({ ...item, id: item.id || undefined });
       }
 
+      // Gallery
+      await supabase.from("gallery_images").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      for (const url of galleryImages) {
+        await supabase.from("gallery_images").insert([{ url }]);
+      }
+
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (e) {
@@ -167,6 +178,7 @@ export default function AdminPage() {
     setFaq(defaultFaq);
     setWorkflow(defaultWorkflow);
     setReviews(defaultReviews);
+    setGalleryImages([]);
     localStorage.removeItem("adminData");
     saveAll();
   };
@@ -214,6 +226,7 @@ export default function AdminPage() {
           {[
             { id: "site", label: "Site" },
             { id: "commissions", label: "Portfolio" },
+            { id: "gallery", label: "Gallery" },
             { id: "pricing", label: "Pricing" },
             { id: "faq", label: "FAQ" },
             { id: "workflow", label: "Process" },
@@ -309,6 +322,14 @@ export default function AdminPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {tab === "gallery" && (
+              <div className="glass rounded-2xl p-7 border border-[var(--border)]">
+                <h2 className="text-lg font-semibold text-white mb-2">Simple Gallery</h2>
+                <p className="text-sm text-[var(--text-secondary)] mb-6">Upload photos without naming them individually. They will appear on the homepage.</p>
+                <GalleryBulkUpload />
               </div>
             )}
 
