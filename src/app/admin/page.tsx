@@ -2,7 +2,112 @@
 
 import { useState, useEffect } from "react";
 import PortfolioAdmin from "@/components/PortfolioAdmin";
+import { Star, CheckCircle2, Trash2, Edit2 } from "lucide-react";
+import StarRating from "@/components/StarRating";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { approveReview, updateReview, deleteReview } from "@/lib/db";
+
+function ReviewCard({ review, index, reviews, setReviews }: { review: any; index: number; reviews: any[]; setReviews: React.Dispatch<React.SetStateAction<any[]>> }) {
+  const [editing, setEditing] = useState(false);
+  const [editData, setEditData] = useState({ name: review.name, text: review.text, star_rating: review.star_rating, project: review.project });
+
+  async function handleApprove() {
+    await approveReview(review.id);
+    setReviews(reviews.map((r) => (r.id === review.id ? { ...r, approved: true } : r)));
+  }
+
+  async function handleEdit() {
+    await updateReview(review.id, editData);
+    setReviews(reviews.map((r) => (r.id === review.id ? { ...r, ...editData } : r)));
+    setEditing(false);
+  }
+
+  async function handleDelete() {
+    if (!confirm("Are you sure you want to delete this review?")) return;
+    await deleteReview(review.id);
+    setReviews(reviews.filter((r) => r.id !== review.id));
+  }
+
+  return (
+    <div className="glass rounded-2xl p-6 space-y-4 border border-[var(--border)]">
+      <div className="flex justify-between items-start">
+        <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+          {review.approved ? (
+            <span className="text-green-400 flex items-center gap-1.5 text-xs">
+              <CheckCircle2 className="w-4 h-4" /> Approved
+            </span>
+          ) : (
+            <span className="text-yellow-400 flex items-center gap-1.5 text-xs">Pending</span>
+          )}
+        </h3>
+        <div className="flex gap-2">
+          {!review.approved && (
+            <button onClick={handleApprove} className="text-xs text-green-400 hover:text-green-300 flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Approve
+            </button>
+          )}
+          <button onClick={() => setEditing(!editing)} className="text-xs text-[var(--accent)] hover:text-[var(--accent-4)] flex items-center gap-1">
+            <Edit2 className="w-3.5 h-3.5" />
+            {editing ? "Cancel" : "Edit"}
+          </button>
+          <button onClick={handleDelete} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1">
+            <Trash2 className="w-3.5 h-3.5" />
+            Delete
+          </button>
+        </div>
+      </div>
+
+      {editing ? (
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Name</label>
+              <input value={editData.name} onChange={(e) => setEditData({ ...editData, name: e.target.value })} className="field" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Project</label>
+              <input value={editData.project || ""} onChange={(e) => setEditData({ ...editData, project: e.target.value })} className="field" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Rating</label>
+            <StarRating value={editData.star_rating || 5} onChange={(val) => setEditData({ ...editData, star_rating: val })} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Review</label>
+            <textarea rows={3} value={editData.text} onChange={(e) => setEditData({ ...editData, text: e.target.value })} className="field resize-y" />
+          </div>
+          <div className="flex gap-2">
+            <button onClick={handleEdit} className="btn-primary !text-sm !py-2 !px-4">Save</button>
+            <button onClick={() => setEditing(false)} className="btn-secondary !text-sm !py-2 !px-4">Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="text-2xl">{(review.avatar as string) || "🎭"}</div>
+            <div>
+              <p className="font-bold text-white text-sm">{review.name}</p>
+              {review.project && <p className="text-xs text-[var(--text-dim)]">{review.project}</p>}
+              <div className="flex gap-0.5 mt-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className={`w-3.5 h-3.5 ${i < (review.star_rating || 5) ? "text-[var(--accent)] fill-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
+                ))}
+              </div>
+            </div>
+          </div>
+          <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{review.text}</p>
+          {review.image_url && (
+            <div className="mt-3">
+              <img src={review.image_url} alt="Review" className="w-full h-40 object-cover rounded-xl border border-[var(--border)]" />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const ADMIN_PASSWORD = "blueyadmin";
 
@@ -302,37 +407,42 @@ export default function AdminPage() {
             )}
 
             {tab === "reviews" && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h2 className="text-lg font-semibold text-white">Client Reviews</h2>
-                  <button onClick={() => setReviews([...reviews, { id: undefined, name: "", avatar: "🎭", text: "", project: "" }])} className="btn-primary !text-sm !py-2 !px-4">+ Add Review</button>
                 </div>
-                {reviews.map((review, i) => (
-                  <div key={review.id || i} className="glass rounded-2xl p-6 space-y-4 border border-[var(--border)]">
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-sm font-semibold text-white">Review {i + 1}</h3>
-                      <button onClick={() => setReviews(reviews.filter((_, j) => j !== i))} className="text-xs text-red-400 hover:text-red-300">Remove</button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Client Name</label>
-                        <input value={review.name} onChange={(e) => { const arr = [...reviews]; arr[i] = { ...arr[i], name: e.target.value }; setReviews(arr); }} className="field" />
+
+                {/* Pending Reviews */}
+                <div>
+                  <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-4 uppercase tracking-wider">Pending Approval ({reviews.filter((r: any) => !r.approved).length})</h3>
+                  <div className="space-y-4">
+                    {reviews.filter((r: any) => !r.approved).length > 0 ? (
+                      reviews.filter((r: any) => !r.approved).map((review, idx) => (
+                        <ReviewCard key={review.id || idx} review={review} index={idx} reviews={reviews} setReviews={setReviews} />
+                      ))
+                    ) : (
+                      <div className="glass rounded-2xl p-8 text-center border border-[var(--border)]">
+                        <p className="text-sm text-[var(--text-dim)]">No pending reviews</p>
                       </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Avatar / Emoji</label>
-                        <input value={review.avatar} onChange={(e) => { const arr = [...reviews]; arr[i] = { ...arr[i], avatar: e.target.value }; setReviews(arr); }} className="field" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Project Type</label>
-                        <input value={review.project} onChange={(e) => { const arr = [...reviews]; arr[i] = { ...arr[i], project: e.target.value }; setReviews(arr); }} className="field" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Review Text</label>
-                      <textarea rows={3} value={review.text} onChange={(e) => { const arr = [...reviews]; arr[i] = { ...arr[i], text: e.target.value }; setReviews(arr); }} className="field resize-y" />
-                    </div>
+                    )}
                   </div>
-                ))}
+                </div>
+
+                {/* Approved Reviews */}
+                <div>
+                  <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-4 uppercase tracking-wider">Approved ({reviews.filter((r: any) => r.approved).length})</h3>
+                  <div className="space-y-4">
+                    {reviews.filter((r: any) => r.approved).length > 0 ? (
+                      reviews.filter((r: any) => r.approved).map((review, idx) => (
+                        <ReviewCard key={review.id || idx} review={review} index={idx} reviews={reviews} setReviews={setReviews} />
+                      ))
+                    ) : (
+                      <div className="glass rounded-2xl p-8 text-center border border-[var(--border)]">
+                        <p className="text-sm text-[var(--text-dim)]">No approved reviews yet</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 

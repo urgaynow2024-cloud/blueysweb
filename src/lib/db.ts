@@ -36,7 +36,21 @@ export async function getPortfolioImages() {
   return fetchAll("portfolio_images", []);
 }
 
-export async function getReviews() {
+export async function getApprovedReviews() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("reviews").select("*").eq("approved", true).order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return data;
+}
+
+export async function getPendingReviews() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("reviews").select("*").eq("approved", false).order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return data;
+}
+
+export async function getAllReviews() {
   return fetchAll("reviews", []);
 }
 
@@ -95,4 +109,28 @@ export async function reorderPortfolioImages(urls: string[]) {
   for (let i = 0; i < urls.length; i++) {
     await supabase.from("portfolio_images").update({ sort_order: i }).eq("url", urls[i]);
   }
+}
+
+export async function submitReview(data: { name: string; text: string; star_rating: number; image_url?: string; project?: string }) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("reviews").insert([{ ...data, approved: false }]).select();
+  return error ? null : result?.[0];
+}
+
+export async function approveReview(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("reviews").update({ approved: true }).eq("id", id);
+  return !error;
+}
+
+export async function updateReview(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("reviews").update(data).eq("id", id);
+  return !error;
+}
+
+export async function deleteReview(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("reviews").delete().eq("id", id);
+  return !error;
 }

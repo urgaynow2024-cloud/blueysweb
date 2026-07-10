@@ -2,12 +2,6 @@
 -- Run this in: Supabase Dashboard → SQL Editor → New query → Paste → Run
 
 -- =============================================================================
--- CLEANUP OLD TABLES (optional - uncomment if you had the old system)
--- =============================================================================
--- DROP TABLE IF EXISTS gallery_images;
--- DROP TABLE IF EXISTS portfolio_items;
-
--- =============================================================================
 -- STORAGE BUCKET (create manually first)
 -- =============================================================================
 -- Go to: Supabase Dashboard → Storage → New bucket
@@ -27,13 +21,16 @@ CREATE TABLE IF NOT EXISTS portfolio_images (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Client reviews
+-- Client reviews with approval workflow
 CREATE TABLE IF NOT EXISTS reviews (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   avatar TEXT DEFAULT '🎭',
   text TEXT NOT NULL,
   project TEXT,
+  star_rating INTEGER DEFAULT 5,
+  image_url TEXT,
+  approved BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
