@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Upload, Image as ImageIcon, CheckCircle2 } from "lucide-react";
+import { Upload, Image as ImageIcon, CheckCircle2, X, Loader2 } from "lucide-react";
 import StarRating from "./StarRating";
-import { uploadImage } from "@/lib/db";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 export default function ClientReviewForm() {
@@ -12,6 +11,7 @@ export default function ClientReviewForm() {
   const [starRating, setStarRating] = useState(5);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -29,6 +29,7 @@ export default function ClientReviewForm() {
       return;
     }
 
+    setSubmitting(true);
     try {
       const res = await fetch("/api/reviews", {
         method: "POST",
@@ -49,6 +50,8 @@ export default function ClientReviewForm() {
       }
     } catch {
       setError(true);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -63,12 +66,25 @@ export default function ClientReviewForm() {
 
     setUploadingImage(true);
     try {
-      const url = await uploadImage(file, "reviews");
-      if (url) {
-        setImagePreview(url);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "reviews");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await res.json();
+      if (res.ok && result.url) {
+        setImagePreview(result.url);
+      } else {
+        console.error("Upload failed:", result.error);
+        alert("Image upload failed: " + (result.error || "Unknown error"));
       }
     } catch (e) {
       console.error("Image upload failed:", e);
+      alert("Image upload failed. Please try again.");
     } finally {
       setUploadingImage(false);
     }
@@ -159,9 +175,9 @@ export default function ClientReviewForm() {
               <button
                 type="button"
                 onClick={() => setImagePreview(null)}
-                className="absolute top-2 right-2 px-3 py-1.5 bg-red-500 text-white text-xs font-bold rounded-lg hover:bg-red-600 transition-colors"
+                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
               >
-                Remove
+                <X className="w-4 h-4" />
               </button>
             </div>
           ) : (
@@ -172,7 +188,10 @@ export default function ClientReviewForm() {
               disabled={!isSupabaseConfigured || uploadingImage}
             >
               {uploadingImage ? (
-                <p className="text-sm text-[var(--text-secondary)]">Uploading...</p>
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
+                  <p className="text-sm text-[var(--text-secondary)]">Uploading...</p>
+                </div>
               ) : (
                 <>
                   <ImageIcon className="w-5 h-5 mx-auto mb-1.5 text-[var(--text-dim)]" />
@@ -186,8 +205,8 @@ export default function ClientReviewForm() {
           )}
         </div>
 
-        <button type="submit" className="w-full btn-primary !justify-center !py-3.5">
-          Submit Review
+        <button type="submit" disabled={submitting} className="w-full btn-primary justify-center !py-3.5 disabled:opacity-50">
+          {submitting ? "Submitting..." : "Submit Review"}
         </button>
       </form>
     </div>

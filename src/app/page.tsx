@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import Hero from "@/components/Hero";
 import FeaturedWork from "@/components/FeaturedWork";
 import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews } from "@/lib/db";
-
 import Link from "next/link";
 import { Star } from "lucide-react";
+import ClientReviewForm from "@/components/ClientReviewForm";
 
 export default function Home() {
   const [site, setSite] = useState<any>({});
@@ -242,9 +242,12 @@ export default function Home() {
             ) : (
               <div className="text-center py-16">
                 <div className="text-5xl mb-4 opacity-20">💬</div>
-                <p className="text-[var(--text-dim)] text-lg max-w-md mx-auto">
+                <p className="text-[var(--text-dim)] text-lg max-w-md mx-auto mb-6">
                   Client reviews will appear here after commissions are completed.
                 </p>
+                <a href="/reviews" className="btn-primary inline-flex items-center gap-2">
+                  Leave a Review
+                </a>
               </div>
             )}
           </div>

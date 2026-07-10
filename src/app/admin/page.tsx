@@ -213,41 +213,22 @@ export default function AdminPage() {
   const saveAll = async () => {
     setSaved(false);
     try {
-      if (!isSupabaseConfigured || !supabase) {
-        localStorage.setItem("adminData", JSON.stringify({ site, pricing, faq, workflow, reviews, updatedAt: new Date().toISOString() }));
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2500);
-        return;
-      }
+      const res = await fetch("/api/admin/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ site, pricing, faq, workflow, reviews }),
+      });
 
-      const siteRows = Object.entries(site).map(([key, value]) => ({ key, value: String(value) }));
-      await supabase.from("site_config").upsert(siteRows, { onConflict: "key" });
-
-      await supabase.from("pricing_tiers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      for (const item of pricing) {
-        await supabase.from("pricing_tiers").upsert({ ...item, id: item.id || undefined });
-      }
-
-      await supabase.from("faq_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      for (const item of faq) {
-        await supabase.from("faq_items").upsert({ ...item, id: item.id || undefined });
-      }
-
-      await supabase.from("workflow_steps").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      for (const item of workflow) {
-        await supabase.from("workflow_steps").upsert({ ...item, id: item.id || undefined });
-      }
-
-      await supabase.from("reviews").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      for (const item of reviews) {
-        await supabase.from("reviews").upsert({ ...item, id: item.id || undefined });
+      if (!res.ok) {
+        const result = await res.json();
+        throw new Error(result.error || "Save failed");
       }
 
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Save failed:", e);
-      alert("Save failed. Check console.");
+      alert(e.message || "Save failed. Check console.");
     }
   };
 

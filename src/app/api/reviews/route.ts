@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-
-export const runtime = "edge";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
@@ -12,21 +10,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Name and text are required" }, { status: 400 });
     }
 
-    if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from("reviews").insert([{
-        name,
-        avatar: avatar || "🎭",
-        text,
-        project: project || null,
-        star_rating: star_rating || 5,
-        image_url: image_url || null,
-        approved: false,
-      }]);
-      if (error) {
-        console.error("Review insert error:", error);
-        return NextResponse.json({ error: "Failed to save review" }, { status: 500 });
-      }
-      return NextResponse.json({ success: true });
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+    }
+
+    const { error } = await supabaseAdmin.from("reviews").insert([{
+      name,
+      avatar: avatar || "🎭",
+      text,
+      project: project || null,
+      star_rating: star_rating || 5,
+      image_url: image_url || null,
+      approved: false,
+    }]);
+
+    if (error) {
+      console.error("Review insert error:", error);
+      return NextResponse.json({ error: "Failed to save review" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
