@@ -6,8 +6,8 @@ import PortfolioLightbox from "@/components/PortfolioLightbox";
 
 function SkeletonCard() {
   return (
-    <div className="aspect-[3/4] rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] animate-pulse">
-      <div className="w-full h-full bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%] animate-[shimmer_1.5s_infinite]" />
+    <div className="rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] animate-pulse">
+      <div className="w-full bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%] animate-[shimmer_1.5s_infinite]" style={{ height: "200px" }} />
     </div>
   );
 }
@@ -57,21 +57,21 @@ export default function PortfolioPage() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
               {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)}
             </div>
           ) : images.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
               {images.map((url, i) => (
                 <div
                   key={i}
                   onClick={() => setLightboxIndex(i)}
-                  className="aspect-[3/4] rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] group hover:border-[var(--border-hover)] transition-all duration-500 hover:shadow-2xl hover:shadow-black/30 cursor-pointer"
+                  className="break-inside-avoid rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] group hover:border-[var(--border-hover)] transition-all duration-500 hover:shadow-2xl hover:shadow-black/30 cursor-pointer"
                 >
                   <img
                     src={url}
                     alt={`Portfolio ${i + 1}`}
-                    className="w-full h-full object-contain p-2 group-hover:scale-[1.02] transition-transform duration-500"
+                    className="w-full h-auto object-contain p-2 group-hover:scale-[1.02] transition-transform duration-500"
                     loading="lazy"
                   />
                 </div>

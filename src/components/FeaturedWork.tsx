@@ -5,8 +5,8 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 function SkeletonCard() {
   return (
-    <div className="group relative aspect-video rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] animate-pulse">
-      <div className="w-full h-full bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%] animate-[shimmer_1.5s_infinite]" />
+    <div className="rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] animate-pulse">
+      <div className="w-full bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%] animate-[shimmer_1.5s_infinite]" style={{ height: "180px" }} />
     </div>
   );
 }
@@ -52,7 +52,7 @@ export default function FeaturedWork() {
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Featured Work</h2>
             <p className="text-[var(--text-secondary)] max-w-xl">Recent commissions and avatar customisations.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="columns-1 md:columns-2 gap-4 space-y-4">
             {[1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)}
           </div>
         </div>
@@ -71,12 +71,12 @@ export default function FeaturedWork() {
 
         {images.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {images.map((url, i) => (
-                  <div key={i} className="group relative aspect-[3/4] rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] hover:border-[var(--border-hover)] transition-all duration-500 hover:shadow-2xl hover:shadow-black/30">
-                    <img src={url} alt={`Work ${i + 1}`} className="w-full h-full object-contain p-2 group-hover:scale-[1.02] transition-transform duration-500" loading="lazy" />
-                  </div>
-                ))}
+            <div className="columns-1 md:columns-2 gap-4 space-y-4">
+              {images.map((url, i) => (
+                <div key={i} className="break-inside-avoid rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] hover:border-[var(--border-hover)] transition-all duration-500 hover:shadow-2xl hover:shadow-black/30">
+                  <img src={url} alt={`Work ${i + 1}`} className="w-full h-auto object-contain p-2 group-hover:scale-[1.02] transition-transform duration-500" loading="lazy" />
+                </div>
+              ))}
             </div>
 
             <div className="text-center mt-10">
