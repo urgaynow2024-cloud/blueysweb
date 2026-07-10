@@ -2,58 +2,56 @@
 
 import { useState, useEffect } from "react";
 import PortfolioAdmin from "@/components/PortfolioAdmin";
-import { Star, CheckCircle2, Trash2, Edit2 } from "lucide-react";
+import { Star, CheckCircle2, Trash2, Edit2, ChevronRight, Settings, ImageIcon, Tag, HelpCircle, BarChart3, Save, RotateCcw, LogOut } from "lucide-react";
 import StarRating from "@/components/StarRating";
+import { uploadImage, approveReview, updateReview, deleteReview } from "@/lib/db";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { approveReview, updateReview, deleteReview } from "@/lib/db";
 
 function ReviewCard({ review, index, reviews, setReviews }: { review: any; index: number; reviews: any[]; setReviews: React.Dispatch<React.SetStateAction<any[]>> }) {
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({ name: review.name, text: review.text, star_rating: review.star_rating, project: review.project });
 
   async function handleApprove() {
-    await approveReview(review.id);
-    setReviews(reviews.map((r) => (r.id === review.id ? { ...r, approved: true } : r)));
+    const result = await approveReview(review.id);
+    if (result) {
+      setReviews(reviews.map((r) => (r.id === review.id ? { ...r, approved: true } : r)));
+    }
   }
 
   async function handleEdit() {
-    await updateReview(review.id, editData);
-    setReviews(reviews.map((r) => (r.id === review.id ? { ...r, ...editData } : r)));
-    setEditing(false);
+    const result = await updateReview(review.id, editData);
+    if (result) {
+      setReviews(reviews.map((r) => (r.id === review.id ? { ...r, ...editData } : r)));
+      setEditing(false);
+    }
   }
 
   async function handleDelete() {
-    if (!confirm("Are you sure you want to delete this review?")) return;
-    await deleteReview(review.id);
-    setReviews(reviews.filter((r) => r.id !== review.id));
+    if (!confirm("Delete this review permanently?")) return;
+    const result = await deleteReview(review.id);
+    if (result) {
+      setReviews(reviews.filter((r) => r.id !== review.id));
+    }
   }
 
   return (
-    <div className="glass rounded-2xl p-6 space-y-4 border border-[var(--border)]">
+    <div className="bg-[var(--bg-card)] rounded-2xl p-6 space-y-4 border border-[var(--border)] hover:border-[var(--border-hover)] transition-all duration-300">
       <div className="flex justify-between items-start">
-        <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-          {review.approved ? (
-            <span className="text-green-400 flex items-center gap-1.5 text-xs">
-              <CheckCircle2 className="w-4 h-4" /> Approved
-            </span>
-          ) : (
-            <span className="text-yellow-400 flex items-center gap-1.5 text-xs">Pending</span>
-          )}
-        </h3>
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${review.approved ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"}`}>
+          {review.approved ? <CheckCircle2 className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-current animate-pulse" />}
+          {review.approved ? "Approved" : "Pending"}
+        </span>
         <div className="flex gap-2">
           {!review.approved && (
-            <button onClick={handleApprove} className="text-xs text-green-400 hover:text-green-300 flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              Approve
+            <button onClick={handleApprove} className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/5 hover:bg-emerald-500/10 px-3 py-1.5 rounded-lg transition-all">
+              <CheckCircle2 className="w-3.5 h-3.5" /> Approve
             </button>
           )}
-          <button onClick={() => setEditing(!editing)} className="text-xs text-[var(--accent)] hover:text-[var(--accent-4)] flex items-center gap-1">
-            <Edit2 className="w-3.5 h-3.5" />
-            {editing ? "Cancel" : "Edit"}
+          <button onClick={() => setEditing(!editing)} className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] hover:text-white bg-[var(--accent)]/5 hover:bg-[var(--accent)]/10 px-3 py-1.5 rounded-lg transition-all">
+            <Edit2 className="w-3.5 h-3.5" /> {editing ? "Cancel" : "Edit"}
           </button>
-          <button onClick={handleDelete} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1">
-            <Trash2 className="w-3.5 h-3.5" />
-            Delete
+          <button onClick={handleDelete} className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-400 hover:text-white bg-red-500/5 hover:bg-red-500/10 px-3 py-1.5 rounded-lg transition-all">
+            <Trash2 className="w-3.5 h-3.5" /> Delete
           </button>
         </div>
       </div>
@@ -62,42 +60,42 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
         <div className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Name</label>
+              <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Name</label>
               <input value={editData.name} onChange={(e) => setEditData({ ...editData, name: e.target.value })} className="field" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Project</label>
+              <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Project</label>
               <input value={editData.project || ""} onChange={(e) => setEditData({ ...editData, project: e.target.value })} className="field" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Rating</label>
+            <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Rating</label>
             <StarRating value={editData.star_rating || 5} onChange={(val) => setEditData({ ...editData, star_rating: val })} />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Review</label>
+            <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Review</label>
             <textarea rows={3} value={editData.text} onChange={(e) => setEditData({ ...editData, text: e.target.value })} className="field resize-y" />
           </div>
           <div className="flex gap-2">
-            <button onClick={handleEdit} className="btn-primary !text-sm !py-2 !px-4">Save</button>
-            <button onClick={() => setEditing(false)} className="btn-secondary !text-sm !py-2 !px-4">Cancel</button>
+            <button onClick={handleEdit} className="btn-primary !text-sm !py-2 !px-5">Save</button>
+            <button onClick={() => setEditing(false)} className="btn-secondary !text-sm !py-2 !px-5">Cancel</button>
           </div>
         </div>
       ) : (
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <div className="text-2xl">{(review.avatar as string) || "🎭"}</div>
+            <div className="text-2xl">🎭</div>
             <div>
               <p className="font-bold text-white text-sm">{review.name}</p>
               {review.project && <p className="text-xs text-[var(--text-dim)]">{review.project}</p>}
               <div className="flex gap-0.5 mt-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className={`w-3.5 h-3.5 ${i < (review.star_rating || 5) ? "text-[var(--accent)] fill-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Star key={i} className={`w-3.5 h-3.5 ${i <= (review.star_rating || 5) ? "text-[var(--accent)] fill-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
                 ))}
               </div>
             </div>
           </div>
-          <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{review.text}</p>
+          <p className="text-sm text-[var(--text-secondary)] leading-relaxed">"{review.text}"</p>
           {review.image_url && (
             <div className="mt-3">
               <img src={review.image_url} alt="Review" className="w-full h-40 object-cover rounded-xl border border-[var(--border)]" />
@@ -142,6 +140,15 @@ const defaultWorkflow = [
 const defaultReviews: any[] = [];
 
 type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site";
+
+const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  { id: "portfolio", label: "Portfolio", icon: <ImageIcon className="w-4 h-4" /> },
+  { id: "pricing", label: "Pricing", icon: <Tag className="w-4 h-4" /> },
+  { id: "faq", label: "FAQ", icon: <HelpCircle className="w-4 h-4" /> },
+  { id: "workflow", label: "Process", icon: <ChevronRight className="w-4 h-4" /> },
+  { id: "reviews", label: "Reviews", icon: <Star className="w-4 h-4" /> },
+  { id: "site", label: "Site", icon: <Settings className="w-4 h-4" /> },
+];
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -272,77 +279,92 @@ export default function AdminPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-white text-sm">Loading...</div>
+        <div className="text-white text-sm flex items-center gap-2"><div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /> Loading...</div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-6xl mx-auto px-4 pt-10 pb-20">
+      <div className="max-w-7xl mx-auto px-4 pt-10 pb-20">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">Admin</h1>
+            <h1 className="text-3xl font-bold text-white tracking-tight">Admin</h1>
             <p className="text-sm text-[var(--text-dim)] mt-1">
               {isSupabaseConfigured ? "Changes sync to Supabase." : "Supabase not configured — saving to localStorage."}
             </p>
           </div>
           <div className="flex gap-2">
-            <button onClick={saveAll} className="btn-primary !text-sm !py-2 !px-4">
-              {saved ? "Saved ✓" : "Save Changes"}
+            <button onClick={saveAll} disabled={saved} className="btn-primary !text-sm !py-2 !px-4 inline-flex items-center gap-2">
+              {saved ? <><CheckCircle2 className="w-4 h-4" /> Saved</> : <><Save className="w-4 h-4" /> Save Changes</>}
             </button>
           </div>
         </div>
 
-        <div className="flex gap-1 mb-8 border-b border-[var(--border)] overflow-x-auto">
-          {[
-            { id: "portfolio", label: "Portfolio" },
-            { id: "pricing", label: "Pricing" },
-            { id: "faq", label: "FAQ" },
-            { id: "workflow", label: "Process" },
-            { id: "reviews", label: "Reviews" },
-            { id: "site", label: "Site" },
-          ].map((t) => (
-            <button key={t.id} onClick={() => setTab(t.id as Tab)} className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-all ${tab === t.id ? "text-white border-b-2 border-[var(--accent)]" : "text-[var(--text-dim)] hover:text-white"}`}>
-              {t.label}
-            </button>
-          ))}
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Sidebar */}
+          <aside className="lg:col-span-3 xl:col-span-3">
+            <div className="lg:sticky lg:top-24">
+              <nav className="space-y-1">
+                {tabs.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTab(t.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${tab === t.id ? "bg-[var(--accent)] text-[#05070a] shadow-lg shadow-[var(--accent)]/20" : "text-[var(--text-secondary)] hover:text-white hover:bg-white/5"}`}
+                  >
+                    {t.icon}
+                    {t.label}
+                    {tab === t.id && <ChevronRight className="w-4 h-4 ml-auto" />}
+                  </button>
+                ))}
+              </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            {tab === "portfolio" && (
-              <PortfolioAdmin />
-            )}
+              <div className="mt-6 space-y-2">
+                <button onClick={saveAll} disabled={saved} className="w-full btn-secondary !text-sm !py-2.5 flex items-center justify-center gap-2">
+                  <Save className="w-4 h-4" /> {saved ? "Saved" : "Save All"}
+                </button>
+                <button onClick={resetAll} className="w-full !text-sm !py-2.5 rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-all flex items-center justify-center gap-2">
+                  <RotateCcw className="w-4 h-4" /> Reset Defaults
+                </button>
+                <button onClick={() => { localStorage.removeItem("adminData"); setAuthed(false); }} className="w-full !text-sm !py-2.5 rounded-xl border border-[var(--border)] text-[var(--text-dim)] hover:text-white hover:border-[var(--border-hover)] transition-all flex items-center justify-center gap-2">
+                  <LogOut className="w-4 h-4" /> Logout
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main content */}
+          <main className="lg:col-span-9 xl:col-span-9">
+            {tab === "portfolio" && <PortfolioAdmin />}
 
             {tab === "pricing" && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h2 className="text-lg font-semibold text-white">Pricing Tiers</h2>
-                  <button onClick={() => setPricing([...pricing, { id: undefined, name: "New Tier", emoji: "✨", price: "£XX - £XX", badge: null, popular: false, features: [] }])} className="btn-primary !text-sm !py-2 !px-4">+ Add</button>
+                  <button onClick={() => setPricing([...pricing, { id: undefined, name: "New Tier", emoji: "✨", price: "£XX - £XX", badge: null, popular: false, features: [] }])} className="btn-primary !text-sm !py-2 !px-4">+ Add Tier</button>
                 </div>
                 {pricing.map((tier, i) => (
-                  <div key={tier.id || i} className="glass rounded-2xl p-6 space-y-4 border border-[var(--border)]">
+                  <div key={tier.id || i} className="bg-[var(--bg-card)] rounded-2xl p-6 space-y-4 border border-[var(--border)] hover:border-[var(--border-hover)] transition-all duration-300">
                     <div className="flex justify-between items-start">
                       <h3 className="text-sm font-semibold text-white">Tier {i + 1}</h3>
-                      <button onClick={() => setPricing(pricing.filter((_, j) => j !== i))} className="text-xs text-red-400 hover:text-red-300">Remove</button>
+                      <button onClick={() => setPricing(pricing.filter((_, j) => j !== i))} className="text-xs text-red-400 hover:text-red-300 bg-red-500/5 hover:bg-red-500/10 px-2.5 py-1 rounded-lg transition-all">Remove</button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Name</label>
+                        <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Name</label>
                         <input value={tier.name} onChange={(e) => { const arr = [...pricing]; arr[i] = { ...arr[i], name: e.target.value }; setPricing(arr); }} className="field" />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Price</label>
+                        <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Price</label>
                         <input value={tier.price} onChange={(e) => { const arr = [...pricing]; arr[i] = { ...arr[i], price: e.target.value }; setPricing(arr); }} className="field" />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Emoji</label>
+                        <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Emoji</label>
                         <input value={tier.emoji} onChange={(e) => { const arr = [...pricing]; arr[i] = { ...arr[i], emoji: e.target.value }; setPricing(arr); }} className="field" />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Features (one per line)</label>
+                      <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Features (one per line)</label>
                       <textarea rows={4} value={tier.features?.join("\n")} onChange={(e) => { const arr = [...pricing]; arr[i] = { ...arr[i], features: e.target.value.split("\n").filter(Boolean) }; setPricing(arr); }} className="field resize-y" />
                     </div>
                   </div>
@@ -357,17 +379,17 @@ export default function AdminPage() {
                   <button onClick={() => setFaq([...faq, { id: undefined, question: "New question?", answer: "New answer." }])} className="btn-primary !text-sm !py-2 !px-4">+ Add</button>
                 </div>
                 {faq.map((item, i) => (
-                  <div key={item.id || i} className="glass rounded-2xl p-6 space-y-4 border border-[var(--border)]">
+                  <div key={item.id || i} className="bg-[var(--bg-card)] rounded-2xl p-6 space-y-4 border border-[var(--border)] hover:border-[var(--border-hover)] transition-all duration-300">
                     <div className="flex justify-between items-start">
                       <h3 className="text-sm font-semibold text-white">Question {i + 1}</h3>
-                      <button onClick={() => setFaq(faq.filter((_, j) => j !== i))} className="text-xs text-red-400 hover:text-red-300">Remove</button>
+                      <button onClick={() => setFaq(faq.filter((_, j) => j !== i))} className="text-xs text-red-400 hover:text-red-300 bg-red-500/5 hover:bg-red-500/10 px-2.5 py-1 rounded-lg transition-all">Remove</button>
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Question</label>
+                      <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Question</label>
                       <input value={item.question} onChange={(e) => { const arr = [...faq]; arr[i] = { ...arr[i], question: e.target.value }; setFaq(arr); }} className="field" />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Answer</label>
+                      <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Answer</label>
                       <textarea rows={3} value={item.answer} onChange={(e) => { const arr = [...faq]; arr[i] = { ...arr[i], answer: e.target.value }; setFaq(arr); }} className="field resize-y" />
                     </div>
                   </div>
@@ -379,25 +401,25 @@ export default function AdminPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h2 className="text-lg font-semibold text-white">Process Steps</h2>
-                  <button onClick={() => setWorkflow([...workflow, { id: undefined, emoji: "📝", title: "New Step", desc: "Description here." }])} className="btn-primary !text-sm !py-2 !px-4">+ Add</button>
+                  <button onClick={() => setWorkflow([...workflow, { id: undefined, emoji: "📝", title: "New Step", desc: "Description here." }])} className="btn-primary !text-sm !py-2 !px-4">+ Add Step</button>
                 </div>
                 {workflow.map((step, i) => (
-                  <div key={step.id || i} className="glass rounded-2xl p-6 space-y-4 border border-[var(--border)]">
+                  <div key={step.id || i} className="bg-[var(--bg-card)] rounded-2xl p-6 space-y-4 border border-[var(--border)] hover:border-[var(--border-hover)] transition-all duration-300">
                     <div className="flex justify-between items-start">
                       <h3 className="text-sm font-semibold text-white">Step {i + 1}</h3>
-                      <button onClick={() => setWorkflow(workflow.filter((_, j) => j !== i))} className="text-xs text-red-400 hover:text-red-300">Remove</button>
+                      <button onClick={() => setWorkflow(workflow.filter((_, j) => j !== i))} className="text-xs text-red-400 hover:text-red-300 bg-red-500/5 hover:bg-red-500/10 px-2.5 py-1 rounded-lg transition-all">Remove</button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Emoji</label>
+                        <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Emoji</label>
                         <input value={step.emoji} onChange={(e) => { const arr = [...workflow]; arr[i] = { ...arr[i], emoji: e.target.value }; setWorkflow(arr); }} className="field" />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Title</label>
+                        <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Title</label>
                         <input value={step.title} onChange={(e) => { const arr = [...workflow]; arr[i] = { ...arr[i], title: e.target.value }; setWorkflow(arr); }} className="field" />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Description</label>
+                        <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Description</label>
                         <input value={step.desc} onChange={(e) => { const arr = [...workflow]; arr[i] = { ...arr[i], desc: e.target.value }; setWorkflow(arr); }} className="field" />
                       </div>
                     </div>
@@ -412,32 +434,30 @@ export default function AdminPage() {
                   <h2 className="text-lg font-semibold text-white">Client Reviews</h2>
                 </div>
 
-                {/* Pending Reviews */}
                 <div>
-                  <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-4 uppercase tracking-wider">Pending Approval ({reviews.filter((r: any) => !r.approved).length})</h3>
+                  <h3 className="text-xs font-bold text-[var(--text-secondary)] mb-4 uppercase tracking-wider">Pending Approval ({reviews.filter((r: any) => !r.approved).length})</h3>
                   <div className="space-y-4">
                     {reviews.filter((r: any) => !r.approved).length > 0 ? (
                       reviews.filter((r: any) => !r.approved).map((review, idx) => (
                         <ReviewCard key={review.id || idx} review={review} index={idx} reviews={reviews} setReviews={setReviews} />
                       ))
                     ) : (
-                      <div className="glass rounded-2xl p-8 text-center border border-[var(--border)]">
+                      <div className="bg-[var(--bg-card)] rounded-2xl p-8 text-center border border-[var(--border)]">
                         <p className="text-sm text-[var(--text-dim)]">No pending reviews</p>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Approved Reviews */}
                 <div>
-                  <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-4 uppercase tracking-wider">Approved ({reviews.filter((r: any) => r.approved).length})</h3>
+                  <h3 className="text-xs font-bold text-[var(--text-secondary)] mb-4 uppercase tracking-wider">Approved ({reviews.filter((r: any) => r.approved).length})</h3>
                   <div className="space-y-4">
                     {reviews.filter((r: any) => r.approved).length > 0 ? (
                       reviews.filter((r: any) => r.approved).map((review, idx) => (
                         <ReviewCard key={review.id || idx} review={review} index={idx} reviews={reviews} setReviews={setReviews} />
                       ))
                     ) : (
-                      <div className="glass rounded-2xl p-8 text-center border border-[var(--border)]">
+                      <div className="bg-[var(--bg-card)] rounded-2xl p-8 text-center border border-[var(--border)]">
                         <p className="text-sm text-[var(--text-dim)]">No approved reviews yet</p>
                       </div>
                     )}
@@ -447,51 +467,27 @@ export default function AdminPage() {
             )}
 
             {tab === "site" && (
-              <div className="glass rounded-2xl p-7 space-y-5 border border-[var(--border)]">
+              <div className="bg-[var(--bg-card)] rounded-2xl p-7 space-y-5 border border-[var(--border)]">
                 <h2 className="text-lg font-semibold text-white mb-4">Site Information</h2>
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Site Name</label>
+                  <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Site Name</label>
                   <input value={site.name} onChange={(e) => setSite({ ...site, name: e.target.value })} className="field" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Tagline</label>
+                  <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Tagline</label>
                   <input value={site.tagline} onChange={(e) => setSite({ ...site, tagline: e.target.value })} className="field" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Description</label>
+                  <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Description</label>
                   <textarea rows={3} value={site.description} onChange={(e) => setSite({ ...site, description: e.target.value })} className="field resize-y" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Discord</label>
+                  <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Discord</label>
                   <input value={site.discord} onChange={(e) => setSite({ ...site, discord: e.target.value })} className="field" />
                 </div>
               </div>
             )}
-          </div>
-
-          <div className="space-y-4">
-            <div className="glass rounded-2xl p-6 border border-[var(--border)]">
-              <h3 className="text-sm font-bold text-white mb-4">Quick Actions</h3>
-              <div className="space-y-2.5">
-                <button onClick={saveAll} className="w-full btn-primary !text-sm !py-2.5">{saved ? "Saved ✓" : "Save All Changes"}</button>
-                <button onClick={resetAll} className="w-full !text-sm !py-2.5 rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all">Reset to Defaults</button>
-                <button onClick={() => setAuthed(false)} className="w-full !text-sm !py-2.5 rounded-xl border border-[var(--border)] text-[var(--text-dim)] hover:text-white transition-all">Logout</button>
-              </div>
-            </div>
-
-            {saved && (
-              <div className="glass rounded-2xl p-4 text-center border border-[var(--border)]">
-                <p className="text-sm text-green-400 font-medium">All changes saved successfully</p>
-              </div>
-            )}
-
-            <div className="glass rounded-2xl p-6 border border-[var(--border)]">
-              <h3 className="text-sm font-bold text-white mb-3">Notes</h3>
-              <p className="text-xs text-[var(--text-dim)] leading-relaxed">
-                {isSupabaseConfigured ? "Images and data are saved to Supabase." : "Supabase not configured. Add your credentials in .env.local to enable cloud sync and image uploads."}
-              </p>
-            </div>
-          </div>
+          </main>
         </div>
       </div>
     </div>

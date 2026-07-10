@@ -3,28 +3,46 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import ClientReviewForm from "@/components/ClientReviewForm";
-import { getApprovedReviews, getPendingReviews, approveReview, updateReview, deleteReview } from "@/lib/db";
+import { getApprovedReviews } from "@/lib/db";
 import { Star } from "lucide-react";
+
+function SkeletonCard() {
+  return (
+    <div className="bg-[var(--bg-card)] rounded-2xl p-6 md:p-8 border border-[var(--border)] animate-pulse">
+      <div className="flex items-center gap-4 mb-4">
+        <div className="w-10 h-10 rounded-full bg-[var(--bg)]" />
+        <div className="space-y-2 flex-1">
+          <div className="h-4 bg-[var(--bg)] rounded w-32" />
+          <div className="h-3 bg-[var(--bg)] rounded w-20" />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <div className="h-3 bg-[var(--bg)] rounded w-full" />
+        <div className="h-3 bg-[var(--bg)] rounded w-5/6" />
+        <div className="h-3 bg-[var(--bg)] rounded w-4/6" />
+      </div>
+    </div>
+  );
+}
 
 export default function ReviewsPage() {
   const [approvedReviews, setApprovedReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    async function loadReviews() {
+      setLoading(true);
+      try {
+        const reviews = await getApprovedReviews();
+        setApprovedReviews(reviews);
+      } catch (e) {
+        console.error("Failed to load reviews:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
     loadReviews();
   }, []);
-
-  async function loadReviews() {
-    setLoading(true);
-    try {
-      const reviews = await getApprovedReviews();
-      setApprovedReviews(reviews);
-    } catch (e) {
-      console.error("Failed to load reviews:", e);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   return (
     <div className="relative">
@@ -38,11 +56,13 @@ export default function ReviewsPage() {
           </div>
 
           {loading ? (
-            <div className="text-center py-16 text-[var(--text-dim)]">Loading...</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto mb-16">
+              {[1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)}
+            </div>
           ) : approvedReviews.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto mb-16">
               {approvedReviews.map((review, i) => (
-                <div key={review.id || i} className="glass rounded-2xl p-6 md:p-8 border border-[var(--border)] relative overflow-hidden group hover:border-[var(--border-hover)] transition-all duration-500">
+                <div key={review.id || i} className="bg-[var(--bg-card)] rounded-2xl p-6 md:p-8 border border-[var(--border)] relative overflow-hidden group hover:border-[var(--border-hover)] transition-all duration-500">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] opacity-[0.02] blur-3xl rounded-full pointer-events-none group-hover:opacity-[0.05] transition-opacity" />
                   <div className="relative">
                     <div className="flex items-center gap-4 mb-4">
@@ -50,11 +70,8 @@ export default function ReviewsPage() {
                       <div>
                         <p className="font-bold text-white">{review.name}</p>
                         <div className="flex gap-0.5 mt-0.5">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${i < (review.star_rating || 5) ? "text-[var(--accent)] fill-[var(--accent)]" : "text-[var(--text-dim)]"}`}
-                            />
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star key={star} className={`w-4 h-4 ${star <= (review.star_rating || 5) ? "text-[var(--accent)] fill-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
                           ))}
                         </div>
                       </div>

@@ -86,6 +86,31 @@ export async function uploadImage(file: File, path?: string): Promise<string | n
   return urlData.publicUrl;
 }
 
+export async function uploadPortfolioImage(file: File) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const ext = file.name.split(".").pop();
+  const storagePath = `portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const { data: uploadData, error: uploadError } = await supabase.storage.from("portfolio-images").upload(storagePath, file, {
+    cacheControl: "3600",
+    upsert: true,
+  });
+  if (uploadError || !uploadData) {
+    console.error("Storage upload error:", uploadError);
+    return null;
+  }
+  const { data: urlData } = supabase.storage.from("portfolio-images").getPublicUrl(storagePath);
+  const url = urlData.publicUrl;
+
+  const { data: dbData, error: dbError } = await supabase.from("portfolio_images").insert([{ url }]).select();
+  if (dbError || !dbData || dbData.length === 0) {
+    console.error("DB insert error:", dbError);
+    await supabase.storage.from("portfolio-images").remove([storagePath]);
+    return null;
+  }
+
+  return { id: dbData[0].id, url, path: storagePath };
+}
+
 export async function deleteImage(path: string): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) return false;
   const { error } = await supabase.storage.from("portfolio-images").remove([path]);
@@ -104,10 +129,11 @@ export async function removePortfolioImage(id: string) {
   return !error;
 }
 
-export async function reorderPortfolioImages(urls: string[]) {
+export async function reorderPortfolioImages(items: { id: string; sort_order: number }[]) {
   if (!isSupabaseConfigured || !supabase) return;
-  for (let i = 0; i < urls.length; i++) {
-    await supabase.from("portfolio_images").update({ sort_order: i }).eq("url", urls[i]);
+  for (const item of items) {
+    const { error } = await supabase.from("portfolio_images").update({ sort_order: item.sort_order }).eq("id", item.id);
+    if (error) console.error("Reorder error:", error);
   }
 }
 

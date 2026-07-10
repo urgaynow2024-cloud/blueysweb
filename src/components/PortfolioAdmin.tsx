@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Upload, Trash2, GripVertical, Save, CheckCircle2 } from "lucide-react";
-import { uploadImage, deleteImage, getPortfolioImages, removePortfolioImage, reorderPortfolioImages } from "@/lib/db";
+import { Upload, Trash2, GripVertical, Save, CheckCircle2, Loader2 } from "lucide-react";
+import { uploadPortfolioImage, deleteImage, getPortfolioImages, removePortfolioImage, reorderPortfolioImages } from "@/lib/db";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 export default function PortfolioAdmin() {
-  const [images, setImages] = useState<{ url: string; id?: string }[]>([]);
+  const [images, setImages] = useState<{ url: string; id?: string; path?: string }[]>([]);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -36,13 +36,18 @@ export default function PortfolioAdmin() {
     setUploading(true);
     setError(null);
     try {
-      const newImages: { url: string; id?: string }[] = [];
+      const newImages: { url: string; id?: string; path?: string }[] = [];
       for (let i = 0; i < files.length; i++) {
-        const url = await uploadImage(files[i], "portfolio");
-        if (url) newImages.push({ url });
+        const result = await uploadPortfolioImage(files[i]);
+        if (result) {
+          newImages.push({ url: result.url, id: result.id, path: result.path });
+        }
       }
       if (newImages.length > 0) {
         setImages([...images, ...newImages]);
+      }
+      if (newImages.length === 0 && files.length > 0) {
+        setError("All uploads failed. Please try again.");
       }
     } catch (e) {
       setError("Upload failed. Please try again.");
@@ -53,13 +58,17 @@ export default function PortfolioAdmin() {
 
   async function removeImage(index: number) {
     const image = images[index];
-    if (image.url) {
+    setImages(images.filter((_, i) => i !== index));
+    
+    if (image.path) {
+      await deleteImage(image.path);
+    } else if (image.url) {
       await deleteImage(image.url);
     }
+    
     if (image.id) {
       await removePortfolioImage(image.id);
     }
-    setImages(images.filter((_, i) => i !== index));
   }
 
   function moveImage(index: number, direction: number) {
@@ -74,8 +83,12 @@ export default function PortfolioAdmin() {
     setSaving(true);
     setError(null);
     try {
-      const urls = images.map(img => img.url);
-      await reorderPortfolioImages(urls);
+      const items = images
+        .filter(img => img.id)
+        .map((img, idx) => ({ id: img.id!, sort_order: idx }));
+      if (items.length > 0) {
+        await reorderPortfolioImages(items);
+      }
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (e) {
@@ -106,17 +119,11 @@ export default function PortfolioAdmin() {
           className="btn-primary !text-sm !py-2 !px-4 inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? (
-            "Saving..."
+            <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
           ) : saved ? (
-            <>
-              <CheckCircle2 className="w-4 h-4" />
-              Saved
-            </>
+            <><CheckCircle2 className="w-4 h-4" /> Saved</>
           ) : (
-            <>
-              <Save className="w-4 h-4" />
-              Save Changes
-            </>
+            <><Save className="w-4 h-4" /> Save Changes</>
           )}
         </button>
       </div>
@@ -153,7 +160,10 @@ export default function PortfolioAdmin() {
         className="mb-6 w-full px-5 py-8 rounded-2xl bg-[var(--bg)] border-2 border-dashed border-[var(--border)] text-center cursor-pointer hover:border-[var(--accent)] hover:text-[var(--text-secondary)] transition-all"
       >
         {uploading ? (
-          <p className="text-sm text-[var(--text-secondary)]">Uploading...</p>
+          <div className="flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
+            <p className="text-sm text-[var(--text-secondary)]">Uploading...</p>
+          </div>
         ) : (
           <>
             <Upload className="w-6 h-6 mx-auto mb-2 text-[var(--text-dim)]" />
@@ -168,7 +178,7 @@ export default function PortfolioAdmin() {
       ) : images.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {images.map((image, i) => (
-            <div key={i} className="relative group aspect-square">
+            <div key={image.id || i} className="relative group aspect-square">
               <img
                 src={image.url}
                 alt={`Portfolio ${i + 1}`}

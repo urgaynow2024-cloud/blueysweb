@@ -1,8 +1,69 @@
-import { workflowSteps, pricingTiers, faqItems, siteConfig, reviews } from "@/data/site";
+"use client";
+
+import { useState, useEffect } from "react";
 import Hero from "@/components/Hero";
 import FeaturedWork from "@/components/FeaturedWork";
+import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews } from "@/lib/db";
+
+import Link from "next/link";
+import { Star } from "lucide-react";
 
 export default function Home() {
+  const [site, setSite] = useState<any>({});
+  const [workflow, setWorkflow] = useState<any[]>([]);
+  const [pricing, setPricing] = useState<any[]>([]);
+  const [faq, setFaq] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      try {
+        const [s, w, p, f, r] = await Promise.all([
+          getSiteConfig(),
+          getWorkflowSteps(),
+          getPricingTiers(),
+          getFaqItems(),
+          getApprovedReviews(),
+        ]);
+        setSite(s);
+        setWorkflow(w);
+        setPricing(p);
+        setFaq(f);
+        setReviews(r);
+      } catch (e) {
+        console.error("Failed to load home data:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="relative">
+        <Hero />
+        <div className="relative z-10">
+          <div className="max-w-7xl mx-auto px-4 md:px-6 py-20">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-[var(--bg-card)] rounded-2xl p-8 border border-[var(--border)] animate-pulse">
+                  <div className="space-y-3">
+                    <div className="h-4 bg-[var(--bg)] rounded w-1/2" />
+                    <div className="h-3 bg-[var(--bg)] rounded w-full" />
+                    <div className="h-3 bg-[var(--bg)] rounded w-2/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
       <Hero />
@@ -122,14 +183,14 @@ export default function Home() {
 
             <div className="max-w-4xl mx-auto">
               <div className="grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-4">
-                {workflowSteps.map((step, i) => (
-                  <div key={step.title} className="relative text-center">
+                {workflow.map((step, i) => (
+                  <div key={step.title || i} className="relative text-center">
                     <div className="w-14 h-14 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center text-2xl mx-auto mb-4 relative z-10 hover:border-[var(--accent)]/30 hover:shadow-lg hover:shadow-[var(--accent)]/5 transition-all duration-500">
                       {step.emoji}
                     </div>
                     <h3 className="text-sm font-bold text-white mb-1.5">{step.title}</h3>
                     <p className="text-xs text-[var(--text-dim)] leading-relaxed px-1">{step.desc}</p>
-                    {i < workflowSteps.length - 1 && (
+                    {i < workflow.length - 1 && (
                       <div className="hidden md:block absolute top-7 left-[60%] w-[80%] h-px bg-gradient-to-r from-[var(--border)] to-transparent" />
                     )}
                   </div>
@@ -153,17 +214,27 @@ export default function Home() {
             {reviews.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {reviews.map((review, i) => (
-                  <div key={i} className="glass rounded-2xl p-6 md:p-8 border border-[var(--border)] relative overflow-hidden group hover:border-[var(--border-hover)] transition-all duration-500">
+                  <div key={review.id || i} className="bg-[var(--bg-card)] rounded-2xl p-6 md:p-8 border border-[var(--border)] relative overflow-hidden group hover:border-[var(--border-hover)] transition-all duration-500">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] opacity-[0.02] blur-3xl rounded-full pointer-events-none group-hover:opacity-[0.05] transition-opacity" />
                     <div className="relative">
                       <div className="flex items-center gap-4 mb-4">
-                        <div className="text-4xl">{review.avatar}</div>
+                        <div className="text-4xl">{review.avatar || "🎭"}</div>
                         <div>
                           <p className="font-bold text-white">{review.name}</p>
-                          <p className="text-xs text-[var(--text-dim)] uppercase tracking-wider">{review.project}</p>
+                          {review.project && <p className="text-xs text-[var(--text-dim)] uppercase tracking-wider">{review.project}</p>}
+                          <div className="flex gap-0.5 mt-0.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star key={star} className={`w-4 h-4 ${star <= (review.star_rating || 5) ? "text-[var(--accent)] fill-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
+                            ))}
+                          </div>
                         </div>
                       </div>
                       <p className="text-[var(--text-secondary)] leading-relaxed italic">"{review.text}"</p>
+                      {review.image_url && (
+                        <div className="mt-4">
+                          <img src={review.image_url} alt="Review image" className="w-full h-48 object-cover rounded-xl border border-[var(--border)]" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -174,9 +245,6 @@ export default function Home() {
                 <p className="text-[var(--text-dim)] text-lg max-w-md mx-auto">
                   Client reviews will appear here after commissions are completed.
                 </p>
-                <a href="/contact" className="btn-secondary mt-6 inline-flex">
-                  Start a Commission
-                </a>
               </div>
             )}
           </div>
@@ -194,9 +262,9 @@ export default function Home() {
             </div>
 
             <div className="space-y-2.5">
-              {faqItems.map((item, i) => (
+              {faq.map((item, i) => (
                 <div
-                  key={item.question}
+                  key={i}
                   className="border border-[var(--border)] rounded-xl p-5 md:p-6 hover:border-[var(--border-hover)] hover:bg-[var(--bg-elevated)]/50 transition-all duration-300 cursor-pointer group"
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -232,7 +300,7 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
-              {pricingTiers.map((tier) => (
+              {pricing.map((tier) => (
                 <div
                   key={tier.id}
                   className={`relative p-6 md:p-8 h-full flex flex-col border rounded-xl transition-all duration-500 ${
@@ -253,7 +321,7 @@ export default function Home() {
                     {tier.price}
                   </p>
                   <ul className="space-y-3 mb-8 flex-1">
-                    {tier.features.map((feat) => (
+                    {tier.features.map((feat: string) => (
                       <li key={feat} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
                         <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-1.5 flex-shrink-0" />
                         <span>{feat}</span>
@@ -290,7 +358,7 @@ export default function Home() {
               </h2>
               <p className="text-[var(--text-secondary)] max-w-lg mx-auto mb-8 text-base leading-relaxed">
                 Send me a message on Discord at{" "}
-                <strong className="text-white font-semibold">{siteConfig.discord}</strong> or
+                <strong className="text-white font-semibold">{site.discord}</strong> or
                 submit a request and I&rsquo;ll get back to you.
               </p>
               <div className="flex flex-wrap gap-4 justify-center">

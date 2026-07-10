@@ -7,7 +7,7 @@
 -- Go to: Supabase Dashboard → Storage → New bucket
 -- Name: portfolio-images
 -- Public bucket: ON
--- Then come back and run the storage policy section below
+-- Then run the storage policy section below
 
 -- =============================================================================
 -- TABLES
@@ -89,55 +89,52 @@ ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies before recreating
 DO $$ BEGIN
-  DROP POLICY IF EXISTS "Public read" ON portfolio_images;
-  DROP POLICY IF EXISTS "Authenticated write" ON portfolio_images;
-  DROP POLICY IF EXISTS "Public read" ON reviews;
-  DROP POLICY IF EXISTS "Authenticated write" ON reviews;
-  DROP POLICY IF EXISTS "Public read" ON pricing_tiers;
-  DROP POLICY IF EXISTS "Authenticated write" ON pricing_tiers;
-  DROP POLICY IF EXISTS "Public read" ON faq_items;
-  DROP POLICY IF EXISTS "Authenticated write" ON faq_items;
-  DROP POLICY IF EXISTS "Public read" ON workflow_steps;
-  DROP POLICY IF EXISTS "Authenticated write" ON workflow_steps;
-  DROP POLICY IF EXISTS "Public read" ON site_config;
-  DROP POLICY IF EXISTS "Authenticated write" ON site_config;
+  DROP POLICY IF EXISTS "Public read portfolio_images" ON portfolio_images;
+  DROP POLICY IF EXISTS "Authenticated write portfolio_images" ON portfolio_images;
+  DROP POLICY IF EXISTS "Public read reviews" ON reviews;
+  DROP POLICY IF EXISTS "Authenticated write reviews" ON reviews;
+  DROP POLICY IF EXISTS "Public read pricing_tiers" ON pricing_tiers;
+  DROP POLICY IF EXISTS "Authenticated write pricing_tiers" ON pricing_tiers;
+  DROP POLICY IF EXISTS "Public read faq_items" ON faq_items;
+  DROP POLICY IF EXISTS "Authenticated write faq_items" ON faq_items;
+  DROP POLICY IF EXISTS "Public read workflow_steps" ON workflow_steps;
+  DROP POLICY IF EXISTS "Authenticated write workflow_steps" ON workflow_steps;
+  DROP POLICY IF EXISTS "Public read site_config" ON site_config;
+  DROP POLICY IF EXISTS "Authenticated write site_config" ON site_config;
 END $$;
 
 -- Public read access for all tables
-CREATE POLICY "Public read" ON portfolio_images FOR SELECT USING (true);
-CREATE POLICY "Public read" ON reviews FOR SELECT USING (true);
-CREATE POLICY "Public read" ON pricing_tiers FOR SELECT USING (true);
-CREATE POLICY "Public read" ON faq_items FOR SELECT USING (true);
-CREATE POLICY "Public read" ON workflow_steps FOR SELECT USING (true);
-CREATE POLICY "Public read" ON site_config FOR SELECT USING (true);
+CREATE POLICY "Public read portfolio_images" ON portfolio_images FOR SELECT USING (true);
+CREATE POLICY "Public read reviews" ON reviews FOR SELECT USING (true);
+CREATE POLICY "Public read pricing_tiers" ON pricing_tiers FOR SELECT USING (true);
+CREATE POLICY "Public read faq_items" ON faq_items FOR SELECT USING (true);
+CREATE POLICY "Public read workflow_steps" ON workflow_steps FOR SELECT USING (true);
+CREATE POLICY "Public read site_config" ON site_config FOR SELECT USING (true);
 
 -- Allow authenticated users to modify
-CREATE POLICY "Authenticated write" ON portfolio_images FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write" ON reviews FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write" ON pricing_tiers FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write" ON faq_items FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write" ON workflow_steps FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write" ON site_config FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write portfolio_images" ON portfolio_images FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write reviews" ON reviews FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write pricing_tiers" ON pricing_tiers FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write faq_items" ON faq_items FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write workflow_steps" ON workflow_steps FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write site_config" ON site_config FOR ALL USING (auth.role() = 'authenticated');
 
 -- =============================================================================
 -- STORAGE POLICIES
 -- =============================================================================
--- IMPORTANT: storage.objects is a system table owned by Supabase.
--- You must create storage policies through the Dashboard UI, not SQL Editor.
---
--- Go to: Supabase Dashboard → Storage → portfolio-images → Policies → New policy
---
--- Create these 4 policies manually:
--- 1. "Public uploads"   - INSERT   - bucket_id = 'portfolio-images'
--- 2. "Public reads"     - SELECT   - bucket_id = 'portfolio-images'
--- 3. "Public updates"   - UPDATE   - bucket_id = 'portfolio-images'
--- 4. "Public deletes"   - DELETE   - bucket_id = 'portfolio-images'
---
--- For each policy:
--- - Allowed operation: select the operation type
--- - Policy definition: bucket_id = 'portfolio-images'
--- - Enable: Yes
 
+-- Drop existing storage policies
+DO $$ BEGIN
+  DROP POLICY IF EXISTS "Public uploads portfolio-images" ON storage.objects;
+  DROP POLICY IF EXISTS "Public reads portfolio-images" ON storage.objects;
+  DROP POLICY IF EXISTS "Public updates portfolio-images" ON storage.objects;
+  DROP POLICY IF EXISTS "Public deletes portfolio-images" ON storage.objects;
+END $$;
+
+CREATE POLICY "Public uploads portfolio-images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'portfolio-images');
+CREATE POLICY "Public reads portfolio-images" ON storage.objects FOR SELECT USING (bucket_id = 'portfolio-images');
+CREATE POLICY "Public updates portfolio-images" ON storage.objects FOR UPDATE USING (bucket_id = 'portfolio-images');
+CREATE POLICY "Public deletes portfolio-images" ON storage.objects FOR DELETE USING (bucket_id = 'portfolio-images');
 
 -- =============================================================================
 -- DEFAULT DATA
