@@ -10,6 +10,8 @@ interface Props {
     blenderWork: boolean;
     unityWork: boolean;
     primaryRender: string;
+    image_url?: string | null;
+    gallery_images?: string[];
     features?: string[];
     optimization?: string;
     beforeAfter?: boolean;
@@ -18,6 +20,9 @@ interface Props {
 }
 
 export default function ShowcaseCard({ item, index }: Props) {
+  const images = item.image_url ? [item.image_url, ...(item.gallery_images || [])] : (item.gallery_images || []);
+  const mainImage = images[0];
+
   return (
     <div
       className="group project-card reveal"
@@ -26,17 +31,18 @@ export default function ShowcaseCard({ item, index }: Props) {
       }}
     >
       <div className="project-image aspect-[16/10] relative bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] overflow-hidden">
-        {/* Placeholder for avatar render */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-[8rem] md:text-[9rem] opacity-[0.08] group-hover:opacity-[0.15] group-hover:scale-105 transition-all duration-700 select-none">
-            {item.primaryRender}
-          </span>
-        </div>
+        {mainImage ? (
+          <img src={mainImage} alt={item.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-[8rem] md:text-[9rem] opacity-[0.08] group-hover:opacity-[0.15] group-hover:scale-105 transition-all duration-700 select-none">
+              {item.primaryRender}
+            </span>
+          </div>
+        )}
 
-        {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-card)] via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-        {/* Platform badges */}
         <div className="absolute top-4 left-4 flex gap-2">
           {item.platforms.map((p) => (
             <span key={p} className="badge badge-pc">
@@ -45,7 +51,6 @@ export default function ShowcaseCard({ item, index }: Props) {
           ))}
         </div>
 
-        {/* Tool badges */}
         <div className="absolute top-4 right-4 flex gap-2">
           {item.blenderWork && (
             <span className="badge badge-blender">Blender</span>
@@ -55,9 +60,21 @@ export default function ShowcaseCard({ item, index }: Props) {
           )}
         </div>
 
-        {/* Bottom gradient fade */}
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[var(--bg-card)] to-transparent opacity-60 group-hover:opacity-0 transition-opacity duration-500" />
       </div>
+
+      {/* Gallery strip - little boxes */}
+      {images.length > 1 && (
+        <div className="px-4 pt-3 pb-1">
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {images.slice(1).map((url, i) => (
+              <div key={i} className="relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border border-[var(--border)]">
+                <img src={url} alt={`${item.name} ${i + 2}`} className="w-full h-full object-cover" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <div className="p-5 md:p-6">

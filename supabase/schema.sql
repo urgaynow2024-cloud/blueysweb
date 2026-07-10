@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS portfolio_items (
   optimization TEXT,
   primary_render TEXT DEFAULT '🎨',
   image_url TEXT,
+  gallery_images TEXT[] DEFAULT '{}',
   media_type TEXT DEFAULT 'image',
   before_after BOOLEAN DEFAULT FALSE,
   sort_order INTEGER DEFAULT 0,

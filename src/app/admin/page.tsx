@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import ImageUpload from "@/components/ImageUpload";
+import GalleryUpload from "@/components/GalleryUpload";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 const ADMIN_PASSWORD = "blueyadmin";
@@ -270,10 +271,14 @@ export default function AdminPage() {
                         <input value={c.primaryRender} onChange={(e) => { const arr = [...commissions]; arr[i] = { ...arr[i], primaryRender: e.target.value }; setCommissions(arr); }} className="field" />
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Image</label>
-                      <ImageUpload bucketPath="portfolio-images" value={c.image_url} onChange={(url) => { const arr = [...commissions]; arr[i] = { ...arr[i], image_url: url }; setCommissions(arr); }} />
-                    </div>
+                     <div>
+                       <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Image</label>
+                       <ImageUpload bucketPath="portfolio-images" value={c.image_url} onChange={(url) => { const arr = [...commissions]; arr[i] = { ...arr[i], image_url: url }; setCommissions(arr); }} />
+                     </div>
+                     <div>
+                       <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Gallery Images (optional, multiple)</label>
+                       <GalleryUpload bucketPath="portfolio-images" value={c.gallery_images || []} onChange={(urls) => { const arr = [...commissions]; arr[i] = { ...arr[i], gallery_images: urls }; setCommissions(arr); }} />
+                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Description</label>
                       <textarea rows={3} value={c.description} onChange={(e) => { const arr = [...commissions]; arr[i] = { ...arr[i], description: e.target.value }; setCommissions(arr); }} className="field resize-y" />
