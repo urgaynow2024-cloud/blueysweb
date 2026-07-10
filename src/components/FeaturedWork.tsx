@@ -72,11 +72,11 @@ export default function FeaturedWork() {
         {images.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {images.map((url, i) => (
-                <div key={i} className="group relative aspect-video rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] hover:border-[var(--border-hover)] transition-all duration-500 hover:shadow-2xl hover:shadow-black/30">
-                  <img src={url} alt={`Work ${i + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" loading="lazy" />
-                </div>
-              ))}
+                {images.map((url, i) => (
+                  <div key={i} className="group relative aspect-[3/4] rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] hover:border-[var(--border-hover)] transition-all duration-500 hover:shadow-2xl hover:shadow-black/30">
+                    <img src={url} alt={`Work ${i + 1}`} className="w-full h-full object-contain p-2 group-hover:scale-[1.02] transition-transform duration-500" loading="lazy" />
+                  </div>
+                ))}
             </div>
 
             <div className="text-center mt-10">

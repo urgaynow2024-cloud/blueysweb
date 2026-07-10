@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import PortfolioLightbox from "@/components/PortfolioLightbox";
 
 function SkeletonCard() {
   return (
-    <div className="aspect-square rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] animate-pulse">
+    <div className="aspect-[3/4] rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] animate-pulse">
       <div className="w-full h-full bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%] animate-[shimmer_1.5s_infinite]" />
     </div>
   );
@@ -14,6 +15,7 @@ function SkeletonCard() {
 export default function PortfolioPage() {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -61,8 +63,17 @@ export default function PortfolioPage() {
           ) : images.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {images.map((url, i) => (
-                <div key={i} className="aspect-square rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] group hover:border-[var(--border-hover)] transition-all duration-500 hover:shadow-2xl hover:shadow-black/30">
-                  <img src={url} alt={`Portfolio ${i + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" loading="lazy" />
+                <div
+                  key={i}
+                  onClick={() => setLightboxIndex(i)}
+                  className="aspect-[3/4] rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] group hover:border-[var(--border-hover)] transition-all duration-500 hover:shadow-2xl hover:shadow-black/30 cursor-pointer"
+                >
+                  <img
+                    src={url}
+                    alt={`Portfolio ${i + 1}`}
+                    className="w-full h-full object-contain p-2 group-hover:scale-[1.02] transition-transform duration-500"
+                    loading="lazy"
+                  />
                 </div>
               ))}
             </div>
@@ -77,6 +88,16 @@ export default function PortfolioPage() {
           )}
         </div>
       </section>
+
+      {lightboxIndex !== null && (
+        <PortfolioLightbox
+          images={images}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onPrev={() => setLightboxIndex((lightboxIndex - 1 + images.length) % images.length)}
+          onNext={() => setLightboxIndex((lightboxIndex + 1) % images.length)}
+        />
+      )}
     </div>
   );
 }

@@ -287,8 +287,8 @@ export default function PortfolioAdmin() {
         <div className="text-center py-8 text-[var(--text-dim)]">Loading...</div>
       ) : images.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {images.map((image, i) => (
-            <div key={image.id || i} className="relative group aspect-square">
+              {images.map((image, i) => (
+            <div key={image.id || i} className="relative group aspect-[3/4]">
               {image.uploading ? (
                 <div className="w-full h-full flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]">
                   <div className="text-center">
@@ -313,7 +313,7 @@ export default function PortfolioAdmin() {
                   <img
                     src={image.url}
                     alt={`Portfolio ${i + 1}`}
-                    className="w-full h-full object-cover rounded-xl border border-[var(--border)]"
+                    className="w-full h-full object-contain p-2 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]"
                   />
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex flex-col items-center justify-center gap-1.5">
                     <div className="flex gap-1">
