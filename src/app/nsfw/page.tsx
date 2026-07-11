@@ -1,12 +1,65 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import AgeVerifier from "@/components/AgeVerifier";
 import { nsfwPricingTiers, nsfwRules } from "@/data/site";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import PortfolioLightbox from "@/components/PortfolioLightbox";
+
+function SkeletonCard() {
+  return (
+    <div className="rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] animate-pulse">
+      <div className="w-full bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%] animate-[shimmer_1.5s_infinite]" style={{ height: "200px" }} />
+    </div>
+  );
+}
 
 export default function NsfwPage() {
   const [isVerified, setIsVerified] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const { isAgeVerified } = require("@/components/AgeVerifier");
+      setIsVerified(isAgeVerified());
+    }
+  }, []);
+
+  useEffect(() => {
+    async function load() {
+      if (!isVerified) return;
+
+      setLoading(true);
+      try {
+        if (!isSupabaseConfigured || !supabase) {
+          const stored = localStorage.getItem("adminData");
+          if (stored) {
+            try {
+              const data = JSON.parse(stored);
+              if (data.nsfwPortfolioImages && data.nsfwPortfolioImages.length > 0) {
+                setImages(data.nsfwPortfolioImages);
+              }
+            } catch (e) {}
+          }
+          setLoading(false);
+          return;
+        }
+        const { data } = await supabase
+          .from("nsfw_portfolio_images")
+          .select("url")
+          .order("sort_order", { ascending: true });
+        if (data && data.length > 0) setImages(data.map((img) => img.url));
+      } catch (e) {
+        console.error("Failed to load NSFW portfolio:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [isVerified]);
 
   if (!isVerified) {
     return <AgeVerifier onVerified={() => setIsVerified(true)} />;
@@ -56,6 +109,45 @@ export default function NsfwPage() {
             </p>
           </div>
 
+          {/* NSFW Portfolio Gallery */}
+          <div className="mb-16">
+            <div className="text-center mb-10">
+              <span className="section-label justify-center">NSFW Portfolio</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Previous Work</h2>
+              <p className="text-[var(--text-secondary)] max-w-lg mx-auto">
+                Examples of mature avatar customisation. Click any image to view full size.
+              </p>
+            </div>
+
+            {loading ? (
+              <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)}
+              </div>
+            ) : images.length > 0 ? (
+              <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
+                {images.map((url, i) => (
+                  <div
+                    key={i}
+                    onClick={() => setLightboxIndex(i)}
+                    className="break-inside-avoid rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] group hover:border-[var(--border-hover)] transition-all duration-500 hover:shadow-2xl hover:shadow-black/30 cursor-pointer"
+                  >
+                    <img
+                      src={url}
+                      alt={`NSFW Work ${i + 1}`}
+                      className="w-full h-auto block object-contain p-2"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <p className="text-[var(--text-dim)] text-lg">No NSFW portfolio images available yet.</p>
+              </div>
+            )}
+          </div>
+
+          {/* NSFW Pricing */}
           <div className="mb-10">
             <span className="section-label justify-center">NSFW Rates</span>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight text-center">Pricing</h2>
@@ -117,6 +209,16 @@ export default function NsfwPage() {
           </div>
         </div>
       </section>
+
+      {lightboxIndex !== null && (
+        <PortfolioLightbox
+          images={images}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onPrev={() => setLightboxIndex((lightboxIndex - 1 + images.length) % images.length)}
+          onNext={() => setLightboxIndex((lightboxIndex + 1) % images.length)}
+        />
+      )}
     </div>
   );
 }
