@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS pricing_tiers (
   popular BOOLEAN DEFAULT FALSE,
   features TEXT[] DEFAULT '{}',
   sort_order INTEGER DEFAULT 0,
+  is_nsfw BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -83,6 +84,14 @@ CREATE TABLE IF NOT EXISTS site_images (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- NSFW portfolio images (separate from SFW)
+CREATE TABLE IF NOT EXISTS nsfw_portfolio_images (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  url TEXT NOT NULL,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =============================================================================
 -- MIGRATIONS
 -- =============================================================================
@@ -119,6 +128,7 @@ ALTER TABLE faq_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workflow_steps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_images ENABLE ROW LEVEL SECURITY;
+ALTER TABLE nsfw_portfolio_images ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies before recreating
 DO $$ BEGIN
@@ -136,6 +146,8 @@ DO $$ BEGIN
   DROP POLICY IF EXISTS "Authenticated write site_config" ON site_config;
   DROP POLICY IF EXISTS "Public read site_images" ON site_images;
   DROP POLICY IF EXISTS "Authenticated write site_images" ON site_images;
+  DROP POLICY IF EXISTS "Public read nsfw_portfolio_images" ON nsfw_portfolio_images;
+  DROP POLICY IF EXISTS "Authenticated write nsfw_portfolio_images" ON nsfw_portfolio_images;
 END $$;
 
 -- Public read access for all tables
@@ -146,6 +158,7 @@ CREATE POLICY "Public read faq_items" ON faq_items FOR SELECT USING (true);
 CREATE POLICY "Public read workflow_steps" ON workflow_steps FOR SELECT USING (true);
 CREATE POLICY "Public read site_config" ON site_config FOR SELECT USING (true);
 CREATE POLICY "Public read site_images" ON site_images FOR SELECT USING (true);
+CREATE POLICY "Public read nsfw_portfolio_images" ON nsfw_portfolio_images FOR SELECT USING (true);
 
 -- Allow authenticated users to modify
 CREATE POLICY "Authenticated write portfolio_images" ON portfolio_images FOR ALL USING (auth.role() = 'authenticated');
@@ -155,6 +168,7 @@ CREATE POLICY "Authenticated write faq_items" ON faq_items FOR ALL USING (auth.r
 CREATE POLICY "Authenticated write workflow_steps" ON workflow_steps FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write site_config" ON site_config FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write site_images" ON site_images FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write nsfw_portfolio_images" ON nsfw_portfolio_images FOR ALL USING (auth.role() = 'authenticated');
 
 -- =============================================================================
 -- STORAGE POLICIES
@@ -183,10 +197,3 @@ INSERT INTO site_config (key, value) VALUES
   ('description', 'Clean, stylish, performance-friendly avatars built for VRChat.'),
   ('discord', 'BlueyBarks')
 ON CONFLICT (key) DO NOTHING;
-
--- Force PostgREST to reload schema cache after migrations
-DO $$
-BEGIN
-  PERFORM pg_notify('pgrst', 'reload schema');
-EXCEPTION WHEN others THEN NULL;
-END $$;

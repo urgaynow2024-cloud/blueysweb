@@ -81,6 +81,69 @@ export async function getSiteImages() {
   return result;
 }
 
+export async function getNsfwPortfolioImages() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("nsfw_portfolio_images").select("*").order("sort_order", { ascending: true });
+  if (error || !data) return [];
+  return data;
+}
+
+export async function uploadNsfwPortfolioImage(file: File) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const ext = file.name.split(".").pop();
+  const storagePath = `nsfw/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  
+  const { data: uploadData, error: uploadError } = await supabase.storage
+    .from("portfolio-images")
+    .upload(storagePath, file, {
+      cacheControl: "3600",
+      upsert: true,
+    });
+
+  if (uploadError || !uploadData) {
+    console.error("NSFW upload error:", uploadError);
+    return null;
+  }
+
+  const { data: urlData } = supabase.storage.from("portfolio-images").getPublicUrl(storagePath);
+  const url = urlData.publicUrl;
+
+  const { data: dbData, error: dbError } = await supabase
+    .from("nsfw_portfolio_images")
+    .insert([{ url }])
+    .select();
+
+  if (dbError || !dbData || dbData.length === 0) {
+    console.error("NSFW DB insert error:", dbError);
+    await supabase.storage.from("portfolio-images").remove([storagePath]);
+    return null;
+  }
+
+  return { id: dbData[0].id, url, path: storagePath };
+}
+
+export async function removeNsfwPortfolioImage(id: string, path?: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  
+  if (path) {
+    await supabase.storage.from("portfolio-images").remove([path]);
+  }
+
+  const { error } = await supabase.from("nsfw_portfolio_images").delete().eq("id", id);
+  return !error;
+}
+
+export async function reorderNsfwPortfolioImages(items: { id: string; sort_order: number }[]) {
+  if (!isSupabaseConfigured || !supabase) return;
+  for (const item of items) {
+    const { error } = await supabase
+      .from("nsfw_portfolio_images")
+      .update({ sort_order: item.sort_order })
+      .eq("id", item.id);
+    if (error) console.error("NSFW reorder error:", error);
+  }
+}
+
 export async function uploadImage(file: File, path?: string): Promise<string | null> {
   if (!isSupabaseConfigured || !supabase) return null;
   const ext = file.name.split(".").pop();

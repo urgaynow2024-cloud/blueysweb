@@ -5,6 +5,7 @@ import PortfolioAdmin from "@/components/PortfolioAdmin";
 import { Star, CheckCircle2, Trash2, Edit2, ChevronRight, Settings, ImageIcon, Tag, HelpCircle, BarChart3, Save, RotateCcw, LogOut } from "lucide-react";
 import StarRating from "@/components/StarRating";
 import SiteImagesAdmin from "@/components/SiteImagesAdmin";
+import NsfwPortfolioAdmin from "@/components/NsfwPortfolioAdmin";
 import { uploadImage, approveReview, updateReview, deleteReview } from "@/lib/db";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -135,7 +136,7 @@ const defaultWorkflow = [
 
 const defaultReviews: any[] = [];
 
-type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site" | "site-images";
+type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site" | "site-images" | "nsfw";
 
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "portfolio", label: "Portfolio", icon: <ImageIcon className="w-4 h-4" /> },
@@ -144,6 +145,7 @@ const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "workflow", label: "Process", icon: <ChevronRight className="w-4 h-4" /> },
   { id: "reviews", label: "Reviews", icon: <Star className="w-4 h-4" /> },
   { id: "site-images", label: "Site Images", icon: <ImageIcon className="w-4 h-4" /> },
+  { id: "nsfw", label: "NSFW Content", icon: <ImageIcon className="w-4 h-4" /> },
   { id: "site", label: "Site Info", icon: <Settings className="w-4 h-4" /> },
 ];
 
@@ -347,6 +349,18 @@ export default function AdminPage() {
                     <div>
                       <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Features (one per line)</label>
                       <textarea rows={4} value={tier.features?.join("\n")} onChange={(e) => { const arr = [...pricing]; arr[i] = { ...arr[i], features: e.target.value.split("\n").filter(Boolean) }; setPricing(arr); }} className="field resize-y" />
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id={`nsfw-${i}`}
+                          checked={tier.is_nsfw || false}
+                          onChange={(e) => { const arr = [...pricing]; arr[i] = { ...arr[i], is_nsfw: e.target.checked }; setPricing(arr); }}
+                          className="w-4 h-4 rounded border-[var(--border)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                        />
+                        <label htmlFor={`nsfw-${i}`} className="text-xs font-semibold text-[var(--text-secondary)]">
+                          NSFW Pricing Tier (18+ only)
+                        </label>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -470,6 +484,8 @@ export default function AdminPage() {
             )}
 
             {tab === "site-images" && <SiteImagesAdmin />}
+
+            {tab === "nsfw" && <NsfwPortfolioAdmin />}
           </main>
         </div>
       </div>

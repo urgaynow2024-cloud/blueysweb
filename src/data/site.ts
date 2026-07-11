@@ -81,6 +81,56 @@ export const pricingTiers = [
   },
 ];
 
+export const nsfwPricingTiers = [
+  {
+    id: "nsfw-light",
+    name: "NSFW Texture Work",
+    emoji: "🔞",
+    price: "£25 - £40",
+    badge: null,
+    popular: false,
+    features: [
+      "Mature texture edits",
+      "Suggestive clothing variants",
+      "Basic adult toggles",
+      "Texture recolours",
+      "Asset additions",
+    ],
+  },
+  {
+    id: "nsfw-custom",
+    name: "NSFW Avatar Customisation",
+    emoji: "🛠",
+    price: "£45 - £80",
+    badge: "Most Requested",
+    popular: true,
+    features: [
+      "Advanced adult toggles",
+      "Multiple mature variants",
+      "Full body customisation",
+      "Performance optimisation",
+      "Quest compatible options",
+      "Private delivery",
+    ],
+  },
+  {
+    id: "nsfw-overhaul",
+    name: "NSFW Full Overhaul",
+    emoji: "🔥",
+    price: "£90 - £150",
+    badge: null,
+    popular: false,
+    features: [
+      "Complete avatar redesign",
+      "Advanced toggle systems",
+      "Multiple style variants",
+      "Full body sculpting",
+      "Custom rigging if needed",
+      "Priority support",
+    ],
+  },
+];
+
 export const tosSections = [
   {
     title: "Payment Terms",
@@ -175,6 +225,7 @@ export const navLinks = [
   { href: "/portfolio", label: "Portfolio" },
   { href: "/services", label: "Services" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/nsfw", label: "NSFW" },
   { href: "/faq", label: "FAQ" },
   { href: "/reviews", label: "Reviews" },
   { href: "/contact", label: "Contact" },
