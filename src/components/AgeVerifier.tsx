@@ -24,22 +24,6 @@ export function isAgeVerified(): boolean {
   return verified === "true";
 }
 
-export function calculateAge(birthday: string): number {
-  const birth = new Date(birthday);
-  const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  return age;
-}
-
-export function verifyAge(birthday: string): boolean {
-  const age = calculateAge(birthday);
-  return age >= 18;
-}
-
 export function setAgeVerified() {
   if (typeof window !== "undefined") {
     localStorage.setItem(AGE_VERIFIED_KEY, "true");
@@ -55,7 +39,7 @@ export function clearAgeVerification() {
 }
 
 export default function AgeVerifier({ onVerified }: { onVerified: () => void }) {
-  const [birthday, setBirthday] = useState("");
+  const [age, setAge] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
 
@@ -63,8 +47,10 @@ export default function AgeVerifier({ onVerified }: { onVerified: () => void }) 
     e.preventDefault();
     setError("");
 
-    if (!birthday) {
-      setError("Please enter your birthday");
+    const parsedAge = parseInt(age, 10);
+
+    if (!age || isNaN(parsedAge)) {
+      setError("Please enter your age");
       return;
     }
 
@@ -73,8 +59,7 @@ export default function AgeVerifier({ onVerified }: { onVerified: () => void }) 
       return;
     }
 
-    const age = calculateAge(birthday);
-    if (age < 18) {
+    if (parsedAge < 18) {
       setError("You must be 18 or older to access this content");
       return;
     }
@@ -82,6 +67,8 @@ export default function AgeVerifier({ onVerified }: { onVerified: () => void }) 
     setAgeVerified();
     onVerified();
   }
+
+  const quickAges = [18, 19, 20, 21, 25, 30];
 
   return (
     <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
@@ -97,19 +84,48 @@ export default function AgeVerifier({ onVerified }: { onVerified: () => void }) 
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">
-              Date of Birth <span className="text-[#ff6b6b]">*</span>
+              How old are you? <span className="text-[#ff6b6b]">*</span>
             </label>
             <input
-              type="date"
-              value={birthday}
-              onChange={(e) => setBirthday(e.target.value)}
-              max={new Date().toISOString().split('T')[0]}
-              className="field"
+              type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              min="18"
+              max="120"
+              placeholder="Enter your age"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              className="field text-center text-lg"
               required
             />
+            <p className="text-xs text-[var(--text-dim)] mt-1.5">
+              Examples: 18, 21, 25, 30...
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">
+              Quick select
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {quickAges.map((quickAge) => (
+                <button
+                  key={quickAge}
+                  type="button"
+                  onClick={() => setAge(String(quickAge))}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                    age === String(quickAge)
+                      ? "bg-[var(--accent)] text-[#05070a]"
+                      : "border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-white"
+                  }`}
+                >
+                  {quickAge}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="flex items-start gap-3">
