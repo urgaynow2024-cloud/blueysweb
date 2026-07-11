@@ -88,7 +88,7 @@ export default function Home() {
             <div className="space-y-20">
               {/* Avatar Editing */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                <div className="lg:col-span-5 order-2 lg:order-1">
+                <div className={`${siteImages.avatar_editing?.url ? "lg:col-span-5 order-2 lg:order-1" : "lg:col-span-12"} `}>
                   <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-3 block">Avatar Editing</span>
                   <h3 className="text-2xl font-bold text-white mb-4">Avatar Editing</h3>
                   <p className="text-[var(--text-secondary)] mb-6 leading-relaxed">
@@ -103,37 +103,27 @@ export default function Home() {
                     ))}
                   </ul>
                 </div>
-                <div className="lg:col-span-7 order-1 lg:order-2">
-                  <div className="aspect-[16/10] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-center overflow-hidden relative">
-                    {siteImages.avatar_editing?.url ? (
+                {siteImages.avatar_editing?.url && (
+                  <div className="lg:col-span-7 order-1 lg:order-2">
+                    <div className="aspect-[16/10] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-center overflow-hidden relative">
                       <img src={siteImages.avatar_editing.url} alt="Avatar Editing" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="text-center">
-                        <div className="text-6xl opacity-10 mb-2">🎨</div>
-                        <p className="text-xs text-[var(--text-dim)]">Avatar editing render placeholder</p>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Blender Work */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                <div className="lg:col-span-7">
-                  <div className="aspect-[16/10] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-center overflow-hidden relative">
-                    {siteImages.blender_work?.url ? (
+                {siteImages.blender_work?.url && (
+                  <div className="lg:col-span-7">
+                    <div className="aspect-[16/10] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-center overflow-hidden relative">
                       <img src={siteImages.blender_work.url} alt="Blender Work" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="text-center">
-                        <div className="text-6xl opacity-10 mb-2">🔧</div>
-                        <p className="text-xs text-[var(--text-dim)]">Blender viewport placeholder</p>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
+                    </div>
                   </div>
-                </div>
-                <div className="lg:col-span-5">
+                )}
+                <div className={`${siteImages.blender_work?.url ? "lg:col-span-5" : "lg:col-span-12"}`}>
                   <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-3 block">Blender</span>
                   <h3 className="text-2xl font-bold text-white mb-4">Blender Work</h3>
                   <p className="text-[var(--text-secondary)] mb-6 leading-relaxed">
@@ -152,7 +142,7 @@ export default function Home() {
 
               {/* Unity Setup */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                <div className="lg:col-span-5 order-2 lg:order-1">
+                <div className={`${siteImages.unity_work?.url ? "lg:col-span-5 order-2 lg:order-1" : "lg:col-span-12"}`}>
                   <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-3 block">Unity</span>
                   <h3 className="text-2xl font-bold text-white mb-4">Unity Setup</h3>
                   <p className="text-[var(--text-secondary)] mb-6 leading-relaxed">
@@ -167,19 +157,14 @@ export default function Home() {
                     ))}
                   </ul>
                 </div>
-                <div className="lg:col-span-7 order-1 lg:order-2">
-                  <div className="aspect-[16/10] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-center overflow-hidden relative">
-                    {siteImages.unity_work?.url ? (
+                {siteImages.unity_work?.url && (
+                  <div className="lg:col-span-7 order-1 lg:order-2">
+                    <div className="aspect-[16/10] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-center overflow-hidden relative">
                       <img src={siteImages.unity_work.url} alt="Unity Setup" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="text-center">
-                        <div className="text-6xl opacity-10 mb-2">⚙️</div>
-                        <p className="text-xs text-[var(--text-dim)]">Unity component placeholder</p>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>

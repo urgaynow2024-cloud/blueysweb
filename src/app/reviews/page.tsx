@@ -88,10 +88,6 @@ export default function ReviewsPage() {
             </div>
           ) : (
             <div className="max-w-2xl mx-auto text-center py-16 mb-16">
-              <div className="relative inline-block mb-6">
-                <div className="absolute inset-0 bg-[var(--accent)] opacity-20 blur-3xl rounded-full" />
-                <div className="relative text-5xl">💬</div>
-              </div>
               <p className="text-[var(--text-dim)] text-lg">
                 Client reviews will appear here after commissions are completed.
               </p>

@@ -168,12 +168,12 @@ export default function SiteImagesAdmin() {
                         <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)]" />
                         <p className="text-xs">Uploading...</p>
                       </div>
-                    ) : (
-                      <>
-                        <ImageIcon className="w-8 h-8 mb-2 opacity-40" />
-                        <p className="text-xs">No image set</p>
-                      </>
-                    )}
+                  ) : (
+                    <>
+                      <ImageIcon className="w-8 h-8 mb-2 opacity-40" />
+                      <p className="text-xs">Upload an image</p>
+                    </>
+                  )}
                   </div>
                 )}
               </div>

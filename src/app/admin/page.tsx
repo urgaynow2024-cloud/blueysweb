@@ -283,21 +283,24 @@ export default function AdminPage() {
           {/* Sidebar */}
           <aside className="lg:col-span-3 xl:col-span-3">
             <div className="lg:sticky lg:top-24">
-              <nav className="space-y-1">
+              <div className="lg:space-y-1 flex lg:flex-col gap-2 overflow-x-auto pb-2 lg:pb-0 -mx-1 px-1">
                 {tabs.map((t) => (
                   <button
                     key={t.id}
                     onClick={() => setTab(t.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${tab === t.id ? "bg-[var(--accent)] text-[#05070a] shadow-lg shadow-[var(--accent)]/20" : "text-[var(--text-secondary)] hover:text-white hover:bg-white/5"}`}
+                    className={`whitespace-nowrap flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      tab === t.id
+                        ? "bg-[var(--accent)] text-[#05070a] shadow-lg shadow-[var(--accent)]/20"
+                        : "text-[var(--text-secondary)] hover:text-white hover:bg-white/5 border border-[var(--border)]"
+                    }`}
                   >
                     {t.icon}
                     {t.label}
-                    {tab === t.id && <ChevronRight className="w-4 h-4 ml-auto" />}
                   </button>
                 ))}
-              </nav>
+              </div>
 
-              <div className="mt-6 space-y-2">
+              <div className="mt-4 lg:mt-6 space-y-2">
                 <button onClick={saveAll} disabled={saved} className="w-full btn-secondary !text-sm !py-2.5 flex items-center justify-center gap-2">
                   <Save className="w-4 h-4" /> {saved ? "Saved" : "Save All"}
                 </button>

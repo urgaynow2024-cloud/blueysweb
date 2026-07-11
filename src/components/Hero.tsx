@@ -33,16 +33,7 @@ export default function Hero() {
               <div className="relative aspect-[4/3] lg:aspect-[16/11] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] rounded-xl overflow-hidden border border-[var(--border)] shadow-2xl shadow-black/40">
                 {heroImage ? (
                   <img src={heroImage} alt="Featured avatar render" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-8xl md:text-[10rem] mb-2 opacity-[0.07] group-hover:opacity-[0.12] group-hover:scale-105 transition-all duration-700 select-none">
-                        🎨
-                      </div>
-                      <p className="text-sm text-[var(--text-dim)]">Add your best avatar render here</p>
-                    </div>
-                  </div>
-                )}
+                ) : null}
 
                 {/* Gradient overlay for depth */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-60" />
@@ -82,11 +73,11 @@ export default function Hero() {
             <div className="max-w-lg">
               <p className="section-label mb-5">VRChat Avatar Commissions</p>
               
-              <h1 className="text-4xl md:text-5xl lg:text-[3.4rem] font-bold text-white mb-5 tracking-tight leading-[1.1]">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.4rem] font-bold text-white mb-5 tracking-tight leading-[1.1]">
                 Bluey&rsquo;s <span className="text-gradient">Avatar Commissions</span>
               </h1>
 
-              <p className="text-base md:text-lg text-[var(--text-secondary)] mb-8 leading-relaxed max-w-md">
+              <p className="text-sm sm:text-base md:text-lg text-[var(--text-secondary)] mb-8 leading-relaxed max-w-md">
                 I create and customise VRChat avatars using Blender and Unity. Clean, stylish, performance-friendly avatars built for your VR experience.
               </p>
 

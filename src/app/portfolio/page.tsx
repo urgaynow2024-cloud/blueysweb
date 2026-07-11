@@ -50,23 +50,23 @@ export default function PortfolioPage() {
       <section className="page relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-dots opacity-40" />
         <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="text-center mb-12 page-head">
+          <div className="text-center mb-10 md:mb-12 page-head">
             <span className="section-label justify-center">Portfolio</span>
             <h2 className="display-lg text-white mb-3">My Work</h2>
             <p className="text-[var(--text-secondary)] max-w-md mx-auto">Browse avatar commissions and edits.</p>
           </div>
 
           {loading ? (
-            <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)}
             </div>
           ) : images.length > 0 ? (
-            <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {images.map((url, i) => (
                 <div
                   key={i}
                   onClick={() => setLightboxIndex(i)}
-                  className="break-inside-avoid rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] group hover:border-[var(--border-hover)] transition-all duration-500 hover:shadow-2xl hover:shadow-black/30 cursor-pointer"
+                  className="rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] group hover:border-[var(--border-hover)] transition-all duration-500 hover:shadow-2xl hover:shadow-black/30 cursor-pointer"
                 >
                   <img
                     src={url}
@@ -78,11 +78,7 @@ export default function PortfolioPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20">
-              <div className="relative inline-block mb-6">
-                <div className="absolute inset-0 bg-[var(--accent)] opacity-20 blur-3xl rounded-full" />
-                <div className="relative text-6xl">🎨</div>
-              </div>
+            <div className="text-center py-16">
               <p className="text-[var(--text-dim)] text-lg">Portfolio images will appear here after upload.</p>
             </div>
           )}

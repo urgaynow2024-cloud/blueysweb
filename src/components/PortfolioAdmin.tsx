@@ -286,17 +286,21 @@ export default function PortfolioAdmin() {
       {loading ? (
         <div className="text-center py-8 text-[var(--text-dim)]">Loading...</div>
       ) : images.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {images.map((image, i) => (
-            <div key={image.id || i} className="relative group rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]">
-              {image.uploading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          {images.map((image, i) => {
+            let cardContent = null;
+
+            if (image.uploading) {
+              cardContent = (
                 <div className="w-full flex items-center justify-center p-6">
                   <div className="text-center">
                     <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)] mx-auto mb-2" />
                     <p className="text-xs text-[var(--text-dim)]">Uploading...</p>
                   </div>
                 </div>
-              ) : image.error ? (
+              );
+            } else if (image.error) {
+              cardContent = (
                 <div className="w-full flex flex-col items-center justify-center p-4">
                   <p className="text-xs text-red-400 text-center mb-2">{image.error}</p>
                   <button
@@ -308,8 +312,10 @@ export default function PortfolioAdmin() {
                     Retry
                   </button>
                 </div>
-              ) : (
-                <>
+              );
+            } else {
+              cardContent = (
+                <div className="relative">
                   <img
                     src={image.url}
                     alt={`Portfolio ${i + 1}`}
@@ -346,16 +352,18 @@ export default function PortfolioAdmin() {
                   <div className="absolute top-2 left-2 w-6 h-6 rounded-md bg-black/60 text-white text-xs flex items-center justify-center font-medium">
                     {i + 1}
                   </div>
-                </>
-              )}
-            </div>
-          ))}
+                </div>
+              );
+            }
+
+            return (
+              <div key={image.id || i} className="relative group rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]">
+                {cardContent}
+              </div>
+            );
+          })}
         </div>
-      ) : (
-        <div className="text-center py-8 text-[var(--text-dim)] text-sm">
-          No images yet. Upload some to get started.
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }
