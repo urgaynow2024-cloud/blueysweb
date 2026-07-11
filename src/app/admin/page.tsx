@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import PortfolioAdmin from "@/components/PortfolioAdmin";
-import { Star, CheckCircle2, Trash2, Edit2, ChevronRight, Settings, ImageIcon, Tag, HelpCircle, BarChart3, Save, RotateCcw, LogOut } from "lucide-react";
+import { Star, CheckCircle2, Trash2, Edit2, ChevronRight, Settings, ImageIcon, Tag, HelpCircle, BarChart3, Save, RotateCcw, LogOut, Clock } from "lucide-react";
 import StarRating from "@/components/StarRating";
 import SiteImagesAdmin from "@/components/SiteImagesAdmin";
 import NsfwPortfolioAdmin from "@/components/NsfwPortfolioAdmin";
+import QueueAdmin from "@/components/QueueAdmin";
 import { uploadImage, approveReview, updateReview, deleteReview } from "@/lib/db";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -136,7 +137,7 @@ const defaultWorkflow = [
 
 const defaultReviews: any[] = [];
 
-type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site" | "site-images" | "nsfw";
+type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site" | "site-images" | "nsfw" | "queue";
 
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "portfolio", label: "Portfolio", icon: <ImageIcon className="w-4 h-4" /> },
@@ -146,6 +147,7 @@ const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "reviews", label: "Reviews", icon: <Star className="w-4 h-4" /> },
   { id: "site-images", label: "Site Images", icon: <ImageIcon className="w-4 h-4" /> },
   { id: "nsfw", label: "NSFW Content", icon: <ImageIcon className="w-4 h-4" /> },
+  { id: "queue", label: "Queue", icon: <Clock className="w-4 h-4" /> },
   { id: "site", label: "Site Info", icon: <Settings className="w-4 h-4" /> },
 ];
 
@@ -486,6 +488,8 @@ export default function AdminPage() {
             {tab === "site-images" && <SiteImagesAdmin />}
 
             {tab === "nsfw" && <NsfwPortfolioAdmin />}
+
+            {tab === "queue" && <QueueAdmin />}
           </main>
         </div>
       </div>

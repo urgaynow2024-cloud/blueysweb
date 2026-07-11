@@ -95,8 +95,22 @@ CREATE TABLE IF NOT EXISTS site_images (
 CREATE TABLE IF NOT EXISTS nsfw_portfolio_images (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   url TEXT NOT NULL,
+  path TEXT,
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Commission queue items
+CREATE TABLE IF NOT EXISTS queue_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  stage TEXT DEFAULT 'Request Received',
+  progress INTEGER DEFAULT 0,
+  estimated_completion TEXT,
+  status TEXT DEFAULT 'active',
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- =============================================================================
@@ -136,6 +150,7 @@ ALTER TABLE workflow_steps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE nsfw_portfolio_images ENABLE ROW LEVEL SECURITY;
+ALTER TABLE queue_items ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies before recreating
 DO $$ BEGIN
@@ -155,6 +170,8 @@ DO $$ BEGIN
   DROP POLICY IF EXISTS "Authenticated write site_images" ON site_images;
   DROP POLICY IF EXISTS "Public read nsfw_portfolio_images" ON nsfw_portfolio_images;
   DROP POLICY IF EXISTS "Authenticated write nsfw_portfolio_images" ON nsfw_portfolio_images;
+  DROP POLICY IF EXISTS "Public read queue_items" ON queue_items;
+  DROP POLICY IF EXISTS "Authenticated write queue_items" ON queue_items;
 END $$;
 
 -- Public read access for all tables
@@ -166,6 +183,7 @@ CREATE POLICY "Public read workflow_steps" ON workflow_steps FOR SELECT USING (t
 CREATE POLICY "Public read site_config" ON site_config FOR SELECT USING (true);
 CREATE POLICY "Public read site_images" ON site_images FOR SELECT USING (true);
 CREATE POLICY "Public read nsfw_portfolio_images" ON nsfw_portfolio_images FOR SELECT USING (true);
+CREATE POLICY "Public read queue_items" ON queue_items FOR SELECT USING (true);
 
 -- Allow authenticated users to modify
 CREATE POLICY "Authenticated write portfolio_images" ON portfolio_images FOR ALL USING (auth.role() = 'authenticated');
@@ -176,6 +194,7 @@ CREATE POLICY "Authenticated write workflow_steps" ON workflow_steps FOR ALL USI
 CREATE POLICY "Authenticated write site_config" ON site_config FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write site_images" ON site_images FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write nsfw_portfolio_images" ON nsfw_portfolio_images FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write queue_items" ON queue_items FOR ALL USING (auth.role() = 'authenticated');
 
 -- =============================================================================
 -- STORAGE POLICIES
@@ -202,5 +221,21 @@ INSERT INTO site_config (key, value) VALUES
   ('name', 'Bluey''s Avatar Commissions'),
   ('tagline', 'VRChat Avatar Edits • Blender Work • Unity Setup'),
   ('description', 'Clean, stylish, performance-friendly avatars built for VRChat.'),
-  ('discord', 'BlueyBarks')
+  ('discord', 'BlueyBarks'),
+  ('queue_status', 'open'),
+  ('queue_slots_total', '8'),
+  ('queue_slots_used', '4'),
+  ('queue_wait_time', '2-3 weeks'),
+  ('queue_notes', 'Currently working through larger commissions. Small edits may be completed faster.'),
+  ('queue_last_updated', '2026-07-11'),
+  ('stat_commissions', '150+'),
+  ('stat_clients', '120+'),
+  ('stat_returning', '40+'),
+  ('stat_rating', '4.9'),
+  ('stat_reviews', '85'),
+  ('stat_experience', '2+'),
+  ('stat_response', '1-3 hours'),
+  ('stat_delivery', '5-10 days'),
+  ('stat_blender', '2+'),
+  ('stat_unity', '2+')
 ON CONFLICT (key) DO NOTHING;

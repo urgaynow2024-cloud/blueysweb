@@ -84,7 +84,11 @@ export async function getSiteImages() {
 export async function getNsfwPortfolioImages() {
   if (!isSupabaseConfigured || !supabase) return [];
   const { data, error } = await supabase.from("nsfw_portfolio_images").select("*").order("sort_order", { ascending: true });
-  if (error || !data) return [];
+  if (error) {
+    console.error("Failed to load NSFW portfolio images:", error);
+    return [];
+  }
+  if (!data) return [];
   return data;
 }
 

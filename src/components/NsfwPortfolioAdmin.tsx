@@ -32,10 +32,12 @@ export default function NsfwPortfolioAdmin() {
     setError(null);
     try {
       const imgs = await getNsfwPortfolioImages();
+      console.log("NSFW images loaded:", imgs.length, imgs);
       const urls = imgs.map((i: any) => ({ url: i.url, id: i.id, path: i.path })).filter((img: any) => img.url);
       setImages(urls);
     } catch (e) {
-      setError("Failed to load NSFW images");
+      console.error("Failed to load NSFW images:", e);
+      setError("Failed to load NSFW images. Check console for details.");
     } finally {
       setLoading(false);
     }
@@ -154,25 +156,39 @@ export default function NsfwPortfolioAdmin() {
           <h2 className="text-lg font-semibold text-white mb-1">NSFW Portfolio Images</h2>
           <p className="text-sm text-[var(--text-secondary)]">Manage adult content portfolio. Only visible to verified 18+ users.</p>
         </div>
-        <button
-          onClick={saveChanges}
-          disabled={saving || images.length === 0 || uploading}
-          className="btn-primary !text-sm !py-2 !px-4 inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {saving ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
-          ) : saved ? (
-            <><CheckCircle2 className="w-4 h-4" /> Saved</>
-          ) : (
-            <><Save className="w-4 h-4" /> Save Changes</>
-          )}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={loadImages}
+            className="!text-sm !py-2 !px-3 btn-secondary inline-flex items-center gap-1.5"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Reload
+          </button>
+          <button
+            onClick={saveChanges}
+            disabled={saving || images.length === 0 || uploading}
+            className="btn-primary !text-sm !py-2 !px-4 inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+            ) : saved ? (
+              <><CheckCircle2 className="w-4 h-4" /> Saved</>
+            ) : (
+              <><Save className="w-4 h-4" /> Save Changes</>
+            )}
+          </button>
+        </div>
       </div>
 
+      <p className="text-xs text-[var(--text-dim)] mb-4">
+        {images.length} image{images.length !== 1 ? 's' : ''} loaded
+      </p>
+
       {error && (
-        <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-2">
-          <span className="flex-1">{error}</span>
-          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-300">&times;</button>
+        <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+          <strong>Error loading images.</strong> Make sure you have run the updated Supabase schema (`supabase/schema.sql`). If the table doesn't exist, create it in the Supabase SQL Editor.
         </div>
       )}
 

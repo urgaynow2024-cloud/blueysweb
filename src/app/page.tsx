@@ -7,6 +7,7 @@ import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getAppro
 import Link from "next/link";
 import { Star, Zap } from "lucide-react";
 import ClientReviewForm from "@/components/ClientReviewForm";
+import StatsSection from "@/components/StatsSection";
 
 export default function Home() {
   const [site, setSite] = useState<any>({});
@@ -370,6 +371,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <StatsSection />
 
         <div className="divider" />
 

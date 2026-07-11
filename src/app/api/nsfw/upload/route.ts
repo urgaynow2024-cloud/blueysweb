@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     const { data: dbData, error: dbError } = await supabaseAdmin
       .from("nsfw_portfolio_images")
-      .insert([{ url }])
+      .insert([{ url, path: storagePath }])
       .select();
 
     if (dbError || !dbData || dbData.length === 0) {
