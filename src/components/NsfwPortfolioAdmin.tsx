@@ -225,7 +225,7 @@ export default function NsfwPortfolioAdmin() {
       {loading ? (
         <div className="text-center py-8 text-[var(--text-dim)]">Loading...</div>
       ) : images.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div className="columns-1 sm:columns-2 md:columns-3 gap-4 space-y-4">
           {images.map((image, i) => {
             let cardContent = null;
 

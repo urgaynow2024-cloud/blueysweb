@@ -61,17 +61,17 @@ export default function PortfolioPage() {
               {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)}
             </div>
           ) : images.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
               {images.map((url, i) => (
                 <div
                   key={i}
                   onClick={() => setLightboxIndex(i)}
-                  className="rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] group hover:border-[var(--border-hover)] transition-all duration-500 hover:shadow-2xl hover:shadow-black/30 cursor-pointer"
+                  className="break-inside-avoid rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] group hover:border-[var(--border-hover)] transition-all duration-500 hover:shadow-2xl hover:shadow-black/30 cursor-pointer"
                 >
                   <img
                     src={url}
                     alt={`Portfolio ${i + 1}`}
-                    className="w-full h-auto object-contain p-2 group-hover:scale-[1.02] transition-transform duration-500"
+                    className="w-full h-auto block object-contain p-2"
                     loading="lazy"
                   />
                 </div>

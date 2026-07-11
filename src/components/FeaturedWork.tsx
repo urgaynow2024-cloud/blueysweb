@@ -52,7 +52,7 @@ export default function FeaturedWork() {
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Featured Work</h2>
             <p className="text-[var(--text-secondary)] max-w-xl">Recent commissions and avatar customisations.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="columns-1 sm:columns-2 gap-4 space-y-4">
             {[1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)}
           </div>
         </div>
@@ -71,10 +71,10 @@ export default function FeaturedWork() {
 
         {images.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="columns-1 sm:columns-2 gap-4 space-y-4">
               {images.map((url, i) => (
-                <div key={i} className="rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] hover:border-[var(--border-hover)] transition-all duration-500 hover:shadow-2xl hover:shadow-black/30">
-                  <img src={url} alt={`Work ${i + 1}`} className="w-full h-auto object-contain p-2" loading="lazy" />
+                <div key={i} className="break-inside-avoid rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] hover:border-[var(--border-hover)] transition-all duration-500 hover:shadow-2xl hover:shadow-black/30">
+                  <img src={url} alt={`Work ${i + 1}`} className="w-full h-auto block object-contain p-2" loading="lazy" />
                 </div>
               ))}
             </div>
