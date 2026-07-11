@@ -24,12 +24,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`} style={{ colorScheme: "dark" }}>
-      <body className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--text)]">
+      <body className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--text)] pb-20 md:pb-0">
         <div className="bg-mesh" />
         <div className="bg-noise" />
         <Navbar />
         <main className="flex-1 relative z-10">{children}</main>
         <Footer />
+        {/* Mobile sticky CTA */}
+        <div className="md:hidden fixed bottom-4 left-4 right-4 z-40">
+          <a
+            href="/contact"
+            className="flex items-center justify-center gap-2 w-full bg-[var(--accent)] text-[#05070a] px-6 py-3.5 rounded-xl font-bold text-base shadow-2xl shadow-[var(--accent)]/30 hover:shadow-[var(--accent)]/40 transition-all"
+          >
+            Commission Me
+          </a>
+        </div>
       </body>
     </html>
   );

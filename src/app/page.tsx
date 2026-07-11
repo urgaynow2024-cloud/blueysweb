@@ -5,7 +5,7 @@ import Hero from "@/components/Hero";
 import FeaturedWork from "@/components/FeaturedWork";
 import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages } from "@/lib/db";
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { Star, Zap } from "lucide-react";
 import ClientReviewForm from "@/components/ClientReviewForm";
 
 export default function Home() {
@@ -178,10 +178,10 @@ export default function Home() {
             <div className="text-center mb-12 md:mb-16">
               <span className="section-label justify-center">Process</span>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">How it works</h2>
-              <p className="text-[var(--text-secondary)]">Simple, transparent workflow from request to delivery.</p>
+              <p className="text-[var(--text-secondary)] max-w-lg mx-auto">A simple, transparent workflow from request to delivery.</p>
             </div>
 
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-5xl mx-auto">
               <div className="grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-4">
                 {workflow.map((step, i) => (
                   <div key={step.title || i} className="relative text-center">
@@ -197,6 +197,12 @@ export default function Home() {
                 ))}
               </div>
             </div>
+
+            <div className="text-center mt-10">
+              <a href="/contact" className="btn-secondary inline-flex">
+                Start Your Commission
+              </a>
+            </div>
           </div>
         </section>
 
@@ -211,33 +217,45 @@ export default function Home() {
               <p className="text-[var(--text-secondary)]">What clients say about working with me.</p>
             </div>
 
-            {reviews.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {reviews.map((review, i) => (
-                  <div key={review.id || i} className="bg-[var(--bg-card)] rounded-2xl p-6 md:p-8 border border-[var(--border)] relative overflow-hidden group hover:border-[var(--border-hover)] transition-all duration-500">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] opacity-[0.02] blur-3xl rounded-full pointer-events-none group-hover:opacity-[0.05] transition-opacity" />
-                    <div className="relative">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="text-4xl">🎭</div>
-                        <div>
-                          <p className="font-bold text-white">{review.display_name}</p>
-                          <div className="flex gap-0.5 mt-0.5">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star key={star} className={`w-4 h-4 ${star <= (review.rating || 5) ? "text-[var(--accent)] fill-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                      <p className="text-[var(--text-secondary)] leading-relaxed italic">"{review.review_text}"</p>
-                      {review.image_url && (
-                        <div className="mt-4">
-                          <img src={review.image_url} alt="Review image" className="w-full h-48 object-cover rounded-xl border border-[var(--border)]" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+{reviews.length > 0 ? (
+  <>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {reviews.map((review, i) => (
+        <div key={review.id || i} className="bg-[var(--bg-card)] rounded-2xl p-6 md:p-8 border border-[var(--border)] relative overflow-hidden group hover:border-[var(--border-hover)] transition-all duration-500">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] opacity-[0.02] blur-3xl rounded-full pointer-events-none group-hover:opacity-[0.05] transition-opacity" />
+          <div className="relative">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="text-4xl">🎭</div>
+              <div>
+                <p className="font-bold text-white">{review.display_name}</p>
+                <div className="flex gap-0.5 mt-0.5">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star key={star} className={`w-4 h-4 ${star <= (review.rating || 5) ? "text-[var(--accent)] fill-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
+                  ))}
+                </div>
               </div>
+            </div>
+            <p className="text-[var(--text-secondary)] leading-relaxed italic">"{review.review_text}"</p>
+            {review.image_url && (
+              <div className="mt-4">
+                <img src={review.image_url} alt="Review image" className="w-full h-48 object-cover rounded-xl border border-[var(--border)]" />
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+    {reviews.length > 2 && (
+      <div className="text-center mt-8">
+        <Link href="/reviews" className="btn-secondary inline-flex items-center gap-2">
+          View All Reviews
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </Link>
+      </div>
+    )}
+  </>
             ) : (
               <div className="text-center py-16">
                 <div className="text-5xl mb-4 opacity-20">💬</div>
@@ -297,7 +315,7 @@ export default function Home() {
               <span className="section-label justify-center">Rates</span>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Pricing</h2>
               <p className="text-[var(--text-secondary)] max-w-lg mx-auto">
-                Prices vary depending on avatar complexity, optimisation requirements, and assets used.
+                Prices vary depending on complexity, optimisation requirements, and assets used.
               </p>
             </div>
 
@@ -342,6 +360,13 @@ export default function Home() {
                   </a>
                 </div>
               ))}
+            </div>
+
+            <div className="text-center mt-10">
+              <p className="text-xs text-[var(--text-dim)] mb-3">All pricing is per-avatar and varies by complexity.</p>
+              <a href="/nsfw" className="text-sm text-[var(--accent)] hover:text-white transition-colors">
+                View NSFW Pricing &rarr;
+              </a>
             </div>
           </div>
         </section>
