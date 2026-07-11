@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
+function sanitiseFileName(name: string): string {
+  return name
+    .replace(/[^a-zA-Z0-9_.-]/g, "_")
+    .replace(/_{2,}/g, "_")
+    .slice(0, 80);
+}
+
 export async function GET() {
   try {
     if (!supabaseAdmin) {
@@ -32,7 +39,7 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const key = formData.get("key") as string | null;
+    const key = (formData.get("key") as string | null)?.trim();
 
     if (!file || !key) {
       return NextResponse.json({ error: "File and key are required" }, { status: 400 });
@@ -42,19 +49,45 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const ext = file.name.split(".").pop() || "bin";
-    const storagePath = `site/${key}.${ext}`;
+    const originalName = file.name || "upload";
+    const ext = originalName.split(".").pop() || "bin";
+    const safeKey = sanitiseFileName(key);
+    const storagePath = `site-images/${safeKey}.${ext}`;
+
+    const uploadOptions: any = {
+      cacheControl: "3600",
+      upsert: true,
+    };
+
+    if (file.type) {
+      uploadOptions.contentType = file.type;
+    }
+
+    const bucketCheck = await supabaseAdmin.storage.getBucket("portfolio-images");
+    if (bucketCheck.error) {
+      console.error("Bucket check error:", bucketCheck.error);
+      return NextResponse.json(
+        {
+          error: "Storage bucket 'portfolio-images' not found. Create it in Supabase Dashboard → Storage → New bucket.",
+          details: bucketCheck.error.message,
+        },
+        { status: 500 }
+      );
+    }
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from("portfolio-images")
-      .upload(storagePath, file, {
-        cacheControl: "3600",
-        upsert: true,
-      });
+      .upload(storagePath, file, uploadOptions);
 
     if (uploadError || !uploadData) {
       console.error("Storage upload error:", uploadError);
-      return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+      return NextResponse.json(
+        {
+          error: "Upload failed",
+          details: uploadError?.message || "Unknown storage error",
+        },
+        { status: 500 }
+      );
     }
 
     const { data: urlData } = supabaseAdmin.storage.from("portfolio-images").getPublicUrl(storagePath);

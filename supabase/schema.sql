@@ -8,6 +8,13 @@
 -- Name: portfolio-images
 -- Public bucket: ON
 -- Then run the storage policy section below
+--
+-- IMPORTANT: If uploads fail with "Bad Request" or "StorageApiError":
+-- 1. Confirm the bucket name is exactly: portfolio-images
+-- 2. Ensure the bucket is set to Public
+-- 3. Run the storage policy SQL below
+-- 4. Check bucket limits and file size settings
+-- =============================================================================
 
 -- =============================================================================
 -- TABLES
