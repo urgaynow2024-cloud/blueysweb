@@ -225,7 +225,7 @@ export const navLinks = [
   { href: "/portfolio", label: "Portfolio" },
   { href: "/services", label: "Services" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/queue", label: "Queue" },
+  { href: "/links", label: "Links" },
   { href: "/nsfw", label: "NSFW" },
   { href: "/faq", label: "FAQ" },
   { href: "/reviews", label: "Reviews" },

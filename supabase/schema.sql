@@ -113,6 +113,16 @@ CREATE TABLE IF NOT EXISTS queue_items (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Social links / dynamic links page
+CREATE TABLE IF NOT EXISTS social_links (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  url TEXT NOT NULL,
+  description TEXT,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =============================================================================
 -- MIGRATIONS
 -- =============================================================================
@@ -151,6 +161,7 @@ ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE nsfw_portfolio_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE queue_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE social_links ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies before recreating
 DO $$ BEGIN
@@ -172,6 +183,8 @@ DO $$ BEGIN
   DROP POLICY IF EXISTS "Authenticated write nsfw_portfolio_images" ON nsfw_portfolio_images;
   DROP POLICY IF EXISTS "Public read queue_items" ON queue_items;
   DROP POLICY IF EXISTS "Authenticated write queue_items" ON queue_items;
+  DROP POLICY IF EXISTS "Public read social_links" ON social_links;
+  DROP POLICY IF EXISTS "Authenticated write social_links" ON social_links;
 END $$;
 
 -- Public read access for all tables
@@ -184,6 +197,7 @@ CREATE POLICY "Public read site_config" ON site_config FOR SELECT USING (true);
 CREATE POLICY "Public read site_images" ON site_images FOR SELECT USING (true);
 CREATE POLICY "Public read nsfw_portfolio_images" ON nsfw_portfolio_images FOR SELECT USING (true);
 CREATE POLICY "Public read queue_items" ON queue_items FOR SELECT USING (true);
+CREATE POLICY "Public read social_links" ON social_links FOR SELECT USING (true);
 
 -- Allow authenticated users to modify
 CREATE POLICY "Authenticated write portfolio_images" ON portfolio_images FOR ALL USING (auth.role() = 'authenticated');
@@ -195,6 +209,7 @@ CREATE POLICY "Authenticated write site_config" ON site_config FOR ALL USING (au
 CREATE POLICY "Authenticated write site_images" ON site_images FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write nsfw_portfolio_images" ON nsfw_portfolio_images FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write queue_items" ON queue_items FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write social_links" ON social_links FOR ALL USING (auth.role() = 'authenticated');
 
 -- =============================================================================
 -- STORAGE POLICIES

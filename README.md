@@ -64,8 +64,8 @@ This creates all tables, RLS policies, and storage policies.
 - **Reviews Section** - Client reviews with star ratings and optional images
 - **Pricing Section** - SFW pricing tiers with NSFW pricing link
 - **FAQ Section** - Common questions with hover effects
-- **Commission Queue** - Public queue page showing availability, slots, active commissions, progress, and wait times
-- **Statistics Section** - Animated counters showing completed commissions, happy clients, ratings, experience, and more
+- **Commission Availability** - Compact homepage card showing status, available slots, and optional notes
+- **Links Page** - Dynamic links hub for socials, platforms, stores, and contact methods
 - **Contact Form** - Commission request form
 - **NSFW Section** - Age-gated adult content with separate portfolio and pricing
 
@@ -76,7 +76,7 @@ Access with password: `blueyadmin`
 - **Portfolio Management** - Upload, reorder, delete portfolio images with server-side storage
 - **Site Images** - Manage hero and service images (Avatar Editing, Blender Work, Unity Setup)
 - **NSFW Content** - Separate portfolio management for adult content
-- **Queue Management** - Commission queue with status, slots, progress tracking, and wait times
+- **Links Management** - Add, edit, or remove social/platform links shown on the `/links` page
 - **Pricing Editor** - Edit pricing tiers with NSFW flag support
 - **FAQ Editor** - Manage FAQ items
 - **Process Editor** - Update workflow steps

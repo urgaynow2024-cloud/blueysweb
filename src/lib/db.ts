@@ -238,3 +238,25 @@ export async function deleteReview(id: string) {
   const { error } = await supabase.from("reviews").delete().eq("id", id);
   return !error;
 }
+
+export async function getSocialLinks() {
+  return fetchAll("social_links", []);
+}
+
+export async function addSocialLink(data: { name: string; url: string; description?: string }) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("social_links").insert([{ name: data.name, url: data.url, description: data.description || null }]).select();
+  return error ? null : result?.[0];
+}
+
+export async function updateSocialLink(id: string, data: { name?: string; url?: string; description?: string }) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("social_links").update(data).eq("id", id);
+  return !error;
+}
+
+export async function deleteSocialLink(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("social_links").delete().eq("id", id);
+  return !error;
+}

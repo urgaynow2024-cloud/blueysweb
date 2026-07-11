@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import PortfolioAdmin from "@/components/PortfolioAdmin";
-import { Star, CheckCircle2, Trash2, Edit2, ChevronRight, Settings, ImageIcon, Tag, HelpCircle, BarChart3, Save, RotateCcw, LogOut, Clock } from "lucide-react";
+import { Star, CheckCircle2, Trash2, Edit2, ChevronRight, Settings, ImageIcon, Tag, HelpCircle, BarChart3, Save, RotateCcw, LogOut, Link as LinkIcon } from "lucide-react";
 import StarRating from "@/components/StarRating";
 import SiteImagesAdmin from "@/components/SiteImagesAdmin";
 import NsfwPortfolioAdmin from "@/components/NsfwPortfolioAdmin";
-import QueueAdmin from "@/components/QueueAdmin";
+import SocialLinksAdmin from "@/components/SocialLinksAdmin";
 import { uploadImage, approveReview, updateReview, deleteReview } from "@/lib/db";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -137,7 +137,7 @@ const defaultWorkflow = [
 
 const defaultReviews: any[] = [];
 
-type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site" | "site-images" | "nsfw" | "queue";
+type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site" | "site-images" | "nsfw" | "social-links";
 
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "portfolio", label: "Portfolio", icon: <ImageIcon className="w-4 h-4" /> },
@@ -147,7 +147,7 @@ const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "reviews", label: "Reviews", icon: <Star className="w-4 h-4" /> },
   { id: "site-images", label: "Site Images", icon: <ImageIcon className="w-4 h-4" /> },
   { id: "nsfw", label: "NSFW Content", icon: <ImageIcon className="w-4 h-4" /> },
-  { id: "queue", label: "Queue", icon: <Clock className="w-4 h-4" /> },
+  { id: "social-links", label: "Links", icon: <LinkIcon className="w-4 h-4" /> },
   { id: "site", label: "Site Info", icon: <Settings className="w-4 h-4" /> },
 ];
 
@@ -163,6 +163,7 @@ export default function AdminPage() {
   const [faq, setFaq] = useState<any[]>(defaultFaq);
   const [workflow, setWorkflow] = useState<any[]>(defaultWorkflow);
   const [reviews, setReviews] = useState<any[]>(defaultReviews);
+  const [links, setLinks] = useState<any[]>([]);
 
   useEffect(() => {
     if (authed) loadAllData();
@@ -187,12 +188,13 @@ export default function AdminPage() {
         return;
       }
 
-      const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }] = await Promise.all([
+      const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }] = await Promise.all([
         supabase.from("site_config").select("*"),
         supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }),
         supabase.from("faq_items").select("*").order("sort_order", { ascending: true }),
         supabase.from("workflow_steps").select("*").order("sort_order", { ascending: true }),
         supabase.from("reviews").select("*").order("created_at", { ascending: false }),
+        supabase.from("social_links").select("*").order("sort_order", { ascending: true }),
       ]);
 
       if (siteData && siteData.length > 0) {
@@ -204,6 +206,7 @@ export default function AdminPage() {
       if (faqData && faqData.length > 0) setFaq(faqData);
       if (workflowData && workflowData.length > 0) setWorkflow(workflowData);
       if (reviewsData && reviewsData.length > 0) setReviews(reviewsData);
+      if (linksData && linksData.length > 0) setLinks(linksData);
     } catch (e) {
       console.error("Failed to load data:", e);
     } finally {
@@ -217,7 +220,7 @@ export default function AdminPage() {
       const res = await fetch("/api/admin/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ site, pricing, faq, workflow, reviews }),
+        body: JSON.stringify({ site, pricing, faq, workflow, reviews, socialLinks: links }),
       });
 
       if (!res.ok) {
@@ -489,7 +492,29 @@ export default function AdminPage() {
 
             {tab === "nsfw" && <NsfwPortfolioAdmin />}
 
-            {tab === "queue" && <QueueAdmin />}
+            {tab === "social-links" && <SocialLinksAdmin />}
+
+            {tab === "site" && (
+              <div className="bg-[var(--bg-card)] rounded-2xl p-7 space-y-5 border border-[var(--border)]">
+                <h2 className="text-lg font-semibold text-white mb-4">Site Information</h2>
+                <div>
+                  <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Site Name</label>
+                  <input value={site.name} onChange={(e) => setSite({ ...site, name: e.target.value })} className="field" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Tagline</label>
+                  <input value={site.tagline} onChange={(e) => setSite({ ...site, tagline: e.target.value })} className="field" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Description</label>
+                  <textarea rows={3} value={site.description} onChange={(e) => setSite({ ...site, description: e.target.value })} className="field resize-y" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Discord</label>
+                  <input value={site.discord} onChange={(e) => setSite({ ...site, discord: e.target.value })} className="field" />
+                </div>
+              </div>
+            )}
           </main>
         </div>
       </div>

@@ -60,11 +60,6 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/queue" className="text-[var(--text-secondary)] hover:text-white hover:translate-x-1 inline-block transition-all">
-                  Queue
-                </Link>
-              </li>
-              <li>
                 <Link href="/tos" className="text-[var(--text-secondary)] hover:text-white hover:translate-x-1 inline-block transition-all">
                   Terms of Service
                 </Link>
