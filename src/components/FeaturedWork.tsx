@@ -89,8 +89,8 @@ export default function FeaturedWork() {
             </div>
           </>
         ) : (
-          <div className="text-center py-24">
-            <p className="text-[var(--text-dim)] text-lg md:text-xl mb-8 max-w-md mx-auto">
+          <div className="text-center py-16">
+            <p className="text-[var(--text-dim)] text-lg md:text-xl mb-6 max-w-md mx-auto">
               Portfolio pieces will appear here after client approval.
             </p>
           </div>

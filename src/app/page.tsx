@@ -81,12 +81,12 @@ export default function Home() {
         <section className="section section-alt">
           <div className="max-w-7xl mx-auto px-4 md:px-6">
             <div className="mb-10 md:mb-14">
-              <span className="section-label">Services</span>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">What I provide</h2>
-              <p className="text-[var(--text-secondary)] max-w-xl">I work on VRChat avatars in a few different ways. Here&rsquo;s what I can help with.</p>
+               <span className="section-label">Services</span>
+               <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">What I provide</h2>
+               <p className="text-[var(--text-secondary)] max-w-xl text-sm md:text-base">I work on VRChat avatars in a few different ways. Here&rsquo;s what I can help with.</p>
             </div>
 
-            <div className="space-y-20">
+            <div className="space-y-12">
               {/* Avatar Editing */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                 <div className={`${siteImages.avatar_editing?.url ? "lg:col-span-5 order-2 lg:order-1" : "lg:col-span-12"} `}>
@@ -177,9 +177,9 @@ export default function Home() {
         <section className="section">
           <div className="max-w-7xl mx-auto px-4 md:px-6">
             <div className="text-center mb-12 md:mb-16">
-              <span className="section-label justify-center">Process</span>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">How it works</h2>
-              <p className="text-[var(--text-secondary)] max-w-lg mx-auto">A simple, transparent workflow from request to delivery.</p>
+               <span className="section-label justify-center">Process</span>
+               <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">How it works</h2>
+               <p className="text-[var(--text-secondary)] max-w-lg mx-auto text-sm md:text-base">A simple, transparent workflow from request to delivery.</p>
             </div>
 
             <div className="max-w-5xl mx-auto">
@@ -213,9 +213,9 @@ export default function Home() {
         <section className="section section-alt">
           <div className="max-w-7xl mx-auto px-4 md:px-6">
             <div className="mb-10 md:mb-14">
-              <span className="section-label">Client Feedback</span>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Reviews</h2>
-              <p className="text-[var(--text-secondary)]">What clients say about working with me.</p>
+               <span className="section-label">Client Feedback</span>
+               <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">Reviews</h2>
+               <p className="text-[var(--text-secondary)] text-sm md:text-base">What clients say about working with me.</p>
             </div>
 
 {reviews.length > 0 ? (
@@ -277,9 +277,9 @@ export default function Home() {
         <section className="section">
           <div className="max-w-3xl mx-auto px-4 md:px-6">
             <div className="text-center mb-10 md:mb-14">
-              <span className="section-label justify-center">FAQ</span>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Common questions</h2>
-              <p className="text-[var(--text-secondary)]">Quick answers to things you might be wondering.</p>
+               <span className="section-label justify-center">Common questions</span>
+               <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">FAQ</h2>
+               <p className="text-[var(--text-secondary)] text-sm md:text-base">Quick answers to things you might be wondering.</p>
             </div>
 
             <div className="space-y-2.5">
@@ -313,18 +313,18 @@ export default function Home() {
         <section className="section section-alt">
           <div className="max-w-7xl mx-auto px-4 md:px-6">
             <div className="text-center mb-10 md:mb-14">
-              <span className="section-label justify-center">Rates</span>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Pricing</h2>
-              <p className="text-[var(--text-secondary)] max-w-lg mx-auto">
-                Prices vary depending on complexity, optimisation requirements, and assets used.
-              </p>
+               <span className="section-label justify-center">Rates</span>
+               <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">Pricing</h2>
+               <p className="text-[var(--text-secondary)] max-w-lg mx-auto text-sm md:text-base">
+                 Prices vary depending on complexity, optimisation requirements, and assets used.
+               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
               {pricing.map((tier) => (
                 <div
                   key={tier.id}
-                  className={`relative p-6 md:p-8 h-full flex flex-col border rounded-xl transition-all duration-500 ${
+                  className={`relative p-5 md:p-7 h-full flex flex-col border rounded-xl transition-all duration-500 ${
                     tier.popular
                       ? "border-[var(--accent)] bg-[var(--accent-soft)] shadow-xl shadow-[var(--accent)]/5"
                       : "border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--border-hover)]"
@@ -383,10 +383,10 @@ export default function Home() {
           </div>
           <div className="max-w-4xl mx-auto px-4 md:px-6">
             <div className="text-center">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 tracking-tight">
                 Ready to commission?
               </h2>
-              <p className="text-[var(--text-secondary)] max-w-lg mx-auto mb-8 text-base leading-relaxed">
+              <p className="text-[var(--text-secondary)] max-w-lg mx-auto mb-6 text-sm md:text-base leading-relaxed">
                 Send me a message on Discord at{" "}
                 <strong className="text-white font-semibold">{site.discord}</strong> or
                 submit a request and I&rsquo;ll get back to you.

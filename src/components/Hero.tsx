@@ -25,7 +25,7 @@ export default function Hero() {
         <div className="absolute inset-0 bg-scene opacity-80" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 py-20 md:py-28 w-full">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 py-12 md:py-16 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
           {/* Left — content */}
           <div className="lg:col-span-5 order-2 lg:order-1">

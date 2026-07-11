@@ -271,7 +271,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 pt-10 pb-20">
+      <div className="max-w-7xl mx-auto px-4 pt-8 pb-12">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight">Admin</h1>
@@ -286,7 +286,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Sidebar */}
           <aside className="lg:col-span-3 xl:col-span-3">
             <div className="lg:sticky lg:top-24">
@@ -462,28 +462,6 @@ export default function AdminPage() {
                       </div>
                     )}
                   </div>
-                </div>
-              </div>
-            )}
-
-            {tab === "site" && (
-              <div className="bg-[var(--bg-card)] rounded-2xl p-7 space-y-5 border border-[var(--border)]">
-                <h2 className="text-lg font-semibold text-white mb-4">Site Information</h2>
-                <div>
-                  <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Site Name</label>
-                  <input value={site.name} onChange={(e) => setSite({ ...site, name: e.target.value })} className="field" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Tagline</label>
-                  <input value={site.tagline} onChange={(e) => setSite({ ...site, tagline: e.target.value })} className="field" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Description</label>
-                  <textarea rows={3} value={site.description} onChange={(e) => setSite({ ...site, description: e.target.value })} className="field resize-y" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Discord</label>
-                  <input value={site.discord} onChange={(e) => setSite({ ...site, discord: e.target.value })} className="field" />
                 </div>
               </div>
             )}

@@ -70,24 +70,24 @@ export default function CommissionAvailability() {
   const progressPercent = slotsTotal > 0 ? (slotsUsed / slotsTotal) * 100 : 0;
 
   return (
-    <div className={`rounded-2xl p-6 md:p-8 border ${config.border} ${config.bg}`}>
-      <div className="flex flex-col md:flex-row md:items-center gap-6">
+    <div className={`rounded-xl p-4 md:p-6 border ${config.border} ${config.bg}`}>
+      <div className="flex flex-col md:flex-row md:items-center gap-4">
         {/* Status */}
-        <div className="flex items-center gap-4">
-          <div className={`w-3 h-3 rounded-full ${config.color} animate-pulse`} />
+        <div className="flex items-center gap-3">
+          <div className={`w-2.5 h-2.5 rounded-full ${config.color} animate-pulse`} />
           <div>
-            <h3 className={`text-xl font-bold ${config.text}`}>{config.label}</h3>
-            <p className="text-sm text-[var(--text-secondary)] mt-1">{config.desc}</p>
+            <h3 className={`text-lg font-bold ${config.text}`}>{config.label}</h3>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">{config.desc}</p>
           </div>
         </div>
 
         {/* Slots */}
         <div className="flex-1 md:text-center">
-          <p className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider mb-1">Available Slots</p>
-          <p className="text-3xl font-bold text-white">
-            {slotsAvailable} <span className="text-lg text-[var(--text-dim)]">/ {slotsTotal}</span>
+          <p className="text-[10px] font-semibold text-[var(--text-dim)] uppercase tracking-wider mb-0.5">Available Slots</p>
+          <p className="text-2xl font-bold text-white">
+            {slotsAvailable} <span className="text-sm text-[var(--text-dim)]">/ {slotsTotal}</span>
           </p>
-          <div className="w-full md:max-w-xs mx-auto bg-[var(--bg)] rounded-full h-2 mt-2 overflow-hidden">
+          <div className="w-full md:max-w-xs mx-auto bg-[var(--bg)] rounded-full h-1.5 mt-1.5 overflow-hidden">
             <div
               className="h-full bg-[var(--accent)] rounded-full transition-all duration-700"
               style={{ width: `${progressPercent}%` }}
@@ -99,7 +99,7 @@ export default function CommissionAvailability() {
         <div className="flex-shrink-0">
           <a
             href="/contact"
-            className="inline-flex items-center gap-2 bg-[var(--accent)] text-[#05070a] px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[var(--accent-4)] transition-all shadow-lg shadow-[var(--accent)]/20"
+            className="inline-flex items-center gap-2 bg-[var(--accent)] text-[#05070a] px-4 py-2 rounded-lg font-bold text-xs hover:bg-[var(--accent-4)] transition-all shadow-lg shadow-[var(--accent)]/20"
           >
             Request Commission
           </a>
@@ -108,8 +108,8 @@ export default function CommissionAvailability() {
 
       {/* Optional note */}
       {note && (
-        <div className="mt-4 pt-4 border-t border-[var(--border)]">
-          <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{note}</p>
+        <div className="mt-3 pt-3 border-t border-[var(--border)]">
+          <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{note}</p>
         </div>
       )}
     </div>

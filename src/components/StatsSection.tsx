@@ -70,19 +70,19 @@ export default function StatsSection() {
   return (
     <section className="section section-alt">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
-        <div className="text-center mb-12 md:mb-16">
+        <div className="text-center mb-8 md:mb-10">
           <span className="section-label justify-center">Trust & Experience</span>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">By the numbers</h2>
-          <p className="text-[var(--text-secondary)] max-w-lg mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">By the numbers</h2>
+          <p className="text-[var(--text-secondary)] max-w-lg mx-auto text-sm md:text-base">
             Real work, real clients, real results.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {stats.map((stat, i) => (
             <div
               key={i}
-              className="bg-[var(--bg-card)] rounded-2xl p-6 md:p-8 border border-[var(--border)] text-center hover:border-[var(--border-hover)] transition-all duration-300 hover:shadow-xl hover:shadow-black/20"
+              className="bg-[var(--bg-card)] rounded-xl p-4 md:p-5 border border-[var(--border)] text-center hover:border-[var(--border-hover)] transition-all duration-300 hover:shadow-lg hover:shadow-black/20"
             >
               <AnimatedCounter
                 value={stat.value}
@@ -94,9 +94,9 @@ export default function StatsSection() {
           ))}
         </div>
 
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-[var(--bg-card)] rounded-2xl p-6 md:p-8 border border-[var(--border)]">
-            <h3 className="text-lg font-semibold text-white mb-4">Tools & Platforms</h3>
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-[var(--bg-card)] rounded-xl p-5 border border-[var(--border)]">
+            <h3 className="text-base font-semibold text-white mb-3">Tools & Platforms</h3>
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-sm mb-1">
@@ -129,9 +129,9 @@ export default function StatsSection() {
             </div>
           </div>
 
-          <div className="bg-[var(--bg-card)] rounded-2xl p-6 md:p-8 border border-[var(--border)]">
-            <h3 className="text-lg font-semibold text-white mb-4">Specializations</h3>
-            <div className="flex flex-wrap gap-2">
+          <div className="bg-[var(--bg-card)] rounded-xl p-5 border border-[var(--border)]">
+            <h3 className="text-base font-semibold text-white mb-3">Specializations</h3>
+            <div className="flex flex-wrap gap-1.5">
               {[
                 "Avatar Editing",
                 "Blender Work",
@@ -144,7 +144,7 @@ export default function StatsSection() {
                 "Accessories",
                 "Performance",
               ].map((spec) => (
-                <span key={spec} className="px-3 py-1.5 rounded-lg bg-[var(--accent-soft)] border border-[var(--accent)]/20 text-xs text-[var(--accent)] font-medium">
+                <span key={spec} className="px-2.5 py-1 rounded-md bg-[var(--accent-soft)] border border-[var(--accent)]/20 text-[10px] md:text-xs text-[var(--accent)] font-medium">
                   {spec}
                 </span>
               ))}
