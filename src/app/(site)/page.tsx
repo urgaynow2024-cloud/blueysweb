@@ -9,7 +9,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import PricingCard from "@/components/ui/PricingCard";
 import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages } from "@/lib/db";
 import Link from "next/link";
-import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles, MessageSquarePlus } from "lucide-react";
+import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles, MessageSquarePlus, Users } from "lucide-react";
 import CommissionAvailability from "@/components/CommissionAvailability";
 
 function Stars({ rating, size = "h-4 w-4" }: { rating?: number; size?: string }) {
@@ -30,6 +30,7 @@ export default function Home() {
   const [faq, setFaq] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
   const [siteImages, setSiteImages] = useState<Record<string, { url: string }>>({});
+  const [returningClients, setReturningClients] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
@@ -51,6 +52,9 @@ export default function Home() {
         setFaq(f);
         setReviews(r);
         setSiteImages(images);
+
+        const statsRes = await fetch("/api/stats").then((res) => res.json()).catch(() => ({ returningClients: 0 }));
+        setReturningClients(Number(statsRes.returningClients) || 0);
       } catch (e) {
         console.error("Failed to load home data:", e);
       } finally {
@@ -90,7 +94,7 @@ export default function Home() {
       <div className="relative z-10">
         <FeaturedWork />
 
-        <StatsBand site={site} />
+        <StatsBand site={site} reviews={reviews} returningClients={returningClients} />
 
         <div className="divider" />
 
@@ -333,12 +337,17 @@ export default function Home() {
   );
 }
 
-function StatsBand({ site }: { site: any }) {
+function StatsBand({ site, reviews, returningClients }: { site: any; reviews: any[]; returningClients: number }) {
+  const approved = reviews || [];
+  const totalReviews = approved.length;
+  const avgRating = totalReviews
+    ? (approved.reduce((sum: number, r: any) => sum + (Number(r.rating) || 5), 0) / totalReviews).toFixed(1)
+    : "—";
   const stats = [
-    { label: "Average rating", value: site.stat_rating || "4.9", icon: <Star className="h-4 w-4" /> },
-    { label: "Turnaround", value: site.stat_delivery || "5–10 days", icon: <Zap className="h-4 w-4" /> },
-    { label: "First response", value: site.stat_response || "1–3 hours", icon: <MessageSquarePlus className="h-4 w-4" /> },
-    { label: "Returning clients", value: site.stat_returning || "40+", icon: <Check className="h-4 w-4" /> },
+    { label: "Average rating", value: avgRating, icon: <Star className="h-4 w-4" /> },
+    { label: "Total reviews", value: totalReviews, icon: <MessageSquarePlus className="h-4 w-4" /> },
+    { label: "Turnaround", value: site.stat_delivery || "5-10 days", icon: <Zap className="h-4 w-4" /> },
+    { label: "Returning clients", value: String(returningClients), icon: <Users className="h-4 w-4" /> },
   ];
   return (
     <section className="section !pb-0">
