@@ -3,11 +3,14 @@
 import { useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
+import Reveal from "@/components/ui/Reveal";
+import SectionHeading from "@/components/ui/SectionHeading";
+import { Images, Maximize2 } from "lucide-react";
 
 function SkeletonCard() {
   return (
-    <div className="rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] animate-pulse">
-      <div className="w-full bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%] animate-[shimmer_1.5s_infinite]" style={{ height: "200px" }} />
+    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
+      <div className="h-[220px] w-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
     </div>
   );
 }
@@ -48,38 +51,53 @@ export default function PortfolioPage() {
   return (
     <div className="relative">
       <section className="page relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-dots opacity-40" />
-        <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="text-center mb-10 md:mb-12 page-head">
-            <span className="section-label justify-center">Portfolio</span>
-            <h2 className="display-lg text-white mb-3">My Work</h2>
-            <p className="text-[var(--text-secondary)] max-w-md mx-auto">Browse avatar commissions and edits.</p>
-          </div>
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px]" />
+
+        <div className="container">
+          <SectionHeading
+            align="center"
+            eyebrow="Portfolio"
+            icon={<Images className="h-4 w-4 text-[var(--accent)]" />}
+            title="My Work"
+            subtitle="Browse avatar commissions and edits — click any piece to view it full size."
+          />
 
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="columns-1 space-y-4 sm:columns-2 lg:columns-3">
               {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)}
             </div>
           ) : images.length > 0 ? (
-            <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
+            <div className="columns-1 space-y-4 sm:columns-2 lg:columns-3">
               {images.map((url, i) => (
-                <div
-                  key={i}
-                  onClick={() => setLightboxIndex(i)}
-                  className="break-inside-avoid rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] group hover:border-[var(--border-hover)] transition-all duration-500 hover:shadow-2xl hover:shadow-black/30 cursor-pointer"
-                >
-                  <img
-                    src={url}
-                    alt={`Portfolio ${i + 1}`}
-                    className="w-full h-auto block object-contain p-2"
-                    loading="lazy"
-                  />
-                </div>
+                <Reveal key={i} delay={(i % 3) * 60}>
+                  <div
+                    onClick={() => setLightboxIndex(i)}
+                    className="group relative mb-4 block cursor-pointer overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/40"
+                  >
+                    <img
+                      src={url}
+                      alt={`Portfolio ${i + 1}`}
+                      loading="lazy"
+                      className="block w-full object-contain p-2 transition-transform duration-700 group-hover:scale-[1.03]"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-500 group-hover:bg-black/20 group-hover:opacity-100">
+                      <div className="grid h-12 w-12 place-items-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition-all duration-300 group-hover:scale-110">
+                        <Maximize2 className="h-5 w-5" />
+                      </div>
+                    </div>
+                  </div>
+                </Reveal>
               ))}
             </div>
           ) : (
-            <div className="text-center py-16">
-              <p className="text-[var(--text-dim)] text-lg">Portfolio images will appear here after upload.</p>
+            <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-20 text-center">
+              <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                <Images className="h-6 w-6" />
+              </div>
+              <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
+                Portfolio images will appear here after upload.
+              </p>
             </div>
           )}
         </div>

@@ -1,78 +1,77 @@
 "use client";
 
-import SectionTitle from "@/components/SectionTitle";
+import SectionHeading from "@/components/ui/SectionHeading";
+import Reveal from "@/components/ui/Reveal";
 import ContactCommissionForm from "@/components/ContactCommissionForm";
+import { MessageSquare, Clock, CheckCircle2 } from "lucide-react";
+
+const CHANNELS = [
+  { icon: <MessageSquare className="h-5 w-5" />, label: "Discord", value: "BlueyBarks", note: "Fastest way to reach me" },
+  { icon: <Clock className="h-5 w-5" />, label: "Response time", value: "24–48 hours", note: "Usually quicker" },
+];
+
+const CHECKLIST = [
+  "What you want done",
+  "Avatar base name",
+  "Reference images",
+  "All required assets provided",
+];
 
 export default function ContactPage() {
   return (
     <div className="relative">
       <section className="page relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-dots opacity-40" />
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-[var(--accent)] opacity-[0.05] blur-[120px] rounded-full pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Contact info sidebar */}
-            <div className="space-y-4">
-              <div>
-                <span className="section-label">Contact</span>
-                <div className="heading-md text-white mb-3">Get in touch</div>
-                <p className="text-sm text-[var(--text-secondary)]">
-                  Ready to commission something?
-                </p>
-              </div>
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
+        <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[var(--accent)] opacity-[0.05] blur-[120px]" />
+
+        <div className="container">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-8">
+            {/* Info */}
+            <div className="space-y-5">
+              <SectionHeading eyebrow="Contact" title="Get in touch" subtitle="Ready to commission something? Reach out and let's talk through your idea." />
 
               <div className="space-y-3">
-                <div className="glass rounded-2xl p-4 border border-[var(--border)] hover:border-[var(--accent)]/30 transition-all duration-500 group">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">💬</span>
-                    <div>
-                      <div className="text-[10px] font-semibold text-[var(--text-dim)] uppercase tracking-wider">
-                        Discord
+                {CHANNELS.map((c, i) => (
+                  <Reveal key={c.label} delay={i * 60}>
+                    <div className="group flex items-center gap-4 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-5 transition-all duration-500 hover:-translate-y-0.5 hover:border-[var(--border-hover)]">
+                      <div className="grid h-12 w-12 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                        {c.icon}
                       </div>
-                      <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
-                        BlueyBarks
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="glass rounded-2xl p-4 border border-[var(--border)] hover:border-[var(--accent)]/30 transition-all duration-500 group">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">⏰</span>
-                    <div>
-                      <div className="text-[10px] font-semibold text-[var(--text-dim)] uppercase tracking-wider">
-                        Response
-                      </div>
-                      <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
-                        Within 24-48 hours
+                      <div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-dim)]">{c.label}</div>
+                        <div className="text-sm font-semibold text-white">{c.value}</div>
+                        <div className="text-xs text-[var(--text-dim)]">{c.note}</div>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  </Reveal>
+                ))}
               </div>
 
-              <div className="glass rounded-2xl p-5 border border-[var(--border)]">
-                <h3 className="text-sm font-bold text-white mb-3">Quick Checklist</h3>
-                <p className="text-xs text-[var(--text-secondary)] mb-3">Please include:</p>
-                <ul className="space-y-2.5 text-xs text-[var(--text-secondary)]">
-                  {[
-                    "What you want done",
-                    "Avatar base name",
-                    "Reference images",
-                    "All required assets provided",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-1 flex-shrink-0" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <Reveal delay={120}>
+                <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-6">
+                  <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-white">
+                    <CheckCircle2 className="h-4 w-4 text-[var(--accent)]" />
+                    Quick checklist
+                  </h3>
+                  <ul className="space-y-3 text-xs text-[var(--text-secondary)]">
+                    {CHECKLIST.map((item) => (
+                      <li key={item} className="flex items-start gap-3">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
             </div>
 
             {/* Form */}
             <div className="lg:col-span-2">
-              <ContactCommissionForm />
+              <Reveal>
+                <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)]/60 p-1">
+                  <ContactCommissionForm />
+                </div>
+              </Reveal>
             </div>
           </div>
         </div>

@@ -32,7 +32,6 @@ export default function NsfwPortfolioAdmin() {
     setError(null);
     try {
       const imgs = await getNsfwPortfolioImages();
-      console.log("NSFW images loaded:", imgs.length, imgs);
       const urls = imgs.map((i: any) => ({ url: i.url, id: i.id, path: i.path })).filter((img: any) => img.url);
       setImages(urls);
     } catch (e) {
@@ -269,12 +268,12 @@ export default function NsfwPortfolioAdmin() {
                     className="w-full h-auto block"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex flex-col items-center justify-center gap-1.5">
-                    <div className="flex gap-1">
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-xl flex flex-col items-center justify-center gap-2">
+                    <div className="flex gap-2">
                       <button
                         onClick={() => moveImage(i, -1)}
                         disabled={i === 0}
-                        className="w-8 h-8 grid place-items-center rounded-lg bg-white/20 text-white hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        className="w-9 h-9 grid place-items-center rounded-lg bg-white/15 text-white hover:bg-white/25 disabled:opacity-30 disabled:cursor-not-allowed transition-all backdrop-blur-sm"
                         title="Move up"
                       >
                         <GripVertical className="w-4 h-4 rotate-90" />
@@ -282,7 +281,7 @@ export default function NsfwPortfolioAdmin() {
                       <button
                         onClick={() => moveImage(i, 1)}
                         disabled={i === images.length - 1}
-                        className="w-8 h-8 grid place-items-center rounded-lg bg-white/20 text-white hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        className="w-9 h-9 grid place-items-center rounded-lg bg-white/15 text-white hover:bg-white/25 disabled:opacity-30 disabled:cursor-not-allowed transition-all backdrop-blur-sm"
                         title="Move down"
                       >
                         <GripVertical className="w-4 h-4 -rotate-90" />
@@ -290,13 +289,13 @@ export default function NsfwPortfolioAdmin() {
                     </div>
                     <button
                       onClick={() => removeImage(i)}
-                      className="w-8 h-8 grid place-items-center rounded-lg bg-red-500 text-white hover:bg-red-600 transition-all"
+                      className="w-9 h-9 grid place-items-center rounded-lg bg-red-500/90 text-white hover:bg-red-600 transition-all backdrop-blur-sm"
                       title="Remove"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="absolute top-2 left-2 w-6 h-6 rounded-md bg-black/60 text-white text-xs flex items-center justify-center font-medium">
+                  <div className="absolute top-2 left-2 w-7 h-7 rounded-lg bg-black/60 text-white text-xs flex items-center justify-center font-semibold backdrop-blur-sm">
                     {i + 1}
                   </div>
                 </div>
@@ -304,7 +303,7 @@ export default function NsfwPortfolioAdmin() {
             }
 
             return (
-              <div key={image.id || i} className="relative group rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]">
+              <div key={image.id || i} className="relative group rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)] transition-all duration-300 hover:border-[var(--border-hover)]">
                 {cardContent}
               </div>
             );

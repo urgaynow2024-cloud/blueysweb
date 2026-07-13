@@ -23,55 +23,60 @@ export default function Lightbox({ images, index, onClose, onPrev, onNext }: Lig
 
   useEffect(() => {
     document.addEventListener("keydown", handleKey);
+    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", handleKey);
-      document.body.style.overflow = "";
+      document.body.style.overflow = prev;
     };
   }, [handleKey]);
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Image ${index + 1} of ${images.length}`}
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative max-w-[95vw] max-h-[95vh] flex items-center justify-center">
+      <div className="relative flex max-h-[95vh] max-w-[95vw] scale-in items-center justify-center">
         <img
           src={images[index]}
           alt={`Portfolio ${index + 1}`}
-          className="max-w-full max-h-[90vh] object-contain"
+          className="max-h-[88vh] max-w-full rounded-2xl border border-white/10 object-contain shadow-2xl shadow-black/60"
         />
 
         {images.length > 1 && (
           <>
             <button
               onClick={(e) => { e.stopPropagation(); onPrev(); }}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
-              aria-label="Previous"
+              className="absolute left-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/10 bg-white/10 text-white backdrop-blur-md transition-all hover:scale-110 hover:bg-white/20 md:left-5"
+              aria-label="Previous image"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="h-6 w-6" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onNext(); }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
-              aria-label="Next"
+              className="absolute right-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/10 bg-white/10 text-white backdrop-blur-md transition-all hover:scale-110 hover:bg-white/20 md:right-5"
+              aria-label="Next image"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="h-6 w-6" />
             </button>
           </>
         )}
 
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+          className="absolute -top-2 right-0 grid h-10 w-10 translate-x-2 -translate-y-2 place-items-center rounded-full border border-white/10 bg-white/10 text-white backdrop-blur-md transition-all hover:scale-110 hover:bg-white/20 md:-top-3 md:right-2"
           aria-label="Close"
         >
-          <X className="w-5 h-5" />
+          <X className="h-5 w-5" />
         </button>
 
-        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-white/60 text-sm">
+        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 text-sm text-white/60">
+          <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
           {index + 1} / {images.length}
         </div>
       </div>

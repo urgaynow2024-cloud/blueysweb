@@ -3,11 +3,24 @@
 import { useState, useEffect } from "react";
 import Hero from "@/components/Hero";
 import FeaturedWork from "@/components/FeaturedWork";
+import Reveal from "@/components/ui/Reveal";
+import SectionHeading from "@/components/ui/SectionHeading";
+import { ButtonLink } from "@/components/ui/Button";
 import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages } from "@/lib/db";
 import Link from "next/link";
-import { Star, Zap } from "lucide-react";
-import ClientReviewForm from "@/components/ClientReviewForm";
+import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles } from "lucide-react";
 import CommissionAvailability from "@/components/CommissionAvailability";
+
+function Stars({ rating, size = "h-4 w-4" }: { rating?: number; size?: string }) {
+  const value = rating || 5;
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star key={i} className={`${size} ${i <= value ? "fill-[var(--accent)] text-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
+      ))}
+    </div>
+  );
+}
 
 export default function Home() {
   const [site, setSite] = useState<any>({});
@@ -17,25 +30,26 @@ export default function Home() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [siteImages, setSiteImages] = useState<Record<string, { url: string }>>({});
   const [loading, setLoading] = useState(true);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-      const [s, w, p, f, r, images] = await Promise.all([
-        getSiteConfig(),
-        getWorkflowSteps(),
-        getPricingTiers(),
-        getFaqItems(),
-        getApprovedReviews(),
-        getSiteImages(),
-      ]);
-      setSite(s);
-      setWorkflow(w);
-      setPricing(p);
-      setFaq(f);
-      setReviews(r);
-      setSiteImages(images);
+        const [s, w, p, f, r, images] = await Promise.all([
+          getSiteConfig(),
+          getWorkflowSteps(),
+          getPricingTiers(),
+          getFaqItems(),
+          getApprovedReviews(),
+          getSiteImages(),
+        ]);
+        setSite(s);
+        setWorkflow(w);
+        setPricing(p);
+        setFaq(f);
+        setReviews(r);
+        setSiteImages(images);
       } catch (e) {
         console.error("Failed to load home data:", e);
       } finally {
@@ -50,14 +64,14 @@ export default function Home() {
       <div className="relative">
         <Hero />
         <div className="relative z-10">
-          <div className="max-w-7xl mx-auto px-4 md:px-6 py-20">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="container py-20">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-[var(--bg-card)] rounded-2xl p-8 border border-[var(--border)] animate-pulse">
+                <div key={i} className="animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-8">
                   <div className="space-y-3">
-                    <div className="h-4 bg-[var(--bg)] rounded w-1/2" />
-                    <div className="h-3 bg-[var(--bg)] rounded w-full" />
-                    <div className="h-3 bg-[var(--bg)] rounded w-2/3" />
+                    <div className="h-4 w-1/2 rounded bg-[var(--bg)]" />
+                    <div className="h-3 w-full rounded bg-[var(--bg)]" />
+                    <div className="h-3 w-2/3 rounded bg-[var(--bg)]" />
                   </div>
                 </div>
               ))}
@@ -79,130 +93,57 @@ export default function Home() {
 
         {/* Services */}
         <section className="section section-alt">
-          <div className="max-w-7xl mx-auto px-4 md:px-6">
-            <div className="mb-10 md:mb-14">
-               <span className="section-label">Services</span>
-               <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">What I provide</h2>
-               <p className="text-[var(--text-secondary)] max-w-xl text-sm md:text-base">I work on VRChat avatars in a few different ways. Here&rsquo;s what I can help with.</p>
-            </div>
+          <div className="container">
+            <SectionHeading
+              eyebrow="Services"
+              title="What I provide"
+              subtitle="I work on VRChat avatars in a few different ways — from subtle edits to complete overhauls."
+            />
 
-            <div className="space-y-12">
-              {/* Avatar Editing */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                <div className={`${siteImages.avatar_editing?.url ? "lg:col-span-5 order-2 lg:order-1" : "lg:col-span-12"} `}>
-                  <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-3 block">Avatar Editing</span>
-                  <h3 className="text-2xl font-bold text-white mb-4">Avatar Editing</h3>
-                  <p className="text-[var(--text-secondary)] mb-6 leading-relaxed">
-                    Texture recolours, accessory additions, clothing fitting, hair combinations, and minor geometry tweaks to existing bases.
-                  </p>
-                  <ul className="space-y-2.5">
-                    {["Texture recolours", "Accessory additions", "Clothing fitting", "Hair combinations", "Minor fixes"].map((item) => (
-                      <li key={item} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                {siteImages.avatar_editing?.url && (
-                  <div className="lg:col-span-7 order-1 lg:order-2">
-                    <div className="aspect-[16/10] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-center overflow-hidden relative">
-                      <img src={siteImages.avatar_editing.url} alt="Avatar Editing" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Blender Work */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                {siteImages.blender_work?.url && (
-                  <div className="lg:col-span-7">
-                    <div className="aspect-[16/10] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-center overflow-hidden relative">
-                      <img src={siteImages.blender_work.url} alt="Blender Work" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
-                    </div>
-                  </div>
-                )}
-                <div className={`${siteImages.blender_work?.url ? "lg:col-span-5" : "lg:col-span-12"}`}>
-                  <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-3 block">Blender</span>
-                  <h3 className="text-2xl font-bold text-white mb-4">Blender Work</h3>
-                  <p className="text-[var(--text-secondary)] mb-6 leading-relaxed">
-                    Asset creation, retopology, UV work, material setup, and mesh adjustments for clean avatar bases.
-                  </p>
-                  <ul className="space-y-2.5">
-                    {["Asset creation", "Retopology", "UV & material work", "Mesh adjustments", "Clean topology"].map((item) => (
-                      <li key={item} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              {/* Unity Setup */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                <div className={`${siteImages.unity_work?.url ? "lg:col-span-5 order-2 lg:order-1" : "lg:col-span-12"}`}>
-                  <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-3 block">Unity</span>
-                  <h3 className="text-2xl font-bold text-white mb-4">Unity Setup</h3>
-                  <p className="text-[var(--text-secondary)] mb-6 leading-relaxed">
-                    Material configuration, toggles, optimisation, viseme setup, and VRChat-ready packaging.
-                  </p>
-                  <ul className="space-y-2.5">
-                    {["Material config", "Toggle systems", "Performance tuning", "Viseme setup", "VRChat packaging"].map((item) => (
-                      <li key={item} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                {siteImages.unity_work?.url && (
-                  <div className="lg:col-span-7 order-1 lg:order-2">
-                    <div className="aspect-[16/10] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-center overflow-hidden relative">
-                      <img src={siteImages.unity_work.url} alt="Unity Setup" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
-                    </div>
-                  </div>
-                )}
-              </div>
+            <div className="space-y-6 md:space-y-10">
+              <ServiceRow
+                image={siteImages.avatar_editing?.url}
+                eyebrow="Avatar Editing"
+                title="Avatar Editing"
+                desc="Texture recolours, accessory additions, clothing fitting, hair combinations, and minor geometry tweaks to existing bases."
+                features={["Texture recolours", "Accessory additions", "Clothing fitting", "Hair combinations", "Minor fixes"]}
+              />
+              <ServiceRow
+                image={siteImages.blender_work?.url}
+                eyebrow="Blender"
+                title="Blender Work"
+                desc="Asset creation, retopology, UV work, material setup, and mesh adjustments for clean avatar bases."
+                features={["Asset creation", "Retopology", "UV & material work", "Mesh adjustments", "Clean topology"]}
+                reverse
+              />
+              <ServiceRow
+                image={siteImages.unity_work?.url}
+                eyebrow="Unity"
+                title="Unity Setup"
+                desc="Material configuration, toggles, optimisation, viseme setup, and VRChat-ready packaging."
+                features={["Material config", "Toggle systems", "Performance tuning", "Viseme setup", "VRChat packaging"]}
+              />
             </div>
           </div>
         </section>
 
         <div className="divider" />
 
-        {/* Process */}
+        {/* Process timeline */}
         <section className="section">
-          <div className="max-w-7xl mx-auto px-4 md:px-6">
-            <div className="text-center mb-12 md:mb-16">
-               <span className="section-label justify-center">Process</span>
-               <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">How it works</h2>
-               <p className="text-[var(--text-secondary)] max-w-lg mx-auto text-sm md:text-base">A simple, transparent workflow from request to delivery.</p>
-            </div>
-
-            <div className="max-w-5xl mx-auto">
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-4">
-                {workflow.map((step, i) => (
-                  <div key={step.title || i} className="relative text-center">
-                    <div className="w-14 h-14 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center text-2xl mx-auto mb-4 relative z-10 hover:border-[var(--accent)]/30 hover:shadow-lg hover:shadow-[var(--accent)]/5 transition-all duration-500">
-                      {step.emoji}
-                    </div>
-                    <h3 className="text-sm font-bold text-white mb-1.5">{step.title}</h3>
-                    <p className="text-xs text-[var(--text-dim)] leading-relaxed px-1">{step.desc}</p>
-                    {i < workflow.length - 1 && (
-                      <div className="hidden md:block absolute top-7 left-[60%] w-[80%] h-px bg-gradient-to-r from-[var(--border)] to-transparent" />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="text-center mt-10">
-              <a href="/contact" className="btn-secondary inline-flex">
+          <div className="container">
+            <SectionHeading
+              align="center"
+              eyebrow="Process"
+              title="How it works"
+              subtitle="A simple, transparent workflow from first message to final delivery."
+            />
+            <ProcessTimeline steps={workflow} />
+            <div className="mt-12 text-center">
+              <ButtonLink href="/contact" variant="secondary">
                 Start Your Commission
-              </a>
+                <ArrowRight className="h-4 w-4" />
+              </ButtonLink>
             </div>
           </div>
         </section>
@@ -211,61 +152,52 @@ export default function Home() {
 
         {/* Reviews */}
         <section className="section section-alt">
-          <div className="max-w-7xl mx-auto px-4 md:px-6">
-            <div className="mb-10 md:mb-14">
-               <span className="section-label">Client Feedback</span>
-               <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">Reviews</h2>
-               <p className="text-[var(--text-secondary)] text-sm md:text-base">What clients say about working with me.</p>
-            </div>
-
-{reviews.length > 0 ? (
-  <>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-      {reviews.map((review, i) => (
-        <div key={review.id || i} className="bg-[var(--bg-card)] rounded-2xl p-6 md:p-8 border border-[var(--border)] relative overflow-hidden group hover:border-[var(--border-hover)] transition-all duration-500">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] opacity-[0.02] blur-3xl rounded-full pointer-events-none group-hover:opacity-[0.05] transition-opacity" />
-          <div className="relative">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="text-4xl">🎭</div>
-              <div>
-                <p className="font-bold text-white">{review.display_name}</p>
-                <div className="flex gap-0.5 mt-0.5">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star key={star} className={`w-4 h-4 ${star <= (review.rating || 5) ? "text-[var(--accent)] fill-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
+          <div className="container">
+            <SectionHeading
+              eyebrow="Client Feedback"
+              title="Reviews"
+              subtitle="What clients say about working together."
+            />
+            {reviews.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  {reviews.slice(0, 4).map((review, i) => (
+                    <Reveal key={review.id || i} delay={i * 60}>
+                      <article className="group relative h-full overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-6 transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)] md:p-7">
+                        <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[var(--accent)] opacity-[0.04] blur-3xl transition-opacity duration-500 group-hover:opacity-[0.08]" />
+                        <div className="relative flex items-center gap-4">
+                          <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)]/20 to-[var(--accent-2)]/20 text-lg">
+                            {review.display_name?.[0]?.toUpperCase() || "★"}
+                          </div>
+                          <div>
+                            <p className="font-bold text-white">{review.display_name}</p>
+                            <Stars rating={review.rating} />
+                          </div>
+                        </div>
+                        <p className="relative mt-4 text-[var(--text-secondary)] leading-relaxed">"{review.review_text}"</p>
+                        {review.image_url && (
+                          <img src={review.image_url} alt="Commission preview" className="relative mt-4 w-full rounded-xl border border-[var(--border)] object-cover" />
+                        )}
+                      </article>
+                    </Reveal>
                   ))}
                 </div>
-              </div>
-            </div>
-            <p className="text-[var(--text-secondary)] leading-relaxed italic">"{review.review_text}"</p>
-            {review.image_url && (
-              <div className="mt-4">
-                <img src={review.image_url} alt="Review image" className="w-full h-48 object-cover rounded-xl border border-[var(--border)]" />
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-    {reviews.length > 2 && (
-      <div className="text-center mt-8">
-        <Link href="/reviews" className="btn-secondary inline-flex items-center gap-2">
-          View All Reviews
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </Link>
-      </div>
-    )}
-  </>
+                {reviews.length > 2 && (
+                  <div className="mt-10 text-center">
+                    <ButtonLink href="/reviews" variant="secondary">
+                      View All Reviews
+                      <ArrowRight className="h-4 w-4" />
+                    </ButtonLink>
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="text-center py-16">
-                <div className="text-5xl mb-4 opacity-20">💬</div>
-                <p className="text-[var(--text-dim)] text-lg max-w-md mx-auto mb-6">
+              <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-16 text-center">
+                <div className="mb-4 text-5xl opacity-20">💬</div>
+                <p className="mx-auto mb-6 max-w-md text-lg text-[var(--text-dim)]">
                   Client reviews will appear here after commissions are completed.
                 </p>
-                <a href="/reviews" className="btn-primary inline-flex items-center gap-2">
-                  Leave a Review
-                </a>
+                <ButtonLink href="/reviews">Leave a Review</ButtonLink>
               </div>
             )}
           </div>
@@ -275,34 +207,53 @@ export default function Home() {
 
         {/* FAQ */}
         <section className="section">
-          <div className="max-w-3xl mx-auto px-4 md:px-6">
-            <div className="text-center mb-10 md:mb-14">
-               <span className="section-label justify-center">Common questions</span>
-               <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">FAQ</h2>
-               <p className="text-[var(--text-secondary)] text-sm md:text-base">Quick answers to things you might be wondering.</p>
-            </div>
-
-            <div className="space-y-2.5">
-              {faq.map((item, i) => (
-                <div
-                  key={i}
-                  className="border border-[var(--border)] rounded-xl p-5 md:p-6 hover:border-[var(--border-hover)] hover:bg-[var(--bg-elevated)]/50 transition-all duration-300 cursor-pointer group"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <h3 className="text-sm font-bold text-white group-hover:text-[var(--accent)] transition-colors">{item.question}</h3>
-                    <span className="text-[var(--text-dim)] mt-0.5 text-lg leading-none">+</span>
+          <div className="container max-w-3xl">
+            <SectionHeading
+              align="center"
+              eyebrow="Common questions"
+              title="FAQ"
+              subtitle="Quick answers to the things people ask most."
+            />
+            <div className="space-y-3">
+              {faq.map((item, i) => {
+                const open = openFaq === i;
+                return (
+                  <div
+                    key={i}
+                    className="overflow-hidden rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--bg-card)] transition-colors duration-300 hover:border-[var(--border-hover)]"
+                  >
+                    <button
+                      onClick={() => setOpenFaq(open ? null : i)}
+                      aria-expanded={open}
+                      className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left"
+                    >
+                      <span className={`font-semibold transition-colors ${open ? "text-white" : "text-[var(--text)]"}`}>
+                        {item.question}
+                      </span>
+                      <span
+                        className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--accent)] transition-all duration-300 ${
+                          open ? "rotate-180 bg-[var(--accent-soft)]" : ""
+                        }`}
+                      >
+                        {open ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                      </span>
+                    </button>
+                    <div
+                      className="grid transition-all duration-500 ease-out"
+                      style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+                    >
+                      <div className="overflow-hidden">
+                        <p className="px-5 pb-5 text-sm leading-relaxed text-[var(--text-secondary)]">{item.answer}</p>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed mt-3">
-                    {item.answer}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
-
-            <div className="text-center mt-12">
-              <a href="/contact" className="btn-secondary inline-flex">
+            <div className="mt-10 text-center">
+              <ButtonLink href="/contact" variant="secondary">
                 Have more questions?
-              </a>
+              </ButtonLink>
             </div>
           </div>
         </section>
@@ -311,63 +262,25 @@ export default function Home() {
 
         {/* Pricing */}
         <section className="section section-alt">
-          <div className="max-w-7xl mx-auto px-4 md:px-6">
-            <div className="text-center mb-10 md:mb-14">
-               <span className="section-label justify-center">Rates</span>
-               <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">Pricing</h2>
-               <p className="text-[var(--text-secondary)] max-w-lg mx-auto text-sm md:text-base">
-                 Prices vary depending on complexity, optimisation requirements, and assets used.
-               </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
-              {pricing.map((tier) => (
-                <div
-                  key={tier.id}
-                  className={`relative p-5 md:p-7 h-full flex flex-col border rounded-xl transition-all duration-500 ${
-                    tier.popular
-                      ? "border-[var(--accent)] bg-[var(--accent-soft)] shadow-xl shadow-[var(--accent)]/5"
-                      : "border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--border-hover)]"
-                  }`}
-                >
-                  {tier.badge && (
-                    <div className="text-[10px] font-bold tracking-wider uppercase text-[var(--accent)] mb-4">
-                      {tier.badge}
-                    </div>
-                  )}
-                  <h3 className="text-base font-semibold text-white mb-2">
-                    {tier.emoji} {tier.name}
-                  </h3>
-                  <p className="text-3xl md:text-4xl font-bold text-white mb-6 tracking-tight">
-                    {tier.price}
-                  </p>
-                  <ul className="space-y-3 mb-8 flex-1">
-                    {tier.features.map((feat: string) => (
-                      <li key={feat} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-1.5 flex-shrink-0" />
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <a
-                    href="/contact"
-                    className={`block text-center py-3 rounded-xl text-sm font-bold transition-all ${
-                      tier.popular
-                        ? "bg-white text-black hover:bg-gray-100"
-                        : "border border-[var(--border)] text-white hover:border-[var(--accent)] hover:text-[var(--accent)]"
-                    }`}
-                  >
-                    Request
-                  </a>
-                </div>
+          <div className="container">
+            <SectionHeading
+              align="center"
+              eyebrow="Rates"
+              title="Pricing"
+              subtitle="Prices vary depending on complexity, optimisation requirements, and assets used."
+            />
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+              {pricing.map((tier, i) => (
+                <Reveal key={tier.id || i} delay={i * 80}>
+                  <PricingCard tier={tier} />
+                </Reveal>
               ))}
             </div>
-
-            <div className="text-center mt-10">
-              <p className="text-xs text-[var(--text-dim)] mb-3">All pricing is per-avatar and varies by complexity.</p>
-              <a href="/nsfw" className="text-sm text-[var(--accent)] hover:text-white transition-colors">
+            <div className="mt-10 text-center">
+              <p className="mb-3 text-xs text-[var(--text-dim)]">All pricing is per-avatar and varies by complexity.</p>
+              <Link href="/nsfw" className="text-sm text-[var(--accent)] transition-colors hover:text-white">
                 View NSFW Pricing &rarr;
-              </a>
+              </Link>
             </div>
           </div>
         </section>
@@ -378,36 +291,154 @@ export default function Home() {
 
         {/* CTA */}
         <section className="section relative overflow-hidden">
-          <div className="absolute inset-0 -z-10">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[var(--accent)] opacity-[0.04] blur-[120px] rounded-full" />
+          <div className="pointer-events-none absolute inset-0 -z-10">
+            <div className="absolute left-1/2 top-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--accent)] opacity-[0.05] blur-[120px]" />
           </div>
-          <div className="max-w-4xl mx-auto px-4 md:px-6">
-            <div className="text-center">
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 tracking-tight">
-                Ready to commission?
-              </h2>
-              <p className="text-[var(--text-secondary)] max-w-lg mx-auto mb-6 text-sm md:text-base leading-relaxed">
+          <div className="container">
+            <div className="mx-auto max-w-3xl text-center">
+              <span className="eyebrow justify-center">
+                <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
+                Ready when you are
+              </span>
+              <h2 className="display-lg mt-5 text-white">Ready to commission?</h2>
+              <p className="lead mx-auto mt-4">
                 Send me a message on Discord at{" "}
-                <strong className="text-white font-semibold">{site.discord}</strong> or
-                submit a request and I&rsquo;ll get back to you.
+                <strong className="font-semibold text-white">{site.discord}</strong>, or submit a request and
+                I&rsquo;ll get back to you.
               </p>
-              <div className="flex flex-wrap gap-4 justify-center">
-                <a href="/contact" className="btn-primary inline-flex">
+              <div className="mt-8 flex flex-wrap justify-center gap-4">
+                <ButtonLink href="/contact">
+                  <Zap className="h-4 w-4" />
                   Start a Commission
-                </a>
-                <a
-                  href="https://discord.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-secondary inline-flex"
-                >
+                </ButtonLink>
+                <ButtonLink href="https://discord.com/" variant="secondary" external>
                   Open Discord
-                </a>
+                </ButtonLink>
               </div>
             </div>
           </div>
         </section>
       </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+function ServiceRow({
+  image,
+  eyebrow,
+  title,
+  desc,
+  features,
+  reverse = false,
+}: {
+  image?: string;
+  eyebrow: string;
+  title: string;
+  desc: string;
+  features: string[];
+  reverse?: boolean;
+}) {
+  return (
+    <Reveal>
+      <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12">
+        <div className={`lg:col-span-5 ${reverse ? "lg:order-2" : "order-2 lg:order-1"}`}>
+          <span className="mb-3 block text-xs font-bold uppercase tracking-wider text-[var(--accent)]">
+            {eyebrow}
+          </span>
+          <h3 className="heading-md text-white">{title}</h3>
+          <p className="mt-4 leading-relaxed text-[var(--text-secondary)]">{desc}</p>
+          <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {features.map((f) => (
+              <li key={f} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
+                <span className="grid h-5 w-5 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+                  <Check className="h-3 w-3" />
+                </span>
+                {f}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className={`lg:col-span-7 ${reverse ? "lg:order-1" : "order-1 lg:order-2"}`}>
+          <div className="group relative aspect-[16/10] overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)]">
+            {image ? (
+              <img src={image} alt={title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
+            ) : (
+              <div className="grid h-full place-items-center text-5xl opacity-30">{eyebrow === "Unity" ? "⚙️" : eyebrow === "Blender" ? "🔧" : "✏️"}</div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
+          </div>
+        </div>
+      </div>
+    </Reveal>
+  );
+}
+
+function ProcessTimeline({ steps }: { steps: any[] }) {
+  if (!steps.length) return null;
+  return (
+    <div className="relative">
+      {/* connecting line (desktop) */}
+      <div className="absolute left-0 right-0 top-7 hidden h-px bg-gradient-to-r from-transparent via-[var(--border-strong)] to-transparent lg:block" />
+      <ol className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
+        {steps.map((step, i) => (
+          <li key={step.title || i} className="relative text-center">
+            <div className="relative z-10 mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] text-2xl shadow-md transition-all duration-500 hover:-translate-y-1 hover:border-[var(--accent)]/40 hover:shadow-[var(--shadow-glow)]">
+              {step.emoji}
+              <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[var(--accent)] text-[10px] font-bold text-[#04060a]">
+                {i + 1}
+              </span>
+            </div>
+            <h3 className="text-sm font-bold text-white">{step.title}</h3>
+            <p className="mt-1.5 px-1 text-xs leading-relaxed text-[var(--text-dim)]">{step.desc}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+function PricingCard({ tier }: { tier: any }) {
+  const popular = tier.popular;
+  return (
+    <div
+      className={`relative flex h-full flex-col rounded-[var(--r-lg)] border p-6 transition-all duration-500 md:p-7 ${
+        popular
+          ? "border-[var(--accent)] bg-[var(--accent-soft)] shadow-[var(--shadow-glow)]"
+          : "border-[var(--border)] bg-[var(--bg-card)] hover:-translate-y-1 hover:border-[var(--border-hover)]"
+      }`}
+    >
+      {tier.badge && (
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#04060a]">
+          {tier.badge}
+        </span>
+      )}
+      <h3 className="text-base font-semibold text-white">
+        <span className="mr-1.5">{tier.emoji}</span>
+        {tier.name}
+      </h3>
+      <p className="mt-4 text-3xl font-bold tracking-tight text-white md:text-4xl">{tier.price}</p>
+      <ul className="mb-8 mt-6 flex-1 space-y-3">
+        {tier.features?.map((feat: string) => (
+          <li key={feat} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
+            <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+              <Check className="h-3 w-3" />
+            </span>
+            <span>{feat}</span>
+          </li>
+        ))}
+      </ul>
+      <a
+        href="/contact"
+        className={`block rounded-xl py-3 text-center text-sm font-bold transition-all ${
+          popular
+            ? "bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] text-[#04060a] hover:brightness-105"
+            : "border border-[var(--border)] text-white hover:border-[var(--accent)] hover:text-[var(--accent)]"
+        }`}
+      >
+        Request
+      </a>
     </div>
   );
 }

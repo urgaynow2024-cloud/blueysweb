@@ -31,10 +31,10 @@ export default function RootLayout({
         <main className="flex-1 relative z-10">{children}</main>
         <Footer />
         {/* Mobile sticky CTA */}
-        <div className="md:hidden fixed bottom-4 left-4 right-4 z-40">
+        <div className="lg:hidden fixed bottom-4 left-4 right-4 z-40">
           <a
             href="/contact"
-            className="flex items-center justify-center gap-2 w-full bg-[var(--accent)] text-[#05070a] px-6 py-3.5 rounded-xl font-bold text-base shadow-2xl shadow-[var(--accent)]/30 hover:shadow-[var(--accent)]/40 transition-all"
+            className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] text-[#04060a] px-6 py-3.5 rounded-2xl font-bold text-base shadow-2xl shadow-[var(--accent)]/30 transition-all active:scale-[0.98]"
           >
             Commission Me
           </a>

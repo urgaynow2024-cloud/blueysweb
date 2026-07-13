@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import SectionTitle from "@/components/SectionTitle";
-import { ExternalLink } from "lucide-react";
+import SectionHeading from "@/components/ui/SectionHeading";
+import Reveal from "@/components/ui/Reveal";
+import { ExternalLink, Link2 } from "lucide-react";
 
 export default function LinksPage() {
   const [links, setLinks] = useState<any[]>([]);
@@ -28,55 +29,59 @@ export default function LinksPage() {
   return (
     <div className="relative">
       <section className="page relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-dots opacity-40" />
-        <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="text-center mb-12 page-head">
-            <span className="section-label justify-center">Links</span>
-            <h2 className="display-lg text-white mb-3">Find me elsewhere</h2>
-            <p className="text-[var(--text-secondary)] max-w-md mx-auto">Socials, commission platforms, stores, and more.</p>
-          </div>
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
+        <div className="container">
+          <SectionHeading
+            align="center"
+            eyebrow="Links"
+            title="Find me elsewhere"
+            subtitle="Socials, commission platforms, stores, and more — all in one place."
+          />
 
           {loading ? (
-            <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6 animate-pulse">
-                  <div className="h-5 bg-[var(--bg)] rounded w-1/3 mb-3" />
-                  <div className="h-4 bg-[var(--bg)] rounded w-1/2" />
+                <div key={i} className="animate-pulse rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-6">
+                  <div className="mb-3 h-5 w-1/3 rounded bg-[var(--bg)]" />
+                  <div className="h-4 w-1/2 rounded bg-[var(--bg)]" />
                 </div>
               ))}
             </div>
           ) : links.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-16 text-center">
               <p className="text-[var(--text-dim)]">No links have been added yet.</p>
             </div>
           ) : (
-            <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
               {links.map((link, i) => (
-                <a
-                  key={link.id || i}
-                  href={link.url}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="group rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6 hover:border-[var(--border-hover)] hover:bg-[var(--bg-elevated)] transition-all duration-300"
-                  style={{ animation: `fadeInUp 0.7s ${0.4 + i * 0.1}s ease both` }}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-white font-semibold group-hover:text-[var(--accent)] transition-colors">{link.name}</h3>
-                      {link.description && <p className="text-sm text-[var(--text-secondary)] mt-1 leading-relaxed">{link.description}</p>}
+                <Reveal key={link.id || i} delay={(i % 4) * 60}>
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="group flex h-full items-start justify-between gap-4 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-6 transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)]"
+                  >
+                    <div className="min-w-0">
+                      <h3 className="truncate font-semibold text-white transition-colors group-hover:text-[var(--accent)]">{link.name}</h3>
+                      {link.description && <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">{link.description}</p>}
+                      <p className="mt-3 break-all text-xs text-[var(--text-dim)]">{link.url}</p>
                     </div>
-                    <span className="text-xs text-[var(--text-dim)] bg-[var(--bg)] px-2.5 py-1 rounded-lg border border-[var(--border)] inline-flex items-center gap-1.5">
+                    <span className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2.5 py-1 text-xs text-[var(--text-dim)] transition-colors group-hover:border-[var(--accent)]/40 group-hover:text-[var(--accent)]">
                       Visit
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <ExternalLink className="h-3.5 w-3.5" />
                     </span>
-                  </div>
-                  <div className="mt-4">
-                    <p className="text-xs text-[var(--text-dim)] break-all">{link.url}</p>
-                  </div>
-                </a>
+                  </a>
+                </Reveal>
               ))}
             </div>
           )}
+
+          <div className="mt-12 text-center">
+            <a href="/contact" className="btn-secondary inline-flex items-center gap-2">
+              <Link2 className="h-4 w-4" />
+              Or just message me
+            </a>
+          </div>
         </div>
       </section>
     </div>
