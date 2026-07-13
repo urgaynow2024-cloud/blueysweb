@@ -232,6 +232,81 @@ CREATE POLICY "Public deletes portfolio-images" ON storage.objects FOR DELETE US
 -- DEFAULT DATA
 -- =============================================================================
 
+-- =============================================================================
+-- MODERATOR / ROLE SYSTEM
+-- =============================================================================
+
+-- Moderator / staff accounts. Passwords are stored hashed (scrypt).
+-- role: 'owner' (full access) or 'moderator' (limited, permission-gated).
+CREATE TABLE IF NOT EXISTS moderators (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  username TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'moderator',
+  permissions JSONB NOT NULL DEFAULT '{"reviews":false,"submissions":false,"hide_content":false}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by TEXT
+);
+
+-- Commission submissions from the public contact form.
+-- status: pending | approved | rejected | hidden  (hidden = soft-removed)
+CREATE TABLE IF NOT EXISTS commission_submissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT,
+  discord TEXT,
+  email TEXT,
+  description TEXT NOT NULL,
+  budget TEXT,
+  deadline TEXT,
+  reference_links TEXT,
+  notes TEXT,
+  status TEXT DEFAULT 'pending',
+  hidden BOOLEAN DEFAULT FALSE,
+  rejected_reason TEXT,
+  moderated_by TEXT,
+  moderated_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Audit trail for every moderation action.
+CREATE TABLE IF NOT EXISTS moderation_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  actor_id TEXT,
+  actor_name TEXT NOT NULL,
+  actor_role TEXT NOT NULL,
+  action TEXT NOT NULL,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT NOT NULL,
+  entity_label TEXT,
+  reason TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Extend reviews with moderation metadata
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'reviews') THEN
+    BEGIN ALTER TABLE reviews ADD COLUMN IF NOT EXISTS hidden BOOLEAN DEFAULT FALSE; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE reviews ADD COLUMN IF NOT EXISTS rejected_reason TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE reviews ADD COLUMN IF NOT EXISTS moderated_by TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE reviews ADD COLUMN IF NOT EXISTS moderated_at TIMESTAMPTZ; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE reviews ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW(); EXCEPTION WHEN others THEN NULL; END;
+  END IF;
+END $$;
+
+ALTER TABLE moderators ENABLE ROW LEVEL SECURITY;
+ALTER TABLE commission_submissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE moderation_log ENABLE ROW LEVEL SECURITY;
+
+-- Reviews stay publicly readable, but hidden reviews must not appear.
+DROP POLICY IF EXISTS "Public read reviews" ON reviews;
+CREATE POLICY "Public read reviews" ON reviews FOR SELECT USING (hidden IS NOT TRUE);
+
+-- Sensitive tables: no anon/authenticated policies => only the service role
+-- (used by server-side API routes) can read or write them.
+-- Public/anon keys cannot read moderator accounts, submissions, or the log.
+
 INSERT INTO site_config (key, value) VALUES
   ('name', 'Bluey''s Avatar Commissions'),
   ('tagline', 'VRChat Avatar Edits • Blender Work • Unity Setup'),

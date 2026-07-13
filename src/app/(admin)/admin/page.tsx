@@ -19,6 +19,7 @@ import { NsfwSection } from "@/components/admin/sections/NsfwSection";
 import { LinksSection } from "@/components/admin/sections/LinksSection";
 import { QueueSection } from "@/components/admin/sections/QueueSection";
 import { SiteInfoSection } from "@/components/admin/sections/SiteInfoSection";
+import { ModeratorsSection } from "@/components/admin/sections/ModeratorsSection";
 
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -52,7 +53,7 @@ const defaultWorkflow = [
   { id: "5", emoji: "📦", title: "Delivery", desc: "Final files sent once the remaining payment is done." },
 ];
 
-type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site";
+type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -141,8 +142,23 @@ export default function AdminPage() {
     return register("content", contentSaver);
   }, [register, contentSaver]);
 
-  function doLogin(e: React.FormEvent) {
+  async function doLogin(e: React.FormEvent) {
     e.preventDefault();
+    // Establish an owner session (sets the httpOnly cookie used by moderator APIs).
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "owner", password: pw }),
+    });
+    if (res.ok) {
+      setAuthed(true);
+      return;
+    }
+    if (res.status === 401) {
+      toast.error("Incorrect password");
+      return;
+    }
+    // Fallback for local/demo mode (Supabase not configured): use the hardcoded check.
     if (pw === ADMIN_PASSWORD) {
       setAuthed(true);
     } else {
@@ -221,6 +237,7 @@ export default function AdminPage() {
       {tab === "nsfw" && <NsfwSection />}
       {tab === "social-links" && <LinksSection value={links} onChange={(n) => { setLinks(n); markDirty(); }} />}
       {tab === "queue" && <QueueSection />}
+      {tab === "moderators" && <ModeratorsSection />}
       {tab === "site" && <SiteInfoSection value={site} onChange={(n) => { setSite(n); markDirty(); }} />}
 
       <Modal

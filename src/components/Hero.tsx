@@ -59,13 +59,14 @@ export default function Hero() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3 fade-in">
-              <a href="#work" className="btn-primary group">
-                View Portfolio
-                <ArrowDown className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" />
-              </a>
-              <a href="/contact" className="btn-secondary">
+              <a href="/contact" className="btn-primary group relative">
+                <span className="pointer-events-none absolute -inset-1 -z-10 rounded-[calc(var(--r-xs)+6px)] bg-[var(--accent)] opacity-25 blur-xl transition-opacity duration-500 group-hover:opacity-50" />
                 <Zap className="h-4 w-4" />
                 Commission Me
+              </a>
+              <a href="#work" className="btn-secondary group">
+                View Portfolio
+                <ArrowDown className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" />
               </a>
             </div>
 

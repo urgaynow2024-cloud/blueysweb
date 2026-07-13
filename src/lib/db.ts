@@ -38,7 +38,12 @@ export async function getPortfolioImages() {
 
 export async function getApprovedReviews() {
   if (!isSupabaseConfigured || !supabase) return [];
-  const { data, error } = await supabase.from("reviews").select("*").eq("status", "approved").order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("*")
+    .eq("status", "approved")
+    .eq("hidden", false)
+    .order("created_at", { ascending: false });
   if (error || !data) return [];
   return data;
 }

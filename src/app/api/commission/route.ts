@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
-
-export const runtime = "edge";
+import { supabaseAdmin } from "@/lib/supabase";
 
 const WEBHOOK_URL = "https://discord.com/api/webhooks/1525237333664989184/cvq6GJFloKC-WhLeRMqBWJCxU46SwzvsABl8iFKd_vu9VmU51t_dYLnalR91zR4wxpUZ";
 
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const { name, discord, description, budget, deadline, references, notes } = data;
+    const { name, discord, email, description, budget, deadline, references, notes } = data;
 
     const message = {
       embeds: [
@@ -28,15 +27,31 @@ export async function POST(request: Request) {
       ],
     };
 
-    const response = await fetch(WEBHOOK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(message),
-    });
+    // Store the submission for moderator review (pending until approved/hidden).
+    if (supabaseAdmin) {
+      await supabaseAdmin.from("commission_submissions").insert([
+        {
+          name: name || null,
+          discord: discord || null,
+          email: email || null,
+          description: description || "",
+          budget: budget || null,
+          deadline: deadline || null,
+          reference_links: references || null,
+          notes: notes || null,
+          status: "pending",
+        },
+      ]);
+    }
 
-    if (!response.ok) {
-      console.error("Discord webhook failed:", response.status, await response.text());
-      return NextResponse.json({ error: "Webhook failed" }, { status: 500 });
+    try {
+      await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(message),
+      });
+    } catch (webhookError) {
+      console.error("Discord webhook failed:", webhookError);
     }
 
     return NextResponse.json({ success: true });

@@ -82,6 +82,29 @@ Access with password: `blueyadmin`
 - **Process Editor** - Update workflow steps
 - **Reviews Management** - Approve, edit, delete client reviews
 - **Site Info** - Update site name, tagline, description, Discord
+- **Moderators** - Create moderator accounts and toggle exactly which permissions each one has
+
+### Moderator System
+
+Roles:
+
+- **Admin / Owner** — Full control (signs in at `/admin` with the master password). Can manage users, payments, settings, and moderator permissions.
+- **Moderator** — Limited, permission-gated access. Signs in at `/moderator`. Can be given any combination of: review moderation, submission moderation, and hiding content. Cannot change prices/payments, edit design, access payment info, change ownership/admin settings, promote users to admin, or permanently delete records.
+- **Customer / User** — Submits reviews and commission requests; content stays `pending` until a moderator or owner approves it.
+
+Owner-managed permissions (per moderator, via toggles in `/admin` → Moderators):
+
+- `reviews` — approve or reject client reviews
+- `submissions` — approve or reject commission submissions
+- `hide_content` — hide inappropriate reviews or submissions
+
+The moderator dashboard (`/moderator`) shows:
+
+- An **Approval Queue** of pending reviews and commission submissions (gated by the moderator's permissions)
+- A **Hidden Content** tab to restore soft-hidden items (requires `hide_content`)
+- A **Moderation Log** recording who approved, rejected, edited, or hid each item and when
+
+Rejecting requires an internal reason, which is stored in the moderation log (never shown publicly). Passwords are hashed with scrypt and sessions are stored in signed, http-only cookies. All moderation writes are enforced server-side by the moderator's permission set.
 
 ### Age Verification System
 
@@ -105,8 +128,9 @@ Access with password: `blueyadmin`
 
 - Public review submission form with optional image upload
 - Star rating (1-5)
-- Pending/approved workflow
-- Admin can preview, approve, edit, or delete reviews
+- Pending/approved workflow (reviews stay `pending` until a moderator or owner approves)
+- Admin or moderator can preview, approve, edit, hide, or reject reviews (reject requires an internal reason)
+- A moderation log records every approval, rejection, edit, and hide with actor and timestamp
 - Optional commission image upload
 - Success confirmation messages
 
@@ -133,6 +157,14 @@ All writes use the Supabase service-role key to bypass RLS:
 - `POST /api/nsfw/upload` - Upload NSFW portfolio images
 - `DELETE /api/nsfw` - Delete NSFW images
 - `POST /api/nsfw` - Reorder NSFW images
+- `POST /api/auth/login` - Owner or moderator sign-in (sets signed http-only session cookie)
+- `POST /api/auth/logout` - Clear session
+- `GET /api/auth/me` - Current session
+- `GET/POST /api/moderators` - List / create moderators (owner only)
+- `PATCH/DELETE /api/moderators/[id]` - Update perms / remove moderator (owner only)
+- `GET /api/moderation/queue` - Pending and hidden items for the signed-in staff member
+- `POST /api/moderation/action` - Approve, reject, hide, or unhide a review/submission (permission-gated)
+- `GET /api/moderation/log` - Moderation audit log
 
 ## Database Schema
 
@@ -146,6 +178,10 @@ All writes use the Supabase service-role key to bypass RLS:
 - `workflow_steps` - Process steps
 - `site_config` - Site metadata (name, tagline, description, discord)
 - `site_images` - Managed images (hero, service images)
+- `reviews` - Client reviews with `status` (pending/approved/rejected), `hidden`, `rejected_reason`, `moderated_by`, `moderated_at`
+- `moderators` - Staff accounts (hashed passwords, role, per-moderator permissions)
+- `commission_submissions` - Commission requests pending moderator approval
+- `moderation_log` - Audit trail of all moderation actions
 
 ### Row Level Security
 
@@ -230,7 +266,8 @@ Make sure to set environment variables in your hosting platform.
 
 ## Notes
 
-- The admin password is hardcoded as `blueyadmin` in `src/app/admin/page.tsx`
+- The admin password is hardcoded as `blueyadmin` in `src/app/admin/page.tsx` (override with `ADMIN_PASSWORD` env)
+- Moderator accounts are created in `/admin` → Moderators and sign in at `/moderator`; their permissions are enforced server-side
 - Age verification is client-side only and can be cleared by clearing localStorage
 - All images are stored in the `portfolio-images` Supabase Storage bucket
 - The site uses a dark theme with CSS custom properties for easy theming

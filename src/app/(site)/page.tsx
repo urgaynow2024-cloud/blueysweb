@@ -9,7 +9,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import PricingCard from "@/components/ui/PricingCard";
 import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages } from "@/lib/db";
 import Link from "next/link";
-import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles } from "lucide-react";
+import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles, MessageSquarePlus } from "lucide-react";
 import CommissionAvailability from "@/components/CommissionAvailability";
 
 function Stars({ rating, size = "h-4 w-4" }: { rating?: number; size?: string }) {
@@ -90,6 +90,8 @@ export default function Home() {
       <div className="relative z-10">
         <FeaturedWork />
 
+        <StatsBand site={site} />
+
         <div className="divider" />
 
         {/* Services */}
@@ -162,10 +164,11 @@ export default function Home() {
               title="Reviews"
               subtitle="What clients say about working together."
             />
+            {reviews.length > 0 && <ReviewSummary reviews={reviews} />}
             {reviews.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                  {reviews.slice(0, 4).map((review, i) => (
+                <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+                  {reviews.slice(0, 6).map((review, i) => (
                     <Reveal key={review.id || i} delay={i * 60}>
                       <article className="premium-card group relative h-full overflow-hidden p-6 md:p-7">
                         <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[var(--accent)] opacity-[0.04] blur-3xl transition-opacity duration-500 group-hover:opacity-[0.08]" />
@@ -186,7 +189,7 @@ export default function Home() {
                     </Reveal>
                   ))}
                 </div>
-                {reviews.length > 2 && (
+                {reviews.length > 3 && (
                   <div className="mt-10 text-center">
                     <ButtonLink href="/reviews" variant="secondary">
                       View All Reviews
@@ -271,7 +274,7 @@ export default function Home() {
               align="center"
               eyebrow="Rates"
               title="Pricing"
-              subtitle="Prices vary depending on complexity, optimisation requirements, and assets used."
+              subtitle="Clear, per-avatar pricing that scales with complexity. A 50% deposit starts the work; the balance is due on delivery."
             />
             <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
               {pricing.map((tier, i) => (
@@ -280,8 +283,11 @@ export default function Home() {
                 </Reveal>
               ))}
             </div>
-            <div className="mt-10 text-center">
-              <p className="mb-3 text-xs text-[var(--text-dim)]">All pricing is per-avatar and varies by complexity.</p>
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center">
+              <p className="text-xs text-[var(--text-dim)]">
+                Starting from <span className="font-semibold text-[var(--text-secondary)]">£15</span> · typical turnaround{" "}
+                <span className="font-semibold text-[var(--text-secondary)]">{site.stat_delivery || "5–10 days"}</span>
+              </p>
               <Link href="/nsfw" className="text-sm text-[var(--accent)] transition-colors hover:text-white">
                 View NSFW Pricing &rarr;
               </Link>
@@ -323,6 +329,53 @@ export default function Home() {
           </div>
         </section>
       </div>
+    </div>
+  );
+}
+
+function StatsBand({ site }: { site: any }) {
+  const stats = [
+    { label: "Average rating", value: site.stat_rating || "4.9", icon: <Star className="h-4 w-4" /> },
+    { label: "Turnaround", value: site.stat_delivery || "5–10 days", icon: <Zap className="h-4 w-4" /> },
+    { label: "First response", value: site.stat_response || "1–3 hours", icon: <MessageSquarePlus className="h-4 w-4" /> },
+    { label: "Returning clients", value: site.stat_returning || "40+", icon: <Check className="h-4 w-4" /> },
+  ];
+  return (
+    <section className="section !pb-0">
+      <div className="container">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+          {stats.map((s, i) => (
+            <Reveal key={s.label} delay={i * 60}>
+              <div className="group relative overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-5 text-center transition-colors duration-500 hover:border-[var(--border-hover)]">
+                <div className="mx-auto mb-3 grid h-9 w-9 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                  {s.icon}
+                </div>
+                <p className="font-display text-2xl font-bold text-white">{s.value}</p>
+                <p className="mt-1 text-xs text-[var(--text-dim)]">{s.label}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ReviewSummary({ reviews }: { reviews: any[] }) {
+  const avg = reviews.length
+    ? (reviews.reduce((sum, r) => sum + (Number(r.rating) || 5), 0) / reviews.length).toFixed(1)
+    : "5.0";
+  return (
+    <div className="mb-8 flex flex-wrap items-center gap-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] px-4 py-3">
+      <div className="flex gap-0.5">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Star key={i} className={`h-4 w-4 ${i <= Math.round(Number(avg)) ? "fill-[var(--accent)] text-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
+        ))}
+      </div>
+      <span className="font-semibold text-white">{avg}</span>
+      <span className="text-sm text-[var(--text-secondary)]">
+        from {reviews.length} verified client {reviews.length === 1 ? "review" : "reviews"}
+      </span>
     </div>
   );
 }
