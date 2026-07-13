@@ -73,18 +73,18 @@ export default function PortfolioPage() {
                 <Reveal key={i} delay={(i % 3) * 60}>
                   <div
                     onClick={() => setLightboxIndex(i)}
-                    className="group relative mb-4 block cursor-pointer overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/40"
+                    className="group relative mb-4 block aspect-[4/3] cursor-pointer overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/40"
                   >
                     <img
                       src={url}
                       alt={`Portfolio ${i + 1}`}
                       loading="lazy"
-                      className="block w-full object-contain p-2 transition-transform duration-700 group-hover:scale-[1.03]"
+                      className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
                     />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-500 group-hover:bg-black/20 group-hover:opacity-100">
-                      <div className="grid h-12 w-12 place-items-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition-all duration-300 group-hover:scale-110">
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/70 via-black/0 to-black/0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+                      <span className="grid h-12 w-12 place-items-center rounded-full border border-white/20 bg-white/15 text-white backdrop-blur transition-transform duration-300 group-hover:scale-110">
                         <Maximize2 className="h-5 w-5" />
-                      </div>
+                      </span>
                     </div>
                   </div>
                 </Reveal>

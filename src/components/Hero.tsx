@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getSiteImages } from "@/lib/db";
+import Link from "next/link";
 import { Zap, ArrowDown, Sparkles, ShieldCheck, Layers } from "lucide-react";
 
 export default function Hero() {
@@ -19,8 +20,8 @@ export default function Hero() {
     <section className="relative flex min-h-[100svh] items-center overflow-hidden pb-20 pt-28 md:pb-24 md:pt-32">
       {/* Ambient atmosphere */}
       <div className="pointer-events-none absolute inset-0 z-0">
-        <div className="absolute left-1/2 top-[-10%] h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.05] blur-[180px]" />
-        <div className="absolute bottom-[-5%] right-[-5%] h-[420px] w-[600px] rounded-full bg-[var(--accent-2)] opacity-[0.04] blur-[150px]" />
+        <div className="absolute left-1/2 top-[-10%] h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.06] blur-[180px]" />
+        <div className="absolute bottom-[-5%] right-[-5%] h-[420px] w-[600px] rounded-full bg-[var(--accent-2)] opacity-[0.05] blur-[150px]" />
         <div className="absolute inset-0 bg-dots opacity-40" />
       </div>
 
@@ -36,7 +37,7 @@ export default function Hero() {
             </div>
 
             <h1 className="display-xl mt-5 text-white fade-in">
-              Bluey&rsquo;s <span className="text-gradient">Avatar Commissions</span>
+              Bluey&rsquo;s <span className="text-gradient-strong">Avatar Commissions</span>
             </h1>
 
             <p className="lead mt-6 fade-in">
@@ -45,10 +46,7 @@ export default function Hero() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3 fade-in">
-              <a
-                href="#work"
-                className="btn-primary group"
-              >
+              <a href="#work" className="btn-primary group">
                 View Portfolio
                 <ArrowDown className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" />
               </a>
@@ -69,15 +67,15 @@ export default function Hero() {
               </span>
               <span className="inline-flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-[var(--accent)]" />
-                150+ avatars delivered
+                Built in Blender &amp; Unity
               </span>
             </div>
           </div>
 
           {/* Showcase */}
           <div className="lg:col-span-6">
-            <div className="relative mx-auto max-w-xl fade-in">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--r-xl)] border border-[var(--border)] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] shadow-2xl shadow-black/50">
+            <div className="relative mx-auto max-w-xl fade-in float-soft">
+              <div className="glow-border relative aspect-[4/3] overflow-hidden rounded-[var(--r-xl)] border border-[var(--border)] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] shadow-2xl shadow-black/50">
                 {heroImage ? (
                   <img src={heroImage} alt="Featured avatar render" className="h-full w-full object-cover" />
                 ) : (
@@ -103,15 +101,14 @@ export default function Hero() {
                 <p className="text-lg font-bold text-white">£15</p>
               </div>
 
-              {/* Floating rating chip */}
-              <div className="absolute -right-3 top-10 hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-float)]/90 px-4 py-3 shadow-2xl backdrop-blur-xl sm:block">
-                <div className="flex items-center gap-1 text-[var(--accent)]">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="h-3.5 w-3.5 fill-current" />
-                  ))}
-                </div>
-                <p className="mt-1 text-xs font-semibold text-white">4.9 / 5.0</p>
-              </div>
+              {/* Floating reviews chip (links to real, approved reviews) */}
+              <Link
+                href="/reviews"
+                className="absolute -right-3 top-10 hidden items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-float)]/90 px-4 py-3 shadow-2xl backdrop-blur-xl transition-colors hover:border-[var(--accent)]/50 sm:flex"
+              >
+                <Star className="h-4 w-4 fill-[var(--accent)] text-[var(--accent)]" />
+                <span className="text-xs font-semibold text-white">Client reviews</span>
+              </Link>
             </div>
           </div>
         </div>
@@ -119,6 +116,15 @@ export default function Hero() {
 
       {/* Bottom fade */}
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 h-24 bg-gradient-to-t from-[var(--bg)] to-transparent md:h-32" />
+
+      {/* Scroll cue */}
+      <a
+        href="#work"
+        className="pointer-events-auto absolute bottom-7 left-1/2 z-20 hidden -translate-x-1/2 items-center gap-2 text-xs uppercase tracking-[0.2em] text-[var(--text-dim)] transition-colors hover:text-white md:flex"
+      >
+        Scroll to explore
+        <ArrowDown className="h-3.5 w-3.5 animate-bounce" />
+      </a>
     </section>
   );
 }

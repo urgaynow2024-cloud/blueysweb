@@ -102,6 +102,7 @@ export default function Home() {
 
             <div className="space-y-6 md:space-y-10">
               <ServiceRow
+                emoji="✏️"
                 image={siteImages.avatar_editing?.url}
                 eyebrow="Avatar Editing"
                 title="Avatar Editing"
@@ -109,6 +110,7 @@ export default function Home() {
                 features={["Texture recolours", "Accessory additions", "Clothing fitting", "Hair combinations", "Minor fixes"]}
               />
               <ServiceRow
+                emoji="🔧"
                 image={siteImages.blender_work?.url}
                 eyebrow="Blender"
                 title="Blender Work"
@@ -117,6 +119,7 @@ export default function Home() {
                 reverse
               />
               <ServiceRow
+                emoji="⚙️"
                 image={siteImages.unity_work?.url}
                 eyebrow="Unity"
                 title="Unity Setup"
@@ -163,7 +166,7 @@ export default function Home() {
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                   {reviews.slice(0, 4).map((review, i) => (
                     <Reveal key={review.id || i} delay={i * 60}>
-                      <article className="group relative h-full overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-6 transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)] md:p-7">
+                      <article className="premium-card group relative h-full overflow-hidden p-6 md:p-7">
                         <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[var(--accent)] opacity-[0.04] blur-3xl transition-opacity duration-500 group-hover:opacity-[0.08]" />
                         <div className="relative flex items-center gap-4">
                           <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)]/20 to-[var(--accent-2)]/20 text-lg">
@@ -326,6 +329,7 @@ export default function Home() {
 /* -------------------------------------------------------------------------- */
 
 function ServiceRow({
+  emoji,
   image,
   eyebrow,
   title,
@@ -333,6 +337,7 @@ function ServiceRow({
   features,
   reverse = false,
 }: {
+  emoji?: string;
   image?: string;
   eyebrow: string;
   title: string;
@@ -344,7 +349,7 @@ function ServiceRow({
     <Reveal>
       <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12">
         <div className={`lg:col-span-5 ${reverse ? "lg:order-2" : "order-2 lg:order-1"}`}>
-          <span className="mb-3 block text-xs font-bold uppercase tracking-wider text-[var(--accent)]">
+          <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[var(--border-strong)] bg-white/[0.03] px-3 py-1 text-xs font-bold uppercase tracking-wider text-[var(--accent)]">
             {eyebrow}
           </span>
           <h3 className="heading-md text-white">{title}</h3>
@@ -361,13 +366,18 @@ function ServiceRow({
           </ul>
         </div>
         <div className={`lg:col-span-7 ${reverse ? "lg:order-1" : "order-1 lg:order-2"}`}>
-          <div className="group relative aspect-[16/10] overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)]">
+          <div className="group relative aspect-[16/10] overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] shadow-lg shadow-black/30">
             {image ? (
-              <img src={image} alt={title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
+              <img src={image} alt={title} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]" />
             ) : (
-              <div className="grid h-full place-items-center text-5xl opacity-30">{eyebrow === "Unity" ? "⚙️" : eyebrow === "Blender" ? "🔧" : "✏️"}</div>
+              <div className="grid h-full place-items-center text-5xl opacity-30">{emoji}</div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-40" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)]/80 via-transparent to-transparent" />
+            {emoji && (
+              <div className="absolute bottom-4 left-4 grid h-12 w-12 place-items-center rounded-xl border border-white/10 bg-[var(--bg-float)]/80 text-2xl backdrop-blur-md">
+                {emoji}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -381,12 +391,12 @@ function ProcessTimeline({ steps }: { steps: any[] }) {
     <div className="relative">
       {/* connecting line (desktop) */}
       <div className="absolute left-0 right-0 top-7 hidden h-px bg-gradient-to-r from-transparent via-[var(--border-strong)] to-transparent lg:block" />
-      <ol className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
+      <ol className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5">
         {steps.map((step, i) => (
-          <li key={step.title || i} className="relative text-center">
-            <div className="relative z-10 mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] text-2xl shadow-md transition-all duration-500 hover:-translate-y-1 hover:border-[var(--accent)]/40 hover:shadow-[var(--shadow-glow)]">
+          <li key={step.title || i} className="group relative text-center">
+            <div className="relative z-10 mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] text-2xl shadow-md transition-all duration-500 group-hover:-translate-y-1.5 group-hover:border-[var(--accent)]/50 group-hover:shadow-[var(--shadow-glow)]">
               {step.emoji}
-              <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[var(--accent)] text-[10px] font-bold text-[#04060a]">
+              <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-4)] text-[10px] font-bold text-[#04060a]">
                 {i + 1}
               </span>
             </div>
@@ -405,12 +415,12 @@ function PricingCard({ tier }: { tier: any }) {
     <div
       className={`relative flex h-full flex-col rounded-[var(--r-lg)] border p-6 transition-all duration-500 md:p-7 ${
         popular
-          ? "border-[var(--accent)] bg-[var(--accent-soft)] shadow-[var(--shadow-glow)]"
-          : "border-[var(--border)] bg-[var(--bg-card)] hover:-translate-y-1 hover:border-[var(--border-hover)]"
+          ? "glow-border border-[var(--accent)] bg-[var(--accent-soft)] shadow-[var(--shadow-glow)] md:-translate-y-2"
+          : "premium-card"
       }`}
     >
       {tier.badge && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#04060a]">
+        <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#04060a] shadow-lg shadow-[var(--accent)]/20">
           {tier.badge}
         </span>
       )}
@@ -419,6 +429,7 @@ function PricingCard({ tier }: { tier: any }) {
         {tier.name}
       </h3>
       <p className="mt-4 text-3xl font-bold tracking-tight text-white md:text-4xl">{tier.price}</p>
+      <p className="mt-1.5 text-xs text-[var(--text-dim)]">Per avatar</p>
       <ul className="mb-8 mt-6 flex-1 space-y-3">
         {tier.features?.map((feat: string) => (
           <li key={feat} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">

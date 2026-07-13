@@ -13,8 +13,8 @@ function PricingCard({ tier, index }: { tier: any; index: number }) {
       <div
         className={`relative flex h-full flex-col rounded-[var(--r-lg)] border p-7 transition-all duration-500 md:p-8 ${
           popular
-            ? "border-[var(--accent)] bg-[var(--accent-soft)] shadow-[var(--shadow-glow)]"
-            : "border-[var(--border)] bg-[var(--bg-card)] hover:-translate-y-1.5 hover:border-[var(--border-hover)]"
+            ? "glow-border border-[var(--accent)] bg-[var(--accent-soft)] shadow-[var(--shadow-glow)] md:-translate-y-2"
+            : "premium-card"
         }`}
       >
         {tier.badge && (
