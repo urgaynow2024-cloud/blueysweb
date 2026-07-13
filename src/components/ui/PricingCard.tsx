@@ -23,15 +23,17 @@ export default function PricingCard({
 
   return (
     <div
-      className={`group relative flex h-full flex-col overflow-hidden rounded-[var(--r-lg)] p-7 transition-all duration-500 md:p-8 ${
+      className={`group relative flex h-full flex-col rounded-[var(--r-lg)] p-7 transition-all duration-500 md:p-8 ${
         popular
           ? "glow-border border border-[var(--accent)]/60 bg-[var(--accent-soft)] shadow-[var(--shadow-glow)] md:-translate-y-2 md:hover:-translate-y-3"
           : "premium-card border border-[var(--border)]"
       }`}
     >
-      {/* Ambient glow for popular tier */}
+      {/* Ambient glow for popular tier (clipped to the card so it doesn't affect the badge) */}
       {popular && (
-        <div className="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-[var(--accent)] opacity-[0.12] blur-3xl transition-opacity duration-500 group-hover:opacity-[0.18]" />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[var(--r-lg)]">
+          <div className="absolute -right-10 -top-16 h-40 w-40 rounded-full bg-[var(--accent)] opacity-[0.12] blur-3xl transition-opacity duration-500 group-hover:opacity-[0.18]" />
+        </div>
       )}
 
       {tier.badge && (

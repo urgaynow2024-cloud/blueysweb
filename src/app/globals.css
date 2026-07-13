@@ -1294,7 +1294,7 @@ select:focus {
 }
 .hero-aurora {
   position: absolute;
-  inset: -35%;
+  inset: -12%;
   border-radius: 9999px;
   background: conic-gradient(
     from 0deg,
@@ -1303,8 +1303,9 @@ select:focus {
     rgba(79, 209, 197, 0.16),
     rgba(90, 176, 240, 0.22)
   );
-  filter: blur(70px);
-  opacity: 0.55;
+  filter: blur(44px);
+  opacity: 0.5;
+  contain: paint;
   animation: auroraSpin 26s linear infinite;
   will-change: transform;
 }
@@ -1366,4 +1367,6 @@ select:focus {
     scroll-behavior: auto !important;
   }
   .reveal { opacity: 1; transform: none; }
+  /* Skip the heavy blurred aurora entirely for reduced-motion users */
+  .hero-aurora { display: none; }
 }

@@ -73,7 +73,7 @@ export default function Footer() {
             <span className="w-6 h-6 rounded-md bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-[#05070a] text-xs font-bold">
               B
             </span>
-            <span>© {new Date().getFullYear()} Bluey&rsquo;s Avatar Commissions</span>
+            <span suppressHydrationWarning>© {new Date().getFullYear()} Bluey&rsquo;s Avatar Commissions</span>
           </div>
           <div className="flex gap-7">
             <Link href="/tos" className="hover:text-white transition-colors">Terms</Link>
