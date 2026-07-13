@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import PortfolioAdmin from "@/components/PortfolioAdmin";
-import { Star, CheckCircle2, Trash2, Edit2, ChevronRight, Settings, ImageIcon, Tag, HelpCircle, BarChart3, Save, RotateCcw, LogOut, Link as LinkIcon } from "lucide-react";
+import { Star, CheckCircle2, Trash2, Edit2, ChevronRight, Settings, ImageIcon, Tag, HelpCircle, BarChart3, Save, RotateCcw, LogOut, Link as LinkIcon, Loader2, X } from "lucide-react";
 import StarRating from "@/components/StarRating";
 import SiteImagesAdmin from "@/components/SiteImagesAdmin";
 import NsfwPortfolioAdmin from "@/components/NsfwPortfolioAdmin";
@@ -12,7 +12,14 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 function ReviewCard({ review, index, reviews, setReviews }: { review: any; index: number; reviews: any[]; setReviews: React.Dispatch<React.SetStateAction<any[]>> }) {
   const [editing, setEditing] = useState(false);
-  const [editData, setEditData] = useState({ display_name: review.display_name, review_text: review.review_text, rating: review.rating });
+  const [editData, setEditData] = useState({
+    display_name: review.display_name,
+    review_text: review.review_text,
+    rating: review.rating,
+    image_url: review.image_url || null,
+  });
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleApprove() {
     const result = await approveReview(review.id);
@@ -34,6 +41,29 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
     const result = await deleteReview(review.id);
     if (result) {
       setReviews(reviews.filter((r) => r.id !== review.id));
+    }
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Please choose an image file");
+      return;
+    }
+    setUploadingImage(true);
+    try {
+      const url = await uploadImage(file, "reviews");
+      if (url) {
+        setEditData((d) => ({ ...d, image_url: url }));
+      } else {
+        alert("Image upload failed. Check Supabase configuration.");
+      }
+    } catch {
+      alert("Image upload failed. Please try again.");
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
 
@@ -74,6 +104,45 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
           <div>
             <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Review</label>
             <textarea rows={3} value={editData.review_text} onChange={(e) => setEditData({ ...editData, review_text: e.target.value })} className="field resize-y" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Review image (optional)</label>
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+            {editData.image_url ? (
+              <div className="relative group">
+                <img src={editData.image_url} alt="Review preview" className="w-full h-40 object-cover rounded-xl border border-[var(--border)]" />
+                <button
+                  type="button"
+                  onClick={() => setEditData((d) => ({ ...d, image_url: null }))}
+                  className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  aria-label="Remove image"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingImage || !isSupabaseConfigured}
+                className="w-full px-5 py-6 rounded-2xl bg-[var(--bg)] border border-dashed border-[var(--border)] text-center cursor-pointer hover:border-[var(--accent)] transition-all disabled:opacity-50"
+              >
+                {uploadingImage ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
+                    <p className="text-sm text-[var(--text-secondary)]">Uploading...</p>
+                  </div>
+                ) : (
+                  <>
+                    <ImageIcon className="w-5 h-5 mx-auto mb-1.5 text-[var(--text-dim)]" />
+                    <p className="text-sm text-[var(--text-dim)]">Click to add an image</p>
+                  </>
+                )}
+              </button>
+            )}
+            {!isSupabaseConfigured && (
+              <p className="text-xs text-[var(--text-dim)] mt-1.5">Image upload requires Supabase configuration</p>
+            )}
           </div>
           <div className="flex gap-2">
             <button onClick={handleEdit} className="btn-primary !text-sm !py-2 !px-5">Save</button>

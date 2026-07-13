@@ -1,12 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Zap, Menu, X, ChevronRight } from "lucide-react";
 import { navLinks } from "@/data/site";
+
+function isActive(pathname: string, href: string) {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(href + "/");
+}
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -14,6 +21,25 @@ export default function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Close menu on navigation, lock scroll while open, and allow Escape to close
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   return (
     <nav
@@ -44,7 +70,8 @@ export default function Navbar() {
               <a
                 key={link.href}
                 href={link.href}
-                className="nav-link"
+                aria-current={isActive(pathname, link.href) ? "page" : undefined}
+                className={`nav-link ${isActive(pathname, link.href) ? "active" : ""}`}
               >
                 {link.label}
               </a>
@@ -76,17 +103,25 @@ export default function Navbar() {
         }`}
       >
         <div className="bg-[var(--bg)]/95 backdrop-blur-2xl border border-[var(--border)] rounded-2xl px-4 py-5 space-y-1 shadow-2xl shadow-black/40">
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={() => setOpen(false)}
-              className="flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-all group"
-            >
-              {link.label}
-              <ChevronRight className="w-4 h-4 text-[var(--text-dim)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
-            </a>
-          ))}
+          {navLinks.map((link) => {
+            const active = isActive(pathname, link.href);
+            return (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                aria-current={active ? "page" : undefined}
+                className={`flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium transition-all group ${
+                  active
+                    ? "text-white bg-white/5"
+                    : "text-[var(--text-secondary)] hover:text-white hover:bg-white/5"
+                }`}
+              >
+                {link.label}
+                <ChevronRight className={`w-4 h-4 transition-all ${active ? "text-[var(--accent)]" : "text-[var(--text-dim)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5"}`} />
+              </a>
+            );
+          })}
           <a
             href="/contact"
             onClick={() => setOpen(false)}
