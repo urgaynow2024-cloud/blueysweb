@@ -6,6 +6,7 @@ import FeaturedWork from "@/components/FeaturedWork";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { ButtonLink } from "@/components/ui/Button";
+import PricingCard from "@/components/ui/PricingCard";
 import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages } from "@/lib/db";
 import Link from "next/link";
 import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles } from "lucide-react";
@@ -405,51 +406,6 @@ function ProcessTimeline({ steps }: { steps: any[] }) {
           </li>
         ))}
       </ol>
-    </div>
-  );
-}
-
-function PricingCard({ tier }: { tier: any }) {
-  const popular = tier.popular;
-  return (
-    <div
-      className={`relative flex h-full flex-col rounded-[var(--r-lg)] border p-6 transition-all duration-500 md:p-7 ${
-        popular
-          ? "glow-border border-[var(--accent)] bg-[var(--accent-soft)] shadow-[var(--shadow-glow)] md:-translate-y-2"
-          : "premium-card"
-      }`}
-    >
-      {tier.badge && (
-        <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#04060a] shadow-lg shadow-[var(--accent)]/20">
-          {tier.badge}
-        </span>
-      )}
-      <h3 className="text-base font-semibold text-white">
-        <span className="mr-1.5">{tier.emoji}</span>
-        {tier.name}
-      </h3>
-      <p className="mt-4 text-3xl font-bold tracking-tight text-white md:text-4xl">{tier.price}</p>
-      <p className="mt-1.5 text-xs text-[var(--text-dim)]">Per avatar</p>
-      <ul className="mb-8 mt-6 flex-1 space-y-3">
-        {tier.features?.map((feat: string) => (
-          <li key={feat} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
-            <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
-              <Check className="h-3 w-3" />
-            </span>
-            <span>{feat}</span>
-          </li>
-        ))}
-      </ul>
-      <a
-        href="/contact"
-        className={`block rounded-xl py-3 text-center text-sm font-bold transition-all ${
-          popular
-            ? "bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] text-[#04060a] hover:brightness-105"
-            : "border border-[var(--border)] text-white hover:border-[var(--accent)] hover:text-[var(--accent)]"
-        }`}
-      >
-        Request
-      </a>
     </div>
   );
 }

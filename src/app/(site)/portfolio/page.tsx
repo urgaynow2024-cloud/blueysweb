@@ -73,7 +73,16 @@ export default function PortfolioPage() {
                 <Reveal key={i} delay={(i % 3) * 60}>
                   <div
                     onClick={() => setLightboxIndex(i)}
-                    className="group relative mb-4 block aspect-[4/3] cursor-pointer overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/40"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setLightboxIndex(i);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`View portfolio image ${i + 1} full size`}
+                    className="sheen group relative mb-4 block aspect-[4/3] cursor-pointer overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/40"
                   >
                     <img
                       src={url}

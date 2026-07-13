@@ -61,7 +61,7 @@ export default function Navbar() {
               <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               B
             </span>
-            <span className="hidden text-lg font-bold tracking-tight text-white sm:inline">
+            <span className="hidden text-lg font-bold tracking-tight text-white sm:inline font-display">
               Bluey<span className="text-[var(--accent)]">'s</span>
             </span>
           </a>

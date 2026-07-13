@@ -3,53 +3,8 @@
 import { pricingTiers, tosSections } from "@/data/site";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
-import { ButtonLink } from "@/components/ui/Button";
-import { Check, ArrowRight, ShieldCheck } from "lucide-react";
-
-function PricingCard({ tier, index }: { tier: any; index: number }) {
-  const popular = tier.popular;
-  return (
-    <Reveal delay={index * 80}>
-      <div
-        className={`relative flex h-full flex-col rounded-[var(--r-lg)] border p-7 transition-all duration-500 md:p-8 ${
-          popular
-            ? "glow-border border-[var(--accent)] bg-[var(--accent-soft)] shadow-[var(--shadow-glow)] md:-translate-y-2"
-            : "premium-card"
-        }`}
-      >
-        {tier.badge && (
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#04060a] shadow-lg shadow-[var(--accent)]/20">
-            {tier.badge}
-          </span>
-        )}
-        <h3 className="text-lg font-semibold text-white">
-          <span className="mr-2">{tier.emoji}</span>
-          {tier.name}
-        </h3>
-        <p className="mt-4 text-3xl font-bold tracking-tight text-white md:text-4xl">{tier.price}</p>
-        <p className="mt-1.5 text-xs text-[var(--text-dim)]">Per avatar</p>
-        <ul className="mb-8 mt-6 flex-1 space-y-3.5">
-          {tier.features.map((feat: string) => (
-            <li key={feat} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
-              <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
-                <Check className="h-3 w-3" />
-              </span>
-              <span>{feat}</span>
-            </li>
-          ))}
-        </ul>
-        <ButtonLink
-          href="/contact"
-          variant={popular ? "primary" : "outline"}
-          className="w-full"
-        >
-          Request
-          <ArrowRight className="h-4 w-4" />
-        </ButtonLink>
-      </div>
-    </Reveal>
-  );
-}
+import PricingCard from "@/components/ui/PricingCard";
+import { ShieldCheck } from "lucide-react";
 
 export default function PricingPage() {
   return (
@@ -68,7 +23,9 @@ export default function PricingPage() {
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
             {pricingTiers.map((tier, i) => (
-              <PricingCard key={tier.id} tier={tier} index={i} />
+              <Reveal key={tier.id} delay={i * 80}>
+                <PricingCard tier={tier} />
+              </Reveal>
             ))}
           </div>
 

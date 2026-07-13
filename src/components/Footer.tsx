@@ -12,7 +12,7 @@ export default function Footer() {
       <div className="relative max-w-7xl mx-auto px-4 md:px-6 py-14 md:py-20">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
           <div>
-            <Link href="/" className="text-lg font-bold tracking-tight text-white flex items-center gap-2.5 group">
+            <Link href="/" className="text-lg font-bold tracking-tight text-white flex items-center gap-2.5 group font-display">
               <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-[#05070a] text-sm font-bold shadow-lg shadow-[var(--accent)]/15 group-hover:shadow-[var(--accent)]/30 transition-shadow">
                 B
               </span>
@@ -73,7 +73,7 @@ export default function Footer() {
             <span className="w-6 h-6 rounded-md bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-[#05070a] text-xs font-bold">
               B
             </span>
-            <span>© 2025 Bluey&rsquo;s Avatar Commissions</span>
+            <span>© {new Date().getFullYear()} Bluey&rsquo;s Avatar Commissions</span>
           </div>
           <div className="flex gap-7">
             <Link href="/tos" className="hover:text-white transition-colors">Terms</Link>

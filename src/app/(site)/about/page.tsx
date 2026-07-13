@@ -14,9 +14,9 @@ const SERVICES = [
 
 const STATS = [
   { emoji: "✨", stat: "£15+", label: "Starting price" },
-  { emoji: "⏱", stat: "2yrs", label: "Experience" },
+  { emoji: "⏱", stat: "~2 yrs", label: "Experience" },
   { emoji: "🎮", stat: "VRChat", label: "Platform" },
-  { emoji: "💬", stat: "24h", label: "Response" },
+  { emoji: "💬", stat: "24–48h", label: "Typical reply" },
 ];
 
 export default function AboutPage() {

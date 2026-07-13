@@ -71,7 +71,7 @@ export default function FeaturedWork() {
               <Reveal key={i} delay={(i % 4) * 60}>
                 <Link
                   href="/portfolio"
-                  className="group relative block aspect-[4/3] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/40"
+                  className="sheen group relative block aspect-[4/3] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/40"
                 >
                   <img
                     src={url}

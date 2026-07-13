@@ -18,6 +18,10 @@
   --border: rgba(255, 255, 255, 0.06);
   --border-strong: rgba(255, 255, 255, 0.1);
   --border-hover: rgba(120, 190, 240, 0.4);
+  --border-accent: rgba(90, 176, 240, 0.35);
+
+  /* Overlays */
+  --bg-overlay: rgba(3, 5, 9, 0.78);
 
   /* Accents — cyan → violet → teal studio gradient */
   --accent: #5ab0f0;
@@ -100,6 +104,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+  letter-spacing: -0.02em;
 }
 
 ::selection {
@@ -298,6 +308,18 @@ select:focus {
   opacity: 0.6;
 }
 
+/* Stronger frosted glass — used for elevated overlays (mobile menu, popovers) */
+.glass-strong {
+  position: relative;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.05), transparent 42%), rgba(8, 11, 18, 0.86);
+  backdrop-filter: blur(26px) saturate(1.5);
+  -webkit-backdrop-filter: blur(26px) saturate(1.5);
+  border: 1px solid var(--border-strong);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 32px 64px -30px rgba(0, 0, 0, 0.85);
+}
+
 /* ----------------------------------------------------------------------------
    Buttons
 ---------------------------------------------------------------------------- */
@@ -448,24 +470,27 @@ select:focus {
 }
 
 .display-xl {
+  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
   font-size: clamp(2.6rem, 6.5vw, 5.25rem);
-  font-weight: 750;
-  line-height: 1.04;
-  letter-spacing: -0.045em;
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
 }
 
 .display-lg {
+  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
   font-size: clamp(1.9rem, 4.2vw, 3.25rem);
-  font-weight: 720;
-  line-height: 1.1;
-  letter-spacing: -0.035em;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.032em;
 }
 
 .heading-md {
+  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
   font-size: clamp(1.4rem, 2.8vw, 2rem);
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.02em;
-  line-height: 1.2;
+  line-height: 1.18;
 }
 
 .lead {
@@ -1242,6 +1267,91 @@ select:focus {
   pointer-events: none;
   opacity: 0.7;
 }
+
+/* ----------------------------------------------------------------------------
+   Premium motion & atmosphere (v2)
+---------------------------------------------------------------------------- */
+
+/* Slowly panning gradient — for animated headline / accents */
+@keyframes gradientPan {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.text-gradient-animated {
+  background: linear-gradient(120deg, var(--accent), var(--accent-2) 40%, var(--accent-3) 70%, var(--accent) 100%);
+  background-size: 220% 220%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: gradientPan 10s ease-in-out infinite;
+}
+
+/* Rotating aurora glow for the hero showcase */
+@keyframes auroraSpin {
+  to { transform: rotate(360deg); }
+}
+.hero-aurora {
+  position: absolute;
+  inset: -35%;
+  border-radius: 9999px;
+  background: conic-gradient(
+    from 0deg,
+    rgba(90, 176, 240, 0.22),
+    rgba(167, 139, 250, 0.18),
+    rgba(79, 209, 197, 0.16),
+    rgba(90, 176, 240, 0.22)
+  );
+  filter: blur(70px);
+  opacity: 0.55;
+  animation: auroraSpin 26s linear infinite;
+  will-change: transform;
+}
+
+/* Sheen sweep for image cards on hover */
+.sheen {
+  position: relative;
+}
+.sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.14) 48%, transparent 66%);
+  transform: translateX(-120%);
+  transition: transform 0.9s var(--ease-out);
+  pointer-events: none;
+  z-index: 2;
+}
+.sheen:hover::after {
+  transform: translateX(120%);
+}
+
+/* Soft looping marquee for the tool / skill strip */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 2.5rem;
+  white-space: nowrap;
+  animation: marquee 32s linear infinite;
+  will-change: transform;
+}
+.marquee-mask {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+
+/* Gentle continuous bob for accent chips */
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.bob { animation: bob 5s ease-in-out infinite; }
+.bob-delayed { animation: bob 6.5s ease-in-out infinite; animation-delay: -2s; }
 
 /* ----------------------------------------------------------------------------
    Reduced motion (global)

@@ -7,8 +7,9 @@ import { nsfwPricingTiers, nsfwRules } from "@/data/site";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
 import SectionHeading from "@/components/ui/SectionHeading";
+import PricingCard from "@/components/ui/PricingCard";
 import Reveal from "@/components/ui/Reveal";
-import { Check, ShieldAlert, ArrowRight } from "lucide-react";
+import { ShieldAlert, ArrowRight } from "lucide-react";
 
 function SkeletonCard() {
   return (
@@ -127,7 +128,16 @@ export default function NsfwPage() {
                   <div
                     key={i}
                     onClick={() => setLightboxIndex(i)}
-                    className="break-inside-avoid cursor-pointer overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/30 group"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setLightboxIndex(i);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`View NSFW image ${i + 1} full size`}
+                    className="sheen break-inside-avoid cursor-pointer overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/30 group"
                   >
                     <img src={url} alt={`NSFW Work ${i + 1}`} loading="lazy" className="block w-full object-contain p-2 transition-transform duration-700 group-hover:scale-[1.02]" />
                   </div>
@@ -146,37 +156,7 @@ export default function NsfwPage() {
           <div className="mb-16 grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
             {nsfwPricingTiers.map((tier, i) => (
               <Reveal key={tier.id} delay={i * 80}>
-                <div
-                  className={`relative flex h-full flex-col rounded-[var(--r-lg)] border p-6 transition-all duration-500 md:p-7 ${
-                    tier.popular
-                      ? "border-[var(--accent)] bg-[var(--accent-soft)] shadow-[var(--shadow-glow)]"
-                      : "border-[var(--border)] bg-[var(--bg-card)] hover:-translate-y-1 hover:border-[var(--border-hover)]"
-                  }`}
-                >
-                  {tier.badge && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#04060a]">
-                      {tier.badge}
-                    </span>
-                  )}
-                  <h3 className="text-base font-semibold text-white">
-                    <span className="mr-1.5">{tier.emoji}</span>
-                    {tier.name}
-                  </h3>
-                  <p className="mt-4 text-3xl font-bold tracking-tight text-white md:text-4xl">{tier.price}</p>
-                  <ul className="mb-8 mt-6 flex-1 space-y-3">
-                    {tier.features.map((feat: string) => (
-                      <li key={feat} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
-                        <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
-                          <Check className="h-3 w-3" />
-                        </span>
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link href="/contact" className={`block rounded-xl py-3 text-center text-sm font-bold transition-all ${tier.popular ? "bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] text-[#04060a]" : "border border-[var(--border)] text-white hover:border-[var(--accent)] hover:text-[var(--accent)]"}`}>
-                    Request
-                  </Link>
-                </div>
+                <PricingCard tier={tier} />
               </Reveal>
             ))}
           </div>
