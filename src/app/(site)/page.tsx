@@ -353,7 +353,7 @@ export default function Home() {
               subtitle="Quick answers to the things people ask most."
             />
             <div className="space-y-3">
-              {(faqItems.length > 0 ? faqItems : getFaqItemsStatic()).map((item: any, i: number) => {
+              {(faqItems.length > 0 ? faqItems : []).map((item: any, i: number) => {
                 const open = openFaq === i;
                 return (
                   <div
@@ -558,37 +558,4 @@ function ProcessTimeline({ steps }: { steps: any[] }) {
       </ol>
     </div>
   );
-}
-
-function getFaqItemsStatic() {
-  return [
-    {
-      question: "What do I need to provide?",
-      answer: "What you want done, avatar base name, reference images, and any required assets. Please read the Before Ordering guide for full details.",
-    },
-    {
-      question: "How long does a commission take?",
-      answer: "Depends on the tier and complexity. Light work is faster, full overhauls take longer.",
-    },
-    {
-      question: "Do you work on Quest?",
-      answer: "Quest compatibility depends on the tier. Overhauls include Quest optimisation.",
-    },
-    {
-      question: "What payment methods?",
-      answer: "PayPal and Payhip only. 50% deposit before work begins.",
-    },
-    {
-      question: "Can I request NSFW work?",
-      answer: "Limited NSFW commissions are accepted case-by-case for 18+ clients. See NSFW page for details.",
-    },
-    {
-      question: "What files do I get?",
-      answer: "Unity-ready VRChat avatar files. Blender source files on request (additional fee applies).",
-    },
-    {
-      question: "Can you do FBX mashups?",
-      answer: "Yes, I create custom avatar edits by combining, modifying, and adjusting existing FBX assets. See the FBX Mashups page for details.",
-    },
-  ];
 }

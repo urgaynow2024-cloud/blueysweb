@@ -51,7 +51,12 @@ export async function POST(request: Request) {
     const timestamp = new Date().toISOString();
     await createBackup(admin, `pre-save-${timestamp}`, data);
 
-    const siteRows = Object.entries(site || {}).map(([key, value]) => ({ key, value: String(value) }));
+    const siteRows = Object.entries(site || {}).map(([key, value]) => {
+      if (typeof value === "object" && value !== null) {
+        return { key, value: JSON.stringify(value) };
+      }
+      return { key, value: String(value) };
+    });
     await admin.from("site_config").upsert(siteRows, { onConflict: "key" });
 
     if (pricing && pricing.length > 0) {

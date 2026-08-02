@@ -5,17 +5,6 @@ import { getHeroContent, getSiteImages, getSiteConfig } from "@/lib/db";
 import Link from "next/link";
 import { Zap, ArrowDown, Sparkles, ShieldCheck, Layers } from "lucide-react";
 
-const TOOL_STRIP = [
-  "Blender",
-  "Unity",
-  "VRChat",
-  "Avatar Edits",
-  "Clothing Fitting",
-  "Toggles",
-  "Optimisation",
-  "Accessories",
-];
-
 export default function Hero() {
   const [heroImage, setHeroImage] = useState<string | null>(null);
   const [heroData, setHeroData] = useState<any>(null);
@@ -99,21 +88,6 @@ export default function Hero() {
                 )}
               </div>
             )}
-
-            {/* Tool / skill marquee */}
-            <div className="marquee-mask mt-10 overflow-hidden fade-in">
-              <div className="marquee-track">
-                {[...TOOL_STRIP, ...TOOL_STRIP].map((tool, i) => (
-                  <span
-                    key={i}
-                    className="inline-flex items-center gap-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-dim)]"
-                  >
-                    <span className="h-1 w-1 rounded-full bg-[var(--accent)]/70" />
-                    {tool}
-                  </span>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Showcase */}

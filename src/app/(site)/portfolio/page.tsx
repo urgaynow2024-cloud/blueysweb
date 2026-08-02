@@ -2,12 +2,11 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { getPortfolioImages } from "@/lib/db";
+import { getPortfolioImages, getPortfolioCategories } from "@/lib/db";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { Images, Maximize2 } from "lucide-react";
-import { portfolioCategories } from "@/data/site";
 
 interface PortfolioImage {
   id: string;
@@ -25,6 +24,7 @@ function SkeletonCard() {
 
 export default function PortfolioPage() {
   const [allImages, setAllImages] = useState<PortfolioImage[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("All");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -33,21 +33,12 @@ export default function PortfolioPage() {
     async function load() {
       setLoading(true);
       try {
-        if (!isSupabaseConfigured || !supabase) {
-          const stored = localStorage.getItem("adminData");
-          if (stored) {
-            try {
-              const data = JSON.parse(stored);
-              if (data.portfolioImages && data.portfolioImages.length > 0) {
-                setAllImages(data.portfolioImages.map((url: string, i: number) => ({ id: String(i), url })));
-              }
-            } catch (e) {}
-          }
-          setLoading(false);
-          return;
-        }
-        const imgs = await getPortfolioImages();
+        const [imgs, cats] = await Promise.all([
+          getPortfolioImages(),
+          getPortfolioCategories(),
+        ]);
         setAllImages(imgs.filter((i: any) => i.url).map((i: any) => ({ id: i.id, url: i.url, category: i.category || "VRChat Avatars" })));
+        setCategories(cats.map((c: any) => c.name).filter(Boolean));
       } catch (e) {
         console.error("Failed to load portfolio:", e);
       } finally {
@@ -80,7 +71,7 @@ export default function PortfolioPage() {
           />
 
           <div className="mb-8 flex flex-wrap items-center justify-center gap-2">
-            {["All", ...portfolioCategories].map((cat) => (
+            {["All", ...categories].map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
@@ -88,7 +79,7 @@ export default function PortfolioPage() {
                   activeCategory === cat
                     ? "bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/30"
                     : "border border-[var(--border)] text-[var(--text-dim)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
-                }}`}
+                }`}
               >
                 {cat}
               </button>

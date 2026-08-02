@@ -48,17 +48,7 @@ export default function ContactCommissionForm() {
     load();
   }, []);
 
-  const defaultFields: FormField[] = [
-    { name: "name", label: "Name", placeholder: "Your name", type: "text", required: true, options: [], max_size_mb: 10 },
-    { name: "discord", label: "Discord", placeholder: "e.g. username", type: "text", required: true, options: [], max_size_mb: 10 },
-    { name: "description", label: "Avatar Information", placeholder: "Describe what you want done...", type: "textarea", required: true, options: [], max_size_mb: 10 },
-    { name: "budget", label: "Budget", placeholder: "e.g. Â£30-Â£50", type: "text", required: false, options: [], max_size_mb: 10 },
-    { name: "deadline", label: "Deadline", placeholder: "e.g. Within 2 weeks", type: "text", required: false, options: [], max_size_mb: 10 },
-    { name: "references", label: "Reference Uploads", placeholder: "Paste image/video links...", type: "textarea", required: false, options: [], max_size_mb: 10 },
-    { name: "notes", label: "Notes", placeholder: "Platform, special requests...", type: "textarea", required: false, options: [], max_size_mb: 10 },
-  ];
-
-  const activeFields = fields.length > 0 ? fields : defaultFields;
+  const activeFields = fields.length > 0 ? fields : [];
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

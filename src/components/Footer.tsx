@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { getNavigationItems } from "@/lib/db";
-import { navLinks } from "@/data/site";
 import { Home, Scissors, Box, Package, Clock, Tag, ShoppingCart, HelpCircle, Star, Phone, Mail, Send } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -36,7 +35,7 @@ export default function Footer() {
     load();
   }, []);
 
-  const displayNav = navItems.length > 0 ? navItems.filter((l: any) => l.is_visible !== false) : navLinks;
+  const displayNav = navItems.filter((l: any) => l.is_visible !== false);
   const exploreLinks = displayNav.filter((l: any) => l.href !== "/contact");
   const supportLinks = [
     { href: "/contact", label: "Contact", icon: Phone },

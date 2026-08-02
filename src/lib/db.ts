@@ -446,6 +446,21 @@ export async function updateWebsiteSetting(key: string, value: string) {
   return !error;
 }
 
+export async function getNsfwRules() {
+  if (!isSupabaseConfigured || !supabase) {
+    return { requirements: [], notAllowed: [], note: "" };
+  }
+  const { data, error } = await supabase.from("site_config").select("*").eq("key", "nsfw_rules");
+  if (error || !data || data.length === 0) {
+    return { requirements: [], notAllowed: [], note: "" };
+  }
+  try {
+    return JSON.parse(data[0].value) as { requirements: string[]; notAllowed: string[]; note: string };
+  } catch {
+    return { requirements: [], notAllowed: [], note: "" };
+  }
+}
+
 export async function getPortfolioCategories() {
   return fetchAll("portfolio_categories", []);
 }

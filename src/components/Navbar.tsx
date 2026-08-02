@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { Zap, Menu, X, ArrowUpRight, Home, Scissors, Box, Package, Clock, Tag, ShoppingCart, HelpCircle, Star, Phone } from "lucide-react";
 import { getNavigationItems } from "@/lib/db";
-import { navLinks } from "@/data/site";
 
 const linkIcons: Record<string, React.ElementType> = {
   "/": Home,
@@ -45,7 +44,7 @@ export default function Navbar() {
     load();
   }, []);
 
-  const displayNav = navItems.length > 0 ? navItems.filter((l: any) => l.is_visible !== false) : navLinks;
+  const displayNav = navItems.filter((l: any) => l.is_visible !== false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);

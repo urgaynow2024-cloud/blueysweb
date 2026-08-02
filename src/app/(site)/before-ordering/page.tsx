@@ -3,7 +3,7 @@
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
-import { AlertTriangle, CheckCircle2, FileText, ExternalLink } from "lucide-react";
+import { CheckCircle2, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { getBeforeOrderingItems } from "@/lib/db";
@@ -68,7 +68,7 @@ export default function BeforeOrderingPage() {
 
           <div className="space-y-6 mb-12">
             {items.map((item, i) => (
-              <Reveal key={item.title || i} delay={i * 60}>
+              <Reveal key={item.id || i} delay={i * 60}>
                 <div className="group flex gap-4 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-6 transition-all duration-500 hover:-translate-y-0.5 hover:border-[var(--border-hover)]">
                   <div className="flex-shrink-0">
                     <div className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--accent-soft)] text-2xl">
@@ -84,26 +84,8 @@ export default function BeforeOrderingPage() {
             ))}
           </div>
 
-          <Reveal>
-            <div className="mb-12 rounded-[var(--r-lg)] border border-amber-500/30 bg-amber-500/10 p-6">
-              <div className="flex items-start gap-4">
-                <AlertTriangle className="text-amber-400 flex-shrink-0 mt-0.5" size={20} />
-                <div>
-                  <h2 className="text-amber-400 font-bold mb-2">Important Notice</h2>
-                  <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
-                    If you cannot confirm that you have valid permissions for the assets you intend to
-                    use, please do not proceed with ordering. Purchasing assets from legitimate sources
-                    (BOOTH, Gumroad, Sketchfab, etc.) is required. Bluey Commissions cannot be held
-                    responsible for copyright claims resulting from client-supplied files.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Reveal>
-
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <ButtonLink href="/process" variant="secondary">
-              <FileText className="h-4 w-4" />
               View Commission Process
             </ButtonLink>
             <Link href="/tos" className="btn-ghost inline-flex items-center justify-center gap-2">

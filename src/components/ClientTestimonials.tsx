@@ -53,7 +53,6 @@ export default function ClientTestimonials({ testimonials }: { testimonials: Tes
                         />
                       ))}
                     </div>
-                    <span className="text-xs text-[var(--text-dim)]">5.0 rated</span>
                   </div>
 
                   <p className="mt-2 text-xs font-medium text-[var(--accent)]">{t.commissioned}</p>

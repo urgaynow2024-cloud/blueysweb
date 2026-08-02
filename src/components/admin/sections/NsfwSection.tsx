@@ -6,15 +6,20 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 import { useSave } from "../SaveProvider";
 import { useToast } from "../Toast";
 import { Card, CardHeader } from "../Card";
+import { Field, Input, Textarea } from "../Field";
+import { Button } from "../Button";
 import { UploadArea } from "../UploadArea";
 import { PortfolioGrid, type PortfolioImage } from "../PortfolioGrid";
 
 export function NsfwSection() {
   const [images, setImages] = useState<PortfolioImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rules, setRules] = useState({ requirements: "", notAllowed: "", note: "" });
+  const [rulesLoading, setRulesLoading] = useState(true);
   const imagesRef = useRef<PortfolioImage[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceIndexRef = useRef<number | null>(null);
+  const rulesRef = useRef(rules);
 
   const { markDirty, register } = useSave();
   const toast = useToast();
@@ -24,8 +29,13 @@ export function NsfwSection() {
   }, [images]);
 
   useEffect(() => {
+    rulesRef.current = rules;
+  }, [rules]);
+
+  useEffect(() => {
     if (!isSupabaseConfigured) {
       setLoading(false);
+      setRulesLoading(false);
       return;
     }
     (async () => {
@@ -36,6 +46,23 @@ export function NsfwSection() {
         toast.error("Failed to load NSFW images");
       } finally {
         setLoading(false);
+      }
+    })();
+    (async () => {
+      try {
+        const res = await fetch("/api/nsfw/rules");
+        if (res.ok) {
+          const data = await res.json();
+          setRules({
+            requirements: (data.requirements || []).join("\n"),
+            notAllowed: (data.notAllowed || []).join("\n"),
+            note: data.note || "",
+          });
+        }
+      } catch {
+        toast.error("Failed to load NSFW rules");
+      } finally {
+        setRulesLoading(false);
       }
     })();
   }, [toast]);
@@ -56,10 +83,31 @@ export function NsfwSection() {
     }
   }, []);
 
+  const saveRules = useCallback(async () => {
+    const res = await fetch("/api/nsfw/rules", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        requirements: rulesRef.current.requirements.split("\n").filter(Boolean),
+        notAllowed: rulesRef.current.notAllowed.split("\n").filter(Boolean),
+        note: rulesRef.current.note,
+      }),
+    });
+    if (!res.ok) {
+      const r = await res.json().catch(() => ({}));
+      throw new Error(r.error || "Failed to save NSFW rules");
+    }
+  }, []);
+
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     return register("nsfw", saveNsfw);
   }, [register, saveNsfw]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    return register("nsfw-rules", saveRules);
+  }, [register, saveRules]);
 
   async function uploadOne(file: File) {
     const formData = new FormData();
@@ -132,7 +180,7 @@ export function NsfwSection() {
   if (!isSupabaseConfigured) {
     return (
       <Card className="p-8">
-        <CardHeader title="NSFW Portfolio" />
+        <CardHeader title="NSFW Content" />
         <p className="mt-4 text-sm text-[var(--text-secondary)]">Supabase is not configured. Add credentials to manage NSFW content.</p>
       </Card>
     );
@@ -141,6 +189,7 @@ export function NsfwSection() {
   return (
     <div className="space-y-6">
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onReplaceFile} />
+
       <Card className="p-8">
         <CardHeader
           title="NSFW Portfolio"
@@ -162,6 +211,39 @@ export function NsfwSection() {
         onDelete={deleteImage}
         onRetry={() => {}}
       />
+
+      <Card className="p-8">
+        <CardHeader
+          title="NSFW Rules"
+          description="Requirements and rules shown on the NSFW page. One item per line."
+        />
+        <div className="mt-6 space-y-4">
+          <Field label="Requirements (one per line)">
+            <Textarea
+              rows={4}
+              value={rules.requirements}
+              onChange={(e) => { setRules({ ...rules, requirements: e.target.value }); markDirty(); }}
+              placeholder="18+ only&#10;Valid permissions for all assets&#10;Reference images provided"
+            />
+          </Field>
+          <Field label="Not Allowed (one per line)">
+            <Textarea
+              rows={4}
+              value={rules.notAllowed}
+              onChange={(e) => { setRules({ ...rules, notAllowed: e.target.value }); markDirty(); }}
+              placeholder="Copyrighted assets without permission&#10;Underage content"
+            />
+          </Field>
+          <Field label="Additional Note">
+            <Textarea
+              rows={2}
+              value={rules.note}
+              onChange={(e) => { setRules({ ...rules, note: e.target.value }); markDirty(); }}
+              placeholder="Any additional notes for clients"
+            />
+          </Field>
+        </div>
+      </Card>
     </div>
   );
 }
