@@ -32,6 +32,19 @@ async function fetchSiteConfig() {
   return result;
 }
 
+export async function getQueueConfig(): Promise<Record<string, string>> {
+  const cfg = await fetchSiteConfig();
+  const result: Record<string, string> = {};
+  for (const key of ["queue_status", "queue_slots_total", "queue_slots_used", "queue_wait_time", "queue_notes", "queue_last_updated"]) {
+    if (cfg[key] !== undefined) result[key] = String(cfg[key]);
+  }
+  return result;
+}
+
+export async function getHomepageSections() {
+  return fetchAll("homepage_sections", []);
+}
+
 export async function getPortfolioImages() {
   if (!isSupabaseConfigured || !supabase) return [];
   const { data, error } = await supabase
@@ -297,8 +310,36 @@ export async function deleteHeroContent(id: string) {
   return !error;
 }
 
+// Canonical homepage-stat mapping. Keep in sync with the homepage_stats seed in
+// supabase/schema.sql (same keys, labels, and sublabels in the same order).
+export const HOMEPAGE_STAT_SEED = [
+  { key: "stat_commissions", label: "Commissions", sublabel: "Completed commissions" },
+  { key: "stat_clients", label: "Clients", sublabel: "Satisfied clients" },
+  { key: "stat_rating", label: "Rating", sublabel: "Average client rating" },
+  { key: "stat_reviews", label: "Reviews", sublabel: "Published reviews" },
+  { key: "stat_blender", label: "Blender", sublabel: "Years using Blender" },
+  { key: "stat_unity", label: "Unity", sublabel: "Years using Unity" },
+  { key: "stat_response", label: "Response", sublabel: "Typical first reply time" },
+  { key: "stat_delivery", label: "Delivery", sublabel: "Typical turnaround" },
+] as const;
+
 export async function getHomepageStats() {
-  return fetchAll("homepage_stats", []);
+  const fromTable = await fetchAll("homepage_stats", []);
+  if (fromTable.length > 0) return fromTable;
+  // Fallback: migrate the real stat_* keys that already live in site_config so
+  // existing statistics are never lost and the page never shows empty.
+  const cfg = await fetchSiteConfig();
+  const out: Array<{
+    label: string;
+    value: string | number;
+    suffix: string;
+    sublabel: string;
+    sort_order: number;
+  }> = [];
+  HOMEPAGE_STAT_SEED.forEach((m, i) => {
+    if (cfg[m.key]) out.push({ label: m.label, value: cfg[m.key], suffix: "", sublabel: m.sublabel, sort_order: i });
+  });
+  return out;
 }
 
 export async function addHomepageStat(data: any) {
@@ -527,10 +568,6 @@ export async function deleteMediaLibraryItem(id: string) {
   return !error;
 }
 
-export async function getHomepageSections() {
-  return fetchAll("homepage_sections", []);
-}
-
 export async function addHomepageSection(data: any) {
   if (!isSupabaseConfigured || !supabase) return null;
   const { data: result, error } = await supabase.from("homepage_sections").insert([data]).select();
@@ -547,4 +584,12 @@ export async function deleteHomepageSection(id: string) {
   if (!isSupabaseConfigured || !supabase) return false;
   const { error } = await supabase.from("homepage_sections").delete().eq("id", id);
   return !error;
+}
+
+export async function getFbxMashupCommission() {
+  return fetchAll("fbx_mashup_commission", []);
+}
+
+export async function getFbxMashupCommissionItems() {
+  return fetchAll("fbx_mashups", []);
 }

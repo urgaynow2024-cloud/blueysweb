@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { getNavigationItems } from "@/lib/db";
+import { getNavigationItems, getSiteConfig } from "@/lib/db";
 import { Home, Scissors, Box, Package, Clock, Tag, ShoppingCart, HelpCircle, Star, Phone, Mail, Send } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -21,13 +21,14 @@ const linkIcons: Record<string, React.ElementType> = {
 export default function Footer() {
   const [navItems, setNavItems] = useState<any[]>([]);
   const [navLoaded, setNavLoaded] = useState(false);
+  const [site, setSite] = useState<any>({});
 
   useEffect(() => {
     async function load() {
       try {
-        const data = await getNavigationItems();
-        if (data && data.length > 0) {
-          setNavItems(data);
+        const [navData, siteData] = await Promise.all([getNavigationItems(), getSiteConfig()]);
+        if (navData && navData.length > 0) {
+          setNavItems(navData);
         } else {
           setNavItems([
             { href: "/services", label: "Services", is_visible: true },
@@ -38,6 +39,7 @@ export default function Footer() {
             { href: "/faq", label: "FAQ", is_visible: true },
           ]);
         }
+        setSite(siteData || {});
       } catch (e) {
         console.error("Failed to load navigation:", e);
         setNavItems([
@@ -57,11 +59,17 @@ export default function Footer() {
 
   const displayNav = navItems.filter((l: any) => l.is_visible !== false);
   const exploreLinks = displayNav.filter((l: any) => l.href !== "/contact");
+  const discordRaw = site.discord_url || site.discord;
+  const discordUrl = discordRaw
+    ? discordRaw.startsWith("http")
+      ? discordRaw
+      : `https://discord.com/users/${encodeURIComponent(discordRaw)}`
+    : "";
   const supportLinks = [
     { href: "/contact", label: "Contact", icon: Phone },
     { href: "/before-ordering", label: "Before Ordering", icon: ShoppingCart },
     { href: "/tos", label: "Terms of Service", icon: Mail },
-    { href: "https://discord.com/", label: "Discord", icon: Send, external: true },
+    ...(discordUrl ? [{ href: discordUrl, label: "Discord", icon: Send, external: true }] : []),
   ];
 
   return (

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { CircleCheck, CalendarClock } from "lucide-react";
+import { getQueueConfig } from "@/lib/db";
 
 const STATUS_CONFIG: Record<string, { label: string; text: string; border: string; bg: string; dot: string; desc: string }> = {
   open: {
@@ -40,14 +41,11 @@ export default function CommissionAvailability() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/queue/config");
-        if (res.ok) {
-          const data = await res.json();
-          setStatus(data.queue_status || "open");
-          setSlotsTotal(parseInt(data.queue_slots_total || "6", 10));
-          setSlotsUsed(parseInt(data.queue_slots_used || "0", 10));
-          setNote(data.queue_notes || "");
-        }
+        const data = await getQueueConfig();
+        if (data.queue_status) setStatus(data.queue_status);
+        if (data.queue_slots_total) setSlotsTotal(parseInt(data.queue_slots_total, 10));
+        if (data.queue_slots_used !== undefined) setSlotsUsed(parseInt(data.queue_slots_used, 10));
+        if (data.queue_notes) setNote(data.queue_notes);
       } catch (e) {
         console.error("Failed to load availability:", e);
       } finally {

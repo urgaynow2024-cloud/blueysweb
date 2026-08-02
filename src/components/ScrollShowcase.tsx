@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
 import Reveal from "@/components/ui/Reveal";
 
 interface ScrollShowcaseProps {
@@ -9,24 +8,9 @@ interface ScrollShowcaseProps {
 }
 
 export default function ScrollShowcase({ images, title }: ScrollShowcaseProps) {
-  const [visibleCount, setVisibleCount] = useState(6);
-
-  useEffect(() => {
-    function updateCount() {
-      const w = window.innerWidth;
-      if (w < 640) setVisibleCount(3);
-      else if (w < 1024) setVisibleCount(4);
-      else setVisibleCount(6);
-    }
-    updateCount();
-    window.addEventListener("resize", updateCount);
-    return () => window.removeEventListener("resize", updateCount);
-  }, []);
-
   if (images.length === 0) return null;
 
   const displayImages = [...images, ...images, ...images];
-  const cardWidth = 220;
 
   return (
     <Reveal>

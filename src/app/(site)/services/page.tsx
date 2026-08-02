@@ -128,7 +128,7 @@ export default function ServicesPage() {
                     <div className="group h-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-5 text-center transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)]">
                       <div className="mb-3 text-2xl transition-transform duration-300 group-hover:scale-110">{step.emoji}</div>
                       <h3 className="mb-1.5 text-sm font-bold text-white">{step.title}</h3>
-                      <p className="px-1 text-xs leading-relaxed text-[var(--text-dim)]">{step.desc}</p>
+                      <p className="px-1 text-xs leading-relaxed text-[var(--text-dim)]">{step.description}</p>
                     </div>
                   </Reveal>
                 ))}

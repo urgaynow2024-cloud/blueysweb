@@ -181,6 +181,8 @@ CREATE TABLE IF NOT EXISTS fbx_mashups (
   before_image_url TEXT,
   after_image_url TEXT,
   description TEXT NOT NULL DEFAULT '',
+  price TEXT DEFAULT '',
+  availability TEXT DEFAULT '',
   status TEXT DEFAULT 'completed',
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -558,3 +560,191 @@ DROP POLICY IF EXISTS "Authenticated write content_backups" ON content_backups;
 
 CREATE POLICY "Public read content_backups" ON content_backups FOR SELECT USING (true);
 CREATE POLICY "Authenticated write content_backups" ON content_backups FOR ALL USING (auth.role() = 'authenticated');
+
+-- =============================================================================
+-- CONTENT BACKUPS TABLE (admin save/restore)
+-- =============================================================================
+-- content_backups is created above. The following keeps an audit trail of every
+-- admin "Save Changes" operation so nothing is ever lost silently.
+
+-- =============================================================================
+-- MIGRATIONS / SEEDS — PRESERVE EXISTING DATA, NEVER OVERWRITE
+-- =============================================================================
+-- These blocks are intentionally idempotent and NON-destructive: they only run
+-- when the target table is empty, so they never delete or clobber real rows
+-- that already exist in your database. Run this file against your existing
+-- Supabase project to backfill the new redesign tables from data that is
+-- already present (site_config, portfolio_images, site_images, etc.).
+
+-- Ensure portfolio_images always has a usable category (backfills the 6 existing
+-- real rows; never deletes them).
+ALTER TABLE portfolio_images ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'VRChat Avatars';
+CREATE INDEX IF NOT EXISTS portfolio_images_sort_idx ON portfolio_images (sort_order);
+UPDATE portfolio_images SET category = 'VRChat Avatars' WHERE category IS NULL OR category = '';
+
+-- -----------------------------------------------------------------------------
+-- Navigation: seed a clean, minimal menu so the Navbar/Footer have real links.
+-- Overridden later by the admin Navigation editor once managed.
+-- -----------------------------------------------------------------------------
+INSERT INTO navigation_items (id, label, href, icon, sort_order, is_external, is_visible, created_at, updated_at)
+VALUES
+  (gen_random_uuid(), 'Home', '/', 'Home', 0, false, true, NOW(), NOW()),
+  (gen_random_uuid(), 'Portfolio', '/portfolio', 'Package', 1, false, true, NOW(), NOW()),
+  (gen_random_uuid(), 'Commissions', '/contact', 'Phone', 2, false, true, NOW(), NOW()),
+  (gen_random_uuid(), 'Prices', '/pricing', 'Tag', 3, false, true, NOW(), NOW()),
+  (gen_random_uuid(), 'About', '/about', 'User', 4, false, true, NOW(), NOW()),
+  (gen_random_uuid(), 'Contact', '/contact', 'Phone', 5, false, true, NOW(), NOW())
+ON CONFLICT (id) DO NOTHING
+WHERE NOT EXISTS (SELECT 1 FROM navigation_items);
+
+-- -----------------------------------------------------------------------------
+-- Homepage statistics: migrate the real stat_* keys that already live in
+-- site_config into the homepage_stats table (only if the table is empty).
+-- Keep these labels/sublabels in sync with HOMEPAGE_STAT_SEED in src/lib/db.ts.
+-- -----------------------------------------------------------------------------
+WITH src AS (
+  SELECT 'Commissions' AS label, 'Completed commissions' AS sub, 0 AS ord, value FROM site_config WHERE key = 'stat_commissions'
+  UNION ALL
+  SELECT 'Clients', 'Satisfied clients', 1, value FROM site_config WHERE key = 'stat_clients'
+  UNION ALL
+  SELECT 'Rating', 'Average client rating', 2, value FROM site_config WHERE key = 'stat_rating'
+  UNION ALL
+  SELECT 'Reviews', 'Published reviews', 3, value FROM site_config WHERE key = 'stat_reviews'
+  UNION ALL
+  SELECT 'Blender', 'Years using Blender', 4, value FROM site_config WHERE key = 'stat_blender'
+  UNION ALL
+  SELECT 'Unity', 'Years using Unity', 5, value FROM site_config WHERE key = 'stat_unity'
+  UNION ALL
+  SELECT 'Response', 'Typical first reply time', 6, value FROM site_config WHERE key = 'stat_response'
+  UNION ALL
+  SELECT 'Delivery', 'Typical turnaround', 7, value FROM site_config WHERE key = 'stat_delivery'
+)
+INSERT INTO homepage_stats (label, value, suffix, sublabel, sort_order)
+SELECT label, value, '', sub, ord FROM src
+WHERE NOT EXISTS (SELECT 1 FROM homepage_stats);
+
+-- -----------------------------------------------------------------------------
+-- Hero content: seed one editable hero row from the existing hero image
+-- (site_images.hero) and site_config branding.
+-- -----------------------------------------------------------------------------
+INSERT INTO hero_content (id, title, subtitle, description, primary_button_text, primary_button_url, secondary_button_text, secondary_button_url, image_url, image_alt, sort_order, created_at, updated_at)
+SELECT
+  gen_random_uuid(),
+  'Custom VRChat Avatars',
+  (SELECT value FROM site_config WHERE key = 'tagline' LIMIT 1),
+  (SELECT value FROM site_config WHERE key = 'description' LIMIT 1),
+  'Request Commission',
+  '/contact',
+  'View Portfolio',
+  '/portfolio',
+  (SELECT url FROM site_images WHERE key = 'hero' LIMIT 1),
+  'Featured VRChat avatar commission',
+  0, NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM hero_content);
+
+-- -----------------------------------------------------------------------------
+-- Services: seed the three core service cards (images from site_images).
+-- -----------------------------------------------------------------------------
+WITH imgs AS (SELECT key, url FROM site_images)
+INSERT INTO services (id, title, emoji, image_url, desc, features, sort_order, created_at, updated_at)
+VALUES
+  (gen_random_uuid(), 'Avatar Editing', '✏️', (SELECT url FROM imgs WHERE key='avatar_editing' LIMIT 1), 'Texture recolours, accessory additions, clothing fitting, hair combinations, and small customisation edits.', ARRAY['Full avatar edit','Texture recolour','Clothing fit','Accessory add','1 revision included'], 0, NOW(), NOW()),
+  (gen_random_uuid(), 'Blender Work', '🔧', (SELECT url FROM imgs WHERE key='blender_work' LIMIT 1), 'Asset creation, retopology, UV work, material setup, and mesh adjustments in Blender.', ARRAY['Custom assets','Retopology','UV mapping','Materials','2 revisions included'], 1, NOW(), NOW()),
+  (gen_random_uuid(), 'Unity Setup', '⚙️', (SELECT url FROM imgs WHERE key='unity_work' LIMIT 1), 'Material configuration, toggles, optimisation, viseme setup, and VRChat SDK packaging.', ARRAY['SDK setup','Toggles','Optimisation','Visemes','Quest compatible'], 2, NOW(), NOW())
+WHERE NOT EXISTS (SELECT 1 FROM services);
+
+-- -----------------------------------------------------------------------------
+-- Pricing tiers: restore the real starting rates referenced across the site.
+-- Fully editable from the admin Pricing editor.
+-- -----------------------------------------------------------------------------
+INSERT INTO pricing_tiers (id, name, emoji, price, badge, popular, features, sort_order, is_nsfw, created_at, updated_at)
+VALUES
+  (gen_random_uuid(), 'Base Edit', '✏️', '£15', NULL, false, ARRAY['Full avatar edit','Texture recolour','1 revision','Performance friendly'], 0, false, NOW(), NOW()),
+  (gen_random_uuid(), 'Standard', '🔧', '£30', 'Popular', true, ARRAY['Full customisation','Clothing fit','Accessories added','Weight painting','2 revisions'], 1, false, NOW(), NOW()),
+  (gen_random_uuid(), 'Complex', '⚙️', '£55', NULL, false, ARRAY['FBX mashup','Advanced rigging','Multiple outfits','Unity SDK setup','3 revisions'], 2, false, NOW(), NOW())
+WHERE NOT EXISTS (SELECT 1 FROM pricing_tiers);
+
+-- -----------------------------------------------------------------------------
+-- Workflow steps: the real commission process (editable from admin).
+-- -----------------------------------------------------------------------------
+INSERT INTO workflow_steps (id, emoji, title, description, sort_order, created_at)
+VALUES
+  (gen_random_uuid(), '💬', 'Request', 'Message me with what you''re looking for and your avatar base.', 0, NOW()),
+  (gen_random_uuid(), '📋', 'Planning', 'We discuss the details and I provide a quote before any work starts.', 1, NOW()),
+  (gen_random_uuid(), '🎨', 'Development', 'I work on your avatar with regular progress updates.', 2, NOW()),
+  (gen_random_uuid(), '🔁', 'Revisions', 'You review the work and request any changes until you''re happy.', 3, NOW()),
+  (gen_random_uuid(), '📦', 'Delivery', 'Final files are sent after payment is complete.', 4, NOW())
+WHERE NOT EXISTS (SELECT 1 FROM workflow_steps);
+
+-- -----------------------------------------------------------------------------
+-- Homepage section ordering / visibility (only seeded if empty).
+-- -----------------------------------------------------------------------------
+INSERT INTO homepage_sections (id, section_key, label, visible, sort_order, created_at, updated_at)
+VALUES
+  (gen_random_uuid(), 'hero', 'Hero', true, 0, NOW(), NOW()),
+  (gen_random_uuid(), 'featured_work', 'Featured Work', true, 1, NOW(), NOW()),
+  (gen_random_uuid(), 'services', 'Services', true, 2, NOW(), NOW()),
+  (gen_random_uuid(), 'fbx_commission', 'FBX Mashup Commission', true, 3, NOW(), NOW()),
+  (gen_random_uuid(), 'stats', 'Statistics', true, 4, NOW(), NOW()),
+  (gen_random_uuid(), 'testimonials', 'Testimonials', true, 5, NOW(), NOW()),
+  (gen_random_uuid(), 'process', 'Process', true, 6, NOW(), NOW()),
+  (gen_random_uuid(), 'faq', 'FAQ', true, 7, NOW(), NOW()),
+  (gen_random_uuid(), 'pricing', 'Pricing', true, 8, NOW(), NOW()),
+  (gen_random_uuid(), 'availability', 'Commission Availability', true, 9, NOW(), NOW()),
+  (gen_random_uuid(), 'cta', 'Call to Action', true, 10, NOW(), NOW())
+WHERE NOT EXISTS (SELECT 1 FROM homepage_sections);
+
+-- -----------------------------------------------------------------------------
+-- FBX Mashup Commission product (the full editable commission card, req. #7).
+-- Stored separately from the fbx_mashups *portfolio* table so portfolio
+-- examples and the commission product config are independently managed.
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS fbx_mashup_commission (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  base1_image_url TEXT,
+  base1_name TEXT NOT NULL DEFAULT '',
+  base1_description TEXT NOT NULL DEFAULT '',
+  base2_image_url TEXT,
+  base2_name TEXT NOT NULL DEFAULT '',
+  base2_description TEXT NOT NULL DEFAULT '',
+  final_image_url TEXT,
+  final_description TEXT NOT NULL DEFAULT '',
+  includes_features TEXT[] DEFAULT '{}',
+  full_setup_cost TEXT DEFAULT '',
+  add_ons TEXT[] DEFAULT '{}',
+  estimated_completion TEXT DEFAULT '',
+  discord_link TEXT DEFAULT '',
+  email_link TEXT DEFAULT '',
+  commission_form_link TEXT DEFAULT '/contact',
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE fbx_mashup_commission ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read fbx_mashup_commission" ON fbx_mashup_commission FOR SELECT USING (true);
+CREATE POLICY "Authenticated write fbx_mashup_commission" ON fbx_mashup_commission FOR ALL USING (auth.role() = 'authenticated');
+CREATE INDEX IF NOT EXISTS fbx_mashup_commission_sort_idx ON fbx_mashup_commission (sort_order);
+
+-- Seed a single editable commission product row (only if the table is empty).
+INSERT INTO fbx_mashup_commission (
+  base1_image_url, base1_name, base1_description,
+  base2_image_url, base2_name, base2_description,
+  final_image_url, final_description, includes_features,
+  full_setup_cost, add_ons, estimated_completion,
+  discord_link, email_link, commission_form_link, sort_order
+)
+SELECT
+  NULL, 'Base Avatar 1', 'Your chosen FBX avatar base — the body/outfit you want kept.',
+  NULL, 'Base Avatar 2', 'A second FBX base to pull parts, outfits, or accessories from.',
+  (SELECT url FROM site_images WHERE key = 'hero' LIMIT 1),
+  'A single, cohesive VRChat-ready character that blends both bases into one.',
+  ARRAY['FBX merge & merge','Materials & textures','Unity SDK setup','Final files (FBX + Unity package)'],
+  '£30',
+  ARRAY['Extra outfit: £10','Additional accessory: £5','Quest optimisation: +£10'],
+  '7-14 days',
+  'https://discord.com/users/' || (SELECT value FROM site_config WHERE key = 'discord' LIMIT 1),
+  NULL,
+  '/contact',
+  0
+WHERE NOT EXISTS (SELECT 1 FROM fbx_mashup_commission);

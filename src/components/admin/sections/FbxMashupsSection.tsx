@@ -22,7 +22,7 @@ export function FbxMashupsSection({ value, onChange }: Props) {
   function add() {
     onChange([
       ...value,
-      { id: undefined, title: "", base_avatar: "", parts_used: [], changes_made: [], software_used: [], thumbnail_url: "", before_image_url: "", after_image_url: "", description: "", status: "completed" },
+      { id: undefined, title: "", base_avatar: "", parts_used: [], changes_made: [], software_used: [], thumbnail_url: "", before_image_url: "", after_image_url: "", description: "", price: "", availability: "", status: "completed" },
     ]);
   }
 
@@ -64,6 +64,14 @@ export function FbxMashupsSection({ value, onChange }: Props) {
               <Field label="Description">
                 <Textarea rows={2} value={item.description} onChange={(e) => update(i, { description: e.target.value })} />
               </Field>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <Field label="Price">
+                  <Input value={item.price} onChange={(e) => update(i, { price: e.target.value })} placeholder="e.g. £30 - £55" />
+                </Field>
+                <Field label="Availability / How to get">
+                  <Input value={item.availability} onChange={(e) => update(i, { availability: e.target.value })} placeholder="e.g. Open for commissions" />
+                </Field>
+              </div>
               <Field label="Parts Used (one per line)">
                 <Textarea rows={3} value={(item.parts_used || []).join("\n")} onChange={(e) => update(i, { parts_used: e.target.value.split("\n").filter(Boolean) })} />
               </Field>
