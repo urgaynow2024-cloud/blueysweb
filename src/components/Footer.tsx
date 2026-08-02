@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { getNavigationItems } from "@/lib/db";
 import { navLinks } from "@/data/site";
 import { Home, Scissors, Box, Package, Clock, Tag, ShoppingCart, HelpCircle, Star, Phone, Mail, Send } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const linkIcons: Record<string, React.ElementType> = {
   "/": Home,
@@ -18,13 +20,30 @@ const linkIcons: Record<string, React.ElementType> = {
 };
 
 export default function Footer() {
-  const exploreLinks = navLinks.filter((l) => l.href !== "/contact");
-const supportLinks = [
-  { href: "/contact", label: "Contact", icon: Phone },
-  { href: "/before-ordering", label: "Before Ordering", icon: ShoppingCart },
-  { href: "/tos", label: "Terms of Service", icon: Mail },
-  { href: "https://discord.com/", label: "Discord", icon: Send, external: true },
-];
+  const [navItems, setNavItems] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await getNavigationItems();
+        if (data && data.length > 0) {
+          setNavItems(data);
+        }
+      } catch (e) {
+        console.error("Failed to load navigation:", e);
+      }
+    }
+    load();
+  }, []);
+
+  const displayNav = navItems.length > 0 ? navItems.filter((l: any) => l.is_visible !== false) : navLinks;
+  const exploreLinks = displayNav.filter((l: any) => l.href !== "/contact");
+  const supportLinks = [
+    { href: "/contact", label: "Contact", icon: Phone },
+    { href: "/before-ordering", label: "Before Ordering", icon: ShoppingCart },
+    { href: "/tos", label: "Terms of Service", icon: Mail },
+    { href: "https://discord.com/", label: "Discord", icon: Send, external: true },
+  ];
 
   return (
     <footer className="relative mt-20 border-t border-[var(--border)] overflow-hidden">
@@ -51,7 +70,7 @@ const supportLinks = [
               Explore
             </h4>
             <ul className="space-y-3 text-sm">
-              {exploreLinks.map((l) => {
+              {exploreLinks.map((l: any) => {
                 const Icon = linkIcons[l.href];
                 return (
                   <li key={l.href}>
@@ -98,7 +117,7 @@ const supportLinks = [
             <span className="w-6 h-6 rounded-md bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-[#05070a] text-xs font-bold">
               B
             </span>
-            <span suppressHydrationWarning>© {new Date().getFullYear()} Bluey&apos;s Avatar Commissions</span>
+            <span suppressHydrationWarning>&copy; {new Date().getFullYear()} Bluey&apos;s Avatar Commissions</span>
           </div>
           <div className="flex gap-7">
             <Link href="/tos" className="hover:text-white transition-colors">Terms</Link>

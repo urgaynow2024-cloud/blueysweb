@@ -21,39 +21,35 @@ import { QueueSection } from "@/components/admin/sections/QueueSection";
 import { SiteInfoSection } from "@/components/admin/sections/SiteInfoSection";
 import { ModeratorsSection } from "@/components/admin/sections/ModeratorsSection";
 
+import { HeroSection } from "@/components/admin/sections/HeroSection";
+import { StatsSection } from "@/components/admin/sections/StatsSection";
+import { ServicesSection } from "@/components/admin/sections/ServicesSection";
+import { FbxMashupsSection } from "@/components/admin/sections/FbxMashupsSection";
+import { BeforeOrderingSection } from "@/components/admin/sections/BeforeOrderingSection";
+import { TosSection } from "@/components/admin/sections/TosSection";
+import { NavigationSection } from "@/components/admin/sections/NavigationSection";
+import { WebsiteSettingsSection } from "@/components/admin/sections/WebsiteSettingsSection";
+import { PortfolioCategoriesSection } from "@/components/admin/sections/PortfolioCategoriesSection";
+import { CommissionFormSection } from "@/components/admin/sections/CommissionFormSection";
+import { MediaLibrarySection } from "@/components/admin/sections/MediaLibrarySection";
+import { HomepageSectionsSection } from "@/components/admin/sections/HomepageSectionsSection";
+
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 const ADMIN_PASSWORD = "blueyadmin";
 
 const defaultSite = {
-  name: "Bluey's Avatar Commissions",
-  tagline: "VRChat Avatar Edits • Blender Work • Unity Setup",
-  description: "Clean, stylish, performance-friendly avatars built for VRChat.",
-  discord: "BlueyBarks",
+  name: "",
+  tagline: "",
+  description: "",
+  discord: "",
 };
 
-const defaultPricing = [
-  { id: "light", name: "Light Blender Work", emoji: "✨", price: "£15 - £25", badge: null, popular: false, features: ["Easy asset additions", "Custom jewellery", "Simple clothing fitting", "Texture recolours", "Minor avatar fixes"] },
-  { id: "custom", name: "Avatar Customisation", emoji: "🛠", price: "£30 - £55", badge: "Most Requested", popular: true, features: ["Multiple asset additions", "Advanced clothing fitting", "Hair combinations", "Toggles setup", "Basic optimisation"] },
-  { id: "overhaul", name: "Avatar Overhaul", emoji: "🔥", price: "£60 - £90", badge: null, popular: false, features: ["Heavy Blender work", "Full avatar redesign", "Advanced toggle systems", "Large asset integration", "Performance optimisation"] },
-];
+const defaultPricing: any[] = [];
+const defaultFaq: any[] = [];
+const defaultWorkflow: any[] = [];
 
-const defaultFaq = [
-  { id: "1", question: "What do I need to provide?", answer: "What you want done, avatar base name, reference images, and any required assets." },
-  { id: "2", question: "How long does a commission take?", answer: "Depends on complexity. Light work is faster, overhauls take longer." },
-  { id: "3", question: "Do you work on Quest?", answer: "Quest compatibility depends on the tier. Overhauls include Quest optimisation." },
-  { id: "4", question: "What payment methods?", answer: "PayPal and Payhip only. 50% deposit before work begins." },
-];
-
-const defaultWorkflow = [
-  { id: "1", emoji: "💬", title: "Enquiry", desc: "Message me on Discord with what you're looking for." },
-  { id: "2", emoji: "📋", title: "Quote", desc: "I'll let you know the price and how long it'll take." },
-  { id: "3", emoji: "💳", title: "Deposit", desc: "50% deposit before I start work." },
-  { id: "4", emoji: "🎨", title: "Work", desc: "I'll send progress updates and previews as I go." },
-  { id: "5", emoji: "📦", title: "Delivery", desc: "Final files sent once the remaining payment is done." },
-];
-
-type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators";
+type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "hero" | "stats" | "services" | "fbx-mashups" | "before-ordering" | "tos" | "navigation" | "website-settings" | "portfolio-categories" | "commission-form" | "media-library" | "homepage-sections";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -68,14 +64,26 @@ export default function AdminPage() {
   const [workflow, setWorkflow] = useState<any[]>(defaultWorkflow);
   const [reviews, setReviews] = useState<any[]>([]);
   const [links, setLinks] = useState<any[]>([]);
+  const [hero, setHero] = useState<any[]>([]);
+  const [stats, setStats] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
+  const [fbxMashups, setFbxMashups] = useState<any[]>([]);
+  const [beforeOrdering, setBeforeOrdering] = useState<any[]>([]);
+  const [tosSections, setTosSections] = useState<any[]>([]);
+  const [navigation, setNavigation] = useState<any[]>([]);
+  const [websiteSettings, setWebsiteSettings] = useState<Record<string, string>>({});
+  const [portfolioCategories, setPortfolioCategories] = useState<any[]>([]);
+  const [commissionForm, setCommissionForm] = useState<any[]>([]);
+  const [mediaLibrary, setMediaLibrary] = useState<any[]>([]);
+  const [homepageSections, setHomepageSections] = useState<any[]>([]);
 
   const { markDirty, register } = useSave();
   const toast = useToast();
 
-  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links });
+  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links, hero, stats, services, fbxMashups, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections });
   useEffect(() => {
-    dataRef.current = { site, pricing, faq, workflow, reviews, links };
-  }, [site, pricing, faq, workflow, reviews, links]);
+    dataRef.current = { site, pricing, faq, workflow, reviews, links, hero, stats, services, fbxMashups, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections };
+  }, [site, pricing, faq, workflow, reviews, links, hero, stats, services, fbxMashups, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections]);
 
   useEffect(() => {
     if (authed) loadAllData();
@@ -95,18 +103,42 @@ export default function AdminPage() {
             if (data.workflow) setWorkflow(data.workflow);
             if (data.reviews) setReviews(data.reviews);
             if (data.links) setLinks(data.links);
+            if (data.hero) setHero(data.hero);
+            if (data.stats) setStats(data.stats);
+            if (data.services) setServices(data.services);
+            if (data.fbxMashups) setFbxMashups(data.fbxMashups);
+            if (data.beforeOrdering) setBeforeOrdering(data.beforeOrdering);
+            if (data.tosSections) setTosSections(data.tosSections);
+            if (data.navigation) setNavigation(data.navigation);
+            if (data.websiteSettings) setWebsiteSettings(data.websiteSettings);
+            if (data.portfolioCategories) setPortfolioCategories(data.portfolioCategories);
+            if (data.commissionForm) setCommissionForm(data.commissionForm);
+            if (data.mediaLibrary) setMediaLibrary(data.mediaLibrary);
+            if (data.homepageSections) setHomepageSections(data.homepageSections);
           } catch {}
         }
         setLoading(false);
         return;
       }
-      const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }] = await Promise.all([
+      const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }, { data: heroData }, { data: statsData }, { data: servicesData }, { data: fbxData }, { data: beforeData }, { data: tosData }, { data: navData }, { data: settingsData }, { data: catsData }, { data: formData }, { data: mediaData }, { data: hsData }] = await Promise.all([
         supabase.from("site_config").select("*"),
         supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }),
         supabase.from("faq_items").select("*").order("sort_order", { ascending: true }),
         supabase.from("workflow_steps").select("*").order("sort_order", { ascending: true }),
         supabase.from("reviews").select("*").order("created_at", { ascending: false }),
         supabase.from("social_links").select("*").order("sort_order", { ascending: true }),
+        supabase.from("hero_content").select("*").order("sort_order", { ascending: true }),
+        supabase.from("homepage_stats").select("*").order("sort_order", { ascending: true }),
+        supabase.from("services").select("*").order("sort_order", { ascending: true }),
+        supabase.from("fbx_mashups").select("*").order("sort_order", { ascending: true }),
+        supabase.from("before_ordering_items").select("*").order("sort_order", { ascending: true }),
+        supabase.from("tos_sections").select("*").order("sort_order", { ascending: true }),
+        supabase.from("navigation_items").select("*").order("sort_order", { ascending: true }),
+        supabase.from("website_settings").select("*"),
+        supabase.from("portfolio_categories").select("*").order("sort_order", { ascending: true }),
+        supabase.from("commission_form_fields").select("*").order("sort_order", { ascending: true }),
+        supabase.from("media_library").select("*").order("sort_order", { ascending: true }),
+        supabase.from("homepage_sections").select("*").order("sort_order", { ascending: true }),
       ]);
       if (siteData && siteData.length > 0) {
         const s: any = { ...defaultSite };
@@ -118,6 +150,22 @@ export default function AdminPage() {
       if (workflowData && workflowData.length > 0) setWorkflow(workflowData);
       if (reviewsData && reviewsData.length > 0) setReviews(reviewsData);
       if (linksData && linksData.length > 0) setLinks(linksData);
+      if (heroData && heroData.length > 0) setHero(heroData);
+      if (statsData && statsData.length > 0) setStats(statsData);
+      if (servicesData && servicesData.length > 0) setServices(servicesData);
+      if (fbxData && fbxData.length > 0) setFbxMashups(fbxData);
+      if (beforeData && beforeData.length > 0) setBeforeOrdering(beforeData);
+      if (tosData && tosData.length > 0) setTosSections(tosData);
+      if (navData && navData.length > 0) setNavigation(navData);
+      if (settingsData && settingsData.length > 0) {
+        const s: Record<string, string> = {};
+        settingsData.forEach((row: any) => { s[row.key] = row.value; });
+        setWebsiteSettings(s);
+      }
+      if (catsData && catsData.length > 0) setPortfolioCategories(catsData);
+      if (formData && formData.length > 0) setCommissionForm(formData);
+      if (mediaData && mediaData.length > 0) setMediaLibrary(mediaData);
+      if (hsData && hsData.length > 0) setHomepageSections(hsData);
     } catch (e) {
       console.error("Failed to load data:", e);
     } finally {
@@ -126,11 +174,11 @@ export default function AdminPage() {
   }
 
   const contentSaver = useCallback(async () => {
-    const { site, pricing, faq, workflow, reviews, links } = dataRef.current;
+    const { site, pricing, faq, workflow, reviews, links, hero, stats, services, fbxMashups, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections } = dataRef.current;
     const res = await fetch("/api/admin/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ site, pricing, faq, workflow, reviews, socialLinks: links }),
+      body: JSON.stringify({ site, pricing, faq, workflow, reviews, socialLinks: links, hero, stats, services, fbxMashups, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections }),
     });
     if (!res.ok) {
       const r = await res.json().catch(() => ({}));
@@ -144,7 +192,6 @@ export default function AdminPage() {
 
   async function doLogin(e: React.FormEvent) {
     e.preventDefault();
-    // Establish an owner session (sets the httpOnly cookie used by moderator APIs).
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -158,7 +205,6 @@ export default function AdminPage() {
       toast.error("Incorrect password");
       return;
     }
-    // Fallback for local/demo mode (Supabase not configured): use the hardcoded check.
     if (pw === ADMIN_PASSWORD) {
       setAuthed(true);
     } else {
@@ -178,9 +224,21 @@ export default function AdminPage() {
     setWorkflow(defaultWorkflow);
     setReviews([]);
     setLinks([]);
+    setHero([]);
+    setStats([]);
+    setServices([]);
+    setFbxMashups([]);
+    setBeforeOrdering([]);
+    setTosSections([]);
+    setNavigation([]);
+    setWebsiteSettings({});
+    setPortfolioCategories([]);
+    setCommissionForm([]);
+    setMediaLibrary([]);
+    setHomepageSections([]);
     localStorage.removeItem("adminData");
     setResetOpen(false);
-    toast.info("Content reset to defaults — press Save Changes to apply");
+    toast.info("Content reset to defaults â press Save Changes to apply");
     markDirty();
   }
 
@@ -218,6 +276,30 @@ export default function AdminPage() {
     );
   }
 
+  if (!isSupabaseConfigured) {
+    return (
+      <DashboardLayout
+        active={tab}
+        onSelect={(id) => {
+          if (id === "__reset") setResetOpen(true);
+          else setTab(id as Tab);
+        }}
+        onLogout={doLogout}
+        onReset={() => setResetOpen(true)}
+      >
+        <div className="ad-panel rounded-xl border border-[var(--warning-border)] bg-[var(--warning-soft)] p-6">
+          <h2 className="text-lg font-bold text-white">Supabase Not Configured</h2>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            Your admin changes cannot be saved because Supabase credentials are missing. Create a <code className="rounded bg-[var(--bg)] px-1.5 py-0.5 text-xs text-[var(--accent)]">.env.local</code> file with your Supabase URL, anon key, and service role key.
+          </p>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            Without Supabase, changes you make here will not persist and may be lost when you navigate away.
+          </p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout
       active={tab}
@@ -239,6 +321,18 @@ export default function AdminPage() {
       {tab === "queue" && <QueueSection />}
       {tab === "moderators" && <ModeratorsSection />}
       {tab === "site" && <SiteInfoSection value={site} onChange={(n) => { setSite(n); markDirty(); }} />}
+      {tab === "hero" && <HeroSection value={hero} onChange={(n) => { setHero(n); markDirty(); }} />}
+      {tab === "stats" && <StatsSection value={stats} onChange={(n) => { setStats(n); markDirty(); }} />}
+      {tab === "services" && <ServicesSection value={services} onChange={(n) => { setServices(n); markDirty(); }} />}
+      {tab === "fbx-mashups" && <FbxMashupsSection value={fbxMashups} onChange={(n) => { setFbxMashups(n); markDirty(); }} />}
+      {tab === "before-ordering" && <BeforeOrderingSection value={beforeOrdering} onChange={(n) => { setBeforeOrdering(n); markDirty(); }} />}
+      {tab === "tos" && <TosSection value={tosSections} onChange={(n) => { setTosSections(n); markDirty(); }} />}
+      {tab === "navigation" && <NavigationSection value={navigation} onChange={(n) => { setNavigation(n); markDirty(); }} />}
+      {tab === "website-settings" && <WebsiteSettingsSection value={websiteSettings} onChange={(n) => { setWebsiteSettings(n); markDirty(); }} />}
+      {tab === "portfolio-categories" && <PortfolioCategoriesSection value={portfolioCategories} onChange={(n) => { setPortfolioCategories(n); markDirty(); }} />}
+      {tab === "commission-form" && <CommissionFormSection value={commissionForm} onChange={(n) => { setCommissionForm(n); markDirty(); }} />}
+      {tab === "media-library" && <MediaLibrarySection value={mediaLibrary} onChange={(n) => { setMediaLibrary(n); markDirty(); }} />}
+      {tab === "homepage-sections" && <HomepageSectionsSection value={homepageSections} onChange={(n) => { setHomepageSections(n); markDirty(); }} />}
 
       <Modal
         open={resetOpen}

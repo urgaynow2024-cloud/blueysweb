@@ -90,7 +90,7 @@ export default function NsfwPage() {
                 <div>
                   <h4 className="mb-2 text-sm font-semibold text-red-400">Requirements</h4>
                   <ul className="space-y-1.5">
-                    {nsfwRules.requirements.map((req, i) => (
+                    {nsfwRules.requirements?.map((req: any, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
                         {req}
@@ -101,7 +101,7 @@ export default function NsfwPage() {
                 <div>
                   <h4 className="mb-2 text-sm font-semibold text-red-400">What&rsquo;s Not Allowed</h4>
                   <ul className="space-y-1.5">
-                    {nsfwRules.notAllowed.map((rule, i) => (
+                    {nsfwRules.notAllowed.map((rule: any, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
                         {rule}

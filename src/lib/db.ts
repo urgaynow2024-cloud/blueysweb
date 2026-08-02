@@ -274,3 +274,262 @@ export async function deleteSocialLink(id: string) {
   const { error } = await supabase.from("social_links").delete().eq("id", id);
   return !error;
 }
+
+export async function getHeroContent() {
+  return fetchAll("hero_content", []);
+}
+
+export async function addHeroContent(data: any) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("hero_content").insert([data]).select();
+  return error ? null : result?.[0];
+}
+
+export async function updateHeroContent(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("hero_content").update(data).eq("id", id);
+  return !error;
+}
+
+export async function deleteHeroContent(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("hero_content").delete().eq("id", id);
+  return !error;
+}
+
+export async function getHomepageStats() {
+  return fetchAll("homepage_stats", []);
+}
+
+export async function addHomepageStat(data: any) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("homepage_stats").insert([data]).select();
+  return error ? null : result?.[0];
+}
+
+export async function updateHomepageStat(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("homepage_stats").update(data).eq("id", id);
+  return !error;
+}
+
+export async function deleteHomepageStat(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("homepage_stats").delete().eq("id", id);
+  return !error;
+}
+
+export async function getServices() {
+  return fetchAll("services", []);
+}
+
+export async function addService(data: any) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("services").insert([data]).select();
+  return error ? null : result?.[0];
+}
+
+export async function updateService(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("services").update(data).eq("id", id);
+  return !error;
+}
+
+export async function deleteService(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("services").delete().eq("id", id);
+  return !error;
+}
+
+export async function getFbxMashups() {
+  return fetchAll("fbx_mashups", []);
+}
+
+export async function addFbxMashup(data: any) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("fbx_mashups").insert([data]).select();
+  return error ? null : result?.[0];
+}
+
+export async function updateFbxMashup(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("fbx_mashups").update(data).eq("id", id);
+  return !error;
+}
+
+export async function deleteFbxMashup(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("fbx_mashups").delete().eq("id", id);
+  return !error;
+}
+
+export async function getBeforeOrderingItems() {
+  return fetchAll("before_ordering_items", []);
+}
+
+export async function addBeforeOrderingItem(data: any) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("before_ordering_items").insert([data]).select();
+  return error ? null : result?.[0];
+}
+
+export async function updateBeforeOrderingItem(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("before_ordering_items").update(data).eq("id", id);
+  return !error;
+}
+
+export async function deleteBeforeOrderingItem(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("before_ordering_items").delete().eq("id", id);
+  return !error;
+}
+
+export async function getTosSections() {
+  return fetchAll("tos_sections", []);
+}
+
+export async function addTosSection(data: any) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("tos_sections").insert([data]).select();
+  return error ? null : result?.[0];
+}
+
+export async function updateTosSection(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("tos_sections").update(data).eq("id", id);
+  return !error;
+}
+
+export async function deleteTosSection(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("tos_sections").delete().eq("id", id);
+  return !error;
+}
+
+export async function getNavigationItems() {
+  return fetchAll("navigation_items", []);
+}
+
+export async function addNavigationItem(data: any) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("navigation_items").insert([data]).select();
+  return error ? null : result?.[0];
+}
+
+export async function updateNavigationItem(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("navigation_items").update(data).eq("id", id);
+  return !error;
+}
+
+export async function deleteNavigationItem(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("navigation_items").delete().eq("id", id);
+  return !error;
+}
+
+export async function getWebsiteSettings() {
+  if (!isSupabaseConfigured || !supabase) return {};
+  const { data, error } = await supabase.from("website_settings").select("*");
+  if (error || !data) return {};
+  const result: Record<string, string> = {};
+  data.forEach((item: any) => {
+    result[item.key] = item.value;
+  });
+  return result;
+}
+
+export async function updateWebsiteSetting(key: string, value: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("website_settings").upsert({ key, value });
+  return !error;
+}
+
+export async function getPortfolioCategories() {
+  return fetchAll("portfolio_categories", []);
+}
+
+export async function addPortfolioCategory(data: any) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("portfolio_categories").insert([data]).select();
+  return error ? null : result?.[0];
+}
+
+export async function updatePortfolioCategory(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("portfolio_categories").update(data).eq("id", id);
+  return !error;
+}
+
+export async function deletePortfolioCategory(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("portfolio_categories").delete().eq("id", id);
+  return !error;
+}
+
+export async function getCommissionFormFields() {
+  return fetchAll("commission_form_fields", []);
+}
+
+export async function addCommissionFormField(data: any) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("commission_form_fields").insert([data]).select();
+  return error ? null : result?.[0];
+}
+
+export async function updateCommissionFormField(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("commission_form_fields").update(data).eq("id", id);
+  return !error;
+}
+
+export async function deleteCommissionFormField(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("commission_form_fields").delete().eq("id", id);
+  return !error;
+}
+
+export async function getMediaLibrary() {
+  return fetchAll("media_library", []);
+}
+
+export async function addMediaLibraryItem(data: any) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("media_library").insert([data]).select();
+  return error ? null : result?.[0];
+}
+
+export async function updateMediaLibraryItem(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("media_library").update(data).eq("id", id);
+  return !error;
+}
+
+export async function deleteMediaLibraryItem(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("media_library").delete().eq("id", id);
+  return !error;
+}
+
+export async function getHomepageSections() {
+  return fetchAll("homepage_sections", []);
+}
+
+export async function addHomepageSection(data: any) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("homepage_sections").insert([data]).select();
+  return error ? null : result?.[0];
+}
+
+export async function updateHomepageSection(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("homepage_sections").update(data).eq("id", id);
+  return !error;
+}
+
+export async function deleteHomepageSection(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("homepage_sections").delete().eq("id", id);
+  return !error;
+}

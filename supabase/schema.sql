@@ -125,6 +125,158 @@ CREATE TABLE IF NOT EXISTS social_links (
 );
 
 -- =============================================================================
+-- NEW TABLES FOR DYNAMIC CONTENT
+-- =============================================================================
+
+-- Hero / homepage hero content
+CREATE TABLE IF NOT EXISTS hero_content (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL DEFAULT '',
+  subtitle TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  primary_button_text TEXT NOT NULL DEFAULT '',
+  primary_button_url TEXT NOT NULL DEFAULT '',
+  secondary_button_text TEXT NOT NULL DEFAULT '',
+  secondary_button_url TEXT NOT NULL DEFAULT '',
+  image_url TEXT,
+  image_alt TEXT DEFAULT '',
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Homepage statistics (dynamic, no fake data)
+CREATE TABLE IF NOT EXISTS homepage_stats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  label TEXT NOT NULL DEFAULT '',
+  value TEXT NOT NULL DEFAULT '',
+  suffix TEXT DEFAULT '',
+  sublabel TEXT DEFAULT '',
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Services / service cards
+CREATE TABLE IF NOT EXISTS services (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL DEFAULT '',
+  emoji TEXT DEFAULT '',
+  image_url TEXT,
+  desc TEXT NOT NULL DEFAULT '',
+  features TEXT[] DEFAULT '{}',
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- FBX Mashup portfolio entries
+CREATE TABLE IF NOT EXISTS fbx_mashups (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL DEFAULT '',
+  base_avatar TEXT NOT NULL DEFAULT '',
+  parts_used TEXT[] DEFAULT '{}',
+  changes_made TEXT[] DEFAULT '{}',
+  software_used TEXT[] DEFAULT '{}',
+  thumbnail_url TEXT,
+  before_image_url TEXT,
+  after_image_url TEXT,
+  description TEXT NOT NULL DEFAULT '',
+  status TEXT DEFAULT 'completed',
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Before ordering checklist items
+CREATE TABLE IF NOT EXISTS before_ordering_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  emoji TEXT DEFAULT '',
+  title TEXT NOT NULL DEFAULT '',
+  desc TEXT NOT NULL DEFAULT '',
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Terms of Service sections
+CREATE TABLE IF NOT EXISTS tos_sections (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL DEFAULT '',
+  icon TEXT DEFAULT '',
+  items TEXT[] DEFAULT '{}',
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Navigation menu items
+CREATE TABLE IF NOT EXISTS navigation_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  label TEXT NOT NULL DEFAULT '',
+  href TEXT NOT NULL DEFAULT '',
+  icon TEXT DEFAULT '',
+  sort_order INTEGER DEFAULT 0,
+  is_external BOOLEAN DEFAULT FALSE,
+  is_visible BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Website settings
+CREATE TABLE IF NOT EXISTS website_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key TEXT UNIQUE NOT NULL,
+  value TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Portfolio categories
+CREATE TABLE IF NOT EXISTS portfolio_categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL DEFAULT '',
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Commission form fields configuration
+CREATE TABLE IF NOT EXISTS commission_form_fields (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL DEFAULT '',
+  label TEXT NOT NULL DEFAULT '',
+  placeholder TEXT NOT NULL DEFAULT '',
+  type TEXT NOT NULL DEFAULT 'text',
+  required BOOLEAN DEFAULT FALSE,
+  options TEXT[] DEFAULT '{}',
+  max_size_mb INTEGER DEFAULT 10,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Media library entries
+CREATE TABLE IF NOT EXISTS media_library (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL DEFAULT '',
+  url TEXT NOT NULL,
+  path TEXT,
+  type TEXT DEFAULT 'image',
+  alt_text TEXT DEFAULT '',
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Homepage section ordering / visibility
+CREATE TABLE IF NOT EXISTS homepage_sections (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  section_key TEXT NOT NULL DEFAULT '',
+  label TEXT NOT NULL DEFAULT '',
+  visible BOOLEAN DEFAULT TRUE,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =============================================================================
 -- MIGRATIONS
 -- =============================================================================
 
@@ -170,6 +322,18 @@ ALTER TABLE site_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE nsfw_portfolio_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE queue_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE social_links ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hero_content ENABLE ROW LEVEL SECURITY;
+ALTER TABLE homepage_stats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE services ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fbx_mashups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE before_ordering_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tos_sections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE navigation_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE website_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE portfolio_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE commission_form_fields ENABLE ROW LEVEL SECURITY;
+ALTER TABLE media_library ENABLE ROW LEVEL SECURITY;
+ALTER TABLE homepage_sections ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies before recreating
 DO $$ BEGIN
@@ -193,6 +357,30 @@ DO $$ BEGIN
   DROP POLICY IF EXISTS "Authenticated write queue_items" ON queue_items;
   DROP POLICY IF EXISTS "Public read social_links" ON social_links;
   DROP POLICY IF EXISTS "Authenticated write social_links" ON social_links;
+  DROP POLICY IF EXISTS "Public read hero_content" ON hero_content;
+  DROP POLICY IF EXISTS "Authenticated write hero_content" ON hero_content;
+  DROP POLICY IF EXISTS "Public read homepage_stats" ON homepage_stats;
+  DROP POLICY IF EXISTS "Authenticated write homepage_stats" ON homepage_stats;
+  DROP POLICY IF EXISTS "Public read services" ON services;
+  DROP POLICY IF EXISTS "Authenticated write services" ON services;
+  DROP POLICY IF EXISTS "Public read fbx_mashups" ON fbx_mashups;
+  DROP POLICY IF EXISTS "Authenticated write fbx_mashups" ON fbx_mashups;
+  DROP POLICY IF EXISTS "Public read before_ordering_items" ON before_ordering_items;
+  DROP POLICY IF EXISTS "Authenticated write before_ordering_items" ON before_ordering_items;
+  DROP POLICY IF EXISTS "Public read tos_sections" ON tos_sections;
+  DROP POLICY IF EXISTS "Authenticated write tos_sections" ON tos_sections;
+  DROP POLICY IF EXISTS "Public read navigation_items" ON navigation_items;
+  DROP POLICY IF EXISTS "Authenticated write navigation_items" ON navigation_items;
+  DROP POLICY IF EXISTS "Public read website_settings" ON website_settings;
+  DROP POLICY IF EXISTS "Authenticated write website_settings" ON website_settings;
+  DROP POLICY IF EXISTS "Public read portfolio_categories" ON portfolio_categories;
+  DROP POLICY IF EXISTS "Authenticated write portfolio_categories" ON portfolio_categories;
+  DROP POLICY IF EXISTS "Public read commission_form_fields" ON commission_form_fields;
+  DROP POLICY IF EXISTS "Authenticated write commission_form_fields" ON commission_form_fields;
+  DROP POLICY IF EXISTS "Public read media_library" ON media_library;
+  DROP POLICY IF EXISTS "Authenticated write media_library" ON media_library;
+  DROP POLICY IF EXISTS "Public read homepage_sections" ON homepage_sections;
+  DROP POLICY IF EXISTS "Authenticated write homepage_sections" ON homepage_sections;
 END $$;
 
 -- Public read access for all tables
@@ -206,6 +394,18 @@ CREATE POLICY "Public read site_images" ON site_images FOR SELECT USING (true);
 CREATE POLICY "Public read nsfw_portfolio_images" ON nsfw_portfolio_images FOR SELECT USING (true);
 CREATE POLICY "Public read queue_items" ON queue_items FOR SELECT USING (true);
 CREATE POLICY "Public read social_links" ON social_links FOR SELECT USING (true);
+CREATE POLICY "Public read hero_content" ON hero_content FOR SELECT USING (true);
+CREATE POLICY "Public read homepage_stats" ON homepage_stats FOR SELECT USING (true);
+CREATE POLICY "Public read services" ON services FOR SELECT USING (true);
+CREATE POLICY "Public read fbx_mashups" ON fbx_mashups FOR SELECT USING (true);
+CREATE POLICY "Public read before_ordering_items" ON before_ordering_items FOR SELECT USING (true);
+CREATE POLICY "Public read tos_sections" ON tos_sections FOR SELECT USING (true);
+CREATE POLICY "Public read navigation_items" ON navigation_items FOR SELECT USING (true);
+CREATE POLICY "Public read website_settings" ON website_settings FOR SELECT USING (true);
+CREATE POLICY "Public read portfolio_categories" ON portfolio_categories FOR SELECT USING (true);
+CREATE POLICY "Public read commission_form_fields" ON commission_form_fields FOR SELECT USING (true);
+CREATE POLICY "Public read media_library" ON media_library FOR SELECT USING (true);
+CREATE POLICY "Public read homepage_sections" ON homepage_sections FOR SELECT USING (true);
 
 -- Allow authenticated users to modify
 CREATE POLICY "Authenticated write portfolio_images" ON portfolio_images FOR ALL USING (auth.role() = 'authenticated');
@@ -218,6 +418,18 @@ CREATE POLICY "Authenticated write site_images" ON site_images FOR ALL USING (au
 CREATE POLICY "Authenticated write nsfw_portfolio_images" ON nsfw_portfolio_images FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write queue_items" ON queue_items FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write social_links" ON social_links FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write hero_content" ON hero_content FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write homepage_stats" ON homepage_stats FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write services" ON services FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write fbx_mashups" ON fbx_mashups FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write before_ordering_items" ON before_ordering_items FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write tos_sections" ON tos_sections FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write navigation_items" ON navigation_items FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write website_settings" ON website_settings FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write portfolio_categories" ON portfolio_categories FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write commission_form_fields" ON commission_form_fields FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write media_library" ON media_library FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write homepage_sections" ON homepage_sections FOR ALL USING (auth.role() = 'authenticated');
 
 -- =============================================================================
 -- STORAGE POLICIES
@@ -325,15 +537,24 @@ INSERT INTO site_config (key, value) VALUES
   ('queue_slots_used', '4'),
   ('queue_wait_time', '2-3 weeks'),
   ('queue_notes', 'Currently working through larger commissions. Small edits may be completed faster.'),
-  ('queue_last_updated', '2026-07-11'),
-  ('stat_commissions', '150+'),
-  ('stat_clients', '120+'),
-  ('stat_returning', '40+'),
-  ('stat_rating', '4.9'),
-  ('stat_reviews', '85'),
-  ('stat_experience', '2+'),
-  ('stat_response', '1-3 hours'),
-  ('stat_delivery', '5-10 days'),
-  ('stat_blender', '2+'),
-  ('stat_unity', '2+')
+  ('queue_last_updated', '2026-07-11')
 ON CONFLICT (key) DO NOTHING;
+
+-- =============================================================================
+-- BACKUPS
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS content_backups (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  label TEXT NOT NULL DEFAULT '',
+  data JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE content_backups ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public read content_backups" ON content_backups;
+DROP POLICY IF EXISTS "Authenticated write content_backups" ON content_backups;
+
+CREATE POLICY "Public read content_backups" ON content_backups FOR SELECT USING (true);
+CREATE POLICY "Authenticated write content_backups" ON content_backups FOR ALL USING (auth.role() = 'authenticated');

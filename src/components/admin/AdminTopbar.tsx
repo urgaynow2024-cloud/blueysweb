@@ -60,7 +60,11 @@ export function AdminTopbar({ onToggleSidebar, onLogout, userName = "Admin" }: T
         <Button
           variant="primary"
           size="sm"
-          onClick={saveAll}
+          onClick={() => {
+            if (window.confirm("Save all changes? This will update your live website content.")) {
+              saveAll();
+            }
+          }}
           disabled={!dirty || saving}
           loading={saving}
           leftIcon={!saving && !dirty ? <Save className="h-4 w-4" /> : undefined}

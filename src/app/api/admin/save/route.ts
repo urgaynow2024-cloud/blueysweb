@@ -1,52 +1,145 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+type AdminClient = SupabaseClient<any, "public", "public", any, any>;
+
+async function upsertTable(table: string, items: any[], admin: AdminClient) {
+  if (!items || items.length === 0) return;
+  for (const item of items) {
+    await admin.from(table).upsert({ ...item, id: item.id || undefined });
+  }
+}
+
+async function createBackup(admin: AdminClient, label: string, data: any) {
+  try {
+    await admin.from("content_backups").insert([{ label, data }]);
+  } catch (e) {
+    console.error("Backup failed:", e);
+  }
+}
 
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const { site, pricing, faq, workflow, reviews, socialLinks } = data;
+    const {
+      site,
+      pricing,
+      faq,
+      workflow,
+      reviews,
+      socialLinks,
+      hero,
+      stats,
+      services,
+      fbxMashups,
+      beforeOrdering,
+      tosSections,
+      navigation,
+      websiteSettings,
+      portfolioCategories,
+      commissionForm,
+      mediaLibrary,
+      homepageSections,
+    } = data;
 
     if (!supabaseAdmin) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
+    const admin = supabaseAdmin as AdminClient;
+    const timestamp = new Date().toISOString();
+    await createBackup(admin, `pre-save-${timestamp}`, data);
+
     const siteRows = Object.entries(site || {}).map(([key, value]) => ({ key, value: String(value) }));
-    await supabaseAdmin.from("site_config").upsert(siteRows, { onConflict: "key" });
+    await admin.from("site_config").upsert(siteRows, { onConflict: "key" });
 
-    await supabaseAdmin.from("pricing_tiers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     if (pricing && pricing.length > 0) {
-      for (const item of pricing) {
-        await supabaseAdmin.from("pricing_tiers").upsert({ ...item, id: item.id || undefined });
-      }
+      await admin.from("pricing_tiers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("pricing_tiers", pricing, admin);
     }
 
-    await supabaseAdmin.from("faq_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     if (faq && faq.length > 0) {
-      for (const item of faq) {
-        await supabaseAdmin.from("faq_items").upsert({ ...item, id: item.id || undefined });
-      }
+      await admin.from("faq_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("faq_items", faq, admin);
     }
 
-    await supabaseAdmin.from("workflow_steps").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     if (workflow && workflow.length > 0) {
-      for (const item of workflow) {
-        await supabaseAdmin.from("workflow_steps").upsert({ ...item, id: item.id || undefined });
-      }
+      await admin.from("workflow_steps").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("workflow_steps", workflow, admin);
     }
 
-    await supabaseAdmin.from("reviews").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     if (reviews && reviews.length > 0) {
-      for (const item of reviews) {
-        await supabaseAdmin.from("reviews").upsert({ ...item, id: item.id || undefined });
-      }
+      await admin.from("reviews").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("reviews", reviews, admin);
     }
 
-    await supabaseAdmin.from("social_links").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     if (socialLinks && socialLinks.length > 0) {
-      for (const item of socialLinks) {
-        await supabaseAdmin.from("social_links").upsert({ ...item, id: item.id || undefined });
-      }
+      await admin.from("social_links").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("social_links", socialLinks, admin);
     }
+
+    if (hero && hero.length > 0) {
+      await admin.from("hero_content").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("hero_content", hero, admin);
+    }
+
+    if (stats && stats.length > 0) {
+      await admin.from("homepage_stats").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("homepage_stats", stats, admin);
+    }
+
+    if (services && services.length > 0) {
+      await admin.from("services").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("services", services, admin);
+    }
+
+    if (fbxMashups && fbxMashups.length > 0) {
+      await admin.from("fbx_mashups").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("fbx_mashups", fbxMashups, admin);
+    }
+
+    if (beforeOrdering && beforeOrdering.length > 0) {
+      await admin.from("before_ordering_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("before_ordering_items", beforeOrdering, admin);
+    }
+
+    if (tosSections && tosSections.length > 0) {
+      await admin.from("tos_sections").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("tos_sections", tosSections, admin);
+    }
+
+    if (navigation && navigation.length > 0) {
+      await admin.from("navigation_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("navigation_items", navigation, admin);
+    }
+
+    if (websiteSettings && Object.keys(websiteSettings).length > 0) {
+      const settingsRows = Object.entries(websiteSettings).map(([key, value]) => ({ key, value: String(value) }));
+      await admin.from("website_settings").upsert(settingsRows, { onConflict: "key" });
+    }
+
+    if (portfolioCategories && portfolioCategories.length > 0) {
+      await admin.from("portfolio_categories").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("portfolio_categories", portfolioCategories, admin);
+    }
+
+    if (commissionForm && commissionForm.length > 0) {
+      await admin.from("commission_form_fields").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("commission_form_fields", commissionForm, admin);
+    }
+
+    if (mediaLibrary && mediaLibrary.length > 0) {
+      await admin.from("media_library").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("media_library", mediaLibrary, admin);
+    }
+
+    if (homepageSections && homepageSections.length > 0) {
+      await admin.from("homepage_sections").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("homepage_sections", homepageSections, admin);
+    }
+
+    await createBackup(admin, `post-save-${timestamp}`, { ...data, saved: true });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Hero from "@/components/Hero";
-import FeaturedWork from "@/components/FeaturedWork";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { ButtonLink } from "@/components/ui/Button";
@@ -11,11 +10,10 @@ import ShowcaseCarousel from "@/components/ShowcaseCarousel";
 import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 import ScrollShowcase from "@/components/ScrollShowcase";
 import ClientTestimonials from "@/components/ClientTestimonials";
-import { getWorkflowSteps, getPricingTiers, getApprovedReviews, getSiteImages, getSiteConfig } from "@/lib/db";
+import { getWorkflowSteps, getPricingTiers, getApprovedReviews, getSiteImages, getSiteConfig, getHeroContent, getHomepageStats, getServices, getFbxMashups, getBeforeOrderingItems, getTosSections, getPortfolioImages, getFaqItems } from "@/lib/db";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { siteStats, testimonials, featuredProjects, servicesDetailed } from "@/data/site";
 import Link from "next/link";
-import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles, Users, Box, Package } from "lucide-react";
+import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles, Users, Box } from "lucide-react";
 import CommissionAvailability from "@/components/CommissionAvailability";
 
 export default function Home() {
@@ -25,6 +23,13 @@ export default function Home() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [siteImages, setSiteImages] = useState<Record<string, { url: string }>>({});
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
+  const [heroContent, setHeroContent] = useState<any[]>([]);
+  const [homepageStats, setHomepageStats] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
+  const [fbxMashups, setFbxMashups] = useState<any[]>([]);
+  const [beforeOrdering, setBeforeOrdering] = useState<any[]>([]);
+  const [tosSections, setTosSections] = useState<any[]>([]);
+  const [faqItems, setFaqItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [returningClients, setReturningClients] = useState<number>(0);
@@ -33,18 +38,32 @@ export default function Home() {
     async function load() {
       setLoading(true);
       try {
-        const [s, w, p, r, images] = await Promise.all([
+        const [s, w, p, r, images, hero, stats, svcs, fbx, bo, tos, faq] = await Promise.all([
           getSiteConfig(),
           getWorkflowSteps(),
           getPricingTiers(),
           getApprovedReviews(),
           getSiteImages(),
+          getHeroContent(),
+          getHomepageStats(),
+          getServices(),
+          getFbxMashups(),
+          getBeforeOrderingItems(),
+          getTosSections(),
+          getFaqItems(),
         ]);
         setSite(s);
         setWorkflow(w);
         setPricing(p);
         setReviews(r);
         setSiteImages(images);
+        setHeroContent(hero);
+        setHomepageStats(stats);
+        setServices(svcs);
+        setFbxMashups(fbx);
+        setBeforeOrdering(bo);
+        setTosSections(tos);
+        setFaqItems(faq);
 
         const statsRes = await fetch("/api/stats").then((res) => res.json()).catch(() => ({ returningClients: 0 }));
         setReturningClients(Number(statsRes.returningClients) || 0);
@@ -89,6 +108,13 @@ export default function Home() {
     );
   }
 
+  const displayHero = heroContent.length > 0 ? heroContent[0] : null;
+  const displayStats = homepageStats.length > 0 ? homepageStats : [];
+  const displayServices = services.length > 0 ? services : [];
+  const displayFbx = fbxMashups.length > 0 ? fbxMashups : [];
+  const displayBeforeOrdering = beforeOrdering.length > 0 ? beforeOrdering : [];
+  const displayTos = tosSections.length > 0 ? tosSections : [];
+
   return (
     <div className="relative">
       <Hero />
@@ -97,7 +123,16 @@ export default function Home() {
         {/* Featured Projects carousel */}
         <section className="section section-alt" id="work">
           <div className="container">
-            <ShowcaseCarousel projects={featuredProjects} />
+            <ShowcaseCarousel
+              projects={fbxMashups.map((fbx: any) => ({
+                id: fbx.id,
+                title: fbx.title,
+                category: fbx.base_avatar || "FBX Mashup",
+                image: fbx.thumbnail_url || "",
+                beforeImage: fbx.before_image_url,
+                afterImage: fbx.after_image_url,
+              }))}
+            />
           </div>
         </section>
 
@@ -116,170 +151,178 @@ export default function Home() {
         </section>
 
         {/* Stats band */}
-        <section className="section section-alt">
-          <div className="container">
-            <div className="mb-12 text-center">
-              <span className="section-label">Statistics</span>
-              <h2 className="display-lg text-white">Numbers Speak Louder</h2>
-              <p className="lead mx-auto mt-4 max-w-2xl">
-                Built with care, delivered with pride — here's what the numbers look like.
-              </p>
-            </div>
+        {displayStats.length > 0 && (
+          <section className="section section-alt">
+            <div className="container">
+              <div className="mb-12 text-center">
+                <span className="section-label">Statistics</span>
+                <h2 className="display-lg text-white">Numbers Speak Louder</h2>
+<p className="lead mx-auto mt-4 max-w-2xl">
+              Built with care, delivered with pride - here&rsquo;s what the numbers look like.
+            </p>
+              </div>
 
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-              <StatCard
-                icon={<Package className="h-5 w-5" />}
-                label="Completed"
-                value={siteStats.completedCommissions}
-                suffix="+"
-                sublabel="Commissions"
-              />
-              <StatCard
-                icon={<Users className="h-5 w-5" />}
-                label="Happy"
-                value={siteStats.happyClients}
-                sublabel="Clients"
-              />
-              <StatCard
-                icon={<Zap className="h-5 w-5" />}
-                label="Years"
-                value={siteStats.yearsExperience}
-                suffix="+"
-                sublabel="Experience"
-              />
-              <StatCard
-                icon={<Star className="h-5 w-5 fill-[var(--accent)] text-[var(--accent)]" />}
-                label="Rating"
-                value={siteStats.averageRating.toFixed(1)}
-                sublabel="Average"
-              />
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+                {displayStats.map((stat, i) => (
+                  <StatCard
+                    key={stat.id || i}
+                    label={stat.label}
+                    value={stat.value}
+                    suffix={stat.suffix}
+                    sublabel={stat.sublabel}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Services with images */}
-        <section className="section">
-          <div className="container">
-            <SectionHeading
-              eyebrow="Services"
-              title="What I provide"
-              subtitle="I work on VRChat avatars in a few different ways — from subtle edits to complete overhauls."
-            />
+        {displayServices.length > 0 && (
+          <section className="section">
+            <div className="container">
+              <SectionHeading
+                eyebrow="Services"
+                title="What I provide"
+                subtitle="I work on VRChat avatars in a few different ways - from subtle edits to complete overhauls."
+              />
 
-            <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {servicesDetailed.map((svc, i) => (
-                <ServiceShowcaseCard key={svc.title} service={svc} delay={i * 80} />
-              ))}
+              <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                {displayServices.map((svc, i) => (
+                  <ServiceShowcaseCard key={svc.title || i} service={svc} delay={i * 80} />
+                ))}
+              </div>
+
+              <div className="mt-12 text-center">
+                <ButtonLink href="/services" variant="secondary">
+                  View All Services
+                  <ArrowRight className="h-4 w-4" />
+                </ButtonLink>
+              </div>
             </div>
+          </section>
+        )}
 
-            <div className="mt-12 text-center">
-              <ButtonLink href="/services" variant="secondary">
-                View All Services
-                <ArrowRight className="h-4 w-4" />
-              </ButtonLink>
-            </div>
-          </div>
-        </section>
-
-        {/* FBX Mashups spotlight — prominent */}
-        <section className="section section-alt">
-          <div className="container">
-            <div className="relative overflow-hidden rounded-[var(--r-xl)] border border-[var(--border)] bg-gradient-to-r from-[var(--accent)]/5 via-[var(--accent)]/3 to-[var(--accent)]/5 p-8 md:p-14">
-              <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[120px]" />
-              <div className="absolute -bottom-28 -left-20 h-96 w-96 rounded-full bg-[var(--accent-2)] opacity-[0.04] blur-[140px]" />
-              <div className="relative flex flex-col items-center gap-8 md:flex-row">
-                <div className="flex-1">
-                  <span className="eyebrow mb-2">
-                    <span className="pill-dot animate-pulse" />
-                    Specialty Service
-                  </span>
-                  <h2 className="display-lg text-white">FBX Mashups &amp; Hybrid Avatars</h2>
-                  <p className="lead mt-4 max-w-xl">
-                    Combining multiple FBX models into one cohesive avatar — blending bodies, outfits,
-                    accessories, and props from different sources into a single VRChat-ready character.
-                  </p>
-                  <ul className="mt-6 grid grid-cols-1 gap-2.5 text-sm text-[var(--text-secondary)]">
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[var(--accent)]" /> Merge body parts from different models
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[var(--accent)]" /> Clothing and accessory swaps
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[var(--accent)]" /> Weight painting and cleanup
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[var(--accent)]" /> Full VRChat SDK integration
-                    </li>
-                  </ul>
-                  <div className="mt-8 flex flex-wrap gap-3">
-                    <ButtonLink href="/fbx-mashups">
-                      <Box className="h-4 w-4" />
-                      See FBX Examples
-                    </ButtonLink>
-                    <ButtonLink href="/contact" variant="secondary">
-                      Request a Mashup
-                      <ArrowRight className="h-4 w-4" />
-                    </ButtonLink>
+        {/* FBX Mashups spotlight */}
+        {displayFbx.length > 0 && (
+          <section className="section section-alt">
+            <div className="container">
+              <div className="relative overflow-hidden rounded-[var(--r-xl)] border border-[var(--border)] bg-gradient-to-r from-[var(--accent)]/5 via-[var(--accent)]/3 to-[var(--accent)]/5 p-8 md:p-14">
+                <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[120px]" />
+                <div className="absolute -bottom-28 -left-20 h-96 w-96 rounded-full bg-[var(--accent-2)] opacity-[0.04] blur-[140px]" />
+                <div className="relative flex flex-col items-center gap-8 md:flex-row">
+                  <div className="flex-1">
+                    <span className="eyebrow mb-2">
+                      <span className="pill-dot animate-pulse" />
+                      Specialty Service
+                    </span>
+                    <h2 className="display-lg text-white">FBX Mashups &amp; Hybrid Avatars</h2>
+                    <p className="lead mt-4 max-w-xl">
+                      Combining multiple FBX models into one cohesive avatar â€" blending bodies, outfits,
+                      accessories, and props from different sources into a single VRChat-ready character.
+                    </p>
+                    <ul className="mt-6 grid grid-cols-1 gap-2.5 text-sm text-[var(--text-secondary)]">
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-[var(--accent)]" /> Merge body parts from different models
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-[var(--accent)]" /> Clothing and accessory swaps
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-[var(--accent)]" /> Weight painting and cleanup
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-[var(--accent)]" /> Full VRChat SDK integration
+                      </li>
+                    </ul>
+                    <div className="mt-8 flex flex-wrap gap-3">
+                      <ButtonLink href="/fbx-mashups">
+                        <Box className="h-4 w-4" />
+                        See FBX Examples
+                      </ButtonLink>
+                      <ButtonLink href="/contact" variant="secondary">
+                        Request a Mashup
+                        <ArrowRight className="h-4 w-4" />
+                      </ButtonLink>
+                    </div>
                   </div>
-                </div>
-                <div className="relative mx-auto w-full max-w-sm flex-shrink-0">
-                  <div className="relative overflow-hidden rounded-[var(--r-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-2xl shadow-black/50">
-                    <img
-                      src="https://placehold.co/512x640/0a192f/5ab0f0?text=FBX+Mashup+Preview"
-                      alt="FBX mashup example"
-                      className="h-full w-full object-cover"
-                    />
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-black/60" />
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <p className="text-sm font-medium text-white">Hybrid character combining multiple FBX sources</p>
+                  <div className="relative mx-auto w-full max-w-sm flex-shrink-0">
+                    <div className="relative overflow-hidden rounded-[var(--r-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-2xl shadow-black/50">
+                      {displayFbx[0]?.thumbnail_url ? (
+                        <img
+                          src={displayFbx[0].thumbnail_url}
+                          alt="FBX mashup example"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="grid h-full w-full place-items-center text-[var(--text-dim)]">
+                          <Sparkles className="h-10 w-10 animate-pulse opacity-40" />
+                        </div>
+                      )}
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-black/60" />
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <p className="text-sm font-medium text-white">{displayFbx[0]?.title || "Hybrid character"}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Before/After comparisons */}
-        <section className="section">
-          <div className="container">
-            <SectionHeading
-              align="center"
-              eyebrow="Transformations"
-              title="Before &amp; After"
-              subtitle="See the transformation from concept to completed avatar."
-            />
+        {displayFbx.length > 0 && (
+          <section className="section">
+            <div className="container">
+              <SectionHeading
+                align="center"
+                eyebrow="Transformations"
+                title="Before &amp; After"
+                subtitle="See the transformation from concept to completed avatar."
+              />
 
-            <div className="mt-12 grid grid-cols-1 gap-12 lg:grid-cols-2">
-              {featuredProjects.map((project, i) => (
-                <div key={project.id}>
-                  <BeforeAfterSlider
-                    beforeImage={project.beforeImage || project.image}
-                    afterImage={project.afterImage || project.image}
-                    title={project.title}
-                    category={project.category}
-                  />
-                </div>
-              ))}
+              <div className="mt-12 grid grid-cols-1 gap-12 lg:grid-cols-2">
+                {displayFbx.map((project, i) => (
+                  <div key={project.id || i}>
+                    <BeforeAfterSlider
+                      beforeImage={project.before_image_url || project.thumbnail_url}
+                      afterImage={project.after_image_url || project.thumbnail_url}
+                      title={project.title}
+                      category={project.base_avatar}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Testimonials */}
+        {reviews.length > 0 && (
         <section className="section section-alt">
           <div className="container">
             <div className="mb-12 text-center">
               <span className="section-label">Client Feedback</span>
               <h2 className="display-lg text-white">What Clients Say</h2>
               <p className="lead mx-auto mt-4 max-w-2xl">
-                Don't just take my word for it — here's what clients have to say about their commissioned avatars.
+                Don&rsquo;t just take my word for it — here&rsquo;s what clients have to say about their commissioned avatars.
               </p>
             </div>
 
-            <ClientTestimonials testimonials={testimonials} />
+            <ClientTestimonials
+              testimonials={reviews.slice(0, 6).map((review: any) => ({
+                id: review.id,
+                name: review.display_name,
+                avatar: review.image_url || "",
+                rating: review.rating || 5,
+                text: review.review_text,
+                commissioned: new Date(review.created_at).toLocaleDateString(),
+              }))}
+            />
           </div>
         </section>
+        )}
 
         {/* Process timeline */}
         <section className="section">
@@ -310,7 +353,7 @@ export default function Home() {
               subtitle="Quick answers to the things people ask most."
             />
             <div className="space-y-3">
-              {getFaqItemsStatic().map((item, i) => {
+              {(faqItems.length > 0 ? faqItems : getFaqItemsStatic()).map((item: any, i: number) => {
                 const open = openFaq === i;
                 return (
                   <div
@@ -371,8 +414,8 @@ export default function Home() {
             </div>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center">
               <p className="text-xs text-[var(--text-dim)]">
-                Starting from <span className="font-semibold text-[var(--text-secondary)]">£15</span> · typical turnaround{" "}
-                <span className="font-semibold text-[var(--text-secondary)]">{site.stat_delivery || "5–10 days"}</span>
+                Starting from <span className="font-semibold text-[var(--text-secondary)]">Â£15</span> Â· typical turnaround{" "}
+                <span className="font-semibold text-[var(--text-secondary)]">{site.stat_delivery || "5â€“10 days"}</span>
               </p>
               <Link href="/nsfw" className="text-sm text-[var(--accent)] transition-colors hover:text-white">
                 View NSFW Pricing &rarr;
@@ -428,7 +471,7 @@ function StatCard({
   suffix,
   sublabel,
 }: {
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   label: string;
   value: number | string;
   suffix?: string;
@@ -460,16 +503,16 @@ function ServiceShowcaseCard({ service, delay }: { service: any; delay?: number 
         <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[var(--accent)] opacity-[0.03] blur-[80px] transition-opacity duration-500 group-hover:opacity-[0.06]" />
 
         <div className="relative mb-5 aspect-[16/9] overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)]">
-          {service.image ? (
+          {service.image_url ? (
             <img
-              src={service.image}
+              src={service.image_url}
               alt={service.title}
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
             />
           ) : (
             <div className="grid h-full w-full place-items-center text-4xl opacity-30">{service.emoji}</div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-card)] via-transparent to-transparent opacity-60" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-card)] via-transparent to-transparent opacity-50" />
           <div className="absolute bottom-3 left-3 flex items-center justify-center rounded-xl border border-white/10 bg-white/10 text-2xl backdrop-blur">
             {service.emoji}
           </div>
@@ -481,7 +524,7 @@ function ServiceShowcaseCard({ service, delay }: { service: any; delay?: number 
           <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">{service.desc}</p>
 
           <ul className="mt-4 grid grid-cols-1 gap-2 text-xs text-[var(--text-secondary)]">
-            {service.features.map((f: string) => (
+            {(service.features || []).map((f: string) => (
               <li key={f} className="flex items-center gap-1.5">
                 <span className="h-1 w-1 shrink-0 rounded-full bg-[var(--accent)]" />
                 {f}

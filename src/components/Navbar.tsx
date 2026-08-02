@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { Zap, Menu, X, ArrowUpRight, Home, Scissors, Box, Package, Clock, Tag, ShoppingCart, HelpCircle, Star, Phone } from "lucide-react";
+import { getNavigationItems } from "@/lib/db";
 import { navLinks } from "@/data/site";
 
-  const linkIcons: Record<string, React.ElementType> = {
+const linkIcons: Record<string, React.ElementType> = {
   "/": Home,
   "/services": Scissors,
   "/fbx-mashups": Box,
@@ -28,6 +29,23 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const navRef = useRef<HTMLDivElement>(null);
+  const [navItems, setNavItems] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await getNavigationItems();
+        if (data && data.length > 0) {
+          setNavItems(data);
+        }
+      } catch (e) {
+        console.error("Failed to load navigation:", e);
+      }
+    }
+    load();
+  }, []);
+
+  const displayNav = navItems.length > 0 ? navItems.filter((l: any) => l.is_visible !== false) : navLinks;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
@@ -68,21 +86,22 @@ export default function Navbar() {
           <a
             href="/"
             className="group flex items-center gap-2.5 shrink-0"
-            aria-label="Bluey's Commissions — home"
+            aria-label="Bluey's Commissions â home"
           >
             <span className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] text-sm font-extrabold shadow-lg shadow-[var(--accent)]/30 transition-transform duration-500 group-hover:scale-105">
               <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               B
             </span>
             <span className="hidden text-lg font-bold tracking-tight text-white sm:inline font-display">
-              Bluey<span className="text-[var(--accent)]">'s</span>
+              Bluey<span className="text-[var(--accent)]">&apos;s</span>
             </span>
           </a>
 
           {/* Desktop links */}
           <div ref={navRef} className="hidden lg:flex items-center gap-0.5">
-            {navLinks.map((link) => {
+            {displayNav.map((link: any) => {
               const active = isActive(pathname, link.href);
+              const Icon = linkIcons[link.href];
               return (
                 <a
                   key={link.href}
@@ -95,7 +114,7 @@ export default function Navbar() {
                   }`}
                 >
                   <span className="relative z-10 flex items-center gap-1.5">
-                    {linkIcons[link.href] && (() => { const Icon = linkIcons[link.href]; return <Icon className="h-4 w-4" />; })()}
+                    {Icon && (() => { const Ic = Icon; return <Ic className="h-4 w-4" />; })()}
                     {link.label}
                   </span>
                   {active && (
@@ -150,8 +169,9 @@ export default function Navbar() {
           }`}
         >
           <div className="glass-strong overflow-hidden rounded-3xl p-3 shadow-2xl shadow-black/50">
-            {navLinks.map((link, i) => {
+            {displayNav.map((link: any, i: number) => {
               const active = isActive(pathname, link.href);
+              const Icon = linkIcons[link.href];
               return (
                 <a
                   key={link.href}
@@ -173,7 +193,7 @@ export default function Navbar() {
                   }
                 >
                   <span className="relative z-10 flex items-center gap-2.5">
-                    {linkIcons[link.href] && (() => { const Icon = linkIcons[link.href]; return <Icon className="h-4 w-4" />; })()}
+                    {Icon && (() => { const Ic = Icon; return <Ic className="h-4 w-4" />; })()}
                     {link.label}
                   </span>
                   {active && (
@@ -189,7 +209,7 @@ export default function Navbar() {
               style={
                 open
                   ? {
-                      animationDelay: `${navLinks.length * 40}ms`,
+                      animationDelay: `${displayNav.length * 40}ms`,
                       animation: "animateIn 0.4s var(--ease-out) both",
                     }
                   : undefined

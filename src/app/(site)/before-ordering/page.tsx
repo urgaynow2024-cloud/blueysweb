@@ -1,13 +1,56 @@
 "use client";
 
-import { beforeOrderingChecklist } from "@/data/site";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
 import { AlertTriangle, CheckCircle2, FileText, ExternalLink } from "lucide-react";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { getBeforeOrderingItems } from "@/lib/db";
 
 export default function BeforeOrderingPage() {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      try {
+        const data = await getBeforeOrderingItems();
+        setItems(data);
+      } catch (e) {
+        console.error("Failed to load before ordering data:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="relative">
+        <section className="page relative overflow-hidden">
+          <div className="container max-w-3xl">
+            <div className="space-y-6">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="animate-pulse rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-6">
+                  <div className="flex gap-4">
+                    <div className="h-10 w-10 rounded-xl bg-[var(--bg)]" />
+                    <div className="flex-1 space-y-2.5">
+                      <div className="h-4 w-36 rounded bg-[var(--bg)]" />
+                      <div className="h-3 w-full rounded bg-[var(--bg)]" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
       <section className="page relative overflow-hidden">
@@ -24,8 +67,8 @@ export default function BeforeOrderingPage() {
           />
 
           <div className="space-y-6 mb-12">
-            {beforeOrderingChecklist.map((item, i) => (
-              <Reveal key={item.title} delay={i * 60}>
+            {items.map((item, i) => (
+              <Reveal key={item.title || i} delay={i * 60}>
                 <div className="group flex gap-4 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-6 transition-all duration-500 hover:-translate-y-0.5 hover:border-[var(--border-hover)]">
                   <div className="flex-shrink-0">
                     <div className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--accent-soft)] text-2xl">

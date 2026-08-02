@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getSiteImages } from "@/lib/db";
+import { getHeroContent, getSiteImages, getSiteConfig } from "@/lib/db";
 import Link from "next/link";
 import { Zap, ArrowDown, Sparkles, ShieldCheck, Layers } from "lucide-react";
 
@@ -18,14 +18,35 @@ const TOOL_STRIP = [
 
 export default function Hero() {
   const [heroImage, setHeroImage] = useState<string | null>(null);
+  const [heroData, setHeroData] = useState<any>(null);
+  const [site, setSite] = useState<any>({});
 
   useEffect(() => {
     async function load() {
-      const images = await getSiteImages();
-      if (images.hero?.url) setHeroImage(images.hero.url);
+      try {
+        const [images, hero, s] = await Promise.all([
+          getSiteImages(),
+          getHeroContent(),
+          getSiteConfig(),
+        ]);
+        if (images.hero?.url) setHeroImage(images.hero.url);
+        if (hero && hero.length > 0) setHeroData(hero[0]);
+        setSite(s);
+      } catch (e) {
+        console.error("Failed to load hero data:", e);
+      }
     }
     load();
   }, []);
+
+  const title = heroData?.title || "";
+  const subtitle = heroData?.subtitle || "";
+  const description = heroData?.description || "";
+  const primaryButtonText = heroData?.primary_button_text || "";
+  const primaryButtonUrl = heroData?.primary_button_url || "/contact";
+  const secondaryButtonText = heroData?.secondary_button_text || "";
+  const secondaryButtonUrl = heroData?.secondary_button_url || "#work";
+  const imageAlt = heroData?.image_alt || "";
 
   return (
     <section className="relative flex min-h-[100svh] items-center overflow-hidden pb-20 pt-28 md:pb-24 md:pt-32">
@@ -44,46 +65,40 @@ export default function Hero() {
             <div className="fade-in">
               <span className="eyebrow">
                 <span className="pill-dot" />
-                VRChat Avatar Commissions
+                {subtitle || "VRChat Avatar Commissions"}
               </span>
             </div>
 
             <h1 className="display-xl mt-5 text-white fade-in">
-              Avatars that feel <br className="hidden sm:block" />
-              <span className="text-gradient-animated">unmistakably yours</span>
+              {title || "Avatars that feel"} <br className="hidden sm:block" />
+              <span className="text-gradient-animated">
+                {heroData?.title ? "unmistakably yours" : ""}
+              </span>
             </h1>
 
-            <p className="lead mt-6 max-w-xl fade-in">
-              Bluey&rsquo;s Avatar Commissions — handcrafted VRChat avatars built in Blender and
-              Unity. Clean, stylish, and performance-friendly, tailored around your vision.
-            </p>
+            {description && (
+              <p className="lead mt-6 max-w-xl fade-in">
+                {description}
+              </p>
+            )}
 
-            <div className="mt-8 flex flex-wrap gap-3 fade-in">
-              <a href="/contact" className="btn-primary group relative">
-                <span className="pointer-events-none absolute -inset-1 -z-10 rounded-[calc(var(--r-xs)+6px)] bg-[var(--accent)] opacity-25 blur-xl transition-opacity duration-500 group-hover:opacity-50" />
-                <Zap className="h-4 w-4" />
-                Commission Me
-              </a>
-              <a href="#work" className="btn-secondary group">
-                View Portfolio
-                <ArrowDown className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" />
-              </a>
-            </div>
-
-            <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-[var(--text-secondary)] fade-in">
-              <span className="inline-flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-[var(--accent)]" />
-                Studio-grade quality
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <Layers className="h-4 w-4 text-[var(--accent)]" />
-                PC &amp; Quest ready
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-[var(--accent)]" />
-                Built in Blender &amp; Unity
-              </span>
-            </div>
+            {(primaryButtonText || secondaryButtonText) && (
+              <div className="mt-8 flex flex-wrap gap-3 fade-in">
+                {primaryButtonText && (
+                  <a href={primaryButtonUrl} className="btn-primary group relative">
+                    <span className="pointer-events-none absolute -inset-1 -z-10 rounded-[calc(var(--r-xs)+6px)] bg-[var(--accent)] opacity-25 blur-xl transition-opacity duration-500 group-hover:opacity-50" />
+                    <Zap className="h-4 w-4" />
+                    {primaryButtonText}
+                  </a>
+                )}
+                {secondaryButtonText && (
+                  <a href={secondaryButtonUrl} className="btn-secondary group">
+                    {secondaryButtonText}
+                    <ArrowDown className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" />
+                  </a>
+                )}
+              </div>
+            )}
 
             {/* Tool / skill marquee */}
             <div className="marquee-mask mt-10 overflow-hidden fade-in">
@@ -117,7 +132,7 @@ export default function Hero() {
                   {heroImage ? (
                     <img
                       src={heroImage}
-                      alt="Featured VRChat avatar commission"
+                      alt={imageAlt || "Featured VRChat avatar commission"}
                       className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out hover:scale-[1.04]"
                     />
                   ) : (
@@ -141,7 +156,7 @@ export default function Hero() {
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-dim)]">
                   Starting from
                 </p>
-                <p className="text-lg font-bold text-white">£15</p>
+                <p className="text-lg font-bold text-white">&#163;15</p>
               </div>
 
               {/* Floating reviews chip (links to real, approved reviews) */}
