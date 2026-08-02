@@ -29,6 +29,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const navRef = useRef<HTMLDivElement>(null);
   const [navItems, setNavItems] = useState<any[]>([]);
+  const [navLoaded, setNavLoaded] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -36,9 +37,36 @@ export default function Navbar() {
         const data = await getNavigationItems();
         if (data && data.length > 0) {
           setNavItems(data);
+        } else {
+          setNavItems([
+            { href: "/", label: "Work", is_visible: true },
+            { href: "/services", label: "Services", is_visible: true },
+            { href: "/fbx-mashups", label: "FBX Mashups", is_visible: true },
+            { href: "/portfolio", label: "Portfolio", is_visible: true },
+            { href: "/process", label: "Process", is_visible: true },
+            { href: "/pricing", label: "Pricing", is_visible: true },
+            { href: "/before-ordering", label: "Before Ordering", is_visible: true },
+            { href: "/faq", label: "FAQ", is_visible: true },
+            { href: "/reviews", label: "Reviews", is_visible: true },
+            { href: "/contact", label: "Contact", is_visible: true },
+          ]);
         }
       } catch (e) {
         console.error("Failed to load navigation:", e);
+        setNavItems([
+          { href: "/", label: "Work", is_visible: true },
+          { href: "/services", label: "Services", is_visible: true },
+          { href: "/fbx-mashups", label: "FBX Mashups", is_visible: true },
+          { href: "/portfolio", label: "Portfolio", is_visible: true },
+          { href: "/process", label: "Process", is_visible: true },
+          { href: "/pricing", label: "Pricing", is_visible: true },
+          { href: "/before-ordering", label: "Before Ordering", is_visible: true },
+          { href: "/faq", label: "FAQ", is_visible: true },
+          { href: "/reviews", label: "Reviews", is_visible: true },
+          { href: "/contact", label: "Contact", is_visible: true },
+        ]);
+      } finally {
+        setNavLoaded(true);
       }
     }
     load();

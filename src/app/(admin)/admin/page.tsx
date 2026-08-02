@@ -48,6 +48,18 @@ const defaultSite = {
 const defaultPricing: any[] = [];
 const defaultFaq: any[] = [];
 const defaultWorkflow: any[] = [];
+const defaultNavigation = [
+  { id: undefined, label: "Work", href: "/", icon: "", is_external: false, is_visible: true },
+  { id: undefined, label: "Services", href: "/services", icon: "", is_external: false, is_visible: true },
+  { id: undefined, label: "FBX Mashups", href: "/fbx-mashups", icon: "", is_external: false, is_visible: true },
+  { id: undefined, label: "Portfolio", href: "/portfolio", icon: "", is_external: false, is_visible: true },
+  { id: undefined, label: "Process", href: "/process", icon: "", is_external: false, is_visible: true },
+  { id: undefined, label: "Pricing", href: "/pricing", icon: "", is_external: false, is_visible: true },
+  { id: undefined, label: "Before Ordering", href: "/before-ordering", icon: "", is_external: false, is_visible: true },
+  { id: undefined, label: "FAQ", href: "/faq", icon: "", is_external: false, is_visible: true },
+  { id: undefined, label: "Reviews", href: "/reviews", icon: "", is_external: false, is_visible: true },
+  { id: undefined, label: "Contact", href: "/contact", icon: "", is_external: false, is_visible: true },
+];
 
 type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "hero" | "stats" | "services" | "fbx-mashups" | "before-ordering" | "tos" | "navigation" | "website-settings" | "portfolio-categories" | "commission-form" | "media-library" | "homepage-sections";
 
@@ -70,7 +82,7 @@ export default function AdminPage() {
   const [fbxMashups, setFbxMashups] = useState<any[]>([]);
   const [beforeOrdering, setBeforeOrdering] = useState<any[]>([]);
   const [tosSections, setTosSections] = useState<any[]>([]);
-  const [navigation, setNavigation] = useState<any[]>([]);
+  const [navigation, setNavigation] = useState<any[]>(defaultNavigation);
   const [websiteSettings, setWebsiteSettings] = useState<Record<string, string>>({});
   const [portfolioCategories, setPortfolioCategories] = useState<any[]>([]);
   const [commissionForm, setCommissionForm] = useState<any[]>([]);

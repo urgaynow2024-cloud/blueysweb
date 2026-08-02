@@ -20,6 +20,7 @@ const linkIcons: Record<string, React.ElementType> = {
 
 export default function Footer() {
   const [navItems, setNavItems] = useState<any[]>([]);
+  const [navLoaded, setNavLoaded] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -27,9 +28,28 @@ export default function Footer() {
         const data = await getNavigationItems();
         if (data && data.length > 0) {
           setNavItems(data);
+        } else {
+          setNavItems([
+            { href: "/services", label: "Services", is_visible: true },
+            { href: "/fbx-mashups", label: "FBX Mashups", is_visible: true },
+            { href: "/portfolio", label: "Portfolio", is_visible: true },
+            { href: "/process", label: "Process", is_visible: true },
+            { href: "/pricing", label: "Pricing", is_visible: true },
+            { href: "/faq", label: "FAQ", is_visible: true },
+          ]);
         }
       } catch (e) {
         console.error("Failed to load navigation:", e);
+        setNavItems([
+          { href: "/services", label: "Services", is_visible: true },
+          { href: "/fbx-mashups", label: "FBX Mashups", is_visible: true },
+          { href: "/portfolio", label: "Portfolio", is_visible: true },
+          { href: "/process", label: "Process", is_visible: true },
+          { href: "/pricing", label: "Pricing", is_visible: true },
+          { href: "/faq", label: "FAQ", is_visible: true },
+        ]);
+      } finally {
+        setNavLoaded(true);
       }
     }
     load();
