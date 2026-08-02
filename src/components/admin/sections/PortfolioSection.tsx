@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { getPortfolioImages } from "@/lib/db";
+import { getPortfolioImages, uploadPortfolioImage } from "@/lib/db";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { useSave } from "../SaveProvider";
 import { useToast } from "../Toast";
@@ -10,11 +10,13 @@ import { UploadArea } from "../UploadArea";
 import { PortfolioGrid, type PortfolioImage } from "../PortfolioGrid";
 import { Modal } from "../Modal";
 import { Button } from "../Button";
+import { portfolioCategories } from "@/data/site";
 
 export function PortfolioSection() {
   const [images, setImages] = useState<PortfolioImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [uploadCategory, setUploadCategory] = useState("VRChat Avatars");
   const imagesRef = useRef<PortfolioImage[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceIndexRef = useRef<number | null>(null);
@@ -34,7 +36,7 @@ export function PortfolioSection() {
     (async () => {
       try {
         const imgs = await getPortfolioImages();
-        setImages(imgs.map((i: any) => ({ id: i.id, url: i.url, path: i.path })).filter((x: any) => x.url));
+        setImages(imgs.map((i: any) => ({ id: i.id, url: i.url, path: i.path, category: i.category })).filter((x: any) => x.url));
       } catch {
         toast.error("Failed to load portfolio images");
       } finally {
@@ -64,13 +66,14 @@ export function PortfolioSection() {
     return register("portfolio", savePortfolio);
   }, [register, savePortfolio]);
 
-  async function uploadOne(file: File): Promise<{ id: string; url: string; path: string } | null> {
+  async function uploadOne(file: File): Promise<{ id: string; url: string; path: string; category: string } | null> {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("folder", "portfolio");
+    formData.append("category", uploadCategory);
     const res = await fetch("/api/portfolio/upload", { method: "POST", body: formData });
     const result = await res.json();
-    if (res.ok && result.id) return { id: result.id, url: result.url, path: result.path };
+    if (res.ok && result.id) return { id: result.id, url: result.url, path: result.path, category: result.category || uploadCategory };
     throw new Error(result.error || "Upload failed");
   }
 
@@ -82,7 +85,7 @@ export function PortfolioSection() {
       setImages((prev) => [...prev, temp]);
       try {
         const uploaded = await uploadOne(file);
-        setImages((prev) => prev.map((img) => (img === temp ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path } : img)));
+        setImages((prev) => prev.map((img) => (img === temp ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path, category: uploaded!.category } : img)));
         toast.success("Image uploaded");
       } catch (e: any) {
         setImages((prev) => prev.map((img) => (img === temp ? { ...img, uploading: false, error: e.message || "Upload failed" } : img)));
@@ -101,7 +104,7 @@ export function PortfolioSection() {
       setImages((prev) => prev.map((img, i) => (i === index ? { ...img, uploading: true, error: undefined, retrying: true } : img)));
       try {
         const uploaded = await uploadOne(file);
-        setImages((prev) => prev.map((img, i) => (i === index ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path, uploading: false, retrying: false, error: undefined } : img)));
+        setImages((prev) => prev.map((img, i) => (i === index ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path, category: uploaded!.category, uploading: false, retrying: false, error: undefined } : img)));
         toast.success("Image uploaded");
       } catch {
         setImages((prev) => prev.map((img, i) => (i === index ? { ...img, uploading: false, retrying: false, error: "Upload failed" } : img)));
@@ -180,6 +183,18 @@ export function PortfolioSection() {
           description="Upload artwork. Drag cards to reorder — your arrangement is saved with the global Save button."
         />
         <div className="mt-6">
+          <div className="mb-4 flex items-center gap-3">
+            <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)]">Category</label>
+            <select
+              value={uploadCategory}
+              onChange={(e) => setUploadCategory(e.target.value)}
+              className="ad-field rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]"
+            >
+              {portfolioCategories.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
           <UploadArea onFiles={handleFiles} uploading={images.some((i) => i.uploading)} />
         </div>
       </Card>

@@ -33,7 +33,13 @@ async function fetchSiteConfig() {
 }
 
 export async function getPortfolioImages() {
-  return fetchAll("portfolio_images", []);
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase
+    .from("portfolio_images")
+    .select("id, url, category, sort_order, created_at")
+    .order("sort_order", { ascending: true });
+  if (error || !data) return [];
+  return data as Array<{ id: string; url: string; category?: string; sort_order: number; created_at: string }>;
 }
 
 export async function getApprovedReviews() {
@@ -169,7 +175,7 @@ export async function uploadImage(file: File, path?: string): Promise<string | n
   return urlData.publicUrl;
 }
 
-export async function uploadPortfolioImage(file: File) {
+export async function uploadPortfolioImage(file: File, category = "VRChat Avatars") {
   if (!isSupabaseConfigured || !supabase) return null;
   const ext = file.name.split(".").pop();
   const storagePath = `portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -184,14 +190,17 @@ export async function uploadPortfolioImage(file: File) {
   const { data: urlData } = supabase.storage.from("portfolio-images").getPublicUrl(storagePath);
   const url = urlData.publicUrl;
 
-  const { data: dbData, error: dbError } = await supabase.from("portfolio_images").insert([{ url }]).select();
+  const { data: dbData, error: dbError } = await supabase
+    .from("portfolio_images")
+    .insert([{ url, category }])
+    .select();
   if (dbError || !dbData || dbData.length === 0) {
     console.error("DB insert error:", dbError);
     await supabase.storage.from("portfolio-images").remove([storagePath]);
     return null;
   }
 
-  return { id: dbData[0].id, url, path: storagePath };
+  return { id: dbData[0].id, url, path: storagePath, category };
 }
 
 export async function deleteImage(path: string): Promise<boolean> {

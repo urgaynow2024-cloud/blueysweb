@@ -24,6 +24,7 @@
 CREATE TABLE IF NOT EXISTS portfolio_images (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   url TEXT NOT NULL,
+  category TEXT DEFAULT 'VRChat Avatars',
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -126,6 +127,13 @@ CREATE TABLE IF NOT EXISTS social_links (
 -- =============================================================================
 -- MIGRATIONS
 -- =============================================================================
+
+-- Migrate portfolio_images to add category column
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'portfolio_images') THEN
+    BEGIN ALTER TABLE portfolio_images ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'VRChat Avatars'; EXCEPTION WHEN others THEN NULL; END;
+  END IF;
+END $$;
 
 -- Migrate reviews table to new schema if it already exists
 DO $$

@@ -1,11 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { getPortfolioImages } from "@/lib/db";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { Images, Maximize2 } from "lucide-react";
+import { portfolioCategories } from "@/data/site";
+
+interface PortfolioImage {
+  id: string;
+  url: string;
+  category?: string;
+}
 
 function SkeletonCard() {
   return (
@@ -16,8 +24,9 @@ function SkeletonCard() {
 }
 
 export default function PortfolioPage() {
-  const [images, setImages] = useState<string[]>([]);
+  const [allImages, setAllImages] = useState<PortfolioImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState("All");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
@@ -30,15 +39,15 @@ export default function PortfolioPage() {
             try {
               const data = JSON.parse(stored);
               if (data.portfolioImages && data.portfolioImages.length > 0) {
-                setImages(data.portfolioImages);
+                setAllImages(data.portfolioImages.map((url: string, i: number) => ({ id: String(i), url })));
               }
             } catch (e) {}
           }
           setLoading(false);
           return;
         }
-        const { data } = await supabase.from("portfolio_images").select("url").order("sort_order", { ascending: true });
-        if (data && data.length > 0) setImages(data.map((img) => img.url));
+        const imgs = await getPortfolioImages();
+        setAllImages(imgs.filter((i: any) => i.url).map((i: any) => ({ id: i.id, url: i.url, category: i.category || "VRChat Avatars" })));
       } catch (e) {
         console.error("Failed to load portfolio:", e);
       } finally {
@@ -47,6 +56,13 @@ export default function PortfolioPage() {
     }
     load();
   }, []);
+
+  const filtered = useMemo(() => {
+    if (activeCategory === "All") return allImages;
+    return allImages.filter((img) => (img.category || "VRChat Avatars") === activeCategory);
+  }, [allImages, activeCategory]);
+
+  const urls = filtered.map((img) => img.url);
 
   return (
     <div className="relative">
@@ -63,14 +79,30 @@ export default function PortfolioPage() {
             subtitle="Browse avatar commissions and edits — click any piece to view it full size."
           />
 
+          <div className="mb-8 flex flex-wrap items-center justify-center gap-2">
+            {["All", ...portfolioCategories].map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
+                  activeCategory === cat
+                    ? "bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/30"
+                    : "border border-[var(--border)] text-[var(--text-dim)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                }}`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
           {loading ? (
             <div className="columns-1 space-y-4 sm:columns-2 lg:columns-3">
               {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)}
             </div>
-          ) : images.length > 0 ? (
+          ) : filtered.length > 0 ? (
             <div className="columns-1 space-y-4 sm:columns-2 lg:columns-3">
-              {images.map((url, i) => (
-                <Reveal key={i} delay={(i % 3) * 60}>
+              {filtered.map((img, i) => (
+                <Reveal key={img.id} delay={(i % 3) * 60}>
                   <div
                     onClick={() => setLightboxIndex(i)}
                     onKeyDown={(e) => {
@@ -81,12 +113,12 @@ export default function PortfolioPage() {
                     }}
                     role="button"
                     tabIndex={0}
-                    aria-label={`View portfolio image ${i + 1} full size`}
+                    aria-label={`View portfolio image ${img.id} full size`}
                     className="sheen group relative mb-4 block aspect-[4/3] cursor-pointer overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/40"
                   >
                     <img
-                      src={url}
-                      alt={`Portfolio ${i + 1}`}
+                      src={img.url}
+                      alt={`Portfolio ${img.id}`}
                       loading="lazy"
                       className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
                     />
@@ -95,6 +127,11 @@ export default function PortfolioPage() {
                         <Maximize2 className="h-5 w-5" />
                       </span>
                     </div>
+                    {img.category && (
+                      <span className="absolute right-3 top-3 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
+                        {img.category}
+                      </span>
+                    )}
                   </div>
                 </Reveal>
               ))}
@@ -105,7 +142,7 @@ export default function PortfolioPage() {
                 <Images className="h-6 w-6" />
               </div>
               <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
-                Portfolio images will appear here after upload.
+                No portfolio images found in this category.
               </p>
             </div>
           )}
@@ -114,11 +151,11 @@ export default function PortfolioPage() {
 
       {lightboxIndex !== null && (
         <PortfolioLightbox
-          images={images}
+          images={urls}
           index={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
-          onPrev={() => setLightboxIndex((lightboxIndex - 1 + images.length) % images.length)}
-          onNext={() => setLightboxIndex((lightboxIndex + 1) % images.length)}
+          onPrev={() => setLightboxIndex((lightboxIndex - 1 + urls.length) % urls.length)}
+          onNext={() => setLightboxIndex((lightboxIndex + 1) % urls.length)}
         />
       )}
     </div>

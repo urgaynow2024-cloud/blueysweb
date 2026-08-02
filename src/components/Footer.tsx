@@ -29,11 +29,12 @@ export default function Footer() {
             </h4>
             <ul className="space-y-3 text-sm">
               {[
-                { href: "/about", label: "About" },
                 { href: "/services", label: "Services" },
+                { href: "/fbx-mashups", label: "FBX Mashups" },
+                { href: "/portfolio", label: "Portfolio" },
+                { href: "/process", label: "Process" },
                 { href: "/pricing", label: "Pricing" },
                 { href: "/faq", label: "FAQ" },
-                { href: "/portfolio", label: "Portfolio" },
               ].map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-[var(--text-secondary)] hover:text-white hover:translate-x-1 inline-block transition-all">
@@ -46,7 +47,7 @@ export default function Footer() {
 
           <div className="md:justify-self-end">
             <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-dim)] mb-5">
-              Get in touch
+              Support
             </h4>
             <ul className="space-y-3 text-sm">
               <li>
@@ -55,8 +56,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/commission" className="text-[var(--text-secondary)] hover:text-white hover:translate-x-1 inline-block transition-all">
-                  Commission
+                <Link href="/before-ordering" className="text-[var(--text-secondary)] hover:text-white hover:translate-x-1 inline-block transition-all">
+                  Before Ordering
                 </Link>
               </li>
               <li>

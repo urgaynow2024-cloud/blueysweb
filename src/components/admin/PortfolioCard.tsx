@@ -7,6 +7,7 @@ export interface PortfolioImage {
   id?: string;
   url: string;
   path?: string;
+  category?: string;
   uploading?: boolean;
   error?: string;
   retrying?: boolean;
@@ -126,6 +127,11 @@ export function PortfolioCard({
             <span className="absolute left-3 top-3 grid h-7 w-7 place-items-center rounded-lg bg-black/60 text-xs font-semibold text-white backdrop-blur-sm">
               {index + 1}
             </span>
+            {image.category && (
+              <span className="absolute right-3 top-3 rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-xs font-medium text-[var(--accent)] backdrop-blur-sm">
+                {image.category}
+              </span>
+            )}
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/55 opacity-0 transition-opacity duration-300 group-hover:opacity-100 focus-within:opacity-100">
               <div className="flex gap-2">
                 <ActionButton label="Edit" onClick={() => onEdit(index)}>

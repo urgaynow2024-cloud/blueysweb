@@ -9,7 +9,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import PricingCard from "@/components/ui/PricingCard";
 import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages } from "@/lib/db";
 import Link from "next/link";
-import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles, MessageSquarePlus, Users } from "lucide-react";
+import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles, MessageSquarePlus, Users, Box } from "lucide-react";
 import CommissionAvailability from "@/components/CommissionAvailability";
 
 function Stars({ rating, size = "h-4 w-4" }: { rating?: number; size?: string }) {
@@ -133,6 +133,33 @@ export default function Home() {
                 desc="Material configuration, toggles, optimisation, viseme setup, and VRChat-ready packaging."
                 features={["Material config", "Toggle systems", "Performance tuning", "Viseme setup", "VRChat packaging"]}
               />
+            </div>
+          </div>
+        </section>
+
+        <div className="divider" />
+
+        {/* FBX Mashups spotlight */}
+        <section className="section">
+          <div className="container">
+            <div className="relative overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-gradient-to-r from-[var(--accent)]/5 via-[var(--accent)]/3 to-[var(--accent)]/5 p-8 md:p-12">
+              <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[100px]" />
+              <div className="relative flex flex-col items-center justify-between gap-6 md:flex-row">
+                <div className="flex-1">
+                  <span className="eyebrow mb-3 inline-flex items-center gap-2">
+                    <Box className="h-4 w-4 text-[var(--accent)]" />
+                    Specialty
+                  </span>
+                  <h3 className="heading-md text-white">FBX Mashups &amp; Hybrid Avatars</h3>
+                  <p className="mt-3 max-w-2xl text-[var(--text-secondary)]">
+                    Combining multiple FBX models into one cohesive avatar — blending bodies, outfits, accessories, and props
+                    from different sources into a single VRChat-ready character.
+                  </p>
+                </div>
+                <ButtonLink href="/fbx-mashups" variant="secondary">
+                  See examples <ArrowRight className="h-4 w-4" />
+                </ButtonLink>
+              </div>
             </div>
           </div>
         </section>
@@ -321,14 +348,18 @@ export default function Home() {
                 I&rsquo;ll get back to you.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-4">
-                <ButtonLink href="/contact">
-                  <Zap className="h-4 w-4" />
-                  Start a Commission
-                </ButtonLink>
-                <ButtonLink href="https://discord.com/" variant="secondary" external>
-                  Open Discord
-                </ButtonLink>
-              </div>
+                 <ButtonLink href="/contact">
+                   <Zap className="h-4 w-4" />
+                   Start a Commission
+                 </ButtonLink>
+                 <ButtonLink href="/queue" variant="secondary">
+                   View Commission Queue
+                   <Users className="h-4 w-4" />
+                 </ButtonLink>
+                 <ButtonLink href="https://discord.com/" variant="secondary" external>
+                   Open Discord
+                 </ButtonLink>
+               </div>
             </div>
           </div>
         </section>

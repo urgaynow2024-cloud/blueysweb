@@ -5,6 +5,8 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
+    const folder = (formData.get("folder") as string) || "portfolio";
+    const category = (formData.get("category") as string) || "VRChat Avatars";
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -15,7 +17,7 @@ export async function POST(request: Request) {
     }
 
     const ext = file.name.split(".").pop();
-    const storagePath = `portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const storagePath = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from("portfolio-images")
@@ -34,7 +36,7 @@ export async function POST(request: Request) {
 
     const { data: dbData, error: dbError } = await supabaseAdmin
       .from("portfolio_images")
-      .insert([{ url }])
+      .insert([{ url, category }])
       .select();
 
     if (dbError || !dbData || dbData.length === 0) {

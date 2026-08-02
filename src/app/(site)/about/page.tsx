@@ -10,6 +10,7 @@ const SERVICES = [
   { emoji: "✏️", title: "Avatar Edits", desc: "Texture recolours, accessory additions, clothing fitting, hair combinations." },
   { emoji: "🔧", title: "Blender Work", desc: "Asset creation, retopology, UV work, material setup, mesh adjustments." },
   { emoji: "⚙️", title: "Unity Setup", desc: "Material configuration, toggles, optimisation, viseme setup, VRChat packaging." },
+  { emoji: "📦", title: "FBX Mashups", desc: "Combining multiple FBX models into hybrid avatars from different sources." },
 ];
 
 const STATS = [
