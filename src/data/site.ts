@@ -26,6 +26,83 @@ export const about = {
   tools: ["Unity", "Blender"],
 };
 
+export const siteStats = {
+  completedCommissions: 120,
+  happyClients: 87,
+  yearsExperience: 2,
+  averageRating: 4.9,
+};
+
+export const testimonials = [
+  {
+    id: "1",
+    name: "Alex R.",
+    avatar: "https://api.dicebear.com/9.x/notdeadrat/png?seed=Alex&size=128",
+    rating: 5,
+    text: "Bluey transformed my avatar completely. The FBX mashup I requested combined two different models and the result was seamless. Communication was great throughout and the turnaround was faster than expected!",
+    commissioned: "FBX Mashup — body swap + custom hair",
+  },
+  {
+    id: "2",
+    name: "Sam K.",
+    avatar: "https://api.dicebear.com/9.x/notdeadrat/png?seed=Sam&size=128",
+    rating: 5,
+    text: "Working with Bluey was a dream. She took my rough concept and turned it into a beautiful VRChat avatar that runs perfectly on Quest. The clothing fit perfectly and the toggles work flawlessly.",
+    commissioned: "Full avatar overhaul with clothing",
+  },
+  {
+    id: "3",
+    name: "Jordan M.",
+    avatar: "https://api.dicebear.com/9.x/notdeadrat/png?seed=Jordan&size=128",
+    rating: 5,
+    text: "Incredible attention to detail. My avatar's blendshapes and viseme setup are perfect. She also did some FBX work combining multiple clothing items — everything fits naturally and nothing clips. Highly recommended!",
+    commissioned: "Blendshape setup + FBX clothing fit",
+  },
+  {
+    id: "4",
+    name: "Taylor P.",
+    avatar: "https://api.dicebear.com/9.x/notdeadrat/png?seed=Taylor&size=128",
+    rating: 5,
+    text: "Bluey is a wizard with mesh editing. She cleaned up a problematic base, merged it with assets from another model, and the result looks like it was always meant to be one piece. Fast, professional, and the quality speaks for itself.",
+    commissioned: "Avatar merge + optimisation",
+  },
+];
+
+export const featuredProjects = [
+  {
+    id: "1",
+    title: "Cyberfox Avatar",
+    category: "FBX Edits",
+    beforeImage: "https://placehold.co/512x512/1a1a1a/ffffff?text=Before",
+    afterImage: "https://placehold.co/512x512/0a192f/5ab0f0?text=Cyberfox",
+    image: "https://placehold.co/512x512/0a192f/5ab0f0?text=Cyberfox",
+  },
+  {
+    id: "2",
+    title: "Raven Custom",
+    category: "Clothing",
+    beforeImage: "https://placehold.co/512x512/1a1a1a/ffffff?text=Before",
+    afterImage: "https://placehold.co/512x512/1a0a2e/ffffff?text=Raven",
+    image: "https://placehold.co/512x512/1a0a2e/ffffff?text=Raven",
+  },
+  {
+    id: "3",
+    title: "Neon Samurai",
+    category: "VRChat Avatars",
+    beforeImage: "https://placehold.co/512x512/1a1a1a/ffffff?text=Before",
+    afterImage: "https://placehold.co/512x512/0a1f2a/4fd1c5?text=Neon+Samurai",
+    image: "https://placehold.co/512x512/0a1f2a/4fd1c5?text=Neon+Samurai",
+  },
+  {
+    id: "4",
+    title: "Hybrid Catgirl",
+    category: "FBX Edits",
+    beforeImage: "https://placehold.co/512x512/1a1a1a/ffffff?text=Before",
+    afterImage: "https://placehold.co/512x512/2a0a1a/ffffff?text=Catgirl",
+    image: "https://placehold.co/512x512/2a0a1a/ffffff?text=Catgirl",
+  },
+];
+
 export const workflowSteps = [
   { emoji: "💬", title: "Request", desc: "Message me with what you're looking for and your avatar base" },
   { emoji: "📋", title: "Planning", desc: "We discuss details and I provide a detailed quote" },
@@ -38,6 +115,7 @@ export const servicesDetailed = [
   {
     emoji: "✏️",
     title: "VRChat Avatar Editing",
+    image: "https://placehold.co/600x400/0a192f/5ab0f0?text=Avatar+Editing",
     desc: "Avatar merges, mesh edits, blendshape fixes, bone adjustments, Unity setup, and full optimisation for PC and Quest.",
     features: [
       "Avatar merges — combine multiple bases into one",
@@ -51,6 +129,7 @@ export const servicesDetailed = [
   {
     emoji: "🔧",
     title: "FBX Mashups & Custom Edits",
+    image: "https://placehold.co/600x400/1a0a2e/ffffff?text=FBX+Mashups",
     desc: "I create custom avatar edits by combining, modifying, and adjusting existing FBX assets to create unique characters.",
     features: [
       "Combine parts from different FBX models",
@@ -63,6 +142,7 @@ export const servicesDetailed = [
   {
     emoji: "👕",
     title: "Clothing & Outfit Creation",
+    image: "https://placehold.co/600x400/0a1f2a/4fd1c5?text=Clothing+Work",
     desc: "Custom hoodie/outfit creation, clothing fitting, weight painting, PhysBones setup, and material configuration.",
     features: [
       "Hoodie and outfit creation from scratch",
@@ -75,6 +155,7 @@ export const servicesDetailed = [
   {
     emoji: "🎨",
     title: "Texture Work & Materials",
+    image: "https://placehold.co/600x400/2a0a1a/e53e3e?text=Texture+Work",
     desc: "Substance Painter workflows, custom texture creation, PBR material setup, and shader tuning.",
     features: [
       "Substance Painter texture creation and editing",
@@ -87,6 +168,7 @@ export const servicesDetailed = [
   {
     emoji: "⚡",
     title: "Avatar Optimisation",
+    image: "https://placehold.co/600x400/0f192a/93c5fd?text=Optimisation",
     desc: "Performance optimisation for smooth VRChat experience — poly count reduction, material combining, and Quest conversion.",
     features: [
       "Polygon count reduction and retopology",

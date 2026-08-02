@@ -7,54 +7,56 @@ import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { ButtonLink } from "@/components/ui/Button";
 import PricingCard from "@/components/ui/PricingCard";
-import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages } from "@/lib/db";
+import ShowcaseCarousel from "@/components/ShowcaseCarousel";
+import BeforeAfterSlider from "@/components/BeforeAfterSlider";
+import ScrollShowcase from "@/components/ScrollShowcase";
+import ClientTestimonials from "@/components/ClientTestimonials";
+import { getWorkflowSteps, getPricingTiers, getApprovedReviews, getSiteImages, getSiteConfig } from "@/lib/db";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { siteStats, testimonials, featuredProjects, servicesDetailed } from "@/data/site";
 import Link from "next/link";
-import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles, MessageSquarePlus, Users, Box } from "lucide-react";
+import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles, Users, Box, Package } from "lucide-react";
 import CommissionAvailability from "@/components/CommissionAvailability";
-
-function Stars({ rating, size = "h-4 w-4" }: { rating?: number; size?: string }) {
-  const value = rating || 5;
-  return (
-    <div className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star key={i} className={`${size} ${i <= value ? "fill-[var(--accent)] text-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
-      ))}
-    </div>
-  );
-}
 
 export default function Home() {
   const [site, setSite] = useState<any>({});
   const [workflow, setWorkflow] = useState<any[]>([]);
   const [pricing, setPricing] = useState<any[]>([]);
-  const [faq, setFaq] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
   const [siteImages, setSiteImages] = useState<Record<string, { url: string }>>({});
-  const [returningClients, setReturningClients] = useState<number>(0);
+  const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [returningClients, setReturningClients] = useState<number>(0);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-        const [s, w, p, f, r, images] = await Promise.all([
+        const [s, w, p, r, images] = await Promise.all([
           getSiteConfig(),
           getWorkflowSteps(),
           getPricingTiers(),
-          getFaqItems(),
           getApprovedReviews(),
           getSiteImages(),
         ]);
         setSite(s);
         setWorkflow(w);
         setPricing(p);
-        setFaq(f);
         setReviews(r);
         setSiteImages(images);
 
         const statsRes = await fetch("/api/stats").then((res) => res.json()).catch(() => ({ returningClients: 0 }));
         setReturningClients(Number(statsRes.returningClients) || 0);
+
+        if (isSupabaseConfigured && supabase) {
+          const { data: portData } = await supabase
+            .from("portfolio_images")
+            .select("url")
+            .order("sort_order", { ascending: true })
+            .limit(15);
+          if (portData) setPortfolioImages(portData.map((img) => img.url));
+        }
       } catch (e) {
         console.error("Failed to load home data:", e);
       } finally {
@@ -92,14 +94,71 @@ export default function Home() {
       <Hero />
 
       <div className="relative z-10">
-        <FeaturedWork />
+        {/* Featured Projects carousel */}
+        <section className="section section-alt" id="work">
+          <div className="container">
+            <ShowcaseCarousel projects={featuredProjects} />
+          </div>
+        </section>
 
-        <StatsBand site={site} reviews={reviews} returningClients={returningClients} />
+        {/* Scroll showcase marquee */}
+        <section className="section">
+          <div className="container">
+            <div className="mb-12 text-center">
+              <span className="section-label">Recent Work</span>
+              <h2 className="display-lg text-white">Recent Showcase</h2>
+              <p className="lead mx-auto mt-4 max-w-2xl">
+                A continuous scroll of recent avatar commissions and FBX mashups. Each piece is crafted with attention to detail and performance.
+              </p>
+            </div>
+            <ScrollShowcase images={portfolioImages} title="" />
+          </div>
+        </section>
 
-        <div className="divider" />
-
-        {/* Services */}
+        {/* Stats band */}
         <section className="section section-alt">
+          <div className="container">
+            <div className="mb-12 text-center">
+              <span className="section-label">Statistics</span>
+              <h2 className="display-lg text-white">Numbers Speak Louder</h2>
+              <p className="lead mx-auto mt-4 max-w-2xl">
+                Built with care, delivered with pride — here's what the numbers look like.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+              <StatCard
+                icon={<Package className="h-5 w-5" />}
+                label="Completed"
+                value={siteStats.completedCommissions}
+                suffix="+"
+                sublabel="Commissions"
+              />
+              <StatCard
+                icon={<Users className="h-5 w-5" />}
+                label="Happy"
+                value={siteStats.happyClients}
+                sublabel="Clients"
+              />
+              <StatCard
+                icon={<Zap className="h-5 w-5" />}
+                label="Years"
+                value={siteStats.yearsExperience}
+                suffix="+"
+                sublabel="Experience"
+              />
+              <StatCard
+                icon={<Star className="h-5 w-5 fill-[var(--accent)] text-[var(--accent)]" />}
+                label="Rating"
+                value={siteStats.averageRating.toFixed(1)}
+                sublabel="Average"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Services with images */}
+        <section className="section">
           <div className="container">
             <SectionHeading
               eyebrow="Services"
@@ -107,64 +166,120 @@ export default function Home() {
               subtitle="I work on VRChat avatars in a few different ways — from subtle edits to complete overhauls."
             />
 
-            <div className="space-y-6 md:space-y-10">
-              <ServiceRow
-                emoji="✏️"
-                image={siteImages.avatar_editing?.url}
-                eyebrow="Avatar Editing"
-                title="Avatar Editing"
-                desc="Texture recolours, accessory additions, clothing fitting, hair combinations, and minor geometry tweaks to existing bases."
-                features={["Texture recolours", "Accessory additions", "Clothing fitting", "Hair combinations", "Minor fixes"]}
-              />
-              <ServiceRow
-                emoji="🔧"
-                image={siteImages.blender_work?.url}
-                eyebrow="Blender"
-                title="Blender Work"
-                desc="Asset creation, retopology, UV work, material setup, and mesh adjustments for clean avatar bases."
-                features={["Asset creation", "Retopology", "UV & material work", "Mesh adjustments", "Clean topology"]}
-                reverse
-              />
-              <ServiceRow
-                emoji="⚙️"
-                image={siteImages.unity_work?.url}
-                eyebrow="Unity"
-                title="Unity Setup"
-                desc="Material configuration, toggles, optimisation, viseme setup, and VRChat-ready packaging."
-                features={["Material config", "Toggle systems", "Performance tuning", "Viseme setup", "VRChat packaging"]}
-              />
+            <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {servicesDetailed.map((svc, i) => (
+                <ServiceShowcaseCard key={svc.title} service={svc} delay={i * 80} />
+              ))}
+            </div>
+
+            <div className="mt-12 text-center">
+              <ButtonLink href="/services" variant="secondary">
+                View All Services
+                <ArrowRight className="h-4 w-4" />
+              </ButtonLink>
             </div>
           </div>
         </section>
 
-        <div className="divider" />
-
-        {/* FBX Mashups spotlight */}
-        <section className="section">
+        {/* FBX Mashups spotlight — prominent */}
+        <section className="section section-alt">
           <div className="container">
-            <div className="relative overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-gradient-to-r from-[var(--accent)]/5 via-[var(--accent)]/3 to-[var(--accent)]/5 p-8 md:p-12">
-              <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[100px]" />
-              <div className="relative flex flex-col items-center justify-between gap-6 md:flex-row">
+            <div className="relative overflow-hidden rounded-[var(--r-xl)] border border-[var(--border)] bg-gradient-to-r from-[var(--accent)]/5 via-[var(--accent)]/3 to-[var(--accent)]/5 p-8 md:p-14">
+              <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[120px]" />
+              <div className="absolute -bottom-28 -left-20 h-96 w-96 rounded-full bg-[var(--accent-2)] opacity-[0.04] blur-[140px]" />
+              <div className="relative flex flex-col items-center gap-8 md:flex-row">
                 <div className="flex-1">
-                  <span className="eyebrow mb-3 inline-flex items-center gap-2">
-                    <Box className="h-4 w-4 text-[var(--accent)]" />
-                    Specialty
+                  <span className="eyebrow mb-2">
+                    <span className="pill-dot animate-pulse" />
+                    Specialty Service
                   </span>
-                  <h3 className="heading-md text-white">FBX Mashups &amp; Hybrid Avatars</h3>
-                  <p className="mt-3 max-w-2xl text-[var(--text-secondary)]">
-                    Combining multiple FBX models into one cohesive avatar — blending bodies, outfits, accessories, and props
-                    from different sources into a single VRChat-ready character.
+                  <h2 className="display-lg text-white">FBX Mashups &amp; Hybrid Avatars</h2>
+                  <p className="lead mt-4 max-w-xl">
+                    Combining multiple FBX models into one cohesive avatar — blending bodies, outfits,
+                    accessories, and props from different sources into a single VRChat-ready character.
                   </p>
+                  <ul className="mt-6 grid grid-cols-1 gap-2.5 text-sm text-[var(--text-secondary)]">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-[var(--accent)]" /> Merge body parts from different models
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-[var(--accent)]" /> Clothing and accessory swaps
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-[var(--accent)]" /> Weight painting and cleanup
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-[var(--accent)]" /> Full VRChat SDK integration
+                    </li>
+                  </ul>
+                  <div className="mt-8 flex flex-wrap gap-3">
+                    <ButtonLink href="/fbx-mashups">
+                      <Box className="h-4 w-4" />
+                      See FBX Examples
+                    </ButtonLink>
+                    <ButtonLink href="/contact" variant="secondary">
+                      Request a Mashup
+                      <ArrowRight className="h-4 w-4" />
+                    </ButtonLink>
+                  </div>
                 </div>
-                <ButtonLink href="/fbx-mashups" variant="secondary">
-                  See examples <ArrowRight className="h-4 w-4" />
-                </ButtonLink>
+                <div className="relative mx-auto w-full max-w-sm flex-shrink-0">
+                  <div className="relative overflow-hidden rounded-[var(--r-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-2xl shadow-black/50">
+                    <img
+                      src="https://placehold.co/512x640/0a192f/5ab0f0?text=FBX+Mashup+Preview"
+                      alt="FBX mashup example"
+                      className="h-full w-full object-cover"
+                    />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-black/60" />
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <p className="text-sm font-medium text-white">Hybrid character combining multiple FBX sources</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <div className="divider" />
+        {/* Before/After comparisons */}
+        <section className="section">
+          <div className="container">
+            <SectionHeading
+              align="center"
+              eyebrow="Transformations"
+              title="Before &amp; After"
+              subtitle="See the transformation from concept to completed avatar."
+            />
+
+            <div className="mt-12 grid grid-cols-1 gap-12 lg:grid-cols-2">
+              {featuredProjects.map((project, i) => (
+                <div key={project.id}>
+                  <BeforeAfterSlider
+                    beforeImage={project.beforeImage || project.image}
+                    afterImage={project.afterImage || project.image}
+                    title={project.title}
+                    category={project.category}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials */}
+        <section className="section section-alt">
+          <div className="container">
+            <div className="mb-12 text-center">
+              <span className="section-label">Client Feedback</span>
+              <h2 className="display-lg text-white">What Clients Say</h2>
+              <p className="lead mx-auto mt-4 max-w-2xl">
+                Don't just take my word for it — here's what clients have to say about their commissioned avatars.
+              </p>
+            </div>
+
+            <ClientTestimonials testimonials={testimonials} />
+          </div>
+        </section>
 
         {/* Process timeline */}
         <section className="section">
@@ -185,66 +300,8 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="divider" />
-
-        {/* Reviews */}
-        <section className="section section-alt">
-          <div className="container">
-            <SectionHeading
-              eyebrow="Client Feedback"
-              title="Reviews"
-              subtitle="What clients say about working together."
-            />
-            {reviews.length > 0 && <ReviewSummary reviews={reviews} />}
-            {reviews.length > 0 ? (
-              <>
-                <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-                  {reviews.slice(0, 6).map((review, i) => (
-                    <Reveal key={review.id || i} delay={i * 60}>
-                      <article className="premium-card group relative h-full overflow-hidden p-6 md:p-7">
-                        <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[var(--accent)] opacity-[0.04] blur-3xl transition-opacity duration-500 group-hover:opacity-[0.08]" />
-                        <div className="relative flex items-center gap-4">
-                          <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)]/20 to-[var(--accent-2)]/20 text-lg">
-                            {review.display_name?.[0]?.toUpperCase() || "★"}
-                          </div>
-                          <div>
-                            <p className="font-bold text-white">{review.display_name}</p>
-                            <Stars rating={review.rating} />
-                          </div>
-                        </div>
-                        <p className="relative mt-4 text-[var(--text-secondary)] leading-relaxed">"{review.review_text}"</p>
-                        {review.image_url && (
-                          <img src={review.image_url} alt="Commission preview" className="relative mt-4 w-full rounded-xl border border-[var(--border)] object-cover" />
-                        )}
-                      </article>
-                    </Reveal>
-                  ))}
-                </div>
-                {reviews.length > 3 && (
-                  <div className="mt-10 text-center">
-                    <ButtonLink href="/reviews" variant="secondary">
-                      View All Reviews
-                      <ArrowRight className="h-4 w-4" />
-                    </ButtonLink>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-16 text-center">
-                <div className="mb-4 text-5xl opacity-20">💬</div>
-                <p className="mx-auto mb-6 max-w-md text-lg text-[var(--text-dim)]">
-                  Client reviews will appear here after commissions are completed.
-                </p>
-                <ButtonLink href="/reviews">Leave a Review</ButtonLink>
-              </div>
-            )}
-          </div>
-        </section>
-
-        <div className="divider" />
-
         {/* FAQ */}
-        <section className="section">
+        <section className="section section-alt">
           <div className="container max-w-3xl">
             <SectionHeading
               align="center"
@@ -253,7 +310,7 @@ export default function Home() {
               subtitle="Quick answers to the things people ask most."
             />
             <div className="space-y-3">
-              {faq.map((item, i) => {
+              {getFaqItemsStatic().map((item, i) => {
                 const open = openFaq === i;
                 return (
                   <div
@@ -296,10 +353,8 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="divider" />
-
         {/* Pricing */}
-        <section className="section section-alt">
+        <section className="section">
           <div className="container">
             <SectionHeading
               align="center"
@@ -307,7 +362,7 @@ export default function Home() {
               title="Pricing"
               subtitle="Clear, per-avatar pricing that scales with complexity. A 50% deposit starts the work; the balance is due on delivery."
             />
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+            <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
               {pricing.map((tier, i) => (
                 <Reveal key={tier.id || i} delay={i * 80}>
                   <PricingCard tier={tier} />
@@ -328,8 +383,6 @@ export default function Home() {
 
         <CommissionAvailability />
 
-        <div className="divider" />
-
         {/* CTA */}
         <section className="section relative overflow-hidden">
           <div className="pointer-events-none absolute inset-0 -z-10">
@@ -344,22 +397,22 @@ export default function Home() {
               <h2 className="display-lg mt-5 text-white">Ready to commission?</h2>
               <p className="lead mx-auto mt-4">
                 Send me a message on Discord at{" "}
-                <strong className="font-semibold text-white">{site.discord}</strong>, or submit a request and
+                <strong className="font-semibold text-white">{site.discord || "BlueyBarks"}</strong>, or submit a request and
                 I&rsquo;ll get back to you.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-4">
-                 <ButtonLink href="/contact">
-                   <Zap className="h-4 w-4" />
-                   Start a Commission
-                 </ButtonLink>
-                 <ButtonLink href="/queue" variant="secondary">
-                   View Commission Queue
-                   <Users className="h-4 w-4" />
-                 </ButtonLink>
-                 <ButtonLink href="https://discord.com/" variant="secondary" external>
-                   Open Discord
-                 </ButtonLink>
-               </div>
+                <ButtonLink href="/contact">
+                  <Zap className="h-4 w-4" />
+                  Start a Commission
+                </ButtonLink>
+                <ButtonLink href="/queue" variant="secondary">
+                  View Commission Queue
+                  <Users className="h-4 w-4" />
+                </ButtonLink>
+                <ButtonLink href="https://discord.com/" variant="secondary" external>
+                  Open Discord
+                </ButtonLink>
+              </div>
             </div>
           </div>
         </section>
@@ -368,111 +421,73 @@ export default function Home() {
   );
 }
 
-function StatsBand({ site, reviews, returningClients }: { site: any; reviews: any[]; returningClients: number }) {
-  const approved = reviews || [];
-  const totalReviews = approved.length;
-  const avgRating = totalReviews
-    ? (approved.reduce((sum: number, r: any) => sum + (Number(r.rating) || 5), 0) / totalReviews).toFixed(1)
-    : "—";
-  const stats = [
-    { label: "Average rating", value: avgRating, icon: <Star className="h-4 w-4" /> },
-    { label: "Total reviews", value: totalReviews, icon: <MessageSquarePlus className="h-4 w-4" /> },
-    { label: "Turnaround", value: site.stat_delivery || "5-10 days", icon: <Zap className="h-4 w-4" /> },
-    { label: "Returning clients", value: String(returningClients), icon: <Users className="h-4 w-4" /> },
-  ];
-  return (
-    <section className="section !pb-0">
-      <div className="container">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-          {stats.map((s, i) => (
-            <Reveal key={s.label} delay={i * 60}>
-              <div className="group relative overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-5 text-center transition-colors duration-500 hover:border-[var(--border-hover)]">
-                <div className="mx-auto mb-3 grid h-9 w-9 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                  {s.icon}
-                </div>
-                <p className="font-display text-2xl font-bold text-white">{s.value}</p>
-                <p className="mt-1 text-xs text-[var(--text-dim)]">{s.label}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ReviewSummary({ reviews }: { reviews: any[] }) {
-  const avg = reviews.length
-    ? (reviews.reduce((sum, r) => sum + (Number(r.rating) || 5), 0) / reviews.length).toFixed(1)
-    : "5.0";
-  return (
-    <div className="mb-8 flex flex-wrap items-center gap-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] px-4 py-3">
-      <div className="flex gap-0.5">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Star key={i} className={`h-4 w-4 ${i <= Math.round(Number(avg)) ? "fill-[var(--accent)] text-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
-        ))}
-      </div>
-      <span className="font-semibold text-white">{avg}</span>
-      <span className="text-sm text-[var(--text-secondary)]">
-        from {reviews.length} verified client {reviews.length === 1 ? "review" : "reviews"}
-      </span>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-
-function ServiceRow({
-  emoji,
-  image,
-  eyebrow,
-  title,
-  desc,
-  features,
-  reverse = false,
+function StatCard({
+  icon,
+  label,
+  value,
+  suffix,
+  sublabel,
 }: {
-  emoji?: string;
-  image?: string;
-  eyebrow: string;
-  title: string;
-  desc: string;
-  features: string[];
-  reverse?: boolean;
+  icon: React.ReactNode;
+  label: string;
+  value: number | string;
+  suffix?: string;
+  sublabel: string;
 }) {
   return (
     <Reveal>
-      <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12">
-        <div className={`lg:col-span-5 ${reverse ? "lg:order-2" : "order-2 lg:order-1"}`}>
-          <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[var(--border-strong)] bg-white/[0.03] px-3 py-1 text-xs font-bold uppercase tracking-wider text-[var(--accent)]">
-            {eyebrow}
-          </span>
-          <h3 className="heading-md text-white">{title}</h3>
-          <p className="mt-4 leading-relaxed text-[var(--text-secondary)]">{desc}</p>
-          <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {features.map((f) => (
-              <li key={f} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
-                <span className="grid h-5 w-5 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
-                  <Check className="h-3 w-3" />
-                </span>
+      <div className="group relative overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-8 text-center shadow-lg transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/50">
+        <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[80px] transition-opacity duration-500 group-hover:opacity-[0.08]" />
+        <div className="relative mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] transition-transform duration-500 group-hover:scale-110 group-hover:bg-[var(--accent-glow)]/20">
+          {icon}
+        </div>
+        <div className="relative">
+          <p className="text-2xl font-bold text-white">
+            {value}{suffix}
+          </p>
+          <p className="mt-0.5 text-xs font-semibold text-[var(--accent)] uppercase tracking-wider">{label}</p>
+          <p className="mt-1 text-xs text-[var(--text-dim)]">{sublabel}</p>
+        </div>
+      </div>
+    </Reveal>
+  );
+}
+
+function ServiceShowcaseCard({ service, delay }: { service: any; delay?: number }) {
+  return (
+    <Reveal delay={delay}>
+      <div className="group relative h-full overflow-hidden rounded-[var(--r-xl)] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-lg shadow-black/30 transition-all duration-500 hover:-translate-y-2 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/50">
+        <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[var(--accent)] opacity-[0.03] blur-[80px] transition-opacity duration-500 group-hover:opacity-[0.06]" />
+
+        <div className="relative mb-5 aspect-[16/9] overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)]">
+          {service.image ? (
+            <img
+              src={service.image}
+              alt={service.title}
+              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
+            />
+          ) : (
+            <div className="grid h-full w-full place-items-center text-4xl opacity-30">{service.emoji}</div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-card)] via-transparent to-transparent opacity-60" />
+          <div className="absolute bottom-3 left-3 flex items-center justify-center rounded-xl border border-white/10 bg-white/10 text-2xl backdrop-blur">
+            {service.emoji}
+          </div>
+        </div>
+
+        <div className="relative">
+          <span className="section-label mb-2">Service</span>
+          <h3 className="heading-md text-white">{service.title}</h3>
+          <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">{service.desc}</p>
+
+          <ul className="mt-4 grid grid-cols-1 gap-2 text-xs text-[var(--text-secondary)]">
+            {service.features.map((f: string) => (
+              <li key={f} className="flex items-center gap-1.5">
+                <span className="h-1 w-1 shrink-0 rounded-full bg-[var(--accent)]" />
                 {f}
               </li>
             ))}
           </ul>
-        </div>
-        <div className={`lg:col-span-7 ${reverse ? "lg:order-1" : "order-1 lg:order-2"}`}>
-          <div className="group relative aspect-[16/10] overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] shadow-lg shadow-black/30">
-            {image ? (
-              <img src={image} alt={title} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]" />
-            ) : (
-              <div className="grid h-full place-items-center text-5xl opacity-30">{emoji}</div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)]/80 via-transparent to-transparent" />
-            {emoji && (
-              <div className="absolute bottom-4 left-4 grid h-12 w-12 place-items-center rounded-xl border border-white/10 bg-[var(--bg-float)]/80 text-2xl backdrop-blur-md">
-                {emoji}
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </Reveal>
@@ -480,10 +495,9 @@ function ServiceRow({
 }
 
 function ProcessTimeline({ steps }: { steps: any[] }) {
-  if (!steps.length) return null;
+  if (!steps || steps.length === 0) return null;
   return (
     <div className="relative">
-      {/* connecting line (desktop) */}
       <div className="absolute left-0 right-0 top-7 hidden h-px bg-gradient-to-r from-transparent via-[var(--border-strong)] to-transparent lg:block" />
       <ol className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5">
         {steps.map((step, i) => (
@@ -501,4 +515,37 @@ function ProcessTimeline({ steps }: { steps: any[] }) {
       </ol>
     </div>
   );
+}
+
+function getFaqItemsStatic() {
+  return [
+    {
+      question: "What do I need to provide?",
+      answer: "What you want done, avatar base name, reference images, and any required assets. Please read the Before Ordering guide for full details.",
+    },
+    {
+      question: "How long does a commission take?",
+      answer: "Depends on the tier and complexity. Light work is faster, full overhauls take longer.",
+    },
+    {
+      question: "Do you work on Quest?",
+      answer: "Quest compatibility depends on the tier. Overhauls include Quest optimisation.",
+    },
+    {
+      question: "What payment methods?",
+      answer: "PayPal and Payhip only. 50% deposit before work begins.",
+    },
+    {
+      question: "Can I request NSFW work?",
+      answer: "Limited NSFW commissions are accepted case-by-case for 18+ clients. See NSFW page for details.",
+    },
+    {
+      question: "What files do I get?",
+      answer: "Unity-ready VRChat avatar files. Blender source files on request (additional fee applies).",
+    },
+    {
+      question: "Can you do FBX mashups?",
+      answer: "Yes, I create custom avatar edits by combining, modifying, and adjusting existing FBX assets. See the FBX Mashups page for details.",
+    },
+  ];
 }

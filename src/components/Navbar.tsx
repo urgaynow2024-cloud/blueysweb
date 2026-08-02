@@ -2,8 +2,21 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
-import { Zap, Menu, X, ArrowUpRight } from "lucide-react";
+import { Zap, Menu, X, ArrowUpRight, Home, Scissors, Box, Package, Clock, Tag, ShoppingCart, HelpCircle, Star, Phone } from "lucide-react";
 import { navLinks } from "@/data/site";
+
+  const linkIcons: Record<string, React.ElementType> = {
+  "/": Home,
+  "/services": Scissors,
+  "/fbx-mashups": Box,
+  "/portfolio": Package,
+  "/process": Clock,
+  "/pricing": Tag,
+  "/before-ordering": ShoppingCart,
+  "/faq": HelpCircle,
+  "/reviews": Star,
+  "/contact": Phone,
+};
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -75,15 +88,24 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   aria-current={active ? "page" : undefined}
-                  className={`relative px-4 py-2 text-sm font-medium transition-all duration-300 rounded-xl ${
+                  className={`group relative px-4 py-2.5 text-sm font-medium transition-all duration-300 rounded-xl ${
                     active
                       ? "text-white"
                       : "text-[var(--text-secondary)] hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  {link.label}
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    {linkIcons[link.href] && (() => { const Icon = linkIcons[link.href]; return <Icon className="h-4 w-4" />; })()}
+                    {link.label}
+                  </span>
                   {active && (
-                    <span className="absolute inset-0 rounded-xl bg-[var(--accent-soft)] border border-[var(--border-accent)] -z-10" />
+                    <>
+                      <span className="absolute -bottom-1 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-100 shadow-lg shadow-[var(--accent)]/40 transition-all duration-500" />
+                      <span className="absolute inset-0 -z-10 rounded-xl bg-[var(--accent-soft)]" />
+                    </>
+                  )}
+                  {!active && (
+                    <span className="absolute -bottom-1 left-1/2 h-0.5 w-0 -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-0 shadow-lg shadow-[var(--accent)]/40 transition-all duration-300 group-hover:w-6 group-hover:opacity-60" />
                   )}
                 </a>
               );
@@ -150,9 +172,12 @@ export default function Navbar() {
                       : undefined
                   }
                 >
-                  {link.label}
+                  <span className="relative z-10 flex items-center gap-2.5">
+                    {linkIcons[link.href] && (() => { const Icon = linkIcons[link.href]; return <Icon className="h-4 w-4" />; })()}
+                    {link.label}
+                  </span>
                   {active && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)]" />
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)]" />
                   )}
                 </a>
               );

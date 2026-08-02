@@ -4,16 +4,8 @@ import { servicesDetailed, workflowSteps } from "@/data/site";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
-import { Check, ArrowRight, Wrench, Settings2, Box, Shirt, Palette, Zap } from "lucide-react";
+import { Check, ArrowRight } from "lucide-react";
 import Link from "next/link";
-
-const SERVICE_ICONS: Record<string, React.ReactNode> = {
-  "VRChat Avatar Editing": <Wrench className="h-5 w-5" />,
-  "FBX Mashups & Custom Edits": <Box className="h-5 w-5" />,
-  "Clothing & Outfit Creation": <Shirt className="h-5 w-5" />,
-  "Texture Work & Materials": <Palette className="h-5 w-5" />,
-  "Avatar Optimisation": <Zap className="h-5 w-5" />,
-};
 
 export default function ServicesPage() {
   return (
@@ -33,9 +25,21 @@ export default function ServicesPage() {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {servicesDetailed.map((svc, i) => (
               <Reveal key={svc.title} delay={i * 60}>
-                <div className="group h-full rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-7 transition-all duration-500 hover:-translate-y-1.5 hover:border-[var(--border-hover)]">
-                  <div className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] transition-transform duration-300 group-hover:scale-110">
-                    {SERVICE_ICONS[svc.title] || <Check className="h-5 w-5" />}
+                <div className="group h-full rounded-[var(--r-xl)] border border-[var(--border)] bg-[var(--bg-card)] p-7 shadow-lg shadow-black/20 transition-all duration-500 hover:-translate-y-2 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/50">
+                  <div className="relative mb-5 aspect-[16/9] overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)]">
+                    {svc.image ? (
+                      <img
+                        src={svc.image}
+                        alt={svc.title}
+                        className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+                      />
+                    ) : (
+                      <div className="grid h-full w-full place-items-center text-3xl opacity-30">{svc.emoji}</div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-card)] via-transparent to-transparent opacity-50" />
+                    <div className="absolute bottom-2 left-2 flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/10 text-xl backdrop-blur">
+                      {svc.emoji}
+                    </div>
                   </div>
                   <h3 className="mb-2 text-lg font-bold text-white">{svc.title}</h3>
                   <p className="mb-6 text-sm leading-relaxed text-[var(--text-secondary)]">{svc.desc}</p>

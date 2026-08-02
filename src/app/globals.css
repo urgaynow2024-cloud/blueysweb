@@ -1333,12 +1333,20 @@ select:focus {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
+@keyframes marqueeFull {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
 .marquee-track {
   display: inline-flex;
   align-items: center;
   gap: 2.5rem;
   white-space: nowrap;
   animation: marquee 32s linear infinite;
+  will-change: transform;
+}
+.animate-marqueeFull {
+  animation: marqueeFull 40s linear infinite;
   will-change: transform;
 }
 .marquee-mask {
@@ -1368,5 +1376,5 @@ select:focus {
   }
   .reveal { opacity: 1; transform: none; }
   /* Skip the heavy blurred aurora entirely for reduced-motion users */
-  .hero-aurora { display: none; }
+   .hero-aurora { display: none; }
 }
