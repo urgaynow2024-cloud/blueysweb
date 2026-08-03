@@ -50,6 +50,7 @@ export function FbxMashupSection() {
   const [beforeAfters, setBeforeAfters] = useState<Record<string, FbxBeforeAfter[]>>({});
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const projectsRef = useRef<FbxMashup[]>([]);
+  const originalIdsRef = useRef<Set<string>>(new Set());
   const { markDirty, register } = useSave();
   const toast = useToast();
 
@@ -70,7 +71,7 @@ export function FbxMashupSection() {
           .select("*")
           .order("sort_order", { ascending: true });
         if (error) throw error;
-        setProjects((data || []).map((p: any) => ({
+        const loaded = (data || []).map((p: any) => ({
           id: p.id,
           title: p.title || "",
           description: p.description || "",
@@ -80,7 +81,37 @@ export function FbxMashupSection() {
           featured: p.featured || false,
           visible: p.visible !== false,
           sort_order: p.sort_order || 0,
-        })));
+        }));
+        setProjects(loaded);
+        originalIdsRef.current = new Set(loaded.map((p) => p.id).filter(Boolean));
+
+        const { data: galleryData } = await sb
+          .from("fbx_gallery")
+          .select("*")
+          .order("sort_order", { ascending: true });
+        const galleryMap: Record<string, FbxGalleryImage[]> = {};
+        (galleryData || []).forEach((img: any) => {
+          const mid = img.mashup_id;
+          if (mid) {
+            if (!galleryMap[mid]) galleryMap[mid] = [];
+            galleryMap[mid].push(img);
+          }
+        });
+        setGalleryImages(galleryMap);
+
+        const { data: baData } = await sb
+          .from("fbx_before_after")
+          .select("*")
+          .order("sort_order", { ascending: true });
+        const baMap: Record<string, FbxBeforeAfter[]> = {};
+        (baData || []).forEach((ba: any) => {
+          const mid = ba.mashup_id;
+          if (mid) {
+            if (!baMap[mid]) baMap[mid] = [];
+            baMap[mid].push(ba);
+          }
+        });
+        setBeforeAfters(baMap);
       } catch {
         toast.error("Failed to load FBX mashups");
       } finally {
@@ -89,22 +120,80 @@ export function FbxMashupSection() {
     })();
   }, [toast]);
 
-  const saveOrder = useCallback(async () => {
+  const saveProjects = useCallback(async () => {
     if (!isSupabaseConfigured) return;
-    const items = projectsRef.current
-      .filter((p) => p.id)
-      .map((p) => ({ id: p.id!, sort_order: p.sort_order }));
-    if (items.length === 0) return;
     if (!sb) return;
-    for (const item of items) {
-      await sb.from("fbx_mashups").update({ sort_order: item.sort_order }).eq("id", item.id);
+
+    const current = projectsRef.current;
+    const currentIds = new Set(current.map((p) => p.id).filter(Boolean));
+
+    for (const id of originalIdsRef.current) {
+      if (!currentIds.has(id)) {
+        await sb.from("fbx_mashups").delete().eq("id", id);
+        originalIdsRef.current.delete(id);
+      }
     }
+
+    for (const project of current) {
+      if (project.id) {
+        await sb
+          .from("fbx_mashups")
+          .update({
+            title: project.title,
+            description: project.description,
+            avatar_base: project.avatar_base,
+            software_used: project.software_used,
+            price: project.price,
+            featured: project.featured,
+            visible: project.visible,
+            sort_order: project.sort_order,
+          })
+          .eq("id", project.id);
+      } else {
+        const result = await sb
+          .from("fbx_mashups")
+          .insert([
+            {
+              title: project.title,
+              description: project.description,
+              avatar_base: project.avatar_base,
+              software_used: project.software_used,
+              price: project.price,
+              featured: project.featured,
+              visible: project.visible,
+              sort_order: project.sort_order,
+            },
+          ])
+          .select();
+        if (result.data && result.data.length > 0) {
+          originalIdsRef.current.add(result.data[0].id);
+        }
+      }
+    }
+
+    const { data: reloaded } = await sb
+      .from("fbx_mashups")
+      .select("*")
+      .order("sort_order", { ascending: true });
+    setProjects(
+      (reloaded || []).map((p: any) => ({
+        id: p.id,
+        title: p.title || "",
+        description: p.description || "",
+        avatar_base: p.avatar_base || "",
+        software_used: p.software_used || [],
+        price: p.price || "",
+        featured: p.featured || false,
+        visible: p.visible !== false,
+        sort_order: p.sort_order || 0,
+      })),
+    );
   }, []);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
-    return register("fbx-mashups", saveOrder);
-  }, [register, saveOrder]);
+    return register("fbx-mashups", saveProjects);
+  }, [register, saveProjects]);
 
   function updateProject(i: number, patch: Partial<FbxMashup>) {
     const next = projects.slice();

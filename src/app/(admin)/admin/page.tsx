@@ -27,33 +27,13 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 const ADMIN_PASSWORD = "blueyadmin";
 
-const defaultSite = {
-  name: "Bluey's Avatar Commissions",
-  tagline: "VRChat Avatar Edits • Blender Work • Unity Setup",
-  description: "Clean, stylish, performance-friendly avatars built for VRChat.",
-  discord: "BlueyBarks",
-};
+const defaultSite: Record<string, string> = {};
 
-const defaultPricing = [
-  { id: "light", name: "Light Blender Work", emoji: "✨", price: "£15 - £25", badge: null, popular: false, features: ["Easy asset additions", "Custom jewellery", "Simple clothing fitting", "Texture recolours", "Minor avatar fixes"] },
-  { id: "custom", name: "Avatar Customisation", emoji: "🛠", price: "£30 - £55", badge: "Most Requested", popular: true, features: ["Multiple asset additions", "Advanced clothing fitting", "Hair combinations", "Toggles setup", "Basic optimisation"] },
-  { id: "overhaul", name: "Avatar Overhaul", emoji: "🔥", price: "£60 - £90", badge: null, popular: false, features: ["Heavy Blender work", "Full avatar redesign", "Advanced toggle systems", "Large asset integration", "Performance optimisation"] },
-];
+const defaultPricing: any[] = [];
 
-const defaultFaq = [
-  { id: "1", question: "What do I need to provide?", answer: "What you want done, avatar base name, reference images, and any required assets." },
-  { id: "2", question: "How long does a commission take?", answer: "Depends on complexity. Light work is faster, overhauls take longer." },
-  { id: "3", question: "Do you work on Quest?", answer: "Quest compatibility depends on the tier. Overhauls include Quest optimisation." },
-  { id: "4", question: "What payment methods?", answer: "PayPal and Payhip only. 50% deposit before work begins." },
-];
+const defaultFaq: any[] = [];
 
-const defaultWorkflow = [
-  { id: "1", emoji: "💬", title: "Enquiry", desc: "Message me on Discord with what you're looking for." },
-  { id: "2", emoji: "📋", title: "Quote", desc: "I'll let you know the price and how long it'll take." },
-  { id: "3", emoji: "💳", title: "Deposit", desc: "50% deposit before I start work." },
-  { id: "4", emoji: "🎨", title: "Work", desc: "I'll send progress updates and previews as I go." },
-  { id: "5", emoji: "📦", title: "Delivery", desc: "Final files sent once the remaining payment is done." },
-];
+const defaultWorkflow: any[] = [];
 
 type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "fbx-mashups" | "tos";
 

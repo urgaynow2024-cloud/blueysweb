@@ -383,9 +383,9 @@ export default function FbxMashupsPage() {
             title="Pricing Overview"
             subtitle="Prices vary depending on complexity. I will always give you a detailed quote before starting."
           />
-          <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
-            {visibleMashups.length > 0 ? (
-              visibleMashups.map((mashup, i) => (
+          {visibleMashups.length > 0 ? (
+            <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
+              {visibleMashups.map((mashup, i) => (
                 <Reveal key={mashup.id || i} delay={i * 80}>
                   <PricingCard
                     tier={{
@@ -396,7 +396,7 @@ export default function FbxMashupsPage() {
                       badge: mashup.featured ? "Popular" : null,
                       popular: mashup.featured,
                       features: [
-                        mashup.avatar_base ? `Base: ${mashup.avatar_base}` : "Custom base",
+                        ...(mashup.avatar_base ? [`Base: ${mashup.avatar_base}`] : []),
                         ...(mashup.software_used || []).map((s: string) => `Uses ${s}`),
                         "Revisions included",
                         "VRChat-ready delivery",
@@ -404,51 +404,18 @@ export default function FbxMashupsPage() {
                     }}
                   />
                 </Reveal>
-              ))
-            ) : (
-              <>
-                <Reveal delay={0}>
-                  <PricingCard
-                    tier={{
-                      id: "basic",
-                      name: "Basic Mashup",
-                      emoji: "🔄",
-                      price: "£40 - £70",
-                      badge: null,
-                      popular: false,
-                      features: ["Base swap", "Material adjustments", "1 revision round", "VRChat-ready delivery"],
-                    }}
-                  />
-                </Reveal>
-                <Reveal delay={80}>
-                  <PricingCard
-                    tier={{
-                      id: "standard",
-                      name: "Standard Mashup",
-                      emoji: "🔄",
-                      price: "£70 - £120",
-                      badge: "Most Popular",
-                      popular: true,
-                      features: ["Full mesh integration", "Material & toggle setup", "3 revision rounds", "Quest compatibility check", "VRChat-ready delivery"],
-                    }}
-                  />
-                </Reveal>
-                <Reveal delay={160}>
-                  <PricingCard
-                    tier={{
-                      id: "premium",
-                      name: "Premium Mashup",
-                      emoji: "🔄",
-                      price: "£120 - £200",
-                      badge: null,
-                      popular: false,
-                      features: ["Complex multi-mesh integration", "Full optimization", "5 revision rounds", "Custom rigging if needed", "Priority support", "VRChat-ready delivery"],
-                    }}
-                  />
-                </Reveal>
-              </>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-12 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-20 text-center">
+              <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                <Layers className="h-6 w-6" />
+              </div>
+              <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
+                No FBX Mashups have been added yet.
+              </p>
+            </div>
+          )}
           <div className="mt-10 text-center">
             <p className="text-xs text-[var(--text-dim)]">
               All prices are per avatar. A 50% deposit is required before work begins.
