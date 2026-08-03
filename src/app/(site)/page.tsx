@@ -91,6 +91,12 @@ export default function Home() {
 
   return (
     <div className="relative">
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute left-1/4 top-[-10%] h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[180px]" />
+        <div className="absolute bottom-[-5%] right-[-5%] h-[400px] w-[600px] rounded-full bg-[var(--accent-2)] opacity-[0.03] blur-[150px]" />
+        <div className="absolute left-[60%] top-[40%] h-[300px] w-[500px] rounded-full bg-[var(--accent-3)] opacity-[0.025] blur-[120px]" />
+      </div>
+
       <Hero />
 
       <div className="relative z-10">
