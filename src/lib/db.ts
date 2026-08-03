@@ -65,6 +65,10 @@ export async function getPricingTiers() {
   return fetchAll("pricing_tiers", []);
 }
 
+export async function getAdditionalServices() {
+  return fetchAll("additional_services", []);
+}
+
 export async function getFaqItems() {
   return fetchAll("faq_items", []);
 }

@@ -1,12 +1,29 @@
 "use client";
 
-import { pricingTiers, tosSections } from "@/data/site";
+import { useState, useEffect } from "react";
+import { pricingTiers, additionalServices, tosSections } from "@/data/site";
+import { getPricingTiers, getAdditionalServices } from "@/lib/db";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import PricingCard from "@/components/ui/PricingCard";
 import { ShieldCheck } from "lucide-react";
 
 export default function PricingPage() {
+  const [pricing, setPricing] = useState(pricingTiers);
+  const [services, setServices] = useState(additionalServices);
+
+  useEffect(() => {
+    async function load() {
+      const [dbPricing, dbServices] = await Promise.all([
+        getPricingTiers(),
+        getAdditionalServices(),
+      ]);
+      if (dbPricing && dbPricing.length > 0) setPricing(dbPricing);
+      if (dbServices && dbServices.length > 0) setServices(dbServices);
+    }
+    load();
+  }, []);
+
   return (
     <div className="relative">
       <section className="page relative overflow-hidden">
@@ -22,11 +39,45 @@ export default function PricingPage() {
           />
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
-            {pricingTiers.map((tier, i) => (
-              <Reveal key={tier.id} delay={i * 80}>
+            {pricing.map((tier, i) => (
+              <Reveal key={tier.id || i} delay={i * 80}>
                 <PricingCard tier={tier} />
               </Reveal>
             ))}
+          </div>
+
+          <div className="mt-20">
+            <SectionHeading
+              align="center"
+              eyebrow="Additional Services"
+              title="Services Priced on Request"
+              subtitle="For work outside the standard tiers below."
+            />
+
+            <div className="space-y-8">
+              {services.map((service, i) => (
+                <Reveal key={service.title || i} delay={i * 80}>
+                  <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-7">
+                    <div className="mb-4 flex items-center gap-3 text-lg font-bold text-white">
+                      <span className="grid h-8 w-8 place-items-center rounded-lg bg-[var(--accent-soft)] text-xl">{service.emoji}</span>
+                      {service.title}
+                    </div>
+                    <p className="mb-4 text-sm text-[var(--text-secondary)]">{service.description}</p>
+                    <ul className="mb-4 grid grid-cols-1 gap-2 text-sm text-[var(--text-secondary)] sm:grid-cols-2">
+                      {service.examples.map((example) => (
+                        <li key={example} className="flex items-start gap-2">
+                          <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
+                          <span>{example}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="text-sm text-[var(--text-secondary)]">
+                      <strong>Pricing:</strong> {service.note}
+                    </p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
           </div>
 
           <div className="mt-20">
