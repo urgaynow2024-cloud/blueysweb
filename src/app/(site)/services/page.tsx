@@ -75,7 +75,7 @@ export default function ServicesPage() {
           </div>
 
           <div className="my-16">
-            <div className="divider" />
+            <div className="section-fade" />
           </div>
 
           <SectionHeading eyebrow="Process" title="How it Works" subtitle="From enquiry to delivery in five simple steps." />
