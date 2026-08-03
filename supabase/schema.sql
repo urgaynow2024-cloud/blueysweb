@@ -265,6 +265,8 @@ DO $$ BEGIN
    DROP POLICY IF EXISTS "Authenticated write fbx_gallery" ON fbx_gallery;
    DROP POLICY IF EXISTS "Public read fbx_before_after" ON fbx_before_after;
    DROP POLICY IF EXISTS "Authenticated write fbx_before_after" ON fbx_before_after;
+   DROP POLICY IF EXISTS "Public read tos_sections" ON tos_sections;
+   DROP POLICY IF EXISTS "Authenticated write tos_sections" ON tos_sections;
 END $$;
 
 -- Public read access for all tables
