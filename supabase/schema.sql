@@ -230,6 +230,8 @@ BEGIN
     BEGIN ALTER TABLE tos_sections ADD COLUMN IF NOT EXISTS content TEXT; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE tos_sections ADD COLUMN IF NOT EXISTS box_type TEXT DEFAULT 'info' CHECK (box_type IN ('info', 'warning', 'error')); EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE tos_sections ADD COLUMN IF NOT EXISTS box_title TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE tos_sections ADD COLUMN IF NOT EXISTS items TEXT[] DEFAULT '{}'; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE tos_sections ADD COLUMN IF NOT EXISTS highlight_box TEXT DEFAULT ''; EXCEPTION WHEN others THEN NULL; END;
   END IF;
 END $$;
 
@@ -769,5 +771,5 @@ These Terms are not intended to confer any rights or benefits upon any third par
 - **Email**: Available via the contact form at blueysweb.com
 - **Website**: https://blueysweb.com
 
-We will respond to your inquiry within a reasonable timeframe.', '{}', '', 'info', NULL, 34, TRUE);
+We will respond to your inquiry within a reasonable timeframe.', '{}', '', 'info', NULL, 34, TRUE)
 ON CONFLICT (id) DO NOTHING;
