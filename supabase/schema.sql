@@ -200,10 +200,24 @@ CREATE TABLE IF NOT EXISTS tos_sections (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL DEFAULT '',
   icon TEXT DEFAULT '',
+  description TEXT DEFAULT '',
   items TEXT[] DEFAULT '{}',
+  type TEXT DEFAULT 'section',
+  is_visible BOOLEAN DEFAULT TRUE,
+  colour TEXT DEFAULT 'accent',
+  card_style TEXT DEFAULT 'default',
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS tos_versions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  version_number INTEGER NOT NULL,
+  snapshot JSONB NOT NULL,
+  changed_by TEXT DEFAULT 'admin',
+  change_summary TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS navigation_items (
@@ -542,6 +556,7 @@ ALTER TABLE homepage_stats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE before_ordering_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tos_sections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tos_versions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE navigation_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE website_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE portfolio_categories ENABLE ROW LEVEL SECURITY;
@@ -605,6 +620,8 @@ DO $$ BEGIN
   DROP POLICY IF EXISTS "Authenticated write before_ordering_items" ON before_ordering_items;
   DROP POLICY IF EXISTS "Public read tos_sections" ON tos_sections;
   DROP POLICY IF EXISTS "Authenticated write tos_sections" ON tos_sections;
+  DROP POLICY IF EXISTS "Public read tos_versions" ON tos_versions;
+  DROP POLICY IF EXISTS "Authenticated write tos_versions" ON tos_versions;
   DROP POLICY IF EXISTS "Public read navigation_items" ON navigation_items;
   DROP POLICY IF EXISTS "Authenticated write navigation_items" ON navigation_items;
   DROP POLICY IF EXISTS "Public read website_settings" ON website_settings;
@@ -675,6 +692,7 @@ CREATE POLICY "Public read homepage_stats" ON homepage_stats FOR SELECT USING (t
 CREATE POLICY "Public read services" ON services FOR SELECT USING (true);
 CREATE POLICY "Public read before_ordering_items" ON before_ordering_items FOR SELECT USING (true);
 CREATE POLICY "Public read tos_sections" ON tos_sections FOR SELECT USING (true);
+CREATE POLICY "Public read tos_versions" ON tos_versions FOR SELECT USING (true);
 CREATE POLICY "Public read navigation_items" ON navigation_items FOR SELECT USING (true);
 CREATE POLICY "Public read website_settings" ON website_settings FOR SELECT USING (true);
 CREATE POLICY "Public read portfolio_categories" ON portfolio_categories FOR SELECT USING (true);
@@ -720,6 +738,7 @@ CREATE POLICY "Authenticated write homepage_stats" ON homepage_stats FOR ALL USI
 CREATE POLICY "Authenticated write services" ON services FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write before_ordering_items" ON before_ordering_items FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write tos_sections" ON tos_sections FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write tos_versions" ON tos_versions FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write navigation_items" ON navigation_items FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write website_settings" ON website_settings FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write portfolio_categories" ON portfolio_categories FOR ALL USING (auth.role() = 'authenticated');
@@ -889,71 +908,71 @@ WHERE NOT EXISTS (SELECT 1 FROM maintenance_mode);
 -- SEED DATA: TOS, FORM FIELDS, CATEGORIES, BEFORE ORDERING
 -- =============================================================================
 
-INSERT INTO tos_sections (id, title, icon, items, sort_order, created_at, updated_at)
+INSERT INTO tos_sections (id, title, icon, description, items, type, is_visible, colour, card_style, sort_order, created_at, updated_at)
 VALUES
-  (gen_random_uuid(), 'Asset Ownership Policy', '🔒', ARRAY[
+  (gen_random_uuid(), 'Asset Ownership Policy', '🔒', 'All assets used in commissioned work must be legally owned by the client.', ARRAY[
     'Clients must own every avatar base used in commissions',
     'Proof of ownership required: purchase receipts, marketplace receipts, store confirmations, or creator confirmations',
     'If ownership cannot be verified, Bluey Commissions reserves the right to refuse the commission',
     'We do not work with leaked, ripped, stolen, or pirated assets',
     'Unauthorised conversions are not accepted'
-  ], 0, NOW(), NOW()),
-  (gen_random_uuid(), 'FBX Mashup Policy', '🧬', ARRAY[
+  ], 'section', TRUE, 'accent', 'default', 0, NOW(), NOW()),
+  (gen_random_uuid(), 'FBX Mashup Policy', '🧬', 'Rules for FBX mashup commissions.', ARRAY[
     'All avatar bases used in FBX mashups must be owned by the client',
     'Proof of ownership required for each base before work begins',
     'Mashups are delivered as single unified avatars',
     'Original rigging and weights are preserved where possible',
     'Client is responsible for ensuring they have rights to all components'
-  ], 1, NOW(), NOW()),
-  (gen_random_uuid(), 'Refund Policy', '💰', ARRAY[
+  ], 'section', TRUE, 'accent', 'default', 1, NOW(), NOW()),
+  (gen_random_uuid(), 'Refund Policy', '💰', 'Important information about deposits, refunds, and cancellation fees.', ARRAY[
     '50% deposit required before work begins',
     'Deposits are non-refundable once work has started',
     'Refunds may be issued if work cannot be completed through no fault of the client',
     'Revision rounds are included in the base price - additional revisions may incur extra charges',
     'Cancelled commissions incur a cancellation fee covering work completed to date'
-  ], 2, NOW(), NOW()),
-  (gen_random_uuid(), 'Behaviour Policy', '🤝', ARRAY[
+  ], 'warning', TRUE, 'warning', 'highlight', 2, NOW(), NOW()),
+  (gen_random_uuid(), 'Behaviour Policy', '🤝', 'Expected conduct during the commission process.', ARRAY[
     'Clients must communicate respectfully at all times',
     'Harassment of any kind will result in immediate commission cancellation',
     'Abusive behaviour towards Bluey or other clients is not tolerated',
     'Deadlines must be agreed upon in advance and communicated clearly',
     'Reasonable communication delays are accepted - life happens'
-  ], 3, NOW(), NOW()),
-  (gen_random_uuid(), 'Blacklist Policy', '🚫', ARRAY[
+  ], 'section', TRUE, 'accent', 'default', 3, NOW(), NOW()),
+  (gen_random_uuid(), 'Blacklist Policy', '🚫', 'Serious consequences for TOS violations.', ARRAY[
     'Blacklisted users may be refused future commissions, updates, support, or any future services',
     'Reasons for blacklisting include: harassment, abuse, threats, fraud, chargeback abuse, lying, providing stolen assets, redistributing work, claiming work as their own, removing required credits, repeated TOS violations',
     'Blacklist status is permanent unless explicitly reviewed and overturned',
     'No explanation is required for blacklisting decisions',
     'Attempting to circumvent a blacklist will result in permanent exclusion'
-  ], 4, NOW(), NOW()),
-  (gen_random_uuid(), 'Privacy Policy', '🔐', ARRAY[
+  ], 'important', TRUE, 'danger', 'highlight', 4, NOW(), NOW()),
+  (gen_random_uuid(), 'Privacy Policy', '🔐', 'How your personal information is handled.', ARRAY[
     'Personal information is collected only for commission purposes',
     'Data is not shared with third parties without consent',
     'Commission work may be featured in portfolio with client permission',
     'Discord usernames may be displayed in reviews if submitted',
     'Data can be deleted on request'
-  ], 5, NOW(), NOW()),
-  (gen_random_uuid(), 'Usage Rights', '📜', ARRAY[
+  ], 'section', TRUE, 'accent', 'default', 5, NOW(), NOW()),
+  (gen_random_uuid(), 'Usage Rights', '📜', 'What you can and cannot do with commissioned work.', ARRAY[
     'Clients receive personal use rights to commissioned work',
     'Commercial use requires prior agreement and additional licensing',
     'Bluey Commissions retains the right to display work in portfolio',
     'Attribution credit is appreciated but not legally required unless specified',
     'Modifications by the client are allowed for personal use'
-  ], 6, NOW(), NOW()),
-  (gen_random_uuid(), 'Portfolio Rights', '🖼️', ARRAY[
+  ], 'section', TRUE, 'accent', 'default', 6, NOW(), NOW()),
+  (gen_random_uuid(), 'Portfolio Rights', '🖼️', 'Rights regarding portfolio display of commissioned work.', ARRAY[
     'Commissioned work may be featured in portfolio and promotional materials',
     'Clients can request work be omitted from portfolio before commissioning',
     'NSFW work will only be displayed in age-verified sections',
     'Client attribution may be included in portfolio descriptions',
     'Portfolio display is at Bluey''s discretion'
-  ], 7, NOW(), NOW()),
-  (gen_random_uuid(), 'Client Responsibilities', '📋', ARRAY[
+  ], 'section', TRUE, 'accent', 'default', 7, NOW(), NOW()),
+  (gen_random_uuid(), 'Client Responsibilities', '📋', 'What is expected from clients during a commission.', ARRAY[
     'Provide clear reference images and requirements',
     'Communicate feedback promptly during revision rounds',
     'Ensure all assets provided are legally owned or licensed',
     'Pay invoices on time as agreed',
     'Review work thoroughly before requesting additional revisions'
-  ], 8, NOW(), NOW())
+  ], 'section', TRUE, 'accent', 'default', 8, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO commission_form_fields (id, name, label, placeholder, type, required, options, max_size_mb, sort_order, created_at, updated_at)

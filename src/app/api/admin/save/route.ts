@@ -19,6 +19,16 @@ async function createBackup(admin: AdminClient, label: string, data: any) {
   }
 }
 
+async function createTosVersion(admin: AdminClient, tosSections: any[]) {
+  try {
+    const { data: existing } = await admin.from("tos_versions").select("version_number").order("version_number", { ascending: false }).limit(1);
+    const nextVersion = existing && existing.length > 0 ? existing[0].version_number + 1 : 1;
+    await admin.from("tos_versions").insert([{ version_number: nextVersion, snapshot: tosSections, changed_by: "admin", change_summary: "Updated via admin panel" }]);
+  } catch (e) {
+    console.error("TOS version creation failed:", e);
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const data = await request.json();
@@ -106,6 +116,7 @@ export async function POST(request: Request) {
     if (tosSections && tosSections.length > 0) {
       await admin.from("tos_sections").delete().neq("id", "00000000-0000-0000-0000-000000000000");
       await upsertTable("tos_sections", tosSections, admin);
+      await createTosVersion(admin, tosSections);
     }
 
     if (navigation && navigation.length > 0) {

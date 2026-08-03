@@ -431,6 +431,32 @@ export async function deleteTosSection(id: string) {
   return !error;
 }
 
+export async function getTosVersions() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("tos_versions").select("*").order("version_number", { ascending: false });
+  if (error || !data) return [];
+  return data as any[];
+}
+
+export async function createTosVersion(versionNumber: number, snapshot: any, changedBy = "admin", changeSummary = "") {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("tos_versions").insert([{ version_number: versionNumber, snapshot, changed_by: changedBy, change_summary: changeSummary }]).select();
+  return error ? null : result?.[0];
+}
+
+export async function restoreTosVersion(versionId: string) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: version, error } = await supabase.from("tos_versions").select("*").eq("id", versionId).single();
+  if (error || !version) return null;
+  const snapshot = version.snapshot as any[];
+  await supabase.from("tos_sections").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  for (const item of snapshot) {
+    const { id, ...rest } = item;
+    await supabase.from("tos_sections").insert([{ ...rest, id: id || undefined }]);
+  }
+  return snapshot;
+}
+
 export async function getNavigationItems() {
   return fetchAll("navigation_items", []);
 }

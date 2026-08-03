@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { CheckCircle2, Send, Paperclip, AlertCircle, Loader2 } from "lucide-react";
 import { getCommissionFormFields } from "@/lib/db";
 
@@ -23,6 +24,12 @@ export default function ContactCommissionForm() {
   const [submitting, setSubmitting] = useState(false);
   const [fields, setFields] = useState<FormField[]>([]);
   const [loadingFields, setLoadingFields] = useState(true);
+  const [tosAgreed, setTosAgreed] = useState({
+    read: false,
+    agree: false,
+    ownership: false,
+    proof: false,
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -41,19 +48,28 @@ export default function ContactCommissionForm() {
     load();
   }, []);
 
-  const activeFields = fields.length > 0 ? fields : [];
+  const activeFields = fields.filter((f) => !f.name.startsWith("tos_"));
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(false);
     setErrorMessage(null);
+    setSubmitting(true);
     const form = e.currentTarget;
     const formData = new FormData(form);
 
-    const data: Record<string, any> = {};
+    if (!tosAgreed.read || !tosAgreed.agree || !tosAgreed.ownership || !tosAgreed.proof) {
+      setError(true);
+      setErrorMessage("You must agree to all Terms of Service statements before submitting.");
+      setSubmitting(false);
+      return;
+    }
+
+    const data: Record<string, unknown> = {};
     activeFields.forEach((f) => {
       data[f.name] = formData.get(f.name);
     });
+    data.tos_agreed = tosAgreed;
 
     try {
       const res = await fetch("/api/commission", {
@@ -68,6 +84,8 @@ export default function ContactCommissionForm() {
       }
     } catch {
       setError(true);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -112,7 +130,7 @@ export default function ContactCommissionForm() {
           </div>
           <h3 className="text-xl font-bold text-white">Request received</h3>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">Thanks for your feedback! I&rsquo;ll review your request and get back to you on Discord or email within 24&ndash;48 hours.</p>
-          <a href="/" className="btn-primary mt-8 inline-flex">Back to Home</a>
+          <Link href="/" className="btn-primary mt-8 inline-flex">Back to Home</Link>
         </div>
       </div>
     );
@@ -219,6 +237,7 @@ export default function ContactCommissionForm() {
           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
           {imagePreview ? (
             <div className="group relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={imagePreview} alt="Preview" className="h-48 w-full rounded-xl border border-[var(--border)] object-cover" />
               <button
                 type="button"
@@ -249,6 +268,38 @@ export default function ContactCommissionForm() {
               )}
             </button>
           )}
+        </div>
+
+        <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] p-5">
+          <h3 className="text-sm font-semibold text-white">Terms of Service Agreement</h3>
+          <p className="mt-1 text-xs text-[var(--text-dim)]">You must confirm all statements below to submit your request.</p>
+          <div className="mt-4 space-y-3">
+            {[
+              { key: "read", label: "I have read the Terms of Service." },
+              { key: "agree", label: "I agree to the Terms of Service." },
+              { key: "ownership", label: "I legally own all supplied assets." },
+              { key: "proof", label: "I understand proof of purchase may be requested." },
+            ].map((item) => (
+              <label
+                key={item.key}
+                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-all duration-200 ${
+                  tosAgreed[item.key as keyof typeof tosAgreed]
+                    ? "border-[var(--accent)]/40 bg-[var(--accent-soft)]"
+                    : "border-[var(--border)] hover:border-[var(--border-hover)]"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={tosAgreed[item.key as keyof typeof tosAgreed]}
+                  onChange={(e) => setTosAgreed((prev) => ({ ...prev, [item.key]: e.target.checked }))}
+                  className="mt-0.5 h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                />
+                <span className={`text-sm ${tosAgreed[item.key as keyof typeof tosAgreed] ? "text-white" : "text-[var(--text-secondary)]"}`}>
+                  {item.label}
+                </span>
+              </label>
+            ))}
+          </div>
         </div>
 
         <button type="submit" disabled={submitting} className="btn-primary w-full !justify-center !py-3.5 disabled:opacity-50">

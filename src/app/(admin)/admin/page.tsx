@@ -340,7 +340,14 @@ export default function AdminPage() {
       {tab === "stats" && <StatsSection value={stats} onChange={(n) => { setStats(n); markDirty(); }} />}
       {tab === "services" && <ServicesSection value={services} onChange={(n) => { setServices(n); markDirty(); }} />}
       {tab === "before-ordering" && <BeforeOrderingSection value={beforeOrdering} onChange={(n) => { setBeforeOrdering(n); markDirty(); }} />}
-      {tab === "tos" && <TosSection value={tosSections} onChange={(n) => { setTosSections(n); markDirty(); }} />}
+      {tab === "tos" && (
+        <TosSection
+          value={tosSections}
+          onChange={(n) => { setTosSections(n); markDirty(); }}
+          siteValue={site}
+          onSiteChange={(siteUpdate) => { setSite(siteUpdate); markDirty(); }}
+        />
+      )}
       {tab === "navigation" && <NavigationSection value={navigation} onChange={(n) => { setNavigation(n); markDirty(); }} />}
       {tab === "website-settings" && <WebsiteSettingsSection value={websiteSettings} onChange={(n) => { setWebsiteSettings(n); markDirty(); }} />}
       {tab === "portfolio-categories" && <PortfolioCategoriesSection value={portfolioCategories} onChange={(n) => { setPortfolioCategories(n); markDirty(); }} />}
