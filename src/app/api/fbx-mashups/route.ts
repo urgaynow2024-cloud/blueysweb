@@ -16,6 +16,19 @@ export async function GET() {
   return NextResponse.json(data || []);
 }
 
+export async function DELETE() {
+  if (!supabaseAdmin) {
+    return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+  }
+  await supabaseAdmin.from("fbx_before_after").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await supabaseAdmin.from("fbx_gallery").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  const { error } = await supabaseAdmin.from("fbx_mashups").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  return NextResponse.json({ success: true });
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

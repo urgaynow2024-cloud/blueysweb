@@ -323,6 +323,15 @@ CREATE POLICY "Public deletes fbx-mashups" ON storage.objects FOR DELETE USING (
 -- =============================================================================
 
 -- =============================================================================
+-- CLEANUP: Remove all FBX mashup demo/seed data
+-- =============================================================================
+-- If demo projects exist in the database (e.g. "Cyber Fox Mashup"), run the
+-- TRUNCATE below in the Supabase SQL Editor to permanently remove them.
+-- This is a one-time operation — it will NOT run automatically with the schema.
+--
+-- TRUNCATE TABLE fbx_before_after, fbx_gallery, fbx_mashups CASCADE;
+
+-- =============================================================================
 -- MODERATOR / ROLE SYSTEM
 -- =============================================================================
 

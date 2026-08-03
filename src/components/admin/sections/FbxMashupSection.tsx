@@ -229,6 +229,24 @@ export function FbxMashupSection() {
     markDirty();
   }
 
+  async function clearAllProjects() {
+    if (!window.confirm("This will permanently delete ALL FBX mashup projects, gallery images, and before/after comparisons. This cannot be undone. Continue?")) return;
+    try {
+      const res = await fetch("/api/fbx-mashups", { method: "DELETE" });
+      if (!res.ok) {
+        const r = await res.json().catch(() => ({}));
+        throw new Error(r.error || "Failed to clear projects");
+      }
+      setProjects([]);
+      setGalleryImages({});
+      setBeforeAfters({});
+      originalIdsRef.current = new Set();
+      toast.success("All FBX mashups cleared");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to clear projects");
+    }
+  }
+
   async function toggleVisibility(i: number) {
     const project = projects[i];
     const newVisible = !project.visible;
@@ -429,9 +447,16 @@ export function FbxMashupSection() {
           title="FBX Mashup Projects"
           description="Manage your FBX mashup services. Each project is a separate mashup offering with its own gallery and before/after comparisons."
           actions={
-            <Button size="sm" variant="primary" onClick={addProject} leftIcon={<Plus className="h-4 w-4" />}>
-              Add Project
-            </Button>
+            <>
+              {projects.length > 0 && (
+                <Button size="sm" variant="ghost" onClick={clearAllProjects} leftIcon={<Trash2 className="h-4 w-4" />} className="!text-[var(--danger)] hover:!bg-[var(--danger-soft)]">
+                  Clear All
+                </Button>
+              )}
+              <Button size="sm" variant="primary" onClick={addProject} leftIcon={<Plus className="h-4 w-4" />}>
+                Add Project
+              </Button>
+            </>
           }
         />
 
