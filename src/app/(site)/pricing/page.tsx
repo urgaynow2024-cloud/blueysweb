@@ -9,6 +9,8 @@ import PricingCard from "@/components/ui/PricingCard";
 import { PremiumCard } from "@/components/ui/Card";
 import { ShieldCheck, Sparkles, Info } from "lucide-react";
 
+const ALLOWED_PRICING_TIERS = ["Light Blender Work", "Standard Avatar Work", "Advanced Avatar Work"];
+
 export default function PricingPage() {
   const [pricing, setPricing] = useState(pricingTiers);
   const [services, setServices] = useState(additionalServices);
@@ -16,7 +18,10 @@ export default function PricingPage() {
   useEffect(() => {
     async function load() {
       const dbPricing = await getPricingTiers();
-      if (dbPricing && dbPricing.length > 0) setPricing(dbPricing);
+      if (dbPricing && dbPricing.length > 0) {
+        const filtered = dbPricing.filter((t: any) => ALLOWED_PRICING_TIERS.includes(t.name));
+        setPricing(filtered.length > 0 ? filtered : pricingTiers);
+      }
     }
     load();
   }, []);

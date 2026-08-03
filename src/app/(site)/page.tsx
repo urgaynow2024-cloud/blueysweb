@@ -47,9 +47,10 @@ export default function Home() {
           getApprovedReviews(),
           getSiteImages(),
         ]);
+        const ALLOWED_PRICING_TIERS = ["Light Blender Work", "Standard Avatar Work", "Advanced Avatar Work"];
         setSite(s);
         setWorkflow(w);
-        setPricing(p);
+        setPricing(p.filter((t: any) => ALLOWED_PRICING_TIERS.includes(t.name)));
         setFaq(f);
         setReviews(r);
         setSiteImages(images);
