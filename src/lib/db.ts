@@ -32,8 +32,8 @@ async function fetchSiteConfig() {
   if (!isSupabaseConfigured || !supabase) return FALLBACKS.siteConfig;
   const { data, error } = await supabase.from("site_config").select("key, value");
   if (error || !data) return FALLBACKS.siteConfig;
-  const result: any = { ...FALLBACKS.siteConfig };
-  data.forEach((row: any) => { result[row.key] = row.value; });
+  const result: Record<string, string> = { ...FALLBACKS.siteConfig };
+  data.forEach((row: { key: string; value: string }) => { result[row.key] = row.value; });
   return result;
 }
 
@@ -237,7 +237,7 @@ export async function approveReview(id: string) {
   return !error;
 }
 
-export async function updateReview(id: string, data: any) {
+export async function updateReview(id: string, data: { display_name?: string; review_text?: string; rating?: number; status?: string; hidden?: boolean; image_url?: string | null; updated_at?: string }) {
   if (!isSupabaseConfigured || !supabase) return false;
   const { error } = await supabase.from("reviews").update(data).eq("id", id);
   return !error;
