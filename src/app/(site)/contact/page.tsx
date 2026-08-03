@@ -3,11 +3,12 @@
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import ContactCommissionForm from "@/components/ContactCommissionForm";
-import { MessageSquare, Clock, CheckCircle2 } from "lucide-react";
+import { MessageSquare, Clock, CheckCircle2, Mail } from "lucide-react";
 
 const CHANNELS = [
   { icon: <MessageSquare className="h-5 w-5" />, label: "Discord", value: "BlueyBarks", note: "Fastest way to reach me" },
   { icon: <Clock className="h-5 w-5" />, label: "Response time", value: "24–48 hours", note: "Usually quicker" },
+  { icon: <Mail className="h-5 w-5" />, label: "Email", value: "Via Discord", note: "I'll respond on Discord" },
 ];
 
 const CHECKLIST = [
@@ -21,8 +22,9 @@ export default function ContactPage() {
   return (
     <div className="relative">
       <section className="page relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-30" />
         <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[var(--accent)] opacity-[0.05] blur-[120px]" />
+        <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-[var(--accent-2)] opacity-[0.03] blur-[100px]" />
 
         <div className="container">
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-8">
@@ -68,7 +70,7 @@ export default function ContactPage() {
             {/* Form */}
             <div className="lg:col-span-2">
               <Reveal>
-                <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)]/60 p-1">
+                <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)]/60 p-1 backdrop-blur-sm">
                   <ContactCommissionForm />
                 </div>
               </Reveal>

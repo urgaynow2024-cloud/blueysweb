@@ -1,47 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { getSiteImages } from "@/lib/db";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ImageIcon } from "lucide-react";
 import Reveal from "@/components/ui/Reveal";
 
-function SkeletonCard() {
-  return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] animate-pulse">
-      <div className="h-[220px] w-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
-    </div>
-  );
-}
-
 export default function FeaturedWork() {
+  const [heroImage, setHeroImage] = useState<string | null>(null);
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
-      setLoading(true);
-      try {
-        if (!isSupabaseConfigured || !supabase) {
-          const stored = localStorage.getItem("adminData");
-          if (stored) {
-            try {
-              const data = JSON.parse(stored);
-              if (data.portfolioImages && data.portfolioImages.length > 0) {
-                setImages(data.portfolioImages.slice(0, 4));
-              }
-            } catch (e) {}
-          }
-          setLoading(false);
-          return;
-        }
-        const { data } = await supabase.from("portfolio_images").select("url").order("sort_order", { ascending: true }).limit(4);
-        if (data && data.length > 0) setImages(data.map((img) => img.url));
-      } catch (e) {
-        console.error("Failed to load featured work:", e);
-      } finally {
-        setLoading(false);
-      }
+      const images = await getSiteImages();
+      if (images.hero?.url) setHeroImage(images.hero.url);
+      setLoading(false);
     }
     load();
   }, []);
@@ -63,7 +37,11 @@ export default function FeaturedWork() {
 
         {loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {[1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)}
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
+                <div className="h-[220px] w-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
+              </div>
+            ))}
           </div>
         ) : images.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
@@ -92,7 +70,12 @@ export default function FeaturedWork() {
           </div>
         ) : (
           <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-16 text-center">
-            <p className="text-[var(--text-dim)]">Portfolio pieces will appear here after client approval.</p>
+            <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+              <ImageIcon className="h-6 w-6" />
+            </div>
+            <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
+              Portfolio pieces will appear here after client approval.
+            </p>
           </div>
         )}
       </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { getSiteImages } from "@/lib/db";
 import Link from "next/link";
-import { Zap, ArrowDown, Sparkles, ShieldCheck, Layers } from "lucide-react";
+import { Zap, ArrowDown, Sparkles, ShieldCheck, Layers, GitBranch, PenTool } from "lucide-react";
 
 const TOOL_STRIP = [
   "Blender",
@@ -29,17 +29,23 @@ export default function Hero() {
 
   return (
     <section className="relative flex min-h-[100svh] items-center overflow-hidden pb-20 pt-28 md:pb-24 md:pt-32">
-      {/* Ambient atmosphere */}
+      {/* Ambient atmosphere — layered depth */}
       <div className="pointer-events-none absolute inset-0 z-0">
-        <div className="absolute left-1/2 top-[-10%] h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.06] blur-[180px]" />
-        <div className="absolute bottom-[-5%] right-[-5%] h-[420px] w-[600px] rounded-full bg-[var(--accent-2)] opacity-[0.05] blur-[150px]" />
-        <div className="absolute inset-0 bg-grid opacity-[0.5]" />
-        <div className="absolute inset-0 bg-dots opacity-30" />
+        <div className="absolute left-1/4 top-[-15%] h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.07] blur-[200px] orb-slow" />
+        <div className="absolute bottom-[-10%] right-[-5%] h-[500px] w-[700px] rounded-full bg-[var(--accent-2)] opacity-[0.05] blur-[180px] orb-med" />
+        <div className="absolute left-[70%] top-[30%] h-[350px] w-[450px] rounded-full bg-[var(--accent-3)] opacity-[0.04] blur-[150px] orb-fast" />
+        <div className="absolute inset-0 bg-grid opacity-[0.4]" />
+        <div className="absolute inset-0 bg-dots opacity-20" />
+      </div>
+
+      {/* Animated gradient mesh overlay */}
+      <div className="pointer-events-none absolute inset-0 z-[1] opacity-[0.03]">
+        <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)] via-transparent to-[var(--accent-2)]" />
       </div>
 
       <div className="container relative z-10">
-        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-10">
-          {/* Content */}
+        <div className="grid grid-cols-1 items-center gap-14 lg:grid-cols-12 lg:gap-12">
+          {/* Content — Left */}
           <div className="lg:col-span-6">
             <div className="fade-in">
               <span className="eyebrow">
@@ -48,21 +54,23 @@ export default function Hero() {
               </span>
             </div>
 
-            <h1 className="display-xl mt-5 text-white fade-in">
-              Avatars that feel <br className="hidden sm:block" />
+            <h1 className="display-xl mt-6 text-white fade-in">
+              Avatars that feel
+              <br className="hidden sm:block" />
               <span className="text-gradient-animated">unmistakably yours</span>
             </h1>
 
-            <p className="lead mt-6 max-w-xl fade-in">
-              Bluey&rsquo;s Avatar Commissions — handcrafted VRChat avatars built in Blender and
-              Unity. Clean, stylish, and performance-friendly, tailored around your vision.
+            <p className="lead mt-7 max-w-xl fade-in">
+              Bluey&rsquo;s Avatar Commissions — handcrafted VRChat avatars built in
+              Blender and Unity. Clean, stylish, and performance-friendly, tailored
+              around your vision.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3 fade-in">
+            <div className="mt-9 flex flex-wrap gap-4 fade-in">
               <a href="/contact" className="btn-primary group relative">
                 <span className="pointer-events-none absolute -inset-1 -z-10 rounded-[calc(var(--r-xs)+6px)] bg-[var(--accent)] opacity-25 blur-xl transition-opacity duration-500 group-hover:opacity-50" />
                 <Zap className="h-4 w-4" />
-                Commission Me
+                Start a Commission
               </a>
               <a href="#work" className="btn-secondary group">
                 View Portfolio
@@ -70,7 +78,7 @@ export default function Hero() {
               </a>
             </div>
 
-            <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-[var(--text-secondary)] fade-in">
+            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-[var(--text-secondary)] fade-in">
               <span className="inline-flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-[var(--accent)]" />
                 Studio-grade quality
@@ -80,13 +88,13 @@ export default function Hero() {
                 PC &amp; Quest ready
               </span>
               <span className="inline-flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-[var(--accent)]" />
+                <PenTool className="h-4 w-4 text-[var(--accent)]" />
                 Built in Blender &amp; Unity
               </span>
             </div>
 
             {/* Tool / skill marquee */}
-            <div className="marquee-mask mt-10 overflow-hidden fade-in">
+            <div className="marquee-mask mt-12 overflow-hidden fade-in">
               <div className="marquee-track">
                 {[...TOOL_STRIP, ...TOOL_STRIP].map((tool, i) => (
                   <span
@@ -101,7 +109,7 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Showcase */}
+          {/* Showcase — Right */}
           <div className="lg:col-span-6">
             <div className="relative mx-auto max-w-xl">
               {/* Rotating aurora glow behind the frame */}
@@ -144,7 +152,7 @@ export default function Hero() {
                 <p className="text-lg font-bold text-white">£15</p>
               </div>
 
-              {/* Floating reviews chip (links to real, approved reviews) */}
+              {/* Floating reviews chip */}
               <Link
                 href="/reviews"
                 className="bob-delayed absolute -right-3 top-10 hidden items-center gap-2 rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-float)]/90 px-4 py-3 shadow-2xl backdrop-blur-xl transition-colors hover:border-[var(--accent)]/50 sm:flex"

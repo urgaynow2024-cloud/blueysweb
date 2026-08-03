@@ -98,7 +98,7 @@ export default function Home() {
 
         <StatsBand site={site} reviews={reviews} returningClients={returningClients} />
 
-        <div className="divider" />
+        <div className="section-fade" />
 
         {/* Services */}
         <section className="section section-alt">
@@ -139,7 +139,7 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="divider" />
+        <div className="section-fade" />
 
         {/* Process timeline */}
         <section className="section">
@@ -160,7 +160,7 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="divider" />
+        <div className="section-fade" />
 
         {/* Reviews */}
         <section className="section section-alt">
@@ -219,7 +219,7 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="divider" />
+        <div className="section-fade" />
 
         {/* FAQ */}
         <section className="section">
@@ -274,7 +274,7 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="divider" />
+        <div className="section-fade" />
 
         {/* Pricing */}
         <section className="section section-alt">
@@ -306,7 +306,7 @@ export default function Home() {
 
         <CommissionAvailability />
 
-        <div className="divider" />
+        <div className="section-fade" />
 
         {/* CTA */}
         <section className="section relative overflow-hidden">

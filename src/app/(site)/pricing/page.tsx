@@ -7,7 +7,7 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import PricingCard from "@/components/ui/PricingCard";
 import { PremiumCard } from "@/components/ui/Card";
-import { ShieldCheck, Sparkles, Info } from "lucide-react";
+import { Sparkles, Info } from "lucide-react";
 
 const ALLOWED_PRICING_TIERS = ["Light Blender Work", "Standard Avatar Work", "Advanced Avatar Work"];
 
@@ -29,9 +29,9 @@ export default function PricingPage() {
   return (
     <div className="relative">
       <section className="page relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-grid opacity-30" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-grid opacity-25" />
         <div className="pointer-events-none absolute -top-24 right-0 h-96 w-96 rounded-full bg-[var(--accent-2)] opacity-[0.05] blur-[120px]" />
-        <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-[var(--accent-2)] opacity-[0.03] blur-[120px]" />
+        <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-[var(--accent-3)] opacity-[0.03] blur-[100px]" />
 
         <div className="container">
           <SectionHeading
@@ -42,7 +42,7 @@ export default function PricingPage() {
           />
 
           <Reveal delay={0}>
-            <div className="mx-auto mb-8 max-w-2xl rounded-[var(--r-lg)] border border-[var(--border-strong)] bg-[var(--bg-card)]/80 px-6 py-4 text-center">
+            <div className="mx-auto mb-8 max-w-2xl rounded-[var(--r-lg)] border border-[var(--border-strong)] bg-[var(--bg-card)]/80 px-6 py-4 text-center backdrop-blur-sm">
               <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">
                 <Sparkles className="h-3.5 w-3.5" />
                 Flexible, workload-based pricing
@@ -53,7 +53,7 @@ export default function PricingPage() {
             </div>
           </Reveal>
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
             {pricing.map((tier, i) => (
               <Reveal key={tier.id || i} delay={i * 80}>
                 <PricingCard tier={tier} />
@@ -107,7 +107,7 @@ export default function PricingPage() {
               title="Terms of Service"
               subtitle="By commissioning me, you agree to the rules below. Please read carefully before ordering."
             />
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               {tosSections.map((section, i) => (
                 <Reveal key={section.title} delay={(i % 4) * 60}>
                   <PremiumCard variant="elevated" className="h-full p-7">
@@ -129,7 +129,7 @@ export default function PricingPage() {
             </div>
 
             <div className="mt-12 flex flex-wrap items-center justify-center gap-3 text-sm text-[var(--text-secondary)]">
-              <ShieldCheck className="h-4 w-4 text-[var(--accent)]" />
+              <Info className="h-4 w-4 text-[var(--accent)]" />
               Every commission is handled with care and clear communication before work begins.
             </div>
           </div>

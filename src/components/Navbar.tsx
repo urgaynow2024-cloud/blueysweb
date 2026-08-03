@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
-import { Zap, Menu, X, ArrowUpRight } from "lucide-react";
+import { Zap, Menu, X, ArrowUpRight, ChevronDown } from "lucide-react";
 import { navLinks } from "@/data/site";
 
 function isActive(pathname: string, href: string) {

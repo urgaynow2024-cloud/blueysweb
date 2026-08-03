@@ -43,7 +43,7 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
         <Field label={label} hint={hint} error={error}>
           <input
             ref={ref}
-            className={`field ${className}`}
+            className={`field ${className} ${error ? "error" : ""}`}
             style={{
               background: "linear-gradient(160deg, rgba(255,255,255,0.025), transparent 45%), var(--bg-card)",
               boxShadow: "0 1px 2px rgba(0,0,0,0.4)",
@@ -79,7 +79,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
           <textarea
             ref={ref}
             rows={rows}
-            className={`field resize-y ${className}`}
+            className={`field resize-y ${className} ${error ? "error" : ""}`}
             style={{
               background: "linear-gradient(160deg, rgba(255,255,255,0.025), transparent 45%), var(--bg-card)",
               boxShadow: "0 1px 2px rgba(0,0,0,0.4)",
@@ -135,7 +135,7 @@ export const InputGroup = ({
   className?: string;
 }) => (
   <div
-    className={`flex items-center gap-2 rounded-[var(--r-xs)] border border-[var(--border)] bg-[var(--bg-card)] px-3 transition-all duration-300 focus-within:border-[var(--accent)] focus-within:box-shadow focus-within:shadow-[0_0_0_3px_var(--accent-soft),_0_0_30px_-8px_var(--accent-glow)] ${className}`}
+    className={`flex items-center gap-2 rounded-[var(--r-xs)] border border-[var(--border)] bg-[var(--bg-card)] px-3 transition-all duration-300 focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_3px_var(--accent-soft),_0_0_30px_-8px_var(--accent-glow)] ${className}`}
   >
     {children}
   </div>

@@ -1,6 +1,6 @@
 import { ReactNode, HTMLAttributes } from "react";
 
-type CardVariant = "default" | "elevated" | "interactive" | "glass" | "marketplace" | "minimal";
+type CardVariant = "default" | "elevated" | "interactive" | "glass" | "marketplace" | "minimal" | "portfolio" | "pricing" | "review" | "faq";
 type CardPadding = "sm" | "md" | "lg";
 
 const variantClasses: Record<CardVariant, string> = {
@@ -10,6 +10,10 @@ const variantClasses: Record<CardVariant, string> = {
   glass: "glass",
   marketplace: "marketplace-card group border border-[var(--border)] hover:border-[var(--border-hover)]",
   minimal: "border border-[var(--border)] bg-transparent hover:border-[var(--border-hover)]",
+  portfolio: "portfolio-card border border-[var(--border)]",
+  pricing: "pricing-card border border-[var(--border)]",
+  review: "review-card border border-[var(--border)]",
+  faq: "faq-card border border-[var(--border)]",
 };
 
 const paddingClasses: Record<CardPadding, string> = {

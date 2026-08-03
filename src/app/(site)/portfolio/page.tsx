@@ -7,14 +7,6 @@ import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { Images, Maximize2 } from "lucide-react";
 
-function SkeletonCard() {
-  return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
-      <div className="h-[220px] w-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
-    </div>
-  );
-}
-
 export default function PortfolioPage() {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,8 +43,9 @@ export default function PortfolioPage() {
   return (
     <div className="relative">
       <section className="page relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-30" />
         <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px]" />
+        <div className="pointer-events-none absolute -bottom-32 right-0 h-60 w-[500px] rounded-full bg-[var(--accent-2)] opacity-[0.03] blur-[100px]" />
 
         <div className="container">
           <SectionHeading
@@ -65,7 +58,11 @@ export default function PortfolioPage() {
 
           {loading ? (
             <div className="columns-1 space-y-4 sm:columns-2 lg:columns-3">
-              {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)}
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
+                  <div className="h-[220px] w-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
+                </div>
+              ))}
             </div>
           ) : images.length > 0 ? (
             <div className="columns-1 space-y-4 sm:columns-2 lg:columns-3">
