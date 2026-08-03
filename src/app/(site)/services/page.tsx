@@ -3,6 +3,7 @@
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
+import { PremiumCard } from "@/components/ui/Card";
 import { Check, ArrowRight, Pencil, Wrench, Settings2 } from "lucide-react";
 
 const SERVICES = [
@@ -52,7 +53,7 @@ export default function ServicesPage() {
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
             {SERVICES.map((svc, i) => (
               <Reveal key={svc.title} delay={i * 80}>
-                <div className="group h-full rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-7 transition-all duration-500 hover:-translate-y-1.5 hover:border-[var(--border-hover)]">
+            <PremiumCard variant="elevated" className="group h-full p-7" hoverGlow>
                   <div className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] transition-transform duration-300 group-hover:scale-110">
                     {svc.icon}
                   </div>
@@ -68,7 +69,7 @@ export default function ServicesPage() {
                       </li>
                     ))}
                   </ul>
-                </div>
+                </PremiumCard>
               </Reveal>
             ))}
           </div>
@@ -82,11 +83,11 @@ export default function ServicesPage() {
           <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
             {WORKFLOW.map((step, i) => (
               <Reveal key={step.title} delay={(i % 5) * 60}>
-                <div className="group h-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-5 text-center transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)]">
+                <PremiumCard variant="interactive" className="h-full p-5 text-center">
                   <div className="mb-3 text-2xl transition-transform duration-300 group-hover:scale-110">{step.emoji}</div>
                   <h3 className="mb-1.5 text-sm font-bold text-white">{step.title}</h3>
                   <p className="text-xs leading-relaxed text-[var(--text-dim)]">{step.desc}</p>
-                </div>
+                </PremiumCard>
               </Reveal>
             ))}
           </div>

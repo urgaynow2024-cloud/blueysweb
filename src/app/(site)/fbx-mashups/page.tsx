@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
+import { PremiumCard } from "@/components/ui/Card";
 import PricingCard from "@/components/ui/PricingCard";
 import { getFbxMashups, getFbxGallery, getFbxBeforeAfters } from "@/lib/db";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
@@ -122,33 +123,33 @@ export default function FbxMashupsPage() {
             subtitle="An FBX mashup is the process of combining, modifying, or integrating existing 3D avatar models (in FBX format) into a new, custom VRChat avatar."
           />
           <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
-            {[
-              {
-                icon: <Layers className="h-6 w-6" />,
-                title: "Base Swaps",
-                desc: "Replace the base mesh of an existing avatar with a different one while keeping all the original materials, toggles, and animations intact.",
-              },
-              {
-                icon: <GitCompare className="h-6 w-6" />,
-                title: "Mesh Integration",
-                desc: "Combine multiple FBX files into a single optimized avatar, merging geometry, materials, and animation controllers.",
-              },
-              {
-                icon: <Shield className="h-6 w-6" />,
-                title: "Optimization",
-                desc: "Reduce polygon count, fix rigging issues, and ensure the mashup runs smoothly in VRChat across PC and Quest.",
-              },
-            ].map((item, i) => (
-              <Reveal key={item.title} delay={i * 80}>
-                <div className="group h-full rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-7 transition-all duration-500 hover:-translate-y-1.5 hover:border-[var(--border-hover)]">
-                  <div className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] transition-transform duration-300 group-hover:scale-110">
-                    {item.icon}
-                  </div>
-                  <h3 className="mb-2 text-lg font-bold text-white">{item.title}</h3>
-                  <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{item.desc}</p>
-                </div>
-              </Reveal>
-            ))}
+           {[
+               {
+                 icon: <Layers className="h-6 w-6" />,
+                 title: "Base Swaps",
+                 desc: "Replace the base mesh of an existing avatar with a different one while keeping all the original materials, toggles, and animations intact.",
+               },
+               {
+                 icon: <GitCompare className="h-6 w-6" />,
+                 title: "Mesh Integration",
+                 desc: "Combine multiple FBX files into a single optimized avatar, merging geometry, materials, and animation controllers.",
+               },
+               {
+                 icon: <Shield className="h-6 w-6" />,
+                 title: "Optimization",
+                 desc: "Reduce polygon count, fix rigging issues, and ensure the mashup runs smoothly in VRChat across PC and Quest.",
+               },
+             ].map((item, i) => (
+               <Reveal key={item.title} delay={i * 80}>
+                 <PremiumCard variant="elevated" className="h-full p-7" hoverGlow>
+                   <div className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] transition-transform duration-300 group-hover:scale-110">
+                     {item.icon}
+                   </div>
+                   <h3 className="mb-2 text-lg font-bold text-white">{item.title}</h3>
+                   <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{item.desc}</p>
+                 </PremiumCard>
+               </Reveal>
+             ))}
           </div>
         </div>
       </section>
@@ -163,22 +164,22 @@ export default function FbxMashupsPage() {
             subtitle="Professional FBX mashups save you time, money, and headaches compared to building an avatar from scratch."
           />
           <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {[
-              { emoji: "⚡", title: "Faster Turnaround", desc: "Build on an existing base instead of starting from zero. Most mashups are completed in 3–7 days." },
-              { emoji: "💰", title: "Cost Effective", desc: "Mashups are more affordable than full custom avatars because the heavy lifting is already done." },
-              { emoji: "🎯", title: "Proven Results", desc: "Every mashup is tested for performance, compatibility, and visual quality before delivery." },
-              { emoji: "🔧", title: "Full Support", desc: "Revisions and troubleshooting included. If something breaks, I fix it." },
-              { emoji: "📦", title: "Ready to Use", desc: "You receive a Unity-ready VRChat avatar file. No extra setup required on your end." },
-              { emoji: "🛡", title: "Proof of Ownership", desc: "You provide all source assets. I only work with assets you own or have rights to use." },
-            ].map((item, i) => (
-              <Reveal key={item.title} delay={i * 60}>
-                <div className="group h-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-6 transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)]">
-                  <div className="mb-3 text-2xl transition-transform duration-300 group-hover:scale-110">{item.emoji}</div>
-                  <h3 className="mb-2 text-sm font-bold text-white">{item.title}</h3>
-                  <p className="text-xs leading-relaxed text-[var(--text-secondary)]">{item.desc}</p>
-                </div>
-              </Reveal>
-            ))}
+             {[
+               { emoji: "⚡", title: "Faster Turnaround", desc: "Build on an existing base instead of starting from zero. Most mashups are completed in 3–7 days." },
+               { emoji: "💰", title: "Cost Effective", desc: "Mashups are more affordable than full custom avatars because the heavy lifting is already done." },
+               { emoji: "🎯", title: "Proven Results", desc: "Every mashup is tested for performance, compatibility, and visual quality before delivery." },
+               { emoji: "🔧", title: "Full Support", desc: "Revisions and troubleshooting included. If something breaks, I fix it." },
+               { emoji: "📦", title: "Ready to Use", desc: "You receive a Unity-ready VRChat avatar file. No extra setup required on your end." },
+               { emoji: "🛡️", title: "Proof of Ownership", desc: "You provide all source assets. I only work with assets you own or have rights to use." },
+             ].map((item, i) => (
+               <Reveal key={item.title} delay={i * 60}>
+                 <PremiumCard variant="marketplace" className="h-full p-6">
+                   <div className="mb-3 text-2xl transition-transform duration-300 group-hover:scale-110">{item.emoji}</div>
+                   <h3 className="mb-2 text-sm font-bold text-white">{item.title}</h3>
+                   <p className="text-xs leading-relaxed text-[var(--text-secondary)]">{item.desc}</p>
+                 </PremiumCard>
+               </Reveal>
+             ))}
           </div>
         </div>
       </section>
@@ -232,14 +233,14 @@ export default function FbxMashupsPage() {
               ))}
             </div>
           ) : (
-            <div className="mt-8 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-20 text-center">
+            <PremiumCard variant="elevated" className="py-20 text-center">
               <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
                 <ImageIcon className="h-6 w-6" />
               </div>
               <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
                 Gallery images will appear here once available.
               </p>
-            </div>
+            </PremiumCard>
           )}
         </div>
       </section>
@@ -282,14 +283,14 @@ export default function FbxMashupsPage() {
               ))}
             </div>
           ) : (
-            <div className="mt-8 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-20 text-center">
+            <PremiumCard variant="elevated" className="py-20 text-center">
               <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
                 <GitCompare className="h-6 w-6" />
               </div>
               <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
                 Before &amp; after comparisons will appear here once available.
               </p>
-            </div>
+            </PremiumCard>
           )}
         </div>
       </section>
@@ -321,24 +322,24 @@ export default function FbxMashupsPage() {
             subtitle="To get started, make sure you have the following ready."
           />
           <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-2">
-            {[
-              { icon: <FileText className="h-5 w-5" />, title: "Source FBX File", desc: "The FBX file of the avatar base you want to use. Must be your own or licensed for modification." },
-              { icon: <ImageIcon className="h-5 w-5" />, title: "Reference Images", desc: "Screenshots or renders of the avatar you want to achieve. More references = better results." },
-              { icon: <Check className="h-5 w-5" />, title: "Clear Description", desc: "Describe what you want changed, added, or integrated. Be as specific as possible." },
-              { icon: <AlertTriangle className="h-5 w-5" />, title: "Ownership Proof", desc: "You must own or have the rights to all provided assets. This is required before work begins." },
-            ].map((item, i) => (
-              <Reveal key={item.title} delay={i * 60}>
-                <div className="flex gap-4 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-5 transition-all duration-500 hover:border-[var(--border-hover)]">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                    {item.icon}
-                  </div>
-                  <div>
-                    <h3 className="mb-1 text-sm font-bold text-white">{item.title}</h3>
-                    <p className="text-xs leading-relaxed text-[var(--text-secondary)]">{item.desc}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
+             {[
+               { icon: <FileText className="h-5 w-5" />, title: "Source FBX File", desc: "The FBX file of the avatar base you want to use. Must be your own or licensed for modification." },
+               { icon: <ImageIcon className="h-5 w-5" />, title: "Reference Images", desc: "Screenshots or renders of the avatar you want to achieve. More references = better results." },
+               { icon: <Check className="h-5 w-5" />, title: "Clear Description", desc: "Describe what you want changed, added, or integrated. Be as specific as possible." },
+               { icon: <AlertTriangle className="h-5 w-5" />, title: "Ownership Proof", desc: "You must own or have the rights to all provided assets. This is required before work begins." },
+             ].map((item, i) => (
+               <Reveal key={item.title} delay={i * 60}>
+                 <PremiumCard variant="elevated" className="flex gap-4 p-6" hoverGlow>
+                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                     {item.icon}
+                   </div>
+                   <div>
+                     <h3 className="mb-1 text-sm font-bold text-white">{item.title}</h3>
+                     <p className="text-xs leading-relaxed text-[var(--text-secondary)]">{item.desc}</p>
+                   </div>
+                 </PremiumCard>
+               </Reveal>
+             ))}
           </div>
         </div>
       </section>
@@ -352,9 +353,9 @@ export default function FbxMashupsPage() {
             title="Proof of Ownership"
             subtitle="I take intellectual property seriously. Here is how it works."
           />
-          <div className="mt-8 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-8">
+          <PremiumCard variant="elevated" className="p-8">
             <div className="space-y-5 text-sm leading-relaxed text-[var(--text-secondary)]">
-              <p>
+            <p>
                 <strong className="text-white">You must own or have the rights to</strong> all assets you provide,
                 including the FBX file, textures, and any other materials.
               </p>
@@ -370,8 +371,8 @@ export default function FbxMashupsPage() {
                 No stolen or unlicensed content is accepted. Period.
               </p>
             </div>
+            </PremiumCard>
           </div>
-        </div>
       </section>
 
       {/* Pricing Overview */}
@@ -407,14 +408,14 @@ export default function FbxMashupsPage() {
               ))}
             </div>
           ) : (
-            <div className="mt-12 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-20 text-center">
+            <PremiumCard variant="elevated" className="py-20 text-center">
               <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
                 <Layers className="h-6 w-6" />
               </div>
               <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
                 No FBX Mashups have been added yet.
               </p>
-            </div>
+            </PremiumCard>
           )}
           <div className="mt-10 text-center">
             <p className="text-xs text-[var(--text-dim)]">

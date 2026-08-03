@@ -2,6 +2,7 @@
 
 import SectionHeading from "@/components/ui/SectionHeading";
 import { ButtonLink } from "@/components/ui/Button";
+import { PremiumCard } from "@/components/ui/Card";
 import { ShieldAlert, AlertTriangle, ArrowRight } from "lucide-react";
 import ContactCommissionForm from "@/components/ContactCommissionForm";
 
@@ -20,9 +21,9 @@ export default function CommissionPage() {
             subtitle="Tell me about the avatar work you need and I'll get back to you with a quote."
           />
 
-          <div className="mx-auto max-w-2xl rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)]/60 p-1">
+          <PremiumCard variant="elevated" className="mx-auto max-w-2xl p-1">
             <ContactCommissionForm />
-          </div>
+          </PremiumCard>
 
           <div className="mt-8 flex justify-center">
             <ButtonLink href="/pricing" variant="secondary">

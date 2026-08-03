@@ -94,20 +94,6 @@ export const pricingTiers = [
 
 export const additionalServices = [
   {
-    emoji: "👕",
-    title: "Custom Clothing",
-    description: "Custom clothing is priced separately depending on complexity.",
-    examples: [
-      "Shirts",
-      "Hoodies",
-      "Jackets",
-      "Shorts",
-      "Trousers",
-      "Accessories",
-    ],
-    note: "The final price depends on the amount of modelling, fitting, weight painting, and texturing required.",
-  },
-  {
     emoji: "🚀",
     title: "Optimisation",
     description: "Avatar optimisation is available separately.",
@@ -120,18 +106,6 @@ export const additionalServices = [
       "Unity optimisation",
     ],
     note: "Pricing depends on the current state of the avatar and the amount of optimisation required.",
-  },
-  {
-    emoji: "🧬",
-    title: "FBX Mashups",
-    description: "FBX Mashups are their own standalone service.",
-    examples: [
-      "Number of bases being merged",
-      "Complexity of the mashup",
-      "Required Blender work",
-      "Required Unity work",
-    ],
-    note: "Clients must provide proof of ownership for every avatar base used before work can begin.",
   },
 ];
 
@@ -443,6 +417,121 @@ export const faqItems = [
 ];
 
 export const reviews: any[] = [];
+
+/* =============================================================================
+   Mock / placeholder data
+   Used for UI preview and development only. These do NOT connect to or
+   depend on any production database. They ensure every page renders fully
+   even without a Supabase backend.
+   ============================================================================ */
+
+export const mockPortfolioImages: { id: string; url: string; sort_order: number }[] = [
+  { id: "mock-port-1", url: "https://images.unsplash.com/photo-1505379918443-6f7e9f9c0e00?auto=format&fit=crop&w=800&q=60", sort_order: 0 },
+  { id: "mock-port-2", url: "https://images.unsplash.com/photo-1519389950414-1a9bcb3f3f2e?auto=format&fit=crop&w=800&q=60", sort_order: 1 },
+  { id: "mock-port-3", url: "https://images.unsplash.com/photo-1526318472392-4a4d0a3b0e0e?auto=format&fit=crop&w=800&q=60", sort_order: 2 },
+  { id: "mock-port-4", url: "https://images.unsplash.com/photo-1518705083311-89d0b0c54657?auto=format&fit=crop&w=800&q=60", sort_order: 3 },
+  { id: "mock-port-5", url: "https://images.unsplash.com/photo-1452860604562-f3dc9c558129?auto=format&fit=crop&w=800&q=60", sort_order: 4 },
+  { id: "mock-port-6", url: "https://images.unsplash.com/photo-1502082950510-8d33a9f2f4d0?auto=format&fit=crop&w=800&q=60", sort_order: 5 },
+  { id: "mock-port-7", url: "https://images.unsplash.com/photo-1484788148861-2616e1b7c510?auto=format&fit=crop&w=800&q=60", sort_order: 6 },
+  { id: "mock-port-8", url: "https://images.unsplash.com/photo-1493663284836-1298a9c0b72b?auto=format&fit=crop&w=800&q=60", sort_order: 7 },
+  { id: "mock-port-9", url: "https://images.unsplash.com/photo-1519183071298-a2962feb937a?auto=format&fit=crop&w=800&q=60", sort_order: 8 },
+  { id: "mock-port-10", url: "https://images.unsplash.com/photo-1483407683979-f1c7a4d6c3e0?auto=format&fit=crop&w=800&q=60", sort_order: 9 },
+];
+
+export const mockNsfwPortfolioImages: { id: string; url: string; sort_order: number }[] = [
+  { id: "mock-nsfw-1", url: "https://images.unsplash.com/photo-1578496541671-4d7f6d6e7c5e?auto=format&fit=crop&w=800&q=60", sort_order: 0 },
+  { id: "mock-nsfw-2", url: "https://images.unsplash.com/photo-1578496541671-4d7f6d6e7c5f?auto=format&fit=crop&w=800&q=60", sort_order: 1 },
+  { id: "mock-nsfw-3", url: "https://images.unsplash.com/photo-1578496541671-4d7f6d6e7c60?auto=format&fit=crop&w=800&q=60", sort_order: 2 },
+  { id: "mock-nsfw-4", url: "https://images.unsplash.com/photo-1578496541671-4d7f6d6e7c61?auto=format&fit=crop&w=800&q=60", sort_order: 3 },
+];
+
+export const mockFbxMashups = [
+  {
+    id: "mock-fbx-1",
+    title: "Cyber Fox × Lunar Cat",
+    description: "Base swap combining a cyberpunk fox base with feline features from a lunar-themed cat avatar.",
+    avatar_base: "Cyber Fox",
+    software_used: ["Blender", "Unity"],
+    price: "£65",
+    featured: true,
+    visible: true,
+    sort_order: 0,
+  },
+  {
+    id: "mock-fbx-2",
+    title: "Rabbit × Wolf Hybrid",
+    description: "Full body integration merging a bunny base with wolf ears, tail, and proportions.",
+    avatar_base: "Bunny Babe",
+    software_used: ["Blender", "Unity"],
+    price: "£75",
+    featured: true,
+    visible: true,
+    sort_order: 1,
+  },
+  {
+    id: "mock-fbx-3",
+    title: "Catgirl × Demon Overlay",
+    description: "Partial mesh integration overlay with demonic horns, wings, and tail onto a standard catgirl base.",
+    avatar_base: "Nectar",
+    software_used: ["Blender", "Unity"],
+    price: "£55",
+    featured: false,
+    visible: true,
+    sort_order: 2,
+  },
+];
+
+export const mockFbxGallery: string[] = [
+  "https://images.unsplash.com/photo-1505379918443-6f7e9f9c0e00?auto=format&fit=crop&w=800&q=60",
+  "https://images.unsplash.com/photo-1519389950414-1a9bcb3f3f2e?auto=format&fit=crop&w=800&q=60",
+  "https://images.unsplash.com/photo-1526318472392-4a4d0a3b0e0e?auto=format&fit=crop&w=800&q=60",
+  "https://images.unsplash.com/photo-1518705083311-89d0b0c54657?auto=format&fit=crop&w=800&q=60",
+  "https://images.unsplash.com/photo-1452860604562-f3dc9c558129?auto=format&fit=crop&w=800&q=60",
+  "https://images.unsplash.com/photo-1502082950510-8d33a9f2f4d0?auto=format&fit=crop&w=800&q=60",
+];
+
+export const mockReviews = [
+  {
+    id: "mock-review-1",
+    display_name: "Astra",
+    rating: 5,
+    review_text: "Bluey transformed my avatar into something I absolutely love. The attention to detail and communication was stellar throughout. Highly recommend!",
+    status: "approved",
+    hidden: false,
+    image_url: "https://images.unsplash.com/photo-1519389950414-1a9bcb3f3f2e?auto=format&fit=crop&w=800&q=60",
+    created_at: "2025-08-15T00:00:00Z",
+  },
+  {
+    id: "mock-review-2",
+    display_name: "Kai",
+    rating: 5,
+    review_text: "Professional, fast, and the quality is excellent. Got my avatar optimised for Quest and it runs flawlessly. Will definitely commission again.",
+    status: "approved",
+    hidden: false,
+    image_url: null,
+    created_at: "2025-07-22T00:00:00Z",
+  },
+  {
+    id: "mock-review-3",
+    display_name: "Rin",
+    rating: 4,
+    review_text: "Great work on my custom clothing set. The weight painting is solid and the fit is perfect on my avatar. Minor revisions were handled quickly.",
+    status: "approved",
+    hidden: false,
+    image_url: null,
+    created_at: "2025-06-10T00:00:00Z",
+  },
+  {
+    id: "mock-review-4",
+    display_name: "Val",
+    rating: 5,
+    review_text: "Commissioned an FBX mashup and the result exceeded my expectations. Clean topology, proper weights, and it looks amazing in-game.",
+    status: "approved",
+    hidden: false,
+    image_url: "https://images.unsplash.com/photo-1526318472392-4a4d0a3b0e0e?auto=format&fit=crop&w=800&q=60",
+    created_at: "2025-05-03T00:00:00Z",
+  },
+];
 
 export const navLinks = [
   { href: "/", label: "Work" },

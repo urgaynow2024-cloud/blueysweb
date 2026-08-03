@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
+import { PremiumCard } from "@/components/ui/Card";
 import { Clock, StickyNote, Inbox } from "lucide-react";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
@@ -77,62 +78,62 @@ export default function QueuePage() {
 
           {/* Status & Slots */}
           <div className="mb-12 grid grid-cols-1 gap-4 md:grid-cols-3">
-            <Reveal className="md:col-span-2">
-              <div className="h-full rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-6 md:p-8">
-                <div className="mb-4 flex items-center gap-3">
-                  <span className={`h-3 w-3 animate-pulse rounded-full ${status.dot}`} />
-                  <h3 className="text-lg font-bold text-white">Current Status</h3>
-                </div>
-                <span className={`mb-4 inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold ${status.bg} ${status.color}`}>
-                  {status.label}
-                </span>
-                <p className="text-sm text-[var(--text-secondary)]">
-                  {config.queue_status === "open" && "I'm currently accepting new commissions."}
-                  {config.queue_status === "limited" && "I have limited slots available. Commission requests may be slower."}
-                  {config.queue_status === "closed" && "I'm not accepting new commissions at this time."}
-                  {config.queue_status === "hold" && "Commission queue is on hold. Please check back later."}
-                </p>
-              </div>
-            </Reveal>
+              <Reveal className="md:col-span-2">
+                <PremiumCard variant="elevated" className="p-6 md:p-8">
+                  <div className="mb-4 flex items-center gap-3">
+                    <span className={`h-3 w-3 animate-pulse rounded-full ${status.dot}`} />
+                    <h3 className="text-lg font-bold text-white">Current Status</h3>
+                  </div>
+                  <span className={`mb-4 inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold ${status.bg} ${status.color}`}>
+                    {status.label}
+                  </span>
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    {config.queue_status === "open" && "I'm currently accepting new commissions."}
+                    {config.queue_status === "limited" && "I have limited slots available. Commission requests may be slower."}
+                    {config.queue_status === "closed" && "I'm not accepting new commissions at this time."}
+                    {config.queue_status === "hold" && "Commission queue is on hold. Please check back later."}
+                  </p>
+                </PremiumCard>
+              </Reveal>
 
-            <Reveal delay={80} className="flex flex-col justify-center">
-              <div className="h-full rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-6 md:p-8">
-                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)]">Available Slots</h3>
-                <p className="mb-1 text-4xl font-bold text-white">
-                  {slotsAvailable} <span className="text-lg text-[var(--text-dim)]">/ {slotsTotal}</span>
-                </p>
-                <p className="text-xs text-[var(--text-dim)]">{slotsAvailable > 0 ? "Open for requests" : "No slots available"}</p>
-                <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[var(--bg)]">
-                  <div className="h-full rounded-full bg-[var(--accent)] transition-all duration-700" style={{ width: `${clampPct(((slotsTotal - slotsAvailable) / slotsTotal) * 100)}%` }} />
-                </div>
-              </div>
-            </Reveal>
+              <Reveal delay={80} className="flex flex-col justify-center">
+                <PremiumCard variant="elevated" className="h-full p-6 md:p-8">
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)]">Available Slots</h3>
+                  <p className="mb-1 text-4xl font-bold text-white">
+                    {slotsAvailable} <span className="text-lg text-[var(--text-dim)]">/ {slotsTotal}</span>
+                  </p>
+                  <p className="text-xs text-[var(--text-dim)]">{slotsAvailable > 0 ? "Open for requests" : "No slots available"}</p>
+                  <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[var(--bg)]">
+                    <div className="h-full rounded-full bg-[var(--accent)] transition-all duration-700" style={{ width: `${clampPct(((slotsTotal - slotsAvailable) / slotsTotal) * 100)}%` }} />
+                  </div>
+                </PremiumCard>
+              </Reveal>
           </div>
 
           {/* Wait Time & Notes */}
           <div className="mb-12 grid grid-cols-1 gap-4 md:grid-cols-2">
             {config.queue_wait_time && (
-              <Reveal>
-                <div className="h-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-6">
-                  <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)]">
-                    <Clock className="h-4 w-4 text-[var(--accent)]" />
-                    Estimated Wait Time
-                  </h3>
-                  <p className="text-2xl font-bold text-white">{config.queue_wait_time}</p>
-                </div>
-              </Reveal>
-            )}
-            {config.queue_notes && (
-              <Reveal delay={60}>
-                <div className="h-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-6">
-                  <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)]">
-                    <StickyNote className="h-4 w-4 text-[var(--accent)]" />
-                    Queue Notes
-                  </h3>
-                  <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{config.queue_notes}</p>
-                </div>
-              </Reveal>
-            )}
+                <Reveal>
+                  <PremiumCard variant="elevated" className="h-full p-6">
+                    <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)]">
+                      <Clock className="h-4 w-4 text-[var(--accent)]" />
+                      Estimated Wait Time
+                    </h3>
+                    <p className="text-2xl font-bold text-white">{config.queue_wait_time}</p>
+                  </PremiumCard>
+                </Reveal>
+              )}
+              {config.queue_notes && (
+                <Reveal delay={60}>
+                  <PremiumCard variant="elevated" className="h-full p-6">
+                    <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)]">
+                      <StickyNote className="h-4 w-4 text-[var(--accent)]" />
+                      Queue Notes
+                    </h3>
+                    <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{config.queue_notes}</p>
+                  </PremiumCard>
+                </Reveal>
+              )}
           </div>
 
           {/* Current Queue */}
@@ -141,11 +142,11 @@ export default function QueuePage() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {[1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)}
             </div>
-          ) : queueItems.length > 0 ? (
+          )           : queueItems.length > 0 ? (
             <div className="space-y-4">
               {queueItems.map((item, i) => (
                 <Reveal key={item.id || i} delay={(i % 4) * 50}>
-                  <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-6 transition-all duration-300 hover:border-[var(--border-hover)]">
+                  <PremiumCard variant="elevated" className="p-6" hoverGlow>
                     <div className="mb-4 flex items-start justify-between">
                       <div>
                         <div className="mb-1 flex items-center gap-3">
@@ -165,15 +166,15 @@ export default function QueuePage() {
                       <span className="text-xs text-[var(--text-dim)]">{item.progress || 0}% complete</span>
                       <span className="text-xs text-[var(--text-secondary)]">{item.status === "active" ? "In Progress" : item.status}</span>
                     </div>
-                  </div>
+                  </PremiumCard>
                 </Reveal>
               ))}
             </div>
           ) : (
-            <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-16 text-center">
+            <PremiumCard variant="elevated" className="py-16 text-center">
               <Inbox className="mx-auto mb-3 h-8 w-8 text-[var(--text-dim)] opacity-50" />
               <p className="text-[var(--text-dim)]">No active commissions in the queue.</p>
-            </div>
+            </PremiumCard>
           )}
 
           {config.queue_last_updated && (

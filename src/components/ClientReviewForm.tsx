@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Upload, Image as ImageIcon, CheckCircle2, X, Loader2, AlertCircle } from "lucide-react";
+import { Upload, Image as ImageIcon, CheckCircle2, X, Loader2, AlertCircle, Send } from "lucide-react";
 import StarRating from "./StarRating";
+import { Textarea } from "@/components/ui/Input";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 export default function ClientReviewForm() {
@@ -132,12 +133,7 @@ export default function ClientReviewForm() {
           <StarRating value={starRating} onChange={setStarRating} />
         </div>
 
-        <div>
-          <label className="mb-2 block text-xs font-semibold text-[var(--text-secondary)]">
-            Your review <span className="text-[var(--danger)]">*</span>
-          </label>
-          <textarea name="review_text" required rows={4} placeholder="What was your experience like?" className="field resize-y" />
-        </div>
+        <Textarea name="review_text" label="Your review" hint="What was your experience like?" required placeholder="What was your experience like?" rows={4} />
 
         <div>
           <label className="mb-2 block text-xs font-semibold text-[var(--text-secondary)]">Commission image (optional)</label>
@@ -185,7 +181,7 @@ export default function ClientReviewForm() {
             </>
           ) : (
             <>
-              <Upload className="h-4 w-4" />
+              <Send className="h-4 w-4" />
               Submit Review
             </>
           )}

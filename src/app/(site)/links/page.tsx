@@ -3,7 +3,17 @@
 import { useState, useEffect } from "react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
+import { PremiumCard } from "@/components/ui/Card";
+import { ButtonLink } from "@/components/ui/Button";
 import { ExternalLink, Link2 } from "lucide-react";
+import { getSocialLinks } from "@/lib/db";
+
+const MOCK_LINKS = [
+  { id: "mock-link-1", name: "Discord", url: "https://discord.com/", description: "Chat with me directly on Discord" },
+  { id: "mock-link-2", name: "Booth", url: "https://booth.pm/en", description: "Buy avatar bases and assets" },
+  { id: "mock-link-3", name: "Gumroad", url: "https://gumroad.com", description: "Commission marketplace" },
+  { id: "mock-link-4", name: "VRChat", url: "https://vrchat.com", description: "The platform I build for" },
+];
 
 export default function LinksPage() {
   const [links, setLinks] = useState<any[]>([]);
@@ -11,14 +21,16 @@ export default function LinksPage() {
 
   useEffect(() => {
     async function load() {
+      setLoading(true);
       try {
-        const res = await fetch("/api/social-links");
-        if (res.ok) {
-          const data = await res.json();
-          setLinks(data || []);
+        const data = await getSocialLinks();
+        if (data && data.length > 0) {
+          setLinks(data);
+        } else {
+          setLinks(MOCK_LINKS);
         }
-      } catch (e) {
-        console.error("Failed to load links:", e);
+      } catch {
+        setLinks(MOCK_LINKS);
       } finally {
         setLoading(false);
       }
@@ -48,29 +60,31 @@ export default function LinksPage() {
               ))}
             </div>
           ) : links.length === 0 ? (
-            <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-16 text-center">
+            <PremiumCard variant="elevated" className="py-16 text-center">
               <p className="text-[var(--text-dim)]">No links have been added yet.</p>
-            </div>
+            </PremiumCard>
           ) : (
             <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
               {links.map((link, i) => (
                 <Reveal key={link.id || i} delay={(i % 4) * 60}>
-                  <a
-                    href={link.url}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="group flex h-full items-start justify-between gap-4 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-6 transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)]"
-                  >
-                    <div className="min-w-0">
-                      <h3 className="truncate font-semibold text-white transition-colors group-hover:text-[var(--accent)]">{link.name}</h3>
-                      {link.description && <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">{link.description}</p>}
-                      <p className="mt-3 break-all text-xs text-[var(--text-dim)]">{link.url}</p>
-                    </div>
-                    <span className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2.5 py-1 text-xs text-[var(--text-dim)] transition-colors group-hover:border-[var(--accent)]/40 group-hover:text-[var(--accent)]">
-                      Visit
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </span>
-                  </a>
+                  <div className="group h-full">
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="flex h-full items-start justify-between gap-4 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-md)] transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-lg)] group-hover:text-white"
+                    >
+                      <div className="min-w-0">
+                        <h3 className="truncate font-semibold text-white transition-colors group-hover:text-[var(--accent)]">{link.name}</h3>
+                        {link.description && <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">{link.description}</p>}
+                        <p className="mt-3 break-all text-xs text-[var(--text-dim)]">{link.url}</p>
+                      </div>
+                      <span className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2.5 py-1 text-xs text-[var(--text-dim)] transition-colors group-hover:border-[var(--accent)]/40 group-hover:text-[var(--accent)]">
+                        Visit
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </span>
+                    </a>
+                  </div>
                 </Reveal>
               ))}
             </div>

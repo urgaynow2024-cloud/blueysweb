@@ -1,11 +1,13 @@
 "use client";
 
 import { useId, useState } from "react";
-import { CheckCircle2, Send, Paperclip, AlertCircle, Check, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Send, Paperclip, AlertCircle, ShieldCheck, Loader2 } from "lucide-react";
+import { Input, Textarea } from "@/components/ui/Input";
 
 export default function ContactCommissionForm() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [ownsAssets, setOwnsAssets] = useState(false);
   const [fbxProof, setFbxProof] = useState(false);
@@ -44,6 +46,7 @@ export default function ContactCommissionForm() {
     };
 
     try {
+      setSubmitting(true);
       const res = await fetch("/api/commission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -56,6 +59,8 @@ export default function ContactCommissionForm() {
       }
     } catch {
       setError(true);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -100,51 +105,27 @@ export default function ContactCommissionForm() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          <div>
-            <label htmlFor={nameId} className="mb-2 block text-xs font-semibold text-[var(--text-secondary)]">
-              Name <span className="text-[var(--danger)]">*</span>
-            </label>
-            <input id={nameId} type="text" name="name" required placeholder="Your name" className="field" />
-          </div>
-          <div>
-            <label htmlFor={discordId} className="mb-2 block text-xs font-semibold text-[var(--text-secondary)]">
-              Discord <span className="text-[var(--danger)]">*</span>
-            </label>
-            <input id={discordId} type="text" name="discord" required placeholder="e.g. username" className="field" />
-          </div>
+          <Input name="name" label="Name" hint="Your name" required placeholder="e.g. Alex" />
+          <Input name="discord" label="Discord" hint="Your Discord username" required placeholder="e.g. BlueyBarks" />
         </div>
 
-        <div>
-          <label htmlFor={descId} className="mb-2 block text-xs font-semibold text-[var(--text-secondary)]">
-            Avatar Information <span className="text-[var(--danger)]">*</span>
-          </label>
-          <textarea id={descId} name="description" required rows={4} placeholder="Describe what you want done..." className="field resize-y" />
-        </div>
+        <Textarea name="description" label="Avatar Information" hint="Describe the avatar work you need" required placeholder="Describe what you want done..." rows={4} />
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          <div>
-            <label htmlFor={budgetId} className="mb-2 block text-xs font-semibold text-[var(--text-secondary)]">Budget</label>
-            <input id={budgetId} type="text" name="budget" placeholder="e.g. £30-£50" className="field" />
-          </div>
-          <div>
-            <label htmlFor={deadlineId} className="mb-2 block text-xs font-semibold text-[var(--text-secondary)]">Deadline</label>
-            <input id={deadlineId} type="text" name="deadline" placeholder="e.g. Within 2 weeks" className="field" />
-          </div>
+          <Input name="budget" label="Budget" hint="Total budget you're comfortable with" placeholder="e.g. £30-£50" />
+          <Input name="deadline" label="Deadline" hint="When you need it by" placeholder="e.g. Within 2 weeks" />
         </div>
 
         <div>
-          <label htmlFor={refsId} className="mb-2 block text-xs font-semibold text-[var(--text-secondary)]">Reference Uploads</label>
+          <label className="mb-2 block text-xs font-semibold text-[var(--text-secondary)]">Reference Uploads</label>
           <div className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg)] px-5 py-7 text-center text-sm text-[var(--text-dim)] transition-all hover:border-[var(--accent)] hover:text-[var(--text-secondary)]">
             <Paperclip className="h-4 w-4" />
             Drop files or paste links
           </div>
-          <textarea id={refsId} name="references" rows={3} placeholder="Paste image/video links..." className="field resize-y mt-3" />
+          <textarea name="references" rows={3} placeholder="Paste image/video links..." className="field resize-y mt-3" />
         </div>
 
-        <div>
-          <label htmlFor={notesId} className="mb-2 block text-xs font-semibold text-[var(--text-secondary)]">Notes</label>
-          <textarea id={notesId} name="notes" rows={3} placeholder="Platform, special requests..." className="field resize-y" />
-        </div>
+        <Textarea name="notes" label="Notes" hint="Platform, special requests..." placeholder="Platform, special requests..." rows={3} />
 
         {/* Agreement Checkboxes */}
         <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-5 space-y-4">
@@ -194,9 +175,18 @@ export default function ContactCommissionForm() {
           </label>
         </div>
 
-        <button type="submit" className="btn-primary w-full !justify-center !py-3.5">
-          <Send className="h-4 w-4" />
-          Submit Request
+        <button type="submit" disabled={submitting} className="btn-primary w-full !justify-center !py-3.5 disabled:opacity-50">
+          {submitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Sending...
+            </>
+          ) : (
+            <>
+              <Send className="h-4 w-4" />
+              Submit Request
+            </>
+          )}
         </button>
       </form>
     </div>

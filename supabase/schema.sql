@@ -54,21 +54,10 @@ CREATE TABLE IF NOT EXISTS pricing_tiers (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Additional services (e.g. Custom Clothing, Optimisation, FBX Mashups)
-CREATE TABLE IF NOT EXISTS additional_services (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  emoji TEXT DEFAULT '✨',
-  title TEXT NOT NULL,
-  description TEXT NOT NULL,
-  examples TEXT[] DEFAULT '{}',
-  note TEXT,
-  sort_order INTEGER DEFAULT 0,
-  is_nsfw BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
+-- =============================================================================
 -- FAQ items
+-- =============================================================================
+
 CREATE TABLE IF NOT EXISTS faq_items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   question TEXT NOT NULL,
@@ -256,7 +245,6 @@ END $$;
 ALTER TABLE portfolio_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pricing_tiers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE additional_services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE faq_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workflow_steps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
@@ -277,9 +265,7 @@ DO $$ BEGIN
   DROP POLICY IF EXISTS "Authenticated write reviews" ON reviews;
    DROP POLICY IF EXISTS "Public read pricing_tiers" ON pricing_tiers;
    DROP POLICY IF EXISTS "Authenticated write pricing_tiers" ON pricing_tiers;
-   DROP POLICY IF EXISTS "Public read additional_services" ON additional_services;
-   DROP POLICY IF EXISTS "Authenticated write additional_services" ON additional_services;
-  DROP POLICY IF EXISTS "Public read faq_items" ON faq_items;
+   DROP POLICY IF EXISTS "Public read faq_items" ON faq_items;
   DROP POLICY IF EXISTS "Authenticated write faq_items" ON faq_items;
   DROP POLICY IF EXISTS "Public read workflow_steps" ON workflow_steps;
   DROP POLICY IF EXISTS "Authenticated write workflow_steps" ON workflow_steps;
@@ -307,7 +293,6 @@ END $$;
 CREATE POLICY "Public read portfolio_images" ON portfolio_images FOR SELECT USING (true);
 CREATE POLICY "Public read reviews" ON reviews FOR SELECT USING (true);
 CREATE POLICY "Public read pricing_tiers" ON pricing_tiers FOR SELECT USING (true);
-CREATE POLICY "Public read additional_services" ON additional_services FOR SELECT USING (true);
 CREATE POLICY "Public read faq_items" ON faq_items FOR SELECT USING (true);
 CREATE POLICY "Public read workflow_steps" ON workflow_steps FOR SELECT USING (true);
 CREATE POLICY "Public read site_config" ON site_config FOR SELECT USING (true);
@@ -332,7 +317,6 @@ CREATE POLICY "Authenticated write tos_sections" ON tos_sections FOR ALL USING (
 CREATE POLICY "Authenticated write portfolio_images" ON portfolio_images FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write reviews" ON reviews FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write pricing_tiers" ON pricing_tiers FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write additional_services" ON additional_services FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write faq_items" ON faq_items FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write workflow_steps" ON workflow_steps FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write site_config" ON site_config FOR ALL USING (auth.role() = 'authenticated');
@@ -508,21 +492,6 @@ INSERT INTO pricing_tiers (id, name, emoji, price, badge, popular, features, sor
     'Complex weight painting', 'Extensive optimisation', 'Complete Unity setup', 'Large toggle systems',
     'Texture work', 'Advanced modifications'
   ], 2, FALSE)
-ON CONFLICT (id) DO NOTHING;
-
--- =============================================================================
--- ADDITIONAL SERVICES SEED DATA
--- =============================================================================
-INSERT INTO additional_services (id, emoji, title, description, examples, note, sort_order, is_nsfw) VALUES
-  ('21111111-1111-1111-1111-111111111101', '👕', 'Custom Clothing', 'Custom clothing is priced separately depending on complexity.', ARRAY[
-    'Shirts', 'Hoodies', 'Jackets', 'Shorts', 'Trousers', 'Accessories'
-  ], 'The final price depends on the amount of modelling, fitting, weight painting, and texturing required.', 0, FALSE),
-  ('21111111-1111-1111-1111-111111111102', '🚀', 'Optimisation', 'Avatar optimisation is available separately.', ARRAY[
-    'Quest optimisation', 'Performance improvements', 'Mesh cleanup', 'Material optimisation', 'Texture optimisation', 'Unity optimisation'
-  ], 'Pricing depends on the current state of the avatar and the amount of optimisation required.', 1, FALSE),
-  ('21111111-1111-1111-1111-111111111103', '🧬', 'FBX Mashups', 'FBX Mashups are their own standalone service. They are NOT part of the standard avatar editing pricing.', ARRAY[
-    'Number of bases being merged', 'Complexity of the mashup', 'Required Blender work', 'Required Unity work'
-  ], 'Clients must provide proof of ownership for every avatar base used before work can begin.', 2, FALSE)
 ON CONFLICT (id) DO NOTHING;
 
 -- =============================================================================

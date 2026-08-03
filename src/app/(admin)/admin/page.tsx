@@ -11,7 +11,6 @@ import { Input } from "@/components/admin/Field";
 
 import { PortfolioSection } from "@/components/admin/sections/PortfolioSection";
 import { PricingSection } from "@/components/admin/sections/PricingSection";
-import { AdditionalServicesSection } from "@/components/admin/sections/AdditionalServicesSection";
 import { FaqSection } from "@/components/admin/sections/FaqSection";
 import { WorkflowSection } from "@/components/admin/sections/WorkflowSection";
 import { ReviewsSection } from "@/components/admin/sections/ReviewsSection";
@@ -32,13 +31,11 @@ const defaultSite: Record<string, string> = {};
 
 const defaultPricing: any[] = [];
 
-const defaultAdditionalServices: any[] = [];
-
 const defaultFaq: any[] = [];
 
 const defaultWorkflow: any[] = [];
 
-type Tab = "portfolio" | "pricing" | "additional-services" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "fbx-mashups" | "tos";
+type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "fbx-mashups" | "tos";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -49,7 +46,6 @@ export default function AdminPage() {
 
   const [site, setSite] = useState<any>(defaultSite);
   const [pricing, setPricing] = useState<any[]>(defaultPricing);
-  const [additionalServices, setAdditionalServices] = useState<any[]>(defaultAdditionalServices);
   const [faq, setFaq] = useState<any[]>(defaultFaq);
   const [workflow, setWorkflow] = useState<any[]>(defaultWorkflow);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -59,10 +55,10 @@ export default function AdminPage() {
   const { markDirty, register } = useSave();
   const toast = useToast();
 
-  const dataRef = useRef({ site, pricing, additionalServices, faq, workflow, reviews, links, tos });
+  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links, tos });
   useEffect(() => {
-    dataRef.current = { site, pricing, additionalServices, faq, workflow, reviews, links, tos };
-  }, [site, pricing, additionalServices, faq, workflow, reviews, links, tos]);
+    dataRef.current = { site, pricing, faq, workflow, reviews, links, tos };
+  }, [site, pricing, faq, workflow, reviews, links, tos]);
 
   useEffect(() => {
     if (authed) loadAllData();
@@ -76,9 +72,8 @@ export default function AdminPage() {
         if (stored) {
           try {
             const data = JSON.parse(stored);
-            if (data.site) setSite(data.site);
+          if (data.site) setSite(data.site);
             if (data.pricing) setPricing(data.pricing);
-            if (data.additionalServices) setAdditionalServices(data.additionalServices);
             if (data.faq) setFaq(data.faq);
             if (data.workflow) setWorkflow(data.workflow);
             if (data.reviews) setReviews(data.reviews);
@@ -88,10 +83,9 @@ export default function AdminPage() {
         setLoading(false);
         return;
       }
-      const [{ data: siteData }, { data: pricingData }, { data: additionalServicesData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }, { data: tosData }] = await Promise.all([
+      const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }, { data: tosData }] = await Promise.all([
         supabase.from("site_config").select("*"),
         supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }),
-        supabase.from("additional_services").select("*").order("sort_order", { ascending: true }),
         supabase.from("faq_items").select("*").order("sort_order", { ascending: true }),
         supabase.from("workflow_steps").select("*").order("sort_order", { ascending: true }),
         supabase.from("reviews").select("*").order("created_at", { ascending: false }),
@@ -104,7 +98,6 @@ export default function AdminPage() {
         setSite(s);
       }
       if (pricingData && pricingData.length > 0) setPricing(pricingData);
-      if (additionalServicesData && additionalServicesData.length > 0) setAdditionalServices(additionalServicesData);
       if (faqData && faqData.length > 0) setFaq(faqData);
       if (workflowData && workflowData.length > 0) setWorkflow(workflowData);
       if (reviewsData && reviewsData.length > 0) setReviews(reviewsData);
@@ -118,11 +111,11 @@ export default function AdminPage() {
   }
 
   const contentSaver = useCallback(async () => {
-    const { site, pricing, additionalServices, faq, workflow, reviews, links, tos } = dataRef.current;
+    const { site, pricing, faq, workflow, reviews, links, tos } = dataRef.current;
     const res = await fetch("/api/admin/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ site, pricing, additionalServices, faq, workflow, reviews, socialLinks: links, tos }),
+      body: JSON.stringify({ site, pricing, faq, workflow, reviews, socialLinks: links, tos }),
     });
     if (!res.ok) {
       const r = await res.json().catch(() => ({}));
@@ -166,7 +159,6 @@ export default function AdminPage() {
   function doReset() {
     setSite(defaultSite);
     setPricing(defaultPricing);
-    setAdditionalServices(defaultAdditionalServices);
     setFaq(defaultFaq);
     setWorkflow(defaultWorkflow);
     setReviews([]);
@@ -223,7 +215,6 @@ export default function AdminPage() {
     >
       {tab === "portfolio" && <PortfolioSection />}
       {tab === "pricing" && <PricingSection value={pricing} onChange={(n) => { setPricing(n); markDirty(); }} />}
-      {tab === "additional-services" && <AdditionalServicesSection value={additionalServices} onChange={(n) => { setAdditionalServices(n); markDirty(); }} />}
       {tab === "faq" && <FaqSection value={faq} onChange={(n) => { setFaq(n); markDirty(); }} />}
       {tab === "workflow" && <WorkflowSection value={workflow} onChange={(n) => { setWorkflow(n); markDirty(); }} />}
       {tab === "reviews" && <ReviewsSection value={reviews} onChange={(n) => { setReviews(n); markDirty(); }} />}

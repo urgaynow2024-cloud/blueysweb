@@ -8,8 +8,9 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import { ButtonLink } from "@/components/ui/Button";
 import PricingCard from "@/components/ui/PricingCard";
 import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages } from "@/lib/db";
+import { PremiumCard } from "@/components/ui/Card";
 import Link from "next/link";
-import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles, MessageSquarePlus, Users } from "lucide-react";
+import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles, MessageSquarePlus, Users, Quote } from "lucide-react";
 import CommissionAvailability from "@/components/CommissionAvailability";
 
 function Stars({ rating, size = "h-4 w-4" }: { rating?: number; size?: string }) {
@@ -174,22 +175,25 @@ export default function Home() {
                 <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                   {reviews.slice(0, 6).map((review, i) => (
                     <Reveal key={review.id || i} delay={i * 60}>
-                      <article className="premium-card group relative h-full overflow-hidden p-6 md:p-7">
+                      <PremiumCard variant="elevated" className="group h-full p-6 md:p-7" hoverGlow>
                         <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[var(--accent)] opacity-[0.04] blur-3xl transition-opacity duration-500 group-hover:opacity-[0.08]" />
+                        <Quote className="relative mb-4 h-7 w-7 text-[var(--accent)]/30" />
                         <div className="relative flex items-center gap-4">
-                          <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)]/20 to-[var(--accent-2)]/20 text-lg">
+                          <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)]/20 to-[var(--accent-2)]/20 text-lg font-bold text-white">
                             {review.display_name?.[0]?.toUpperCase() || "★"}
                           </div>
                           <div>
                             <p className="font-bold text-white">{review.display_name}</p>
-                            <Stars rating={review.rating} />
+                            <Stars rating={review.rating} size="h-3.5 w-3.5" />
                           </div>
                         </div>
-                        <p className="relative mt-4 text-[var(--text-secondary)] leading-relaxed">"{review.review_text}"</p>
+                        <p className="relative mt-4 text-sm text-[var(--text-secondary)] leading-relaxed">"{review.review_text}"</p>
                         {review.image_url && (
-                          <img src={review.image_url} alt="Commission preview" className="relative mt-4 w-full rounded-xl border border-[var(--border)] object-cover" />
+                          <div className="relative mt-4 overflow-hidden rounded-xl border border-[var(--border)]">
+                            <img src={review.image_url} alt="Commission preview" loading="lazy" className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
+                          </div>
                         )}
-                      </article>
+                      </PremiumCard>
                     </Reveal>
                   ))}
                 </div>
@@ -355,13 +359,13 @@ function StatsBand({ site, reviews, returningClients }: { site: any; reviews: an
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
           {stats.map((s, i) => (
             <Reveal key={s.label} delay={i * 60}>
-              <div className="group relative overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-5 text-center transition-colors duration-500 hover:border-[var(--border-hover)]">
+              <PremiumCard variant="elevated" className="h-full p-5 text-center" hoverGlow>
                 <div className="mx-auto mb-3 grid h-9 w-9 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
                   {s.icon}
                 </div>
                 <p className="font-display text-2xl font-bold text-white">{s.value}</p>
                 <p className="mt-1 text-xs text-[var(--text-dim)]">{s.label}</p>
-              </div>
+              </PremiumCard>
             </Reveal>
           ))}
         </div>

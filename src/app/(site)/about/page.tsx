@@ -4,6 +4,7 @@ import Link from "next/link";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
+import { PremiumCard } from "@/components/ui/Card";
 import { Sparkles, Hammer, Boxes, ArrowRight, Heart } from "lucide-react";
 
 const SERVICES = [
@@ -41,19 +42,19 @@ export default function AboutPage() {
               </div>
 
               <div className="mt-8 space-y-4">
-                {SERVICES.map((svc, i) => (
-                  <Reveal key={svc.title} delay={i * 70}>
-                    <div className="group flex gap-4 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-4 transition-all duration-500 hover:-translate-y-0.5 hover:border-[var(--border-hover)]">
-                      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-xl transition-transform duration-300 group-hover:scale-110">
-                        {svc.emoji}
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-white">{svc.title}</h4>
-                        <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{svc.desc}</p>
-                      </div>
+              {SERVICES.map((svc, i) => (
+                <Reveal key={svc.title} delay={i * 70}>
+                  <PremiumCard variant="elevated" className="group flex gap-4 p-5" hoverGlow>
+                    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-xl transition-transform duration-300 group-hover:scale-110">
+                      {svc.emoji}
                     </div>
-                  </Reveal>
-                ))}
+                    <div>
+                      <h4 className="text-sm font-bold text-white">{svc.title}</h4>
+                      <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{svc.desc}</p>
+                    </div>
+                  </PremiumCard>
+                </Reveal>
+              ))}
               </div>
 
               <div className="mt-8 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
@@ -72,11 +73,11 @@ export default function AboutPage() {
             <div className="grid grid-cols-2 gap-3">
               {STATS.map((stat, i) => (
                 <Reveal key={stat.label} delay={i * 70}>
-                  <div className="group h-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-6 text-center transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)]">
+                  <PremiumCard variant="elevated" className="group h-full p-6 text-center" hoverGlow>
                     <div className="mb-2 text-2xl transition-transform duration-300 group-hover:scale-110">{stat.emoji}</div>
                     <div className="text-xl font-bold text-white">{stat.stat}</div>
                     <div className="text-xs uppercase tracking-wider text-[var(--text-dim)]">{stat.label}</div>
-                  </div>
+                  </PremiumCard>
                 </Reveal>
               ))}
 

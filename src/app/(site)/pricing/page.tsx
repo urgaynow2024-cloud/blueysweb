@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { pricingTiers, additionalServices, tosSections } from "@/data/site";
-import { getPricingTiers, getAdditionalServices } from "@/lib/db";
+import { getPricingTiers } from "@/lib/db";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import PricingCard from "@/components/ui/PricingCard";
-import { ShieldCheck } from "lucide-react";
+import { PremiumCard } from "@/components/ui/Card";
+import { ShieldCheck, Sparkles, Info } from "lucide-react";
 
 export default function PricingPage() {
   const [pricing, setPricing] = useState(pricingTiers);
@@ -14,12 +15,8 @@ export default function PricingPage() {
 
   useEffect(() => {
     async function load() {
-      const [dbPricing, dbServices] = await Promise.all([
-        getPricingTiers(),
-        getAdditionalServices(),
-      ]);
+      const dbPricing = await getPricingTiers();
       if (dbPricing && dbPricing.length > 0) setPricing(dbPricing);
-      if (dbServices && dbServices.length > 0) setServices(dbServices);
     }
     load();
   }, []);
@@ -29,6 +26,7 @@ export default function PricingPage() {
       <section className="page relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-grid opacity-30" />
         <div className="pointer-events-none absolute -top-24 right-0 h-96 w-96 rounded-full bg-[var(--accent-2)] opacity-[0.05] blur-[120px]" />
+        <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-[var(--accent-2)] opacity-[0.03] blur-[120px]" />
 
         <div className="container">
           <SectionHeading
@@ -37,6 +35,18 @@ export default function PricingPage() {
             title="Pricing"
             subtitle="Prices vary depending on the work needed. I'll always give you a quote before starting."
           />
+
+          <Reveal delay={0}>
+            <div className="mx-auto mb-8 max-w-2xl rounded-[var(--r-lg)] border border-[var(--border-strong)] bg-[var(--bg-card)]/80 px-6 py-4 text-center">
+              <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">
+                <Sparkles className="h-3.5 w-3.5" />
+                Flexible, workload-based pricing
+              </p>
+              <p className="mt-1.5 text-sm text-[var(--text-secondary)]">
+                Prices are ranges, not fixed packages. The final cost depends on complexity, scope, and time required.
+              </p>
+            </div>
+          </Reveal>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
             {pricing.map((tier, i) => (
@@ -54,27 +64,32 @@ export default function PricingPage() {
               subtitle="For work outside the standard tiers below."
             />
 
-            <div className="space-y-8">
+            <div className="mx-auto max-w-3xl space-y-6">
               {services.map((service, i) => (
                 <Reveal key={service.title || i} delay={i * 80}>
-                  <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-7">
-                    <div className="mb-4 flex items-center gap-3 text-lg font-bold text-white">
-                      <span className="grid h-8 w-8 place-items-center rounded-lg bg-[var(--accent-soft)] text-xl">{service.emoji}</span>
-                      {service.title}
+                  <PremiumCard variant="elevated" padding="lg" className="border border-[var(--border-hover)]">
+                    <div className="mb-5 flex items-center gap-4">
+                      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[var(--accent-soft)] text-2xl">
+                        {service.emoji}
+                      </span>
+                      <h3 className="font-display text-2xl font-bold text-white">{service.title}</h3>
                     </div>
-                    <p className="mb-4 text-sm text-[var(--text-secondary)]">{service.description}</p>
-                    <ul className="mb-4 grid grid-cols-1 gap-2 text-sm text-[var(--text-secondary)] sm:grid-cols-2">
+                    <p className="mb-5 text-[var(--text-secondary)] leading-relaxed">{service.description}</p>
+                    <ul className="mb-6 grid grid-cols-1 gap-2.5 text-sm text-[var(--text-secondary)] sm:grid-cols-2">
                       {service.examples.map((example) => (
-                        <li key={example} className="flex items-start gap-2">
-                          <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
+                        <li key={example} className="flex items-start gap-2.5">
+                          <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
                           <span>{example}</span>
                         </li>
                       ))}
                     </ul>
-                    <p className="text-sm text-[var(--text-secondary)]">
-                      <strong>Pricing:</strong> {service.note}
-                    </p>
-                  </div>
+                    <div className="flex items-start gap-3 rounded-[var(--r-sm)] bg-[var(--bg)]/50 p-4">
+                      <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
+                      <p className="text-sm text-[var(--text-secondary)]">
+                        <strong>Pricing:</strong> {service.note}
+                      </p>
+                    </div>
+                  </PremiumCard>
                 </Reveal>
               ))}
             </div>
@@ -90,7 +105,7 @@ export default function PricingPage() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {tosSections.map((section, i) => (
                 <Reveal key={section.title} delay={(i % 4) * 60}>
-                  <div className="group h-full rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-7 transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)]">
+                  <PremiumCard variant="elevated" className="h-full p-7">
                     <h2 className="mb-4 flex items-center gap-3 text-base font-bold text-white">
                       <span className="grid h-8 w-8 place-items-center rounded-lg bg-[var(--accent-soft)] text-lg">{section.icon}</span>
                       {section.title}
@@ -98,19 +113,19 @@ export default function PricingPage() {
                     <ul className="space-y-3 text-sm text-[var(--text-secondary)]">
                       {section.items.map((item: string) => (
                         <li key={item} className="flex items-start gap-3">
-                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
                           <span>{item}</span>
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  </PremiumCard>
                 </Reveal>
               ))}
             </div>
 
             <div className="mt-12 flex flex-wrap items-center justify-center gap-3 text-sm text-[var(--text-secondary)]">
               <ShieldCheck className="h-4 w-4 text-[var(--accent)]" />
-              Every commission is handled with care and clear communication.
+              Every commission is handled with care and clear communication before work begins.
             </div>
           </div>
         </div>

@@ -21,7 +21,6 @@ export const ADMIN_NAV: NavGroup[] = [
     items: [
       { id: "portfolio", label: "Portfolio", icon: <ImageIcon className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "pricing", label: "Pricing", icon: <Tag className="ad-nav-icon h-[18px] w-[18px]" /> },
-      { id: "additional-services", label: "Additional Services", icon: <Layers className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "faq", label: "FAQ", icon: <HelpCircle className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "workflow", label: "Process", icon: <Workflow className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "fbx-mashups", label: "FBX Mashups", icon: <Layers className="ad-nav-icon h-[18px] w-[18px]" /> },

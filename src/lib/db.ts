@@ -1,21 +1,24 @@
 import { supabase, isSupabaseConfigured } from "./supabase";
+import { pricingTiers, additionalServices, faqItems, workflowSteps, mockReviews, mockPortfolioImages, mockFbxMashups, mockFbxGallery, mockNsfwPortfolioImages } from "../data/site";
 
 const FALLBACKS = {
   siteConfig: {
     name: "Bluey's Avatar Commissions",
     tagline: "VRChat Avatar Edits • Blender Work • Unity Setup",
     description: "Clean, stylish, performance-friendly avatars built for VRChat.",
-     discord: "BlueyBarks",
+    discord: "BlueyBarks",
     tos_last_updated: "August 2025",
     tos_version: "2.0",
   },
-  workflowSteps: [
-    { emoji: "💬", title: "Request", desc: "Message me with what you're looking for and your avatar base" },
-    { emoji: "📋", title: "Planning", desc: "We discuss details and I provide a detailed quote" },
-    { emoji: "🎨", title: "Development", desc: "I work on your avatar with regular progress updates" },
-    { emoji: "🔁", title: "Revisions", desc: "You review the work and request any changes" },
-    { emoji: "📦", title: "Delivery", desc: "Final files sent after payment is complete" },
-  ],
+  workflowSteps,
+  pricingTiers,
+  additionalServices,
+  faqItems,
+  reviews: mockReviews,
+  portfolioImages: mockPortfolioImages,
+  nsfwPortfolioImages: mockNsfwPortfolioImages,
+  fbxMashups: mockFbxMashups,
+  fbxGallery: mockFbxGallery,
 };
 
 async function fetchAll<T>(table: string, fallback: T[]): Promise<T[]> {
@@ -35,18 +38,18 @@ async function fetchSiteConfig() {
 }
 
 export async function getPortfolioImages() {
-  return fetchAll("portfolio_images", []);
+  return fetchAll("portfolio_images", FALLBACKS.portfolioImages);
 }
 
 export async function getApprovedReviews() {
-  if (!isSupabaseConfigured || !supabase) return [];
+  if (!isSupabaseConfigured || !supabase) return FALLBACKS.reviews;
   const { data, error } = await supabase
     .from("reviews")
     .select("*")
     .eq("status", "approved")
     .eq("hidden", false)
     .order("created_at", { ascending: false });
-  if (error || !data) return [];
+  if (error || !data || data.length === 0) return FALLBACKS.reviews;
   return data;
 }
 
@@ -62,19 +65,15 @@ export async function getAllReviews() {
 }
 
 export async function getPricingTiers() {
-  return fetchAll("pricing_tiers", []);
-}
-
-export async function getAdditionalServices() {
-  return fetchAll("additional_services", []);
+  return fetchAll("pricing_tiers", FALLBACKS.pricingTiers);
 }
 
 export async function getFaqItems() {
-  return fetchAll("faq_items", []);
+  return fetchAll("faq_items", FALLBACKS.faqItems);
 }
 
 export async function getWorkflowSteps() {
-  return fetchAll("workflow_steps", []);
+  return fetchAll("workflow_steps", FALLBACKS.workflowSteps);
 }
 
 export async function getSiteConfig() {
@@ -93,13 +92,13 @@ export async function getSiteImages() {
 }
 
 export async function getNsfwPortfolioImages() {
-  if (!isSupabaseConfigured || !supabase) return [];
+  if (!isSupabaseConfigured || !supabase) return FALLBACKS.nsfwPortfolioImages;
   const { data, error } = await supabase.from("nsfw_portfolio_images").select("*").order("sort_order", { ascending: true });
   if (error) {
     console.error("Failed to load NSFW portfolio images:", error);
-    return [];
+    return FALLBACKS.nsfwPortfolioImages;
   }
-  if (!data) return [];
+  if (!data || data.length === 0) return FALLBACKS.nsfwPortfolioImages;
   return data;
 }
 
@@ -287,23 +286,17 @@ export async function getTosSections() {
 }
 
 export async function getFbxMashups() {
-  if (!isSupabaseConfigured || !supabase) return [];
+  if (!isSupabaseConfigured || !supabase) return FALLBACKS.fbxMashups;
   const { data, error } = await supabase.from("fbx_mashups").select("*").order("sort_order", { ascending: true });
-  if (error) {
-    console.error("Failed to load FBX mashups:", error);
-    return [];
-  }
-  return data || [];
+  if (error || !data || data.length === 0) return FALLBACKS.fbxMashups;
+  return data;
 }
 
 export async function getFbxGallery() {
-  if (!isSupabaseConfigured || !supabase) return [];
+  if (!isSupabaseConfigured || !supabase) return FALLBACKS.fbxGallery;
   const { data, error } = await supabase.from("fbx_gallery").select("*").order("sort_order", { ascending: true });
-  if (error) {
-    console.error("Failed to load FBX gallery:", error);
-    return [];
-  }
-  return data || [];
+  if (error || !data || data.length === 0) return FALLBACKS.fbxGallery;
+  return data;
 }
 
 export async function getFbxBeforeAfters() {

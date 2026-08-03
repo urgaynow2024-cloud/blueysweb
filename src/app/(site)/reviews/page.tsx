@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import ClientReviewForm from "@/components/ClientReviewForm";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
+import { PremiumCard } from "@/components/ui/Card";
 import { getApprovedReviews } from "@/lib/db";
 import { Star, Quote, MessageSquarePlus } from "lucide-react";
 
@@ -67,7 +68,7 @@ export default function ReviewsPage() {
             <div className="mx-auto mb-16 grid max-w-5xl grid-cols-1 gap-5 md:grid-cols-2">
               {approvedReviews.map((review, i) => (
                 <Reveal key={review.id || i} delay={(i % 4) * 70}>
-                  <article className="group relative h-full overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-7 transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)] md:p-8">
+                  <PremiumCard variant="elevated" className="group h-full p-7 md:p-8" hoverGlow>
                     <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[var(--accent)] opacity-[0.03] blur-3xl transition-opacity duration-500 group-hover:opacity-[0.07]" />
                     <Quote className="relative mb-4 h-7 w-7 text-[var(--accent)]/30" />
                     <div className="relative flex items-center gap-4">
@@ -89,19 +90,19 @@ export default function ReviewsPage() {
                         <img src={review.image_url} alt="Commission preview" loading="lazy" className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
                       </div>
                     )}
-                  </article>
+                  </PremiumCard>
                 </Reveal>
               ))}
             </div>
           ) : (
-            <div className="mx-auto mb-16 max-w-2xl rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] py-20 text-center">
+            <PremiumCard variant="elevated" className="mx-auto mb-16 max-w-2xl py-20 text-center">
               <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
                 <MessageSquarePlus className="h-6 w-6" />
               </div>
               <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
                 Client reviews will appear here after commissions are completed.
               </p>
-            </div>
+            </PremiumCard>
           )}
 
           <div className="mx-auto max-w-2xl">
@@ -109,9 +110,9 @@ export default function ReviewsPage() {
               <MessageSquarePlus className="h-5 w-5 text-[var(--accent)]" />
               <h2 className="heading-md text-white">Leave your own review</h2>
             </div>
-            <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)]/60 p-1">
+            <PremiumCard variant="elevated" className="p-1">
               <ClientReviewForm />
-            </div>
+            </PremiumCard>
           </div>
         </div>
       </section>

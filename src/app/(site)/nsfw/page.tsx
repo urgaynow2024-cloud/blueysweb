@@ -8,6 +8,7 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
 import SectionHeading from "@/components/ui/SectionHeading";
 import PricingCard from "@/components/ui/PricingCard";
+import { PremiumCard } from "@/components/ui/Card";
 import Reveal from "@/components/ui/Reveal";
 import { ShieldAlert, ArrowRight } from "lucide-react";
 
@@ -144,9 +145,9 @@ export default function NsfwPage() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-16 text-center">
+              <PremiumCard variant="elevated" className="py-16 text-center">
                 <p className="text-[var(--text-dim)]">No NSFW portfolio images available yet.</p>
-              </div>
+              </PremiumCard>
             )}
           </div>
 
