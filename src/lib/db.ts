@@ -5,7 +5,9 @@ const FALLBACKS = {
     name: "Bluey's Avatar Commissions",
     tagline: "VRChat Avatar Edits • Blender Work • Unity Setup",
     description: "Clean, stylish, performance-friendly avatars built for VRChat.",
-    discord: "BlueyBarks",
+     discord: "BlueyBarks",
+    tos_last_updated: "August 2025",
+    tos_version: "2.0",
   },
   workflowSteps: [
     { emoji: "💬", title: "Request", desc: "Message me with what you're looking for and your avatar base" },

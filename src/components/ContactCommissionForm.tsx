@@ -22,7 +22,7 @@ export default function ContactCommissionForm() {
     e.preventDefault();
     setError(false);
 
-    if (!agreed || !ownsAssets) {
+    if (!agreed || !ownsAssets || !fbxProof || !refundsUnderstood) {
       setError(true);
       return;
     }
@@ -92,8 +92,8 @@ export default function ContactCommissionForm() {
       {error && (
         <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
           <AlertCircle className="h-4 w-4 shrink-0" />
-          {(!agreed || !ownsAssets)
-            ? "You must agree to the Terms of Service and confirm asset ownership before submitting."
+          {(!agreed || !ownsAssets || !fbxProof || !refundsUnderstood)
+            ? "Please read and agree to all terms below (Terms of Service, asset ownership, FBX proof, and refund policy) before submitting."
             : "Failed to send request. Please try again or contact me directly on Discord."}
         </div>
       )}

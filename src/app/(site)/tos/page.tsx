@@ -2,11 +2,26 @@
 
 import { useState, useEffect, useRef } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { getSiteConfig } from "@/lib/db";
+import { tosSections } from "@/data/site";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
-import { ArrowUp, Search, FileText, ShieldCheck, Clock, AlertCircle, CheckCircle2, Eye, EyeOff, ChevronUp, ChevronDown } from "lucide-react";
-import Link from "next/link";
+import { ArrowUp, Search, FileText, ShieldCheck, Clock, AlertCircle, AlertTriangle, Info, ChevronUp, ChevronDown } from "lucide-react";
+
+interface TosSection {
+  id?: string;
+  title: string;
+  icon: string;
+  section_type: "bullets" | "paragraphs";
+  content: string;
+  items: string[];
+  highlight_box: string;
+  box_type: "info" | "warning" | "error";
+  box_title: string;
+  sort_order: number;
+  visible: boolean;
+}
 
 function SkeletonCard() {
   return (
@@ -22,30 +37,105 @@ function SkeletonCard() {
   );
 }
 
+function renderMarkdown(text: string): string {
+  if (!text) return "";
+  let html = text
+    .replace(/<(?!br|hr)\/?>[^<]*/gi, "")
+    .replace(/'''/g, "''")
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/(?:\r\n|\r|\n){3,}/g, "\n\n")
+    .replace(/^### (.*$)/gm, "<h3 class='text-base font-semibold text-white mb-3 mt-6 first:mt-0'>$1</h3>")
+    .replace(/^## (.*$)/gm, "<h2 class='text-lg font-semibold text-white mb-3 mt-6 first:mt-0'>$1</h2>")
+    .replace(/^# (.*$)/gm, "<h1 class='text-2xl font-bold text-white mb-4'>$1</h1>")
+    .split("\n\n")
+    .map((para) => {
+      para = para.trim();
+      if (!para) return "";
+      if (para.startsWith("<h") || para.startsWith("<str")) return para;
+      return `<p class='mb-3 last:mb-0 leading-relaxed'>${para.replace(/\n/g, "<br />")}</p>`;
+    })
+    .join("");
+  return html;
+}
+
+function BoxIcon({ type }: { type: string }) {
+  if (type === "warning") return <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400" />;
+  if (type === "error") return <AlertCircle className="h-5 w-5 shrink-0 text-red-400" />;
+  return <Info className="h-5 w-5 shrink-0 text-blue-400" />;
+}
+
+function getBoxClasses(type: string) {
+  switch (type) {
+    case "warning":
+      return "border-amber-500/30 bg-amber-500/10 text-amber-200";
+    case "error":
+      return "border-red-500/30 bg-red-500/10 text-red-200";
+    default:
+      return "border-blue-500/30 bg-blue-500/10 text-blue-200";
+  }
+}
+
+function SectionContent({ section }: { section: TosSection }) {
+  if (section.section_type === "paragraphs" && section.content) {
+    return (
+      <div
+        className="prose prose-invert max-w-none text-sm text-[var(--text-secondary)]"
+        dangerouslySetInnerHTML={{ __html: renderMarkdown(section.content) }}
+      />
+    );
+  }
+  if (section.items && section.items.length > 0) {
+    return (
+      <ul className="space-y-3 text-sm text-[var(--text-secondary)]">
+        {section.items.map((item: string, j: number) => (
+          <li key={j} className="flex items-start gap-3">
+            <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  return null;
+}
+
 export default function ToSPage() {
-  const [sections, setSections] = useState<any[]>([]);
+  const [sections, setSections] = useState<TosSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [version, setVersion] = useState<string>("");
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-        if (!isSupabaseConfigured || !supabase) {
-          setLoading(false);
-          return;
+        if (isSupabaseConfigured) {
+          const res = await fetch("/api/tos-sections");
+          if (res.ok) {
+            const data = await res.json();
+            setSections(data);
+          } else {
+            setSections(tosSections as TosSection[]);
+          }
+        } else {
+          setSections(tosSections as TosSection[]);
         }
-        const { data, error } = await supabase
-          .from("tos_sections")
-          .select("*")
-          .eq("visible", true)
-          .order("sort_order", { ascending: true });
-        if (error) throw error;
-        setSections(data || []);
+        if (!isSupabaseConfigured) {
+          const fallbackConfig: any = { tos_last_updated: "August 2025", tos_version: "2.0" };
+          setLastUpdated(fallbackConfig.tos_last_updated || "August 2025");
+          setVersion(fallbackConfig.tos_version || "2.0");
+        } else {
+          const config = await getSiteConfig();
+          setLastUpdated((config as any).tos_last_updated || "August 2025");
+          setVersion((config as any).tos_version || "2.0");
+        }
       } catch (e) {
         console.error("Failed to load TOS:", e);
+        setSections(tosSections as TosSection[]);
       } finally {
         setLoading(false);
       }
@@ -53,9 +143,18 @@ export default function ToSPage() {
     load();
   }, []);
 
+  useEffect(() => {
+    function onScroll() {
+      setShowBackToTop(window.scrollY > 400);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const filteredSections = sections.filter(
     (s) =>
       s.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.items?.some((item: string) => item.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
@@ -70,9 +169,16 @@ export default function ToSPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const expandAll = () => {
+    const ids = sections.map((s) => s.id || "").filter(Boolean);
+    setExpandedSection(ids[0] || null);
+    ids.forEach((id) => {
+      setTimeout(() => scrollToSection(id), 50);
+    });
+  };
+
   return (
     <div className="relative" ref={contentRef}>
-      {/* Hero Header */}
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
         <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px]" />
@@ -85,17 +191,22 @@ export default function ToSPage() {
             </span>
             <h1 className="display-xl mt-5 text-white">Terms of Service</h1>
             <p className="lead mx-auto mt-4">
-              Please read these terms carefully before commissioning. By working with me, you agree to the rules outlined below.
+              These Terms govern all commissions, services, and interactions with Bluey Commissions. Please read them carefully before engaging our services.
             </p>
-            <div className="mt-6 flex items-center justify-center gap-2 text-sm text-[var(--text-dim)]">
-              <Clock className="h-4 w-4" />
-              Last Updated: July 2026
+            <div className="mt-6 flex items-center justify-center gap-4 text-sm text-[var(--text-dim)]">
+              <div className="flex items-center gap-1.5">
+                <Clock className="h-4 w-4" />
+                Last Updated: {lastUpdated || "—"}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4" />
+                Version: {version || "—"}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Search Bar */}
       <section className="section !pt-0">
         <div className="container">
           <div className="relative max-w-xl mx-auto">
@@ -104,19 +215,28 @@ export default function ToSPage() {
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search terms..."
+              placeholder="Search terms, sections, keywords..."
               className="field w-full pl-12 pr-4 py-3 text-sm"
               aria-label="Search Terms of Service"
             />
           </div>
+
+          <div className="mt-8 flex justify-center">
+            <button
+              type="button"
+              onClick={expandAll}
+              className="text-sm text-[var(--text-secondary)] hover:text-white transition-colors"
+            >
+              Jump to first section
+            </button>
+          </div>
         </div>
       </section>
 
-      {/* Sticky Table of Contents */}
       {sections.length > 0 && (
         <section className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-xl">
-          <div className="container py-4">
-            <div className="flex items-center gap-3 overflow-x-auto">
+          <div className="container py-4 overflow-x-auto">
+            <div className="flex items-center gap-3">
               <span className="shrink-0 text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider">Contents</span>
               <div className="flex flex-wrap gap-2">
                 {sections.map((section) => (
@@ -135,7 +255,6 @@ export default function ToSPage() {
         </section>
       )}
 
-      {/* TOS Sections */}
       <section className="section">
         <div className="container max-w-4xl">
           {loading ? (
@@ -152,51 +271,56 @@ export default function ToSPage() {
                     id={section.id || ""}
                     className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden transition-all duration-500 hover:border-[var(--border-hover)]"
                   >
-                    {/* Section Header */}
                     <button
                       type="button"
-                      onClick={() => setExpandedSection(expandedSection === section.id ? null : section.id)}
+                      onClick={() => setExpandedSection(expandedSection === (section.id || i.toString()) ? null : (section.id || i.toString()))}
                       className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
-                      aria-expanded={expandedSection === section.id}
+                      aria-expanded={expandedSection === (section.id || i.toString())}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--accent-soft)] text-xl">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-xl">
                           {section.icon}
                         </span>
-                        <h2 className="text-lg font-bold text-white">{section.title}</h2>
+                        <div className="flex flex-col">
+                          <h2 className="text-lg font-bold text-white">{section.title}</h2>
+                          <span className="text-xs text-[var(--text-dim)] capitalize">{section.section_type}</span>
+                        </div>
                       </div>
                       <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--accent)] transition-all duration-300 ${
-                        expandedSection === section.id ? "rotate-180 bg-[var(--accent-soft)]" : ""
+                        expandedSection === (section.id || i.toString()) ? "rotate-180 bg-[var(--accent-soft)]" : ""
                       }`}>
-                        {expandedSection === section.id ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                        {expandedSection === (section.id || i.toString()) ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                       </span>
                     </button>
 
-                    {/* Section Content */}
                     <div
-                      className="grid transition-all duration-500 ease-out"
-                      style={{ gridTemplateRows: expandedSection === section.id ? "1fr" : "0fr" }}
+                      className={`grid transition-all duration-500 ease-out ${
+                        expandedSection === (section.id || i.toString()) ? "max-h-[5000px] opacity-100" : "max-h-0 opacity-0"
+                      }`}
                     >
                       <div className="overflow-hidden px-6 pb-6">
                         {section.highlight_box && (
-                          <div className="mb-5 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent-soft)] p-4">
+                          <div className={`mb-5 rounded-xl border p-4 ${getBoxClasses(section.box_type || "info")}`}>
                             <div className="flex items-start gap-3">
-                              <AlertCircle className="h-5 w-5 shrink-0 text-[var(--accent)] mt-0.5" />
-                              <p className="text-sm text-[var(--accent)]">{section.highlight_box}</p>
+                              {BoxIcon({ type: section.box_type || "info" })}
+                              <div>
+                                {section.box_title && (
+                                  <p className="font-semibold mb-1">{section.box_title}</p>
+                                )}
+                                <p className="text-sm">{section.highlight_box}</p>
+                              </div>
                             </div>
                           </div>
                         )}
 
-                        <ul className="space-y-3">
-                          {section.items.map((item: string, j: number) => (
-                            <li key={j} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
-                              <span className="mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)] text-xs">
-                                {j + 1}
-                              </span>
-                              <span>{item}</span>
-                            </li>
-                          ))}
-                        </ul>
+                        {section.section_type === "paragraphs" && section.content ? (
+                          <div
+                            className="prose prose-invert max-w-none text-sm text-[var(--text-secondary)]"
+                            dangerouslySetInnerHTML={{ __html: renderMarkdown(section.content) }}
+                          />
+                        ) : (
+                          <SectionContent section={section} />
+                        )}
                       </div>
                     </div>
                   </div>
@@ -214,16 +338,41 @@ export default function ToSPage() {
             </div>
           )}
 
-          {/* Back to Top */}
-          <div className="mt-16 text-center">
-            <button
-              type="button"
-              onClick={scrollToTop}
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-6 py-3 text-sm font-medium text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:text-white hover:shadow-lg"
-            >
-              <ArrowUp className="h-4 w-4" />
-              Back to Top
-            </button>
+          {showBackToTop && (
+            <div className="fixed bottom-8 right-8 z-40">
+              <button
+                type="button"
+                onClick={scrollToTop}
+                className="flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-4 py-3 text-sm font-medium text-[var(--text-secondary)] shadow-lg transition-all hover:border-[var(--accent)] hover:text-white"
+              >
+                <ArrowUp className="h-4 w-4" />
+                Back to Top
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container max-w-3xl text-center">
+          <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-6 md:p-10">
+            <div className="mb-4 flex items-center justify-center gap-2 text-sm text-[var(--text-dim)]">
+              <Clock className="h-4 w-4" />
+              Last Updated: {lastUpdated || "—"}
+              <span className="mx-2 text-[var(--border)]">|</span>
+              <ShieldCheck className="h-4 w-4" />
+              Version: {version || "—"}
+            </div>
+            <p className="text-sm text-[var(--text-secondary)]">
+              These Terms of Service constitute the entire agreement between you and Bluey Commissions regarding the use of our services. By commissioning work, you acknowledge that you have read, understood, and agreed to these Terms.
+            </p>
+            <div className="mt-4 flex justify-center">
+              <Reveal>
+                <ButtonLink href="/commission" variant="secondary" size="sm">
+                  <span>Back to Commission Form</span>
+                </ButtonLink>
+              </Reveal>
+            </div>
           </div>
         </div>
       </section>
