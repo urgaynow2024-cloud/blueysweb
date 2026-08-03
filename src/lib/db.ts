@@ -85,7 +85,7 @@ export async function getSiteImages() {
   const { data, error } = await supabase.from("site_images").select("*");
   if (error || !data) return {};
   const result: Record<string, { url: string; path?: string }> = {};
-  data.forEach((item: any) => {
+  data.forEach((item: { key: string; url: string; path?: string }) => {
     result[item.key] = { url: item.url, path: item.path };
   });
   return result;
