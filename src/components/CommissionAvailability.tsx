@@ -42,10 +42,13 @@ export default function CommissionAvailability() {
     async function load() {
       try {
         const data = await getQueueConfig();
-        if (data.queue_status) setStatus(data.queue_status);
-        if (data.queue_slots_total) setSlotsTotal(parseInt(data.queue_slots_total, 10));
-        if (data.queue_slots_used !== undefined) setSlotsUsed(parseInt(data.queue_slots_used, 10));
-        if (data.queue_notes) setNote(data.queue_notes);
+        if (data) {
+          const statusKey = (data.status_text || "Open").toLowerCase();
+          setStatus(statusKey === "open" ? "open" : statusKey === "limited" ? "limited" : "closed");
+          setSlotsTotal(data.slots_total || 6);
+          setSlotsUsed(data.slots_used || 0);
+          setNote(data.notes || "");
+        }
       } catch (e) {
         console.error("Failed to load availability:", e);
       } finally {

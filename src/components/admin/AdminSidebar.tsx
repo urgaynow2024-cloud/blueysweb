@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { Tag, HelpCircle, Workflow, Star, Image as ImageIcon, Link as LinkIcon, Info, BarChart3, ShieldAlert, LogOut, Lock, UserCog, Layout, ChartBar, Settings, ShoppingCart, FileText, Menu, Globe, FolderOpen, FormInput, Grid, Layers } from "lucide-react";
+import { Tag, HelpCircle, Workflow, Star, Image as ImageIcon, Link as LinkIcon, Info, BarChart3, ShieldAlert, LogOut, Lock, UserCog, Layout, ChartBar, Settings, ShoppingCart, FileText, Menu, Globe, FolderOpen, FormInput, Grid, ClipboardList, Users, Bell, Wrench, Newspaper } from "lucide-react";
 
 export interface NavItem {
   id: string;
@@ -27,7 +27,6 @@ export const ADMIN_NAV: NavGroup[] = [
       { id: "hero", label: "Hero", icon: <Layout className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "stats", label: "Statistics", icon: <ChartBar className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "services", label: "Services", icon: <Settings className="ad-nav-icon h-[18px] w-[18px]" /> },
-      { id: "fbx-mashups", label: "FBX Mashups", icon: <Layers className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "before-ordering", label: "Before Ordering", icon: <ShoppingCart className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "tos", label: "Terms of Service", icon: <FileText className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "navigation", label: "Navigation", icon: <Menu className="ad-nav-icon h-[18px] w-[18px]" /> },
@@ -51,12 +50,17 @@ export const ADMIN_NAV: NavGroup[] = [
       { id: "social-links", label: "Links", icon: <LinkIcon className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "site", label: "Site Info", icon: <Info className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "queue", label: "Queue", icon: <BarChart3 className="ad-nav-icon h-[18px] w-[18px]" /> },
+      { id: "commissions", label: "Commissions", icon: <ClipboardList className="ad-nav-icon h-[18px] w-[18px]" /> },
+      { id: "notifications", label: "Notifications", icon: <Bell className="ad-nav-icon h-[18px] w-[18px]" /> },
+      { id: "maintenance", label: "Maintenance", icon: <Wrench className="ad-nav-icon h-[18px] w-[18px]" /> },
+      { id: "changelog", label: "Changelog", icon: <Newspaper className="ad-nav-icon h-[18px] w-[18px]" /> },
     ],
   },
   {
     label: "Team",
     items: [
       { id: "moderators", label: "Moderators", icon: <UserCog className="ad-nav-icon h-[18px] w-[18px]" /> },
+      { id: "roles", label: "Roles", icon: <Users className="ad-nav-icon h-[18px] w-[18px]" /> },
     ],
   },
   {

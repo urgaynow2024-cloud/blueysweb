@@ -259,7 +259,7 @@ supabase/
 
 ```bash
 npm run build
-npm run start
+ 
 ```
 
 Make sure to set environment variables in your hosting platform.

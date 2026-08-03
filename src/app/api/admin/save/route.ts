@@ -32,7 +32,6 @@ export async function POST(request: Request) {
       hero,
       stats,
       services,
-      fbxMashups,
       beforeOrdering,
       tosSections,
       navigation,
@@ -97,11 +96,6 @@ export async function POST(request: Request) {
     if (services && services.length > 0) {
       await admin.from("services").delete().neq("id", "00000000-0000-0000-0000-000000000000");
       await upsertTable("services", services, admin);
-    }
-
-    if (fbxMashups && fbxMashups.length > 0) {
-      await admin.from("fbx_mashups").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      await upsertTable("fbx_mashups", fbxMashups, admin);
     }
 
     if (beforeOrdering && beforeOrdering.length > 0) {

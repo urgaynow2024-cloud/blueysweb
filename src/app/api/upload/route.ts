@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(request: Request) {
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     const storagePath = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from("portfolio-images")
+      .from("media")
       .upload(storagePath, file, {
         cacheControl: "3600",
         upsert: true,
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Upload failed" }, { status: 500 });
     }
 
-    const { data: urlData } = supabaseAdmin.storage.from("portfolio-images").getPublicUrl(storagePath);
+    const { data: urlData } = supabaseAdmin.storage.from("media").getPublicUrl(storagePath);
 
     return NextResponse.json({ url: urlData.publicUrl, path: storagePath });
   } catch (error) {
@@ -38,3 +38,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
+

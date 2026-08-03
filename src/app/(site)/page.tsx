@@ -3,12 +3,10 @@
 import { useState, useEffect } from "react";
 import Hero from "@/components/Hero";
 import FeaturedWork from "@/components/FeaturedWork";
-import FbxMashupCommission from "@/components/FbxMashupCommission";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { ButtonLink } from "@/components/ui/Button";
 import PricingCard from "@/components/ui/PricingCard";
-import ScrollShowcase from "@/components/ScrollShowcase";
 import ClientTestimonials from "@/components/ClientTestimonials";
 import {
   getWorkflowSteps,
@@ -17,10 +15,8 @@ import {
   getSiteConfig,
   getHomepageStats,
   getServices,
-  getFbxMashupCommission,
   getFaqItems,
 } from "@/lib/db";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import Link from "next/link";
 import { Star, ArrowRight, Plus, Minus, Sparkles, Users, Zap } from "lucide-react";
 import CommissionAvailability from "@/components/CommissionAvailability";
@@ -73,9 +69,6 @@ interface Service {
   description?: string;
   features?: string[];
 }
-interface FbxCommission {
-  id?: string;
-}
 interface FaqItem {
   id?: string;
   question?: string;
@@ -88,10 +81,8 @@ export default function Home() {
   const [workflow, setWorkflow] = useState<WorkflowStep[]>([]);
   const [pricing, setPricing] = useState<PricingTier[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [homepageStats, setHomepageStats] = useState<StatItem[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [fbxCommission, setFbxCommission] = useState<FbxCommission[]>([]);
   const [faqItems, setFaqItems] = useState<FaqItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -100,14 +91,13 @@ export default function Home() {
     async function load() {
       setLoading(true);
       try {
-        const [s, w, p, r, stats, svcs, fbx, faq] = await Promise.all([
+        const [s, w, p, r, stats, svcs, faq] = await Promise.all([
           getSiteConfig(),
           getWorkflowSteps(),
           getPricingTiers(),
           getApprovedReviews(),
           getHomepageStats(),
           getServices(),
-          getFbxMashupCommission(),
           getFaqItems(),
         ]);
         setSite(s);
@@ -116,17 +106,7 @@ export default function Home() {
         setReviews(r);
         setHomepageStats(stats);
         setServices(svcs);
-        setFbxCommission(fbx);
         setFaqItems(faq);
-
-        if (isSupabaseConfigured && supabase) {
-          const { data: portData } = await supabase
-            .from("portfolio_images")
-            .select("url")
-            .order("sort_order", { ascending: true })
-            .limit(15);
-          if (portData) setPortfolioImages(portData.map((img) => img.url));
-        }
       } catch (e) {
         console.error("Failed to load home data:", e);
       } finally {
@@ -176,8 +156,52 @@ export default function Home() {
       <Hero />
 
       <div className="relative z-10">
-        {/* Featured portfolio work */}
-        <FeaturedWork />
+        {/* Portfolio showcase */}
+        <section className="section" id="portfolio">
+          <div className="container">
+            <div className="mb-10 flex flex-wrap items-end justify-between gap-4 md:mb-14">
+              <div>
+                <span className="section-label">Portfolio</span>
+                <h2 className="display-lg text-white">Recent Work</h2>
+                <p className="mt-3 max-w-xl text-[var(--text-secondary)]">VRChat avatar edits, FBX mashups, custom clothing, and texture work.</p>
+              </div>
+              <a href="/portfolio" className="btn-secondary inline-flex items-center gap-2">
+                View All Work
+                <ArrowRight className="h-4 w-4" />
+              </a>
+            </div>
+            <FeaturedWork />
+          </div>
+        </section>
+
+        {/* Why Choose Bluey */}
+        <section className="section" id="why">
+          <div className="container">
+            <div className="mb-12 text-center">
+              <span className="section-label">Why Bluey</span>
+              <h2 className="display-lg text-white">Why Choose Bluey Commissions</h2>
+              <p className="lead mx-auto mt-4 max-w-2xl">
+                Professional VRChat avatar services built on quality, trust, and performance.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+              {[
+                { icon: "🎨", title: "VRChat Specialised", desc: "Built specifically for VRChat creators. I understand the platform, the limits, and the workflow." },
+                { icon: "⚡", title: "Performance First", desc: "Every avatar is optimised for smooth performance in VRChat. No lag, no crashes." },
+                { icon: "🔒", title: "Asset Safe", desc: "Full proof of ownership required for all avatar bases. No stolen assets, no exceptions." },
+                { icon: "🚀", title: "Fast Turnaround", desc: "Most commissions completed within 2-3 weeks. Rush orders available on request." },
+              ].map((item, i) => (
+                <Reveal key={item.title} delay={i * 80}>
+                  <div className="group h-full rounded-[var(--r-xl)] border border-[var(--border)] bg-[var(--bg-card)] p-7 shadow-lg shadow-black/20 transition-all duration-500 hover:-translate-y-2 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/50">
+                    <div className="mb-4 text-4xl transition-transform duration-300 group-hover:scale-110">{item.icon}</div>
+                    <h3 className="mb-2 text-lg font-bold text-white">{item.title}</h3>
+                    <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{item.desc}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* Services */}
         {services.length > 0 && (
@@ -186,7 +210,7 @@ export default function Home() {
               <SectionHeading
                 eyebrow="Services"
                 title="What I provide"
-                subtitle="Avatar edits, Blender work, Unity setup, and FBX mashups — all performance-friendly and built for VRChat."
+                subtitle="Specialised VRChat avatar services — from subtle edits to complete FBX mashups."
               />
 
               <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -201,29 +225,6 @@ export default function Home() {
                   <ArrowRight className="h-4 w-4" />
                 </ButtonLink>
               </div>
-            </div>
-          </section>
-        )}
-
-        {/* FBX Mashup Commission (full, editable product) */}
-        {fbxCommission.length > 0 && (
-          <section className="section" id="fbx">
-            <FbxMashupCommission inline limit={1} />
-          </section>
-        )}
-
-        {/* Recent work marquee */}
-        {portfolioImages.length > 0 && (
-          <section className="section section-alt">
-            <div className="container">
-              <div className="mb-12 text-center">
-                <span className="section-label">Recent Work</span>
-                <h2 className="display-lg text-white">Recent Showcase</h2>
-                <p className="lead mx-auto mt-4 max-w-2xl">
-                  A continuous scroll of recent avatar commissions. Each piece is crafted with attention to detail and performance.
-                </p>
-              </div>
-              <ScrollShowcase images={portfolioImages} />
             </div>
           </section>
         )}

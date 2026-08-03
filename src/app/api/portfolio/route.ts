@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export async function DELETE(request: Request) {
@@ -10,7 +10,7 @@ export async function DELETE(request: Request) {
     }
 
     if (path) {
-      await supabaseAdmin.storage.from("portfolio-images").remove([path]);
+      await supabaseAdmin.storage.from("media").remove([path]);
     }
 
     if (id) {
@@ -27,3 +27,4 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
+

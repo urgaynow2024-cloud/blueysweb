@@ -1,18 +1,18 @@
-import { supabase, isSupabaseConfigured } from "./supabase";
+﻿import { supabase, isSupabaseConfigured } from "./supabase";
 
 const FALLBACKS = {
   siteConfig: {
     name: "Bluey's Avatar Commissions",
-    tagline: "VRChat Avatar Edits • Blender Work • Unity Setup",
+    tagline: "VRChat Avatar Edits â€¢ Blender Work â€¢ Unity Setup",
     description: "Clean, stylish, performance-friendly avatars built for VRChat.",
     discord: "BlueyBarks",
   },
   workflowSteps: [
-    { emoji: "💬", title: "Request", desc: "Message me with what you're looking for and your avatar base" },
-    { emoji: "📋", title: "Planning", desc: "We discuss details and I provide a detailed quote" },
-    { emoji: "🎨", title: "Development", desc: "I work on your avatar with regular progress updates" },
-    { emoji: "🔁", title: "Revisions", desc: "You review the work and request any changes" },
-    { emoji: "📦", title: "Delivery", desc: "Final files sent after payment is complete" },
+    { emoji: "ðŸ’¬", title: "Request", desc: "Message me with what you're looking for and your avatar base" },
+    { emoji: "ðŸ“‹", title: "Planning", desc: "We discuss details and I provide a detailed quote" },
+    { emoji: "ðŸŽ¨", title: "Development", desc: "I work on your avatar with regular progress updates" },
+    { emoji: "ðŸ”", title: "Revisions", desc: "You review the work and request any changes" },
+    { emoji: "ðŸ“¦", title: "Delivery", desc: "Final files sent after payment is complete" },
   ],
 };
 
@@ -32,13 +32,11 @@ async function fetchSiteConfig() {
   return result;
 }
 
-export async function getQueueConfig(): Promise<Record<string, string>> {
-  const cfg = await fetchSiteConfig();
-  const result: Record<string, string> = {};
-  for (const key of ["queue_status", "queue_slots_total", "queue_slots_used", "queue_wait_time", "queue_notes", "queue_last_updated"]) {
-    if (cfg[key] !== undefined) result[key] = String(cfg[key]);
-  }
-  return result;
+export async function getQueueConfig() {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data, error } = await supabase.from("queue_config").select("*").limit(1).single();
+  if (error || !data) return null;
+  return data;
 }
 
 export async function getHomepageSections() {
@@ -47,12 +45,19 @@ export async function getHomepageSections() {
 
 export async function getPortfolioImages() {
   if (!isSupabaseConfigured || !supabase) return [];
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("portfolio_images")
-    .select("id, url, category, sort_order, created_at")
+    .select("id, url, sort_order, created_at")
     .order("sort_order", { ascending: true });
-  if (error || !data) return [];
-  return data as Array<{ id: string; url: string; category?: string; sort_order: number; created_at: string }>;
+  if (error || !data) {
+    const { data: data2, error: error2 } = await supabase
+      .from("portfolio_images")
+      .select("id, url, category, sort_order, created_at")
+      .order("sort_order", { ascending: true });
+    if (error2 || !data2) return [];
+    return data2 as Array<{ id: string; url: string; category?: string; sort_order: number; created_at: string }>;
+  }
+  return data as Array<{ id: string; url: string; sort_order: number; created_at: string }>;
 }
 
 export async function getApprovedReviews() {
@@ -122,7 +127,7 @@ export async function uploadNsfwPortfolioImage(file: File) {
   const storagePath = `nsfw/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   
   const { data: uploadData, error: uploadError } = await supabase.storage
-    .from("portfolio-images")
+    .from("media")
     .upload(storagePath, file, {
       cacheControl: "3600",
       upsert: true,
@@ -133,7 +138,7 @@ export async function uploadNsfwPortfolioImage(file: File) {
     return null;
   }
 
-  const { data: urlData } = supabase.storage.from("portfolio-images").getPublicUrl(storagePath);
+  const { data: urlData } = supabase.storage.from("media").getPublicUrl(storagePath);
   const url = urlData.publicUrl;
 
   const { data: dbData, error: dbError } = await supabase
@@ -143,7 +148,7 @@ export async function uploadNsfwPortfolioImage(file: File) {
 
   if (dbError || !dbData || dbData.length === 0) {
     console.error("NSFW DB insert error:", dbError);
-    await supabase.storage.from("portfolio-images").remove([storagePath]);
+    await supabase.storage.from("media").remove([storagePath]);
     return null;
   }
 
@@ -154,7 +159,7 @@ export async function removeNsfwPortfolioImage(id: string, path?: string) {
   if (!isSupabaseConfigured || !supabase) return false;
   
   if (path) {
-    await supabase.storage.from("portfolio-images").remove([path]);
+    await supabase.storage.from("media").remove([path]);
   }
 
   const { error } = await supabase.from("nsfw_portfolio_images").delete().eq("id", id);
@@ -176,7 +181,7 @@ export async function uploadImage(file: File, path?: string): Promise<string | n
   if (!isSupabaseConfigured || !supabase) return null;
   const ext = file.name.split(".").pop();
   const fileName = `${path || "portfolio"}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const { data, error } = await supabase.storage.from("portfolio-images").upload(fileName, file, {
+  const { data, error } = await supabase.storage.from("media").upload(fileName, file, {
     cacheControl: "3600",
     upsert: true,
   });
@@ -184,7 +189,7 @@ export async function uploadImage(file: File, path?: string): Promise<string | n
     console.error("Upload error:", error);
     return null;
   }
-  const { data: urlData } = supabase.storage.from("portfolio-images").getPublicUrl(data.path);
+  const { data: urlData } = supabase.storage.from("media").getPublicUrl(data.path);
   return urlData.publicUrl;
 }
 
@@ -192,7 +197,7 @@ export async function uploadPortfolioImage(file: File, category = "VRChat Avatar
   if (!isSupabaseConfigured || !supabase) return null;
   const ext = file.name.split(".").pop();
   const storagePath = `portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const { data: uploadData, error: uploadError } = await supabase.storage.from("portfolio-images").upload(storagePath, file, {
+  const { data: uploadData, error: uploadError } = await supabase.storage.from("media").upload(storagePath, file, {
     cacheControl: "3600",
     upsert: true,
   });
@@ -200,7 +205,7 @@ export async function uploadPortfolioImage(file: File, category = "VRChat Avatar
     console.error("Storage upload error:", uploadError);
     return null;
   }
-  const { data: urlData } = supabase.storage.from("portfolio-images").getPublicUrl(storagePath);
+  const { data: urlData } = supabase.storage.from("media").getPublicUrl(storagePath);
   const url = urlData.publicUrl;
 
   const { data: dbData, error: dbError } = await supabase
@@ -209,7 +214,7 @@ export async function uploadPortfolioImage(file: File, category = "VRChat Avatar
     .select();
   if (dbError || !dbData || dbData.length === 0) {
     console.error("DB insert error:", dbError);
-    await supabase.storage.from("portfolio-images").remove([storagePath]);
+    await supabase.storage.from("media").remove([storagePath]);
     return null;
   }
 
@@ -218,7 +223,7 @@ export async function uploadPortfolioImage(file: File, category = "VRChat Avatar
 
 export async function deleteImage(path: string): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) return false;
-  const { error } = await supabase.storage.from("portfolio-images").remove([path]);
+  const { error } = await supabase.storage.from("media").remove([path]);
   return !error;
 }
 
@@ -379,28 +384,6 @@ export async function updateService(id: string, data: any) {
 export async function deleteService(id: string) {
   if (!isSupabaseConfigured || !supabase) return false;
   const { error } = await supabase.from("services").delete().eq("id", id);
-  return !error;
-}
-
-export async function getFbxMashups() {
-  return fetchAll("fbx_mashups", []);
-}
-
-export async function addFbxMashup(data: any) {
-  if (!isSupabaseConfigured || !supabase) return null;
-  const { data: result, error } = await supabase.from("fbx_mashups").insert([data]).select();
-  return error ? null : result?.[0];
-}
-
-export async function updateFbxMashup(id: string, data: any) {
-  if (!isSupabaseConfigured || !supabase) return false;
-  const { error } = await supabase.from("fbx_mashups").update(data).eq("id", id);
-  return !error;
-}
-
-export async function deleteFbxMashup(id: string) {
-  if (!isSupabaseConfigured || !supabase) return false;
-  const { error } = await supabase.from("fbx_mashups").delete().eq("id", id);
   return !error;
 }
 
@@ -586,10 +569,235 @@ export async function deleteHomepageSection(id: string) {
   return !error;
 }
 
-export async function getFbxMashupCommission() {
-  return fetchAll("fbx_mashup_commission", []);
+// =============================================================================
+// NEW DB FUNCTIONS FOR REDESIGN
+// =============================================================================
+
+export async function getPortfolioProjects() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("portfolio_projects").select("*").order("sort_order", { ascending: true });
+  if (error || !data) return [];
+  return data;
 }
 
-export async function getFbxMashupCommissionItems() {
-  return fetchAll("fbx_mashups", []);
+export async function getProjectImages(projectId: string) {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("project_images").select("*").eq("project_id", projectId).order("sort_order", { ascending: true });
+  if (error || !data) return [];
+  return data;
 }
+
+export async function getBeforeAfterSliders(projectId: string) {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("before_after_sliders").select("*").eq("project_id", projectId).order("sort_order", { ascending: true });
+  if (error || !data) return [];
+  return data;
+}
+
+export async function getCommissions() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("commissions").select("*").order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return data;
+}
+
+export async function getCommissionRevisions(commissionId: string) {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("commission_revisions").select("*").eq("commission_id", commissionId).order("created_at", { ascending: true });
+  if (error || !data) return [];
+  return data;
+}
+
+export async function getCommissionFiles(commissionId: string) {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("commission_files").select("*").eq("commission_id", commissionId).order("created_at", { ascending: true });
+  if (error || !data) return [];
+  return data;
+}
+
+export async function updateQueueConfig(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("queue_config").update(data).eq("id", id);
+  return !error;
+}
+
+export async function getNotifications() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("notifications").select("*").order("created_at", { ascending: false }).limit(50);
+  if (error || !data) return [];
+  return data;
+}
+
+export async function getNotificationSettings() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("notification_settings").select("*");
+  if (error || !data) return [];
+  return data;
+}
+
+export async function updateNotificationSetting(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("notification_settings").update(data).eq("id", id);
+  return !error;
+}
+
+export async function getRoles() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("roles").select("*");
+  if (error || !data) return [];
+  return data;
+}
+
+export async function getUserRoles(userId: string) {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("user_roles").select("*, roles(*)").eq("user_id", userId);
+  if (error || !data) return [];
+  return data;
+}
+
+export async function assignRole(userId: string, roleId: string) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data, error } = await supabase.from("user_roles").insert([{ user_id: userId, role_id: roleId }]).select();
+  return error ? null : data?.[0];
+}
+
+export async function removeUserRole(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("user_roles").delete().eq("id", id);
+  return !error;
+}
+
+export async function getAuditLog(limit = 100) {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(limit);
+  if (error || !data) return [];
+  return data;
+}
+
+export async function addAuditLogEntry(data: { actor_name: string; actor_role: string; action: string; entity_type: string; entity_id: string; previous_value?: any; new_value?: any; reason?: string }) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("audit_log").insert([data]).select();
+  return error ? null : result?.[0];
+}
+
+export async function getPageViews(limit = 100) {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("page_views").select("*").order("created_at", { ascending: false }).limit(limit);
+  if (error || !data) return [];
+  return data;
+}
+
+export async function addPageView(data: { page_path: string; visitor_id?: string; referrer?: string; user_agent?: string }) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("page_views").insert([data]).select();
+  return error ? null : result?.[0];
+}
+
+export async function getSearchIndex() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("search_index").select("*").order("updated_at", { ascending: false });
+  if (error || !data) return [];
+  return data;
+}
+
+export async function updateSearchIndex(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("search_index").update(data).eq("id", id);
+  return !error;
+}
+
+export async function getMaintenanceMode() {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data, error } = await supabase.from("maintenance_mode").select("*").limit(1).single();
+  if (error || !data) return null;
+  return data;
+}
+
+export async function updateMaintenanceMode(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("maintenance_mode").update(data).eq("id", id);
+  return !error;
+}
+
+export async function getChangelogEntries() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("changelog_entries").select("*").eq("published", true).order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return data;
+}
+
+export async function getAllChangelogEntries() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("changelog_entries").select("*").order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return data;
+}
+
+export async function addChangelogEntry(data: any) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("changelog_entries").insert([data]).select();
+  return error ? null : result?.[0];
+}
+
+export async function updateChangelogEntry(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("changelog_entries").update(data).eq("id", id);
+  return !error;
+}
+
+export async function deleteChangelogEntry(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("changelog_entries").delete().eq("id", id);
+  return !error;
+}
+
+export async function getFbxMashupRequests() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("fbx_mashup_requests").select("*").order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return data;
+}
+
+export async function addFbxMashupRequest(data: any) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("fbx_mashup_requests").insert([data]).select();
+  return error ? null : result?.[0];
+}
+
+export async function updateFbxMashupRequest(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("fbx_mashup_requests").update(data).eq("id", id);
+  return !error;
+}
+
+export async function deleteFbxMashupRequest(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("fbx_mashup_requests").delete().eq("id", id);
+  return !error;
+}
+
+export async function getFbxMashups() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("fbx_mashups").select("*").eq("visible", true).order("sort_order", { ascending: true });
+  if (error || !data) return [];
+  return data;
+}
+
+export async function addFbxMashup(data: any) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data: result, error } = await supabase.from("fbx_mashups").insert([data]).select();
+  return error ? null : result?.[0];
+}
+
+export async function updateFbxMashup(id: string, data: any) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("fbx_mashups").update(data).eq("id", id);
+  return !error;
+}
+
+export async function deleteFbxMashup(id: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  const { error } = await supabase.from("fbx_mashups").delete().eq("id", id);
+  return !error;
+}
+

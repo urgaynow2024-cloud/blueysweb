@@ -4,8 +4,7 @@ import { getServices, getWorkflowSteps } from "@/lib/db";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
-import { Check, ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function ServicesPage() {
@@ -60,8 +59,8 @@ export default function ServicesPage() {
           <SectionHeading
             align="center"
             eyebrow="Services"
-            title="What I provide"
-            subtitle="I work on VRChat avatars in a few different ways - from subtle edits to complete overhauls, including FBX mashups and optimisation."
+            title="VRChat Avatar Services"
+            subtitle="Specialised services for VRChat creators. From avatar editing and FBX mashups to custom clothing, texturing, and optimisation."
           />
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -76,34 +75,15 @@ export default function ServicesPage() {
                         className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
                       />
                     ) : (
-                      <div className="grid h-full w-full place-items-center text-3xl opacity-30">{svc.emoji}</div>
+                      <div className="grid h-full w-full place-items-center text-5xl opacity-40">{svc.emoji}</div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-card)] via-transparent to-transparent opacity-50" />
                     <div className="absolute bottom-2 left-2 flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/10 text-xl backdrop-blur">
                       {svc.emoji}
                     </div>
                   </div>
-                  <h3 className="mb-2 text-lg font-bold text-white">{svc.title}</h3>
-                  <p className="mb-6 text-sm leading-relaxed text-[var(--text-secondary)]">{svc.desc}</p>
-                  <ul className="space-y-2.5">
-                    {(svc.features || []).map((f: string) => (
-                      <li key={f} className="flex items-center gap-2.5 text-sm text-[var(--text-secondary)]">
-                        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
-                          <Check className="h-3 w-3" />
-                        </span>
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  {svc.title === "FBX Mashups & Custom Edits" && (
-                    <Link
-                      href="/fbx-mashups"
-                      className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-[var(--accent)] hover:text-white transition-colors"
-                    >
-                      View FBX Mashups
-                      <ArrowRight className="h-3 w-3" />
-                    </Link>
-                  )}
+                 <h3 className="mb-2 text-lg font-bold text-white">{svc.title}</h3>
+                 <p className="mb-6 text-sm leading-relaxed text-[var(--text-secondary)]">{svc.desc}</p>
                 </div>
               </Reveal>
             ))}
@@ -118,7 +98,7 @@ export default function ServicesPage() {
               <SectionHeading
                 align="center"
                 eyebrow="Process"
-                title="How it Works"
+                title="Commission Process"
                 subtitle="From enquiry to delivery in five simple steps."
               />
 
@@ -137,8 +117,8 @@ export default function ServicesPage() {
           )}
 
           <div className="mt-12 text-center">
-            <ButtonLink href="/process" variant="secondary">
-              View Full Process
+            <ButtonLink href="/contact" variant="secondary">
+              Start a Commission
               <ArrowRight className="h-4 w-4" />
             </ButtonLink>
           </div>

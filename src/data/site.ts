@@ -23,8 +23,6 @@ export const workflowSteps: any[] = [];
 
 export const servicesDetailed: any[] = [];
 
-export const fbxMashupPortfolio: any[] = [];
-
 export const portfolioCategories: string[] = [];
 
 export const beforeOrderingChecklist: any[] = [];

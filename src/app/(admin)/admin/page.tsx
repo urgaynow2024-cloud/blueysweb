@@ -24,7 +24,6 @@ import { ModeratorsSection } from "@/components/admin/sections/ModeratorsSection
 import { HeroSection } from "@/components/admin/sections/HeroSection";
 import { StatsSection } from "@/components/admin/sections/StatsSection";
 import { ServicesSection } from "@/components/admin/sections/ServicesSection";
-import { FbxMashupsSection } from "@/components/admin/sections/FbxMashupsSection";
 import { BeforeOrderingSection } from "@/components/admin/sections/BeforeOrderingSection";
 import { TosSection } from "@/components/admin/sections/TosSection";
 import { NavigationSection } from "@/components/admin/sections/NavigationSection";
@@ -51,7 +50,6 @@ const defaultWorkflow: any[] = [];
 const defaultNavigation = [
   { id: undefined, label: "Work", href: "/", icon: "", is_external: false, is_visible: true },
   { id: undefined, label: "Services", href: "/services", icon: "", is_external: false, is_visible: true },
-  { id: undefined, label: "FBX Mashups", href: "/fbx-mashups", icon: "", is_external: false, is_visible: true },
   { id: undefined, label: "Portfolio", href: "/portfolio", icon: "", is_external: false, is_visible: true },
   { id: undefined, label: "Process", href: "/process", icon: "", is_external: false, is_visible: true },
   { id: undefined, label: "Pricing", href: "/pricing", icon: "", is_external: false, is_visible: true },
@@ -61,7 +59,7 @@ const defaultNavigation = [
   { id: undefined, label: "Contact", href: "/contact", icon: "", is_external: false, is_visible: true },
 ];
 
-type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "hero" | "stats" | "services" | "fbx-mashups" | "before-ordering" | "tos" | "navigation" | "website-settings" | "portfolio-categories" | "commission-form" | "media-library" | "homepage-sections";
+type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "hero" | "stats" | "services" | "before-ordering" | "tos" | "navigation" | "website-settings" | "portfolio-categories" | "commission-form" | "media-library" | "homepage-sections" | "commissions" | "notifications" | "maintenance" | "changelog" | "roles";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -79,7 +77,6 @@ export default function AdminPage() {
   const [hero, setHero] = useState<any[]>([]);
   const [stats, setStats] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
-  const [fbxMashups, setFbxMashups] = useState<any[]>([]);
   const [beforeOrdering, setBeforeOrdering] = useState<any[]>([]);
   const [tosSections, setTosSections] = useState<any[]>([]);
   const [navigation, setNavigation] = useState<any[]>(defaultNavigation);
@@ -88,14 +85,19 @@ export default function AdminPage() {
   const [commissionForm, setCommissionForm] = useState<any[]>([]);
   const [mediaLibrary, setMediaLibrary] = useState<any[]>([]);
   const [homepageSections, setHomepageSections] = useState<any[]>([]);
+  const [commissions, setCommissions] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [maintenanceMode, setMaintenanceMode] = useState<any>(null);
+  const [changelog, setChangelog] = useState<any[]>([]);
+  const [roles, setRoles] = useState<any[]>([]);
 
   const { markDirty, register } = useSave();
   const toast = useToast();
 
-  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links, hero, stats, services, fbxMashups, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections });
+  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles });
   useEffect(() => {
-    dataRef.current = { site, pricing, faq, workflow, reviews, links, hero, stats, services, fbxMashups, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections };
-  }, [site, pricing, faq, workflow, reviews, links, hero, stats, services, fbxMashups, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections]);
+    dataRef.current = { site, pricing, faq, workflow, reviews, links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles };
+  }, [site, pricing, faq, workflow, reviews, links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles]);
 
   useEffect(() => {
     if (authed) loadAllData();
@@ -116,10 +118,9 @@ export default function AdminPage() {
             if (data.reviews) setReviews(data.reviews);
             if (data.links) setLinks(data.links);
             if (data.hero) setHero(data.hero);
-            if (data.stats) setStats(data.stats);
-            if (data.services) setServices(data.services);
-            if (data.fbxMashups) setFbxMashups(data.fbxMashups);
-            if (data.beforeOrdering) setBeforeOrdering(data.beforeOrdering);
+             if (data.stats) setStats(data.stats);
+             if (data.services) setServices(data.services);
+             if (data.beforeOrdering) setBeforeOrdering(data.beforeOrdering);
             if (data.tosSections) setTosSections(data.tosSections);
             if (data.navigation) setNavigation(data.navigation);
             if (data.websiteSettings) setWebsiteSettings(data.websiteSettings);
@@ -132,7 +133,7 @@ export default function AdminPage() {
         setLoading(false);
         return;
       }
-      const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }, { data: heroData }, { data: statsData }, { data: servicesData }, { data: fbxData }, { data: beforeData }, { data: tosData }, { data: navData }, { data: settingsData }, { data: catsData }, { data: formData }, { data: mediaData }, { data: hsData }] = await Promise.all([
+      const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }, { data: heroData }, { data: statsData }, { data: servicesData }, { data: beforeData }, { data: tosData }, { data: navData }, { data: settingsData }, { data: catsData }, { data: formData }, { data: mediaData }, { data: hsData }] = await Promise.all([
         supabase.from("site_config").select("*"),
         supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }),
         supabase.from("faq_items").select("*").order("sort_order", { ascending: true }),
@@ -142,7 +143,6 @@ export default function AdminPage() {
         supabase.from("hero_content").select("*").order("sort_order", { ascending: true }),
         supabase.from("homepage_stats").select("*").order("sort_order", { ascending: true }),
         supabase.from("services").select("*").order("sort_order", { ascending: true }),
-        supabase.from("fbx_mashups").select("*").order("sort_order", { ascending: true }),
         supabase.from("before_ordering_items").select("*").order("sort_order", { ascending: true }),
         supabase.from("tos_sections").select("*").order("sort_order", { ascending: true }),
         supabase.from("navigation_items").select("*").order("sort_order", { ascending: true }),
@@ -165,7 +165,6 @@ export default function AdminPage() {
       if (heroData && heroData.length > 0) setHero(heroData);
       if (statsData && statsData.length > 0) setStats(statsData);
       if (servicesData && servicesData.length > 0) setServices(servicesData);
-      if (fbxData && fbxData.length > 0) setFbxMashups(fbxData);
       if (beforeData && beforeData.length > 0) setBeforeOrdering(beforeData);
       if (tosData && tosData.length > 0) setTosSections(tosData);
       if (navData && navData.length > 0) setNavigation(navData);
@@ -186,11 +185,11 @@ export default function AdminPage() {
   }
 
   const contentSaver = useCallback(async () => {
-    const { site, pricing, faq, workflow, reviews, links, hero, stats, services, fbxMashups, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections } = dataRef.current;
+     const { site, pricing, faq, workflow, reviews, links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles } = dataRef.current;
     const res = await fetch("/api/admin/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ site, pricing, faq, workflow, reviews, socialLinks: links, hero, stats, services, fbxMashups, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections }),
+      body: JSON.stringify({ site, pricing, faq, workflow, reviews, socialLinks: links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles }),
     });
     if (!res.ok) {
       const r = await res.json().catch(() => ({}));
@@ -238,9 +237,8 @@ export default function AdminPage() {
     setLinks([]);
     setHero([]);
     setStats([]);
-    setServices([]);
-    setFbxMashups([]);
-    setBeforeOrdering([]);
+     setServices([]);
+     setBeforeOrdering([]);
     setTosSections([]);
     setNavigation([]);
     setWebsiteSettings({});
@@ -248,6 +246,11 @@ export default function AdminPage() {
     setCommissionForm([]);
     setMediaLibrary([]);
     setHomepageSections([]);
+    setCommissions([]);
+    setNotifications([]);
+    setMaintenanceMode(null);
+    setChangelog([]);
+    setRoles([]);
     localStorage.removeItem("adminData");
     setResetOpen(false);
     toast.info("Content reset to defaults â press Save Changes to apply");
@@ -336,7 +339,6 @@ export default function AdminPage() {
       {tab === "hero" && <HeroSection value={hero} onChange={(n) => { setHero(n); markDirty(); }} />}
       {tab === "stats" && <StatsSection value={stats} onChange={(n) => { setStats(n); markDirty(); }} />}
       {tab === "services" && <ServicesSection value={services} onChange={(n) => { setServices(n); markDirty(); }} />}
-      {tab === "fbx-mashups" && <FbxMashupsSection value={fbxMashups} onChange={(n) => { setFbxMashups(n); markDirty(); }} />}
       {tab === "before-ordering" && <BeforeOrderingSection value={beforeOrdering} onChange={(n) => { setBeforeOrdering(n); markDirty(); }} />}
       {tab === "tos" && <TosSection value={tosSections} onChange={(n) => { setTosSections(n); markDirty(); }} />}
       {tab === "navigation" && <NavigationSection value={navigation} onChange={(n) => { setNavigation(n); markDirty(); }} />}
@@ -345,6 +347,11 @@ export default function AdminPage() {
       {tab === "commission-form" && <CommissionFormSection value={commissionForm} onChange={(n) => { setCommissionForm(n); markDirty(); }} />}
       {tab === "media-library" && <MediaLibrarySection value={mediaLibrary} onChange={(n) => { setMediaLibrary(n); markDirty(); }} />}
       {tab === "homepage-sections" && <HomepageSectionsSection value={homepageSections} onChange={(n) => { setHomepageSections(n); markDirty(); }} />}
+      {tab === "commissions" && <div className="ad-panel rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6"><h2 className="text-lg font-bold text-white">Commissions</h2><p className="mt-2 text-sm text-[var(--text-secondary)]">Commission management coming soon. Use the API routes for now.</p></div>}
+      {tab === "notifications" && <div className="ad-panel rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6"><h2 className="text-lg font-bold text-white">Notifications</h2><p className="mt-2 text-sm text-[var(--text-secondary)]">Notification settings coming soon. Configure webhooks via the API.</p></div>}
+      {tab === "maintenance" && <div className="ad-panel rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6"><h2 className="text-lg font-bold text-white">Maintenance Mode</h2><p className="mt-2 text-sm text-[var(--text-secondary)]">Maintenance mode configuration coming soon. Use the API to enable/disable.</p></div>}
+      {tab === "changelog" && <div className="ad-panel rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6"><h2 className="text-lg font-bold text-white">Changelog</h2><p className="mt-2 text-sm text-[var(--text-secondary)]">Changelog management coming soon. Use the API to add entries.</p></div>}
+      {tab === "roles" && <div className="ad-panel rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6"><h2 className="text-lg font-bold text-white">Roles</h2><p className="mt-2 text-sm text-[var(--text-secondary)]">Role management coming soon. Default roles are seeded in the database.</p></div>}
 
       <Modal
         open={resetOpen}

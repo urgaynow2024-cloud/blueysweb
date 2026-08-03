@@ -37,10 +37,11 @@ export default function PortfolioPage() {
           getPortfolioImages(),
           getPortfolioCategories(),
         ]);
+        console.log("[portfolio] images loaded:", imgs.length, "categories:", cats.length);
         setAllImages(imgs.filter((i: any) => i.url).map((i: any) => ({ id: i.id, url: i.url, category: i.category || "VRChat Avatars" })));
         setCategories(cats.map((c: any) => c.name).filter(Boolean));
       } catch (e) {
-        console.error("Failed to load portfolio:", e);
+        console.error("[portfolio] Failed to load portfolio:", e);
       } finally {
         setLoading(false);
       }

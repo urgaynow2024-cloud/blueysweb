@@ -24,13 +24,6 @@ export default function ContactCommissionForm() {
   const [fields, setFields] = useState<FormField[]>([]);
   const [loadingFields, setLoadingFields] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const nameId = useId();
-  const discordId = useId();
-  const descId = useId();
-  const budgetId = useId();
-  const deadlineId = useId();
-  const refsId = useId();
-  const notesId = useId();
 
   useEffect(() => {
     async function load() {
@@ -161,7 +154,7 @@ export default function ContactCommissionForm() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {activeFields.map((field) => {
-          const id = field.name === "name" ? nameId : field.name === "discord" ? discordId : field.name === "description" ? descId : field.name === "budget" ? budgetId : field.name === "deadline" ? deadlineId : field.name === "references" ? refsId : notesId;
+          const id = `field-${field.name}`;
           if (field.type === "textarea") {
             return (
               <div key={field.name}>

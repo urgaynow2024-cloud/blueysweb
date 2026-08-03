@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { getNavigationItems, getSiteConfig } from "@/lib/db";
-import { Home, Scissors, Box, Package, Clock, Tag, ShoppingCart, HelpCircle, Star, Phone, Mail, Send } from "lucide-react";
+import { Home, Scissors, Package, Clock, Tag, ShoppingCart, HelpCircle, Star, Phone, Mail, Send } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const linkIcons: Record<string, React.ElementType> = {
   "/": Home,
   "/services": Scissors,
-  "/fbx-mashups": Box,
   "/portfolio": Package,
   "/process": Clock,
   "/pricing": Tag,
@@ -32,7 +31,6 @@ export default function Footer() {
         } else {
           setNavItems([
             { href: "/services", label: "Services", is_visible: true },
-            { href: "/fbx-mashups", label: "FBX Mashups", is_visible: true },
             { href: "/portfolio", label: "Portfolio", is_visible: true },
             { href: "/process", label: "Process", is_visible: true },
             { href: "/pricing", label: "Pricing", is_visible: true },
@@ -44,7 +42,6 @@ export default function Footer() {
         console.error("Failed to load navigation:", e);
         setNavItems([
           { href: "/services", label: "Services", is_visible: true },
-          { href: "/fbx-mashups", label: "FBX Mashups", is_visible: true },
           { href: "/portfolio", label: "Portfolio", is_visible: true },
           { href: "/process", label: "Process", is_visible: true },
           { href: "/pricing", label: "Pricing", is_visible: true },
@@ -87,7 +84,7 @@ export default function Footer() {
               Bluey<span className="text-[var(--accent)]">&apos;s</span>
             </Link>
             <p className="mt-4 text-sm text-[var(--text-secondary)] leading-relaxed max-w-xs">
-              Custom VRChat avatars crafted in Blender &amp; Unity. FBX mashups, avatar edits,
+              Custom VRChat avatars crafted in Blender &amp; Unity. Avatar edits,
               clothing creation, and performance optimisation with care.
             </p>
           </div>

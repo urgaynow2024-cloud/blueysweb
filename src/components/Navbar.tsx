@@ -1,18 +1,16 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { Zap, Menu, X, ArrowUpRight, Home, Scissors, Box, Package, Clock, Tag, ShoppingCart, HelpCircle, Star, Phone } from "lucide-react";
+import { Zap, Menu, X, ArrowUpRight, Home, Scissors, Package, Tag, HelpCircle, Star, Phone, Layers } from "lucide-react";
 import { getNavigationItems } from "@/lib/db";
 
 const linkIcons: Record<string, React.ElementType> = {
   "/": Home,
   "/services": Scissors,
-  "/fbx-mashups": Box,
   "/portfolio": Package,
-  "/process": Clock,
+  "/fbx-mashups": Layers,
   "/pricing": Tag,
-  "/before-ordering": ShoppingCart,
   "/faq": HelpCircle,
   "/reviews": Star,
   "/contact": Phone,
@@ -27,46 +25,46 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-  const navRef = useRef<HTMLDivElement>(null);
   const [navItems, setNavItems] = useState<any[]>([]);
-  const [navLoaded, setNavLoaded] = useState(false);
+  const [queueStatus, setQueueStatus] = useState<{ status_text: string; status_color: string } | null>(null);
+  const navRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function load() {
       try {
-        const data = await getNavigationItems();
-        if (data && data.length > 0) {
-          setNavItems(data);
+        const [navData, queueData] = await Promise.all([
+          getNavigationItems(),
+          fetch("/api/queue/config").then(r => r.ok ? r.json() : null).catch(() => null),
+        ]);
+        if (navData && navData.length > 0) {
+          setNavItems(navData);
         } else {
           setNavItems([
-            { href: "/", label: "Work", is_visible: true },
+            { href: "/", label: "Home", is_visible: true },
+            { href: "/portfolio", label: "Portfolio", is_visible: true },
             { href: "/services", label: "Services", is_visible: true },
             { href: "/fbx-mashups", label: "FBX Mashups", is_visible: true },
-            { href: "/portfolio", label: "Portfolio", is_visible: true },
-            { href: "/process", label: "Process", is_visible: true },
             { href: "/pricing", label: "Pricing", is_visible: true },
-            { href: "/before-ordering", label: "Before Ordering", is_visible: true },
             { href: "/faq", label: "FAQ", is_visible: true },
             { href: "/reviews", label: "Reviews", is_visible: true },
             { href: "/contact", label: "Contact", is_visible: true },
           ]);
         }
+        if (queueData) {
+          setQueueStatus({ status_text: queueData.status_text || "Open", status_color: queueData.status_color || "green" });
+        }
       } catch (e) {
         console.error("Failed to load navigation:", e);
         setNavItems([
-          { href: "/", label: "Work", is_visible: true },
+          { href: "/", label: "Home", is_visible: true },
+          { href: "/portfolio", label: "Portfolio", is_visible: true },
           { href: "/services", label: "Services", is_visible: true },
           { href: "/fbx-mashups", label: "FBX Mashups", is_visible: true },
-          { href: "/portfolio", label: "Portfolio", is_visible: true },
-          { href: "/process", label: "Process", is_visible: true },
           { href: "/pricing", label: "Pricing", is_visible: true },
-          { href: "/before-ordering", label: "Before Ordering", is_visible: true },
           { href: "/faq", label: "FAQ", is_visible: true },
           { href: "/reviews", label: "Reviews", is_visible: true },
           { href: "/contact", label: "Contact", is_visible: true },
         ]);
-      } finally {
-        setNavLoaded(true);
       }
     }
     load();
@@ -159,13 +157,29 @@ export default function Navbar() {
           </div>
 
           {/* Desktop CTA */}
-          <a
-            href="/contact"
-            className="hidden lg:inline-flex btn-primary !py-2 !px-5 !text-sm !rounded-xl items-center gap-2"
-          >
-            <Zap className="h-3.5 w-3.5" />
-            Commission
-          </a>
+          <div className="hidden lg:flex items-center gap-3">
+            {queueStatus && (
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                queueStatus.status_color === "green" ? "bg-emerald-500/15 text-emerald-400" :
+                queueStatus.status_color === "yellow" ? "bg-yellow-500/15 text-yellow-400" :
+                "bg-red-500/15 text-red-400"
+              }`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${
+                  queueStatus.status_color === "green" ? "bg-emerald-400" :
+                  queueStatus.status_color === "yellow" ? "bg-yellow-400" :
+                  "bg-red-400"
+                }`} />
+                {queueStatus.status_text}
+              </span>
+            )}
+            <a
+              href="/contact"
+              className="btn-primary !py-2 !px-5 !text-sm !rounded-xl inline-flex items-center gap-2"
+            >
+              <Zap className="h-3.5 w-3.5" />
+              Commission
+            </a>
+          </div>
 
           {/* Mobile toggle */}
           <button
@@ -229,10 +243,26 @@ export default function Navbar() {
                 </a>
               );
             })}
+            {queueStatus && (
+              <div className="mb-2 flex justify-center">
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                  queueStatus.status_color === "green" ? "bg-emerald-500/15 text-emerald-400" :
+                  queueStatus.status_color === "yellow" ? "bg-yellow-500/15 text-yellow-400" :
+                  "bg-red-500/15 text-red-400"
+                }`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${
+                    queueStatus.status_color === "green" ? "bg-emerald-400" :
+                    queueStatus.status_color === "yellow" ? "bg-yellow-400" :
+                    "bg-red-400"
+                  }`} />
+                  {queueStatus.status_text}
+                </span>
+              </div>
+            )}
             <a
               href="/contact"
               onClick={() => setOpen(false)}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] px-5 py-3.5 font-bold text-[#04060a]"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] px-5 py-3.5 font-bold text-[#04060a]"
               style={
                 open
                   ? {
