@@ -203,6 +203,21 @@ BEGIN
   END IF;
 END $$;
 
+-- Migrate fbx_mashups table to ensure all columns exist (added after initial creation)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'fbx_mashups') THEN
+    BEGIN ALTER TABLE fbx_mashups ADD COLUMN IF NOT EXISTS avatar_base TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE fbx_mashups ADD COLUMN IF NOT EXISTS software_used TEXT[] DEFAULT '{}'; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE fbx_mashups ADD COLUMN IF NOT EXISTS price TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE fbx_mashups ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT FALSE; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE fbx_mashups ADD COLUMN IF NOT EXISTS visible BOOLEAN DEFAULT TRUE; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE fbx_mashups ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE fbx_mashups ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(); EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE fbx_mashups ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW(); EXCEPTION WHEN others THEN NULL; END;
+  END IF;
+END $$;
+
 -- =============================================================================
 -- ROW LEVEL SECURITY
 -- =============================================================================

@@ -1,6 +1,24 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
+const fbxFields = ["title", "description", "avatar_base", "software_used", "price", "featured", "visible", "sort_order"] as const;
+const skipFields = new Set<string>();
+
+function buildPayload(body: any, skip: Set<string>) {
+  const payload: Record<string, any> = {};
+  for (const field of fbxFields) {
+    if (!skip.has(field) && body[field] !== undefined) {
+      payload[field] = body[field];
+    }
+  }
+  return payload;
+}
+
+function parseMissingColumn(errorMessage: string): string | null {
+  const match = errorMessage.match(/'(\w+)'? column|Could not find the '(\w+)' column/);
+  return match ? (match[1] || match[2]) : null;
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -30,16 +48,32 @@ export async function PUT(
     if (!supabaseAdmin) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
-    const { data, error } = await supabaseAdmin
-      .from("fbx_mashups")
-      .update(body)
-      .eq("id", id)
-      .select();
-    if (error) {
+
+    let payload = buildPayload(body, skipFields);
+
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const { data, error } = await supabaseAdmin
+        .from("fbx_mashups")
+        .update(payload)
+        .eq("id", id)
+        .select();
+
+      if (!error) {
+        return NextResponse.json(data?.[0]);
+      }
+
+      const col = parseMissingColumn(error.message);
+      if (col) {
+        skipFields.add(col);
+        payload = buildPayload(body, skipFields);
+        continue;
+      }
+
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    return NextResponse.json(data?.[0]);
-  } catch (error) {
+
+    return NextResponse.json({ error: "Max retries exceeded" }, { status: 500 });
+  } catch (error: any) {
     console.error("FBX mashup update error:", error);
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
