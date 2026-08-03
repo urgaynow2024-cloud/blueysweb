@@ -3,13 +3,29 @@
 import { getPricingTiers, getTosSections } from "@/lib/db";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
-import PricingCard from "@/components/ui/PricingCard";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, ArrowRight } from "lucide-react";
+import { ButtonLink } from "@/components/ui/Button";
 import { useState, useEffect } from "react";
 
+interface PricingTier {
+  id?: string;
+  name: string;
+  emoji?: string;
+  price: string;
+  badge?: string | null;
+  popular?: boolean;
+  features?: string[];
+}
+
+interface TosSection {
+  title?: string;
+  icon?: string;
+  items?: string[];
+}
+
 export default function PricingPage() {
-  const [tiers, setTiers] = useState<any[]>([]);
-  const [tosSections, setTosSections] = useState<any[]>([]);
+  const [tiers, setTiers] = useState<PricingTier[]>([]);
+  const [tosSections, setTosSections] = useState<TosSection[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -63,14 +79,42 @@ export default function PricingPage() {
             align="center"
             eyebrow="Rates"
             title="Pricing"
-            subtitle="Prices vary depending on the work needed. I&rsquo;ll always give you a quote before starting."
+            subtitle="Prices can vary depending on avatar complexity, optimisation requirements, and assets used."
           />
 
           {tiers.length > 0 ? (
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+            <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
               {tiers.map((tier, i) => (
                 <Reveal key={tier.id || i} delay={i * 80}>
-                  <PricingCard tier={tier} />
+                  <div className="group flex h-full flex-col rounded-[var(--r-xl)] border border-[var(--border)] bg-[var(--bg-card)] p-7 shadow-lg shadow-black/20 transition-all duration-500 hover:-translate-y-2 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/50">
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-11 w-11 place-items-center rounded-xl bg-[var(--accent-soft)] text-xl transition-transform duration-300 group-hover:scale-110">
+                        {tier.emoji}
+                      </span>
+                      <h3 className="text-lg font-bold text-white">{tier.name}</h3>
+                    </div>
+                    <div className="mt-4 flex items-baseline gap-2">
+                      <p className="font-display text-3xl font-bold tracking-tight text-white">{tier.price}</p>
+                    </div>
+                    <p className="mt-1.5 text-xs uppercase tracking-wider text-[var(--text-dim)]">Per avatar</p>
+                    <div className="my-5 h-px w-full bg-gradient-to-r from-[var(--border-strong)] to-transparent" />
+                    <ul className="mb-8 flex-1 space-y-3">
+                      {(tier.features || []).map((feat: string) => (
+                        <li key={feat} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
+                          <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </span>
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <ButtonLink href="/contact" variant="primary" className="w-full justify-center">
+                      Request Commission
+                      <ArrowRight className="h-4 w-4" />
+                    </ButtonLink>
+                  </div>
                 </Reveal>
               ))}
             </div>

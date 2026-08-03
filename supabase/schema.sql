@@ -815,47 +815,47 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO homepage_stats (label, value, suffix, sublabel, sort_order)
 VALUES
-  ('Commissions', '50+', '', 'Completed commissions', 0),
-  ('Clients', '40+', '', 'Satisfied clients', 1),
-  ('Rating', '5.0', '', 'Average client rating', 2),
-  ('Reviews', '25+', '', 'Published reviews', 3),
-  ('Blender', '5+', '', 'Years using Blender', 4),
-  ('Unity', '5+', '', 'Years using Unity', 5),
-  ('Response', '24h', '', 'Typical first reply time', 6),
-  ('Delivery', '2-3w', '', 'Typical turnaround', 7)
+  ('Portfolio Projects', '0', '', 'Total projects', 0),
+  ('Client Reviews', '0', '', 'Verified reviews', 1),
+  ('Completed Commissions', '0', '', 'Finished projects', 2),
+  ('FBX Mashups', '0', '', 'Pre-made mashups', 3),
+  ('Active Queue', '0', '', 'Current slots', 4)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO hero_content (id, title, subtitle, description, primary_button_text, primary_button_url, secondary_button_text, secondary_button_url, image_url, image_alt, sort_order, created_at, updated_at)
 SELECT
   gen_random_uuid(),
-  'VRChat Avatar Studio',
-  'FBX Mashups • Custom Clothing • Textures • Optimisation',
-  'Professional VRChat avatar commissions. Specialising in FBX mashups, custom clothing, texture work, and performance optimisation.',
-  'Start Commission',
+  'Bluey''s Avatar Commissions',
+  'VRChat Avatar Edits • Blender Work • Unity Setup',
+  'Clean, stylish, performance-friendly avatars built for VRChat.',
+  '✨ Commission Me',
   '/contact',
   'View Portfolio',
   '/portfolio',
   (SELECT url FROM site_images WHERE key = 'hero' LIMIT 1),
   'VRChat avatar commission showcase',
-  0, NOW(), NOW()
+   0, NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM hero_content);
 
 INSERT INTO services (id, title, emoji, image_url, "desc", features, sort_order, created_at, updated_at)
 VALUES
-  (gen_random_uuid(), 'Avatar Editing', '✏️', NULL, 'Texture recolours, accessory additions, clothing fitting, hair combinations, and small customisation edits for VRChat avatars.', ARRAY['Full avatar edit','Texture recolour','Clothing fit','Accessory add','1 revision included'], 0, NOW(), NOW()),
-  (gen_random_uuid(), 'FBX Mashups', '🔧', NULL, 'Combine multiple avatar bases into a single custom avatar. Full rigging, texture work, and optimisation included.', ARRAY['Custom mashup','Full rigging','Texture bake','Unity setup','3 revisions included'], 1, NOW(), NOW()),
-  (gen_random_uuid(), 'Custom Clothing', '👕', NULL, 'Custom clothing items fitted to your avatar. Tops, bottoms, accessories, and full outfit commissions.', ARRAY['Custom fit','Texture work','Material setup','Physics bones','2 revisions included'], 2, NOW(), NOW()),
-  (gen_random_uuid(), 'Texturing', '🎨', NULL, 'Custom texture creation and editing. PBR materials, hand-painted details, and texture optimisation for VRChat.', ARRAY['PBR materials','Hand-painted','Texture optimisation','UDIM support','2 revisions included'], 3, NOW(), NOW()),
-  (gen_random_uuid(), 'Optimisation', '⚡', NULL, 'Avatar optimisation for performance. Reduce draw calls, compress textures, and ensure Quest compatibility.', ARRAY['Draw call reduction','Texture compression','Quest compatible','Performance report','1 revision included'], 4, NOW(), NOW())
+  (gen_random_uuid(), 'VRChat Avatar Editing', '✏️', NULL, 'Texture recolours, accessory additions, clothing fitting, hair combinations, and small customisation edits for VRChat avatars.', ARRAY['Texture recolour','Accessory add','Clothing fit','Hair combinations','Minor fixes'], 0, NOW(), NOW()),
+  (gen_random_uuid(), 'Blender Work', '🔧', NULL, 'Asset creation, retopology, UV work, material setup, mesh adjustments, and general Blender editing for VRChat avatars.', ARRAY['Asset creation','Retopology','UV work','Material setup','Mesh adjustments'], 1, NOW(), NOW()),
+  (gen_random_uuid(), 'Unity Setup', '⚙️', NULL, 'Material configuration, toggles, optimisation, viseme setup, and VRChat SDK packaging.', ARRAY['Material config','Toggles','Optimisation','Viseme setup','VRChat packaging'], 2, NOW(), NOW()),
+  (gen_random_uuid(), 'Avatar Optimisation', '⚡', NULL, 'Performance optimisation for VRChat. Reduce draw calls, compress textures, and ensure smooth performance.', ARRAY['Draw call reduction','Texture compression','Performance boost','Quest compatible'], 3, NOW(), NOW()),
+  (gen_random_uuid(), 'Clothing Fitting', '👕', NULL, 'Custom clothing items fitted to your avatar. Tops, bottoms, accessories, and full outfit commissions.', ARRAY['Custom fit','Texture work','Material setup','Physics bones'], 4, NOW(), NOW()),
+  (gen_random_uuid(), 'Asset Integration', '🧩', NULL, 'Integrate assets into your avatar. Accessories, hair, jewellery, and custom additions.', ARRAY['Accessory integration','Hair addition','Jewellery setup','Custom assets'], 5, NOW(), NOW()),
+  (gen_random_uuid(), 'Texture Editing', '🎨', NULL, 'Custom texture creation and editing. PBR materials, hand-painted details, and texture optimisation.', ARRAY['PBR materials','Hand-painted','Texture optimisation','UDIM support'], 6, NOW(), NOW()),
+  (gen_random_uuid(), 'Material Setup', '🎭', NULL, 'Material configuration for VRChat. Shaders, toggles, and visual adjustments.', ARRAY['Shader setup','Material tweaks','Toggle systems','Visual polish'], 7, NOW(), NOW()),
+  (gen_random_uuid(), 'Quest Optimisation', '🥽', NULL, 'Optimise avatars for Meta Quest. Reduce polycount, compress textures, and ensure compatibility.', ARRAY['Quest compatible','Polygon reduction','Texture compression','Performance testing'], 8, NOW(), NOW()),
+  (gen_random_uuid(), 'FBX Mashups', '🧬', NULL, 'Combine multiple avatar bases into a single custom avatar. Full rigging, texture work, and Unity setup.', ARRAY['Custom mashup','Full rigging','Texture bake','Unity setup'], 9, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO pricing_tiers (id, name, emoji, price, badge, popular, features, sort_order, is_nsfw, created_at, updated_at)
 VALUES
-  (gen_random_uuid(), 'Base Edit', '✏️', '£15', NULL, false, ARRAY['Full avatar edit','Texture recolour','1 revision','Performance friendly'], 0, false, NOW(), NOW()),
-  (gen_random_uuid(), 'Standard', '🔧', '£30', 'Popular', true, ARRAY['Full customisation','Clothing fit','Accessories added','Weight painting','2 revisions'], 1, false, NOW(), NOW()),
-  (gen_random_uuid(), 'Complex', '⚙️', '£55', NULL, false, ARRAY['FBX mashup','Advanced rigging','Multiple outfits','Unity SDK setup','3 revisions'], 2, false, NOW(), NOW()),
-  (gen_random_uuid(), 'Custom Clothing', '👕', 'From £20', NULL, false, ARRAY['Custom fitted','Texture work','Material setup','Physics bones'], 3, false, NOW(), NOW()),
-  (gen_random_uuid(), 'Optimisation', '⚡', 'From £10', NULL, false, ARRAY['Draw call reduction','Texture compression','Quest compatible','Performance report'], 4, false, NOW(), NOW())
+  (gen_random_uuid(), 'Light Blender Work', '✨', '£15 - £25', NULL, false, ARRAY['Easy asset additions','Custom jewellery','Simple clothing fitting','Texture recolours','Minor avatar fixes','Accessory setup'], 0, false, NOW(), NOW()),
+  (gen_random_uuid(), 'Avatar Customisation', '🛠', '£30 - £55', 'Popular', true, ARRAY['Multiple asset additions','Advanced clothing fitting','Hair combinations','Toggles setup','Material adjustments','Basic optimisation'], 1, false, NOW(), NOW()),
+  (gen_random_uuid(), 'Avatar Overhaul', '🔥', '£60 - £90', NULL, false, ARRAY['Heavy Blender work','Full avatar redesign','Advanced toggle systems','Large asset integration','Performance optimisation','Complete Unity setup'], 2, false, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO workflow_steps (id, emoji, title, description, sort_order, created_at)

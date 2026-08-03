@@ -1,15 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
-import { Sparkles, Hammer, Boxes, ArrowRight, Heart } from "lucide-react";
+import { Sparkles, ArrowRight, Heart } from "lucide-react";
 
 const SERVICES = [
   { emoji: "✏️", title: "Avatar Edits", desc: "Texture recolours, accessory additions, clothing fitting, hair combinations." },
   { emoji: "🔧", title: "Blender Work", desc: "Asset creation, retopology, UV work, material setup, mesh adjustments." },
   { emoji: "⚙️", title: "Unity Setup", desc: "Material configuration, toggles, optimisation, viseme setup, VRChat packaging." },
+  { emoji: "⚡", title: "Optimisation", desc: "Performance optimisation for VRChat. Reduce draw calls, compress textures." },
+  { emoji: "👕", title: "Clothing Fitting", desc: "Custom clothing items fitted to your avatar. Tops, bottoms, accessories." },
+  { emoji: "🧩", title: "Asset Integration", desc: "Integrate assets into your avatar. Accessories, hair, jewellery, custom additions." },
 ];
 
 const STATS = [
