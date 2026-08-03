@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { Tag, HelpCircle, Workflow, Star, Image as ImageIcon, Link as LinkIcon, Info, BarChart3, ShieldAlert, LogOut, Lock, UserCog, Layout, ChartBar, Settings, ShoppingCart, FileText, Menu, Globe, FolderOpen, FormInput, Grid, ClipboardList, Users, Bell, Wrench, Newspaper } from "lucide-react";
+import { Tag, HelpCircle, Workflow, Star, Image as ImageIcon, Link as LinkIcon, Info, BarChart3, ShieldAlert, LogOut, Lock, UserCog, Layout, ChartBar, Settings, ShoppingCart, FileText, Menu, Globe, FolderOpen, FormInput, Grid, ClipboardList, Users, Bell, Wrench, Newspaper, Layers } from "lucide-react";
 
 export interface NavItem {
   id: string;
@@ -19,36 +19,36 @@ export const ADMIN_NAV: NavGroup[] = [
   {
     label: "Content",
     items: [
-      { id: "portfolio", label: "Portfolio", icon: <ImageIcon className="ad-nav-icon h-[18px] w-[18px]" /> },
-      { id: "pricing", label: "Pricing", icon: <Tag className="ad-nav-icon h-[18px] w-[18px]" /> },
-      { id: "faq", label: "FAQ", icon: <HelpCircle className="ad-nav-icon h-[18px] w-[18px]" /> },
-      { id: "workflow", label: "Process", icon: <Workflow className="ad-nav-icon h-[18px] w-[18px]" /> },
-      { id: "reviews", label: "Reviews", icon: <Star className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "hero", label: "Hero", icon: <Layout className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "stats", label: "Statistics", icon: <ChartBar className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "services", label: "Services", icon: <Settings className="ad-nav-icon h-[18px] w-[18px]" /> },
+      { id: "pricing", label: "Pricing", icon: <Tag className="ad-nav-icon h-[18px] w-[18px]" /> },
+      { id: "portfolio", label: "Portfolio", icon: <ImageIcon className="ad-nav-icon h-[18px] w-[18px]" /> },
+      { id: "fbx-mashups", label: "FBX Mashups", icon: <Layers className="ad-nav-icon h-[18px] w-[18px]" /> },
+      { id: "workflow", label: "Process", icon: <Workflow className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "before-ordering", label: "Before Ordering", icon: <ShoppingCart className="ad-nav-icon h-[18px] w-[18px]" /> },
+      { id: "faq", label: "FAQ", icon: <HelpCircle className="ad-nav-icon h-[18px] w-[18px]" /> },
+      { id: "reviews", label: "Reviews", icon: <Star className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "tos", label: "Terms of Service", icon: <FileText className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "navigation", label: "Navigation", icon: <Menu className="ad-nav-icon h-[18px] w-[18px]" /> },
-      { id: "website-settings", label: "Website Settings", icon: <Globe className="ad-nav-icon h-[18px] w-[18px]" /> },
     ],
   },
   {
     label: "Structure",
     items: [
+      { id: "homepage-sections", label: "Homepage Sections", icon: <Grid className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "portfolio-categories", label: "Portfolio Categories", icon: <FolderOpen className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "commission-form", label: "Commission Form", icon: <FormInput className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "media-library", label: "Media Library", icon: <ImageIcon className="ad-nav-icon h-[18px] w-[18px]" /> },
-      { id: "homepage-sections", label: "Homepage Sections", icon: <Grid className="ad-nav-icon h-[18px] w-[18px]" /> },
     ],
   },
   {
     label: "Website",
     items: [
-      { id: "site-images", label: "Images", icon: <ImageIcon className="ad-nav-icon h-[18px] w-[18px]" /> },
+      { id: "site", label: "General Settings", icon: <Info className="ad-nav-icon h-[18px] w-[18px]" /> },
+      { id: "site-images", label: "Site Images", icon: <ImageIcon className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "nsfw", label: "NSFW Content", icon: <Lock className="ad-nav-icon h-[18px] w-[18px]" /> },
-      { id: "social-links", label: "Links", icon: <LinkIcon className="ad-nav-icon h-[18px] w-[18px]" /> },
-      { id: "site", label: "Site Info", icon: <Info className="ad-nav-icon h-[18px] w-[18px]" /> },
+      { id: "social-links", label: "Social Links", icon: <LinkIcon className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "queue", label: "Queue", icon: <BarChart3 className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "commissions", label: "Commissions", icon: <ClipboardList className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "notifications", label: "Notifications", icon: <Bell className="ad-nav-icon h-[18px] w-[18px]" /> },

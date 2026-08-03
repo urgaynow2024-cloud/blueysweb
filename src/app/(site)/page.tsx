@@ -16,6 +16,7 @@ import {
   getHomepageStats,
   getServices,
   getFaqItems,
+  getAutoStats,
 } from "@/lib/db";
 import Link from "next/link";
 import { Star, ArrowRight, Plus, Minus, Sparkles, Users, Zap } from "lucide-react";
@@ -82,6 +83,7 @@ export default function Home() {
   const [pricing, setPricing] = useState<PricingTier[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [homepageStats, setHomepageStats] = useState<StatItem[]>([]);
+  const [autoStats, setAutoStats] = useState<any>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [faqItems, setFaqItems] = useState<FaqItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,7 +93,7 @@ export default function Home() {
     async function load() {
       setLoading(true);
       try {
-        const [s, w, p, r, stats, svcs, faq] = await Promise.all([
+        const [s, w, p, r, stats, svcs, faq, auto] = await Promise.all([
           getSiteConfig(),
           getWorkflowSteps(),
           getPricingTiers(),
@@ -99,6 +101,7 @@ export default function Home() {
           getHomepageStats(),
           getServices(),
           getFaqItems(),
+          getAutoStats(),
         ]);
         setSite(s);
         setWorkflow(w);
@@ -107,6 +110,7 @@ export default function Home() {
         setHomepageStats(stats);
         setServices(svcs);
         setFaqItems(faq);
+        setAutoStats(auto);
       } catch (e) {
         console.error("Failed to load home data:", e);
       } finally {
@@ -230,28 +234,46 @@ export default function Home() {
         )}
 
         {/* Stats band */}
-        {homepageStats.length > 0 && (
+        {(homepageStats.length > 0 || autoStats) && (
           <section className="section">
             <div className="container">
               <div className="mb-12 text-center">
                 <span className="section-label">Statistics</span>
                 <h2 className="display-lg text-white">Numbers Speak Louder</h2>
                 <p className="lead mx-auto mt-4 max-w-2xl">
-                  Built with care, delivered with pride — here’s what the numbers look like.
+                  Built with care, delivered with pride — here&apos;s what the numbers look like.
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-                {homepageStats.map((stat, i) => (
-                  <StatCard
-                    key={stat.id || i}
-                    icon={<StatIcon label={stat.label} />}
-                    label={stat.label}
-                    value={stat.value}
-                    suffix={stat.suffix}
-                    sublabel={stat.sublabel}
-                  />
-                ))}
+                {autoStats ? (
+                  [
+                    { label: "Completed Commissions", value: autoStats.completedCommissions, suffix: "", sublabel: "Finished projects", icon: "✅" },
+                    { label: "Portfolio Projects", value: autoStats.totalProjects, suffix: "", sublabel: "Total projects", icon: "🖼️" },
+                    { label: "FBX Mashups", value: autoStats.totalFbxMashups, suffix: "", sublabel: "Pre-made mashups", icon: "🧬" },
+                    { label: "Client Reviews", value: autoStats.totalReviews, suffix: "", sublabel: autoStats.avgRating ? `Avg ${autoStats.avgRating}/5` : "Verified reviews", icon: "⭐" },
+                  ].map((stat, i) => (
+                    <StatCard
+                      key={i}
+                      icon={<StatIcon label={stat.label} />}
+                      label={stat.label}
+                      value={stat.value}
+                      suffix={stat.suffix}
+                      sublabel={stat.sublabel}
+                    />
+                  ))
+                ) : (
+                  homepageStats.map((stat, i) => (
+                    <StatCard
+                      key={stat.id || i}
+                      icon={<StatIcon label={stat.label} />}
+                      label={stat.label}
+                      value={stat.value}
+                      suffix={stat.suffix}
+                      sublabel={stat.sublabel}
+                    />
+                  ))
+                )}
               </div>
             </div>
           </section>

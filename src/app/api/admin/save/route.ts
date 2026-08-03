@@ -50,6 +50,12 @@ export async function POST(request: Request) {
       commissionForm,
       mediaLibrary,
       homepageSections,
+      commissions,
+      notifications,
+      maintenanceMode,
+      changelog,
+      roles,
+      fbxMashups,
     } = data;
 
     if (!supabaseAdmin) {
@@ -147,6 +153,11 @@ export async function POST(request: Request) {
     if (homepageSections && homepageSections.length > 0) {
       await admin.from("homepage_sections").delete().neq("id", "00000000-0000-0000-0000-000000000000");
       await upsertTable("homepage_sections", homepageSections, admin);
+    }
+
+    if (fbxMashups && fbxMashups.length > 0) {
+      await admin.from("fbx_mashups").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await upsertTable("fbx_mashups", fbxMashups, admin);
     }
 
     await createBackup(admin, `post-save-${timestamp}`, { ...data, saved: true });

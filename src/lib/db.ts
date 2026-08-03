@@ -827,3 +827,53 @@ export async function deleteFbxMashup(id: string) {
   return !error;
 }
 
+export async function getAllFbxMashups() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("fbx_mashups").select("*").order("sort_order", { ascending: true });
+  if (error || !data) return [];
+  return data;
+}
+
+export async function getCommissionSubmissions() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("commission_submissions").select("*").order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return data;
+}
+
+export async function getAutoStats() {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const [
+      { count: portfolioCount },
+      { count: reviewsCount },
+      { count: fbxCount },
+      { count: completedCommissions },
+      { data: queueData },
+    ] = await Promise.all([
+      supabase.from("portfolio_projects").select("*", { count: "exact", head: true }),
+      supabase.from("reviews").select("*", { count: "exact", head: true }),
+      supabase.from("fbx_mashups").select("*", { count: "exact", head: true }),
+      supabase.from("commissions").select("*", { count: "exact", head: true }).eq("status", "completed"),
+      supabase.from("queue_config").select("*").limit(1).single(),
+    ]);
+
+    const avgRating = (reviewsCount || 0) > 0
+      ? ((await supabase.from("reviews").select("rating")).data?.reduce((sum: number, r: { rating: number }) => sum + (r.rating || 0), 0) || 0) / (reviewsCount || 1)
+      : 0;
+
+    return {
+      totalProjects: portfolioCount || 0,
+      totalReviews: reviewsCount || 0,
+      totalFbxMashups: fbxCount || 0,
+      completedCommissions: completedCommissions || 0,
+      activeQueueSlots: queueData?.slots_used || 0,
+      avgRating: Math.round(avgRating * 10) / 10,
+    };
+  } catch (e) {
+    console.error("Failed to load auto stats:", e);
+    return null;
+  }
+}
+
+

@@ -32,6 +32,12 @@ import { PortfolioCategoriesSection } from "@/components/admin/sections/Portfoli
 import { CommissionFormSection } from "@/components/admin/sections/CommissionFormSection";
 import { MediaLibrarySection } from "@/components/admin/sections/MediaLibrarySection";
 import { HomepageSectionsSection } from "@/components/admin/sections/HomepageSectionsSection";
+import { CommissionsSection } from "@/components/admin/sections/CommissionsSection";
+import { NotificationsSection } from "@/components/admin/sections/NotificationsSection";
+import { MaintenanceSection } from "@/components/admin/sections/MaintenanceSection";
+import { ChangelogSection } from "@/components/admin/sections/ChangelogSection";
+import { RolesSection } from "@/components/admin/sections/RolesSection";
+import { FbxMashupSection } from "@/components/admin/sections/FbxMashupSection";
 
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -44,9 +50,9 @@ const defaultSite = {
   discord: "",
 };
 
-const defaultPricing: any[] = [];
-const defaultFaq: any[] = [];
-const defaultWorkflow: any[] = [];
+const defaultPricing: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
+const defaultFaq: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
+const defaultWorkflow: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
 const defaultNavigation = [
   { id: undefined, label: "Work", href: "/", icon: "", is_external: false, is_visible: true },
   { id: undefined, label: "Services", href: "/services", icon: "", is_external: false, is_visible: true },
@@ -59,7 +65,7 @@ const defaultNavigation = [
   { id: undefined, label: "Contact", href: "/contact", icon: "", is_external: false, is_visible: true },
 ];
 
-type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "hero" | "stats" | "services" | "before-ordering" | "tos" | "navigation" | "website-settings" | "portfolio-categories" | "commission-form" | "media-library" | "homepage-sections" | "commissions" | "notifications" | "maintenance" | "changelog" | "roles";
+type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "hero" | "stats" | "services" | "before-ordering" | "tos" | "navigation" | "website-settings" | "portfolio-categories" | "commission-form" | "media-library" | "homepage-sections" | "commissions" | "notifications" | "maintenance" | "changelog" | "roles" | "fbx-mashups";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -68,128 +74,154 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [resetOpen, setResetOpen] = useState(false);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [site, setSite] = useState<any>(defaultSite);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [pricing, setPricing] = useState<any[]>(defaultPricing);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [faq, setFaq] = useState<any[]>(defaultFaq);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [workflow, setWorkflow] = useState<any[]>(defaultWorkflow);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [reviews, setReviews] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [links, setLinks] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [hero, setHero] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [stats, setStats] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [services, setServices] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [beforeOrdering, setBeforeOrdering] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [tosSections, setTosSections] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [navigation, setNavigation] = useState<any[]>(defaultNavigation);
   const [websiteSettings, setWebsiteSettings] = useState<Record<string, string>>({});
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [portfolioCategories, setPortfolioCategories] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [commissionForm, setCommissionForm] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [mediaLibrary, setMediaLibrary] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [homepageSections, setHomepageSections] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [commissions, setCommissions] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [notifications, setNotifications] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [maintenanceMode, setMaintenanceMode] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [changelog, setChangelog] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [roles, setRoles] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [fbxMashups, setFbxMashups] = useState<any[]>([]);
 
   const { markDirty, register } = useSave();
   const toast = useToast();
 
-  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles });
+  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles, fbxMashups });
   useEffect(() => {
-    dataRef.current = { site, pricing, faq, workflow, reviews, links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles };
-  }, [site, pricing, faq, workflow, reviews, links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles]);
+    dataRef.current = { site, pricing, faq, workflow, reviews, links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles, fbxMashups };
+  }, [site, pricing, faq, workflow, reviews, links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles, fbxMashups]);
 
   useEffect(() => {
-    if (authed) loadAllData();
+    if (!authed) return;
+
+    async function loadAllData() {
+      setLoading(true);
+      try {
+        if (!isSupabaseConfigured || !supabase) {
+          const stored = localStorage.getItem("adminData");
+          if (stored) {
+            try {
+              const data = JSON.parse(stored);
+              if (data.site) setSite(data.site);
+              if (data.pricing) setPricing(data.pricing);
+              if (data.faq) setFaq(data.faq);
+              if (data.workflow) setWorkflow(data.workflow);
+              if (data.reviews) setReviews(data.reviews);
+              if (data.links) setLinks(data.links);
+              if (data.hero) setHero(data.hero);
+               if (data.stats) setStats(data.stats);
+               if (data.services) setServices(data.services);
+               if (data.beforeOrdering) setBeforeOrdering(data.beforeOrdering);
+              if (data.tosSections) setTosSections(data.tosSections);
+              if (data.navigation) setNavigation(data.navigation);
+              if (data.websiteSettings) setWebsiteSettings(data.websiteSettings);
+              if (data.portfolioCategories) setPortfolioCategories(data.portfolioCategories);
+              if (data.commissionForm) setCommissionForm(data.commissionForm);
+              if (data.mediaLibrary) setMediaLibrary(data.mediaLibrary);
+              if (data.homepageSections) setHomepageSections(data.homepageSections);
+            } catch {}
+          }
+          setLoading(false);
+          return;
+        }
+        const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }, { data: heroData }, { data: statsData }, { data: servicesData }, { data: beforeData }, { data: tosData }, { data: navData }, { data: settingsData }, { data: catsData }, { data: formData }, { data: mediaData }, { data: hsData }, { data: fbxData }] = await Promise.all([
+          supabase.from("site_config").select("*"),
+          supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }),
+          supabase.from("faq_items").select("*").order("sort_order", { ascending: true }),
+          supabase.from("workflow_steps").select("*").order("sort_order", { ascending: true }),
+          supabase.from("reviews").select("*").order("created_at", { ascending: false }),
+          supabase.from("social_links").select("*").order("sort_order", { ascending: true }),
+          supabase.from("hero_content").select("*").order("sort_order", { ascending: true }),
+          supabase.from("homepage_stats").select("*").order("sort_order", { ascending: true }),
+          supabase.from("services").select("*").order("sort_order", { ascending: true }),
+          supabase.from("before_ordering_items").select("*").order("sort_order", { ascending: true }),
+          supabase.from("tos_sections").select("*").order("sort_order", { ascending: true }),
+          supabase.from("navigation_items").select("*").order("sort_order", { ascending: true }),
+          supabase.from("website_settings").select("*"),
+          supabase.from("portfolio_categories").select("*").order("sort_order", { ascending: true }),
+          supabase.from("commission_form_fields").select("*").order("sort_order", { ascending: true }),
+          supabase.from("media_library").select("*").order("sort_order", { ascending: true }),
+          supabase.from("homepage_sections").select("*").order("sort_order", { ascending: true }),
+          supabase.from("fbx_mashups").select("*").order("sort_order", { ascending: true }),
+        ]);
+        if (siteData && siteData.length > 0) {
+          const s: Record<string, string> = { ...defaultSite };
+          siteData.forEach((row: Record<string, string>) => { s[row.key] = row.value; });
+          setSite(s);
+        }
+        if (pricingData && pricingData.length > 0) setPricing(pricingData);
+        if (faqData && faqData.length > 0) setFaq(faqData);
+        if (workflowData && workflowData.length > 0) setWorkflow(workflowData);
+        if (reviewsData && reviewsData.length > 0) setReviews(reviewsData);
+        if (linksData && linksData.length > 0) setLinks(linksData);
+        if (heroData && heroData.length > 0) setHero(heroData);
+        if (statsData && statsData.length > 0) setStats(statsData);
+        if (servicesData && servicesData.length > 0) setServices(servicesData);
+        if (beforeData && beforeData.length > 0) setBeforeOrdering(beforeData);
+        if (tosData && tosData.length > 0) setTosSections(tosData);
+        if (navData && navData.length > 0) setNavigation(navData);
+        if (settingsData && settingsData.length > 0) {
+          const s: Record<string, string> = {};
+          settingsData.forEach((row: Record<string, string>) => { s[row.key] = row.value; });
+          setWebsiteSettings(s);
+        }
+        if (catsData && catsData.length > 0) setPortfolioCategories(catsData);
+        if (formData && formData.length > 0) setCommissionForm(formData);
+        if (mediaData && mediaData.length > 0) setMediaLibrary(mediaData);
+        if (hsData && hsData.length > 0) setHomepageSections(hsData);
+        if (fbxData && fbxData.length > 0) setFbxMashups(fbxData);
+      } catch (e) {
+        console.error("Failed to load data:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadAllData();
   }, [authed]);
 
-  async function loadAllData() {
-    setLoading(true);
-    try {
-      if (!isSupabaseConfigured || !supabase) {
-        const stored = localStorage.getItem("adminData");
-        if (stored) {
-          try {
-            const data = JSON.parse(stored);
-            if (data.site) setSite(data.site);
-            if (data.pricing) setPricing(data.pricing);
-            if (data.faq) setFaq(data.faq);
-            if (data.workflow) setWorkflow(data.workflow);
-            if (data.reviews) setReviews(data.reviews);
-            if (data.links) setLinks(data.links);
-            if (data.hero) setHero(data.hero);
-             if (data.stats) setStats(data.stats);
-             if (data.services) setServices(data.services);
-             if (data.beforeOrdering) setBeforeOrdering(data.beforeOrdering);
-            if (data.tosSections) setTosSections(data.tosSections);
-            if (data.navigation) setNavigation(data.navigation);
-            if (data.websiteSettings) setWebsiteSettings(data.websiteSettings);
-            if (data.portfolioCategories) setPortfolioCategories(data.portfolioCategories);
-            if (data.commissionForm) setCommissionForm(data.commissionForm);
-            if (data.mediaLibrary) setMediaLibrary(data.mediaLibrary);
-            if (data.homepageSections) setHomepageSections(data.homepageSections);
-          } catch {}
-        }
-        setLoading(false);
-        return;
-      }
-      const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }, { data: heroData }, { data: statsData }, { data: servicesData }, { data: beforeData }, { data: tosData }, { data: navData }, { data: settingsData }, { data: catsData }, { data: formData }, { data: mediaData }, { data: hsData }] = await Promise.all([
-        supabase.from("site_config").select("*"),
-        supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }),
-        supabase.from("faq_items").select("*").order("sort_order", { ascending: true }),
-        supabase.from("workflow_steps").select("*").order("sort_order", { ascending: true }),
-        supabase.from("reviews").select("*").order("created_at", { ascending: false }),
-        supabase.from("social_links").select("*").order("sort_order", { ascending: true }),
-        supabase.from("hero_content").select("*").order("sort_order", { ascending: true }),
-        supabase.from("homepage_stats").select("*").order("sort_order", { ascending: true }),
-        supabase.from("services").select("*").order("sort_order", { ascending: true }),
-        supabase.from("before_ordering_items").select("*").order("sort_order", { ascending: true }),
-        supabase.from("tos_sections").select("*").order("sort_order", { ascending: true }),
-        supabase.from("navigation_items").select("*").order("sort_order", { ascending: true }),
-        supabase.from("website_settings").select("*"),
-        supabase.from("portfolio_categories").select("*").order("sort_order", { ascending: true }),
-        supabase.from("commission_form_fields").select("*").order("sort_order", { ascending: true }),
-        supabase.from("media_library").select("*").order("sort_order", { ascending: true }),
-        supabase.from("homepage_sections").select("*").order("sort_order", { ascending: true }),
-      ]);
-      if (siteData && siteData.length > 0) {
-        const s: any = { ...defaultSite };
-        siteData.forEach((row: any) => { s[row.key] = row.value; });
-        setSite(s);
-      }
-      if (pricingData && pricingData.length > 0) setPricing(pricingData);
-      if (faqData && faqData.length > 0) setFaq(faqData);
-      if (workflowData && workflowData.length > 0) setWorkflow(workflowData);
-      if (reviewsData && reviewsData.length > 0) setReviews(reviewsData);
-      if (linksData && linksData.length > 0) setLinks(linksData);
-      if (heroData && heroData.length > 0) setHero(heroData);
-      if (statsData && statsData.length > 0) setStats(statsData);
-      if (servicesData && servicesData.length > 0) setServices(servicesData);
-      if (beforeData && beforeData.length > 0) setBeforeOrdering(beforeData);
-      if (tosData && tosData.length > 0) setTosSections(tosData);
-      if (navData && navData.length > 0) setNavigation(navData);
-      if (settingsData && settingsData.length > 0) {
-        const s: Record<string, string> = {};
-        settingsData.forEach((row: any) => { s[row.key] = row.value; });
-        setWebsiteSettings(s);
-      }
-      if (catsData && catsData.length > 0) setPortfolioCategories(catsData);
-      if (formData && formData.length > 0) setCommissionForm(formData);
-      if (mediaData && mediaData.length > 0) setMediaLibrary(mediaData);
-      if (hsData && hsData.length > 0) setHomepageSections(hsData);
-    } catch (e) {
-      console.error("Failed to load data:", e);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   const contentSaver = useCallback(async () => {
-     const { site, pricing, faq, workflow, reviews, links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles } = dataRef.current;
+     const { site, pricing, faq, workflow, reviews, links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles, fbxMashups } = dataRef.current;
     const res = await fetch("/api/admin/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ site, pricing, faq, workflow, reviews, socialLinks: links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles }),
+      body: JSON.stringify({ site, pricing, faq, workflow, reviews, socialLinks: links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles, fbxMashups }),
     });
     if (!res.ok) {
       const r = await res.json().catch(() => ({}));
@@ -251,6 +283,7 @@ export default function AdminPage() {
     setMaintenanceMode(null);
     setChangelog([]);
     setRoles([]);
+    setFbxMashups([]);
     localStorage.removeItem("adminData");
     setResetOpen(false);
     toast.info("Content reset to defaults â press Save Changes to apply");
@@ -354,11 +387,12 @@ export default function AdminPage() {
       {tab === "commission-form" && <CommissionFormSection value={commissionForm} onChange={(n) => { setCommissionForm(n); markDirty(); }} />}
       {tab === "media-library" && <MediaLibrarySection value={mediaLibrary} onChange={(n) => { setMediaLibrary(n); markDirty(); }} />}
       {tab === "homepage-sections" && <HomepageSectionsSection value={homepageSections} onChange={(n) => { setHomepageSections(n); markDirty(); }} />}
-      {tab === "commissions" && <div className="ad-panel rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6"><h2 className="text-lg font-bold text-white">Commissions</h2><p className="mt-2 text-sm text-[var(--text-secondary)]">Commission management coming soon. Use the API routes for now.</p></div>}
-      {tab === "notifications" && <div className="ad-panel rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6"><h2 className="text-lg font-bold text-white">Notifications</h2><p className="mt-2 text-sm text-[var(--text-secondary)]">Notification settings coming soon. Configure webhooks via the API.</p></div>}
-      {tab === "maintenance" && <div className="ad-panel rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6"><h2 className="text-lg font-bold text-white">Maintenance Mode</h2><p className="mt-2 text-sm text-[var(--text-secondary)]">Maintenance mode configuration coming soon. Use the API to enable/disable.</p></div>}
-      {tab === "changelog" && <div className="ad-panel rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6"><h2 className="text-lg font-bold text-white">Changelog</h2><p className="mt-2 text-sm text-[var(--text-secondary)]">Changelog management coming soon. Use the API to add entries.</p></div>}
-      {tab === "roles" && <div className="ad-panel rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6"><h2 className="text-lg font-bold text-white">Roles</h2><p className="mt-2 text-sm text-[var(--text-secondary)]">Role management coming soon. Default roles are seeded in the database.</p></div>}
+      {tab === "commissions" && <CommissionsSection />}
+      {tab === "notifications" && <NotificationsSection />}
+      {tab === "maintenance" && <MaintenanceSection />}
+      {tab === "changelog" && <ChangelogSection />}
+      {tab === "roles" && <RolesSection />}
+      {tab === "fbx-mashups" && <FbxMashupSection value={fbxMashups} onChange={(n) => { setFbxMashups(n); markDirty(); }} />}
 
       <Modal
         open={resetOpen}
