@@ -257,8 +257,14 @@ DO $$ BEGIN
   DROP POLICY IF EXISTS "Authenticated write nsfw_portfolio_images" ON nsfw_portfolio_images;
   DROP POLICY IF EXISTS "Public read queue_items" ON queue_items;
   DROP POLICY IF EXISTS "Authenticated write queue_items" ON queue_items;
-  DROP POLICY IF EXISTS "Public read social_links" ON social_links;
-  DROP POLICY IF EXISTS "Authenticated write social_links" ON social_links;
+   DROP POLICY IF EXISTS "Public read social_links" ON social_links;
+   DROP POLICY IF EXISTS "Authenticated write social_links" ON social_links;
+   DROP POLICY IF EXISTS "Public read fbx_mashups" ON fbx_mashups;
+   DROP POLICY IF EXISTS "Authenticated write fbx_mashups" ON fbx_mashups;
+   DROP POLICY IF EXISTS "Public read fbx_gallery" ON fbx_gallery;
+   DROP POLICY IF EXISTS "Authenticated write fbx_gallery" ON fbx_gallery;
+   DROP POLICY IF EXISTS "Public read fbx_before_after" ON fbx_before_after;
+   DROP POLICY IF EXISTS "Authenticated write fbx_before_after" ON fbx_before_after;
 END $$;
 
 -- Public read access for all tables
@@ -440,6 +446,13 @@ INSERT INTO site_config (key, value) VALUES
   ('stat_experience', '2+'),
   ('stat_response', '1-3 hours'),
   ('stat_delivery', '5-10 days'),
-  ('stat_blender', '2+'),
-  ('stat_unity', '2+')
+   ('stat_blender', '2+'),
+   ('stat_unity', '2+')
 ON CONFLICT (key) DO NOTHING;
+
+-- =============================================================================
+-- ONE-TIME CLEANUP: Remove all FBX mashup demo/placeholder data
+-- Uncomment to run: removes every row from FBX tables so you can start fresh
+-- =============================================================================
+-- TRUNCATE TABLE fbx_before_after, fbx_gallery, fbx_mashups CASCADE;
+-- SELECT pg_catalog.pg_notify('pgrst', 'reload schema');
