@@ -125,69 +125,67 @@ export function FbxMashupSection() {
     if (!sb) return;
 
     const current = projectsRef.current;
-    const currentIds = new Set(current.map((p) => p.id).filter(Boolean));
-
-    for (const id of originalIdsRef.current) {
-      if (!currentIds.has(id)) {
-        await sb.from("fbx_mashups").delete().eq("id", id);
-        originalIdsRef.current.delete(id);
-      }
-    }
 
     for (const project of current) {
+      const payload = {
+        title: project.title,
+        description: project.description,
+        avatar_base: project.avatar_base,
+        software_used: project.software_used,
+        price: project.price,
+        featured: project.featured,
+        visible: project.visible,
+        sort_order: project.sort_order,
+      };
       if (project.id) {
-        await sb
-          .from("fbx_mashups")
-          .update({
-            title: project.title,
-            description: project.description,
-            avatar_base: project.avatar_base,
-            software_used: project.software_used,
-            price: project.price,
-            featured: project.featured,
-            visible: project.visible,
-            sort_order: project.sort_order,
-          })
-          .eq("id", project.id);
+        const res = await fetch(`/api/fbx-mashups/${project.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const r = await res.json().catch(() => ({}));
+          throw new Error(r.error || "Failed to update project");
+        }
       } else {
-        const result = await sb
-          .from("fbx_mashups")
-          .insert([
-            {
-              title: project.title,
-              description: project.description,
-              avatar_base: project.avatar_base,
-              software_used: project.software_used,
-              price: project.price,
-              featured: project.featured,
-              visible: project.visible,
-              sort_order: project.sort_order,
-            },
-          ])
-          .select();
-        if (result.data && result.data.length > 0) {
-          originalIdsRef.current.add(result.data[0].id);
+        const res = await fetch("/api/fbx-mashups", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const r = await res.json().catch(() => ({}));
+          throw new Error(r.error || "Failed to create project");
+        }
+        const data = await res.json();
+        if (data && data.id) {
+          originalIdsRef.current.add(data.id);
         }
       }
     }
 
-    const { data: reloaded } = await sb
+    const { data: reloaded, error } = await sb
       .from("fbx_mashups")
       .select("*")
       .order("sort_order", { ascending: true });
-    setProjects(
-      (reloaded || []).map((p: any) => ({
-        id: p.id,
-        title: p.title || "",
-        description: p.description || "",
-        avatar_base: p.avatar_base || "",
-        software_used: p.software_used || [],
-        price: p.price || "",
-        featured: p.featured || false,
-        visible: p.visible !== false,
-        sort_order: p.sort_order || 0,
-      })),
-    );
+    if (!error && reloaded) {
+      setProjects(
+        reloaded.map((p: any) => ({
+          id: p.id,
+          title: p.title || "",
+          description: p.description || "",
+          avatar_base: p.avatar_base || "",
+          software_used: p.software_used || [],
+          price: p.price || "",
+          featured: p.featured || false,
+          visible: p.visible !== false,
+          sort_order: p.sort_order || 0,
+        })),
+      );
+      originalIdsRef.current = new Set(
+        reloaded.map((p: any) => p.id).filter(Boolean),
+      );
+    }
   }, []);
 
   useEffect(() => {
@@ -202,7 +200,22 @@ export function FbxMashupSection() {
     markDirty();
   }
 
-  function removeProject(i: number) {
+  async function removeProject(i: number) {
+    const project = projects[i];
+    if (project.id) {
+      try {
+        const res = await fetch(`/api/fbx-mashups/${project.id}`, { method: "DELETE" });
+        if (!res.ok) {
+          const r = await res.json().catch(() => ({}));
+          throw new Error(r.error || "Delete failed");
+        }
+        originalIdsRef.current.delete(project.id);
+        toast.success("Project deleted");
+      } catch (e: any) {
+        toast.error(e.message || "Failed to delete project");
+        return;
+      }
+    }
     setProjects(projects.filter((_, j) => j !== i));
     markDirty();
   }
@@ -216,12 +229,48 @@ export function FbxMashupSection() {
     markDirty();
   }
 
-  function toggleVisibility(i: number) {
-    updateProject(i, { visible: !projects[i].visible });
+  async function toggleVisibility(i: number) {
+    const project = projects[i];
+    const newVisible = !project.visible;
+    if (project.id) {
+      try {
+        const res = await fetch(`/api/fbx-mashups/${project.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ visible: newVisible }),
+        });
+        if (!res.ok) {
+          const r = await res.json().catch(() => ({}));
+          throw new Error(r.error || "Update failed");
+        }
+      } catch (e: any) {
+        toast.error(e.message || "Failed to update visibility");
+        return;
+      }
+    }
+    updateProject(i, { visible: newVisible });
   }
 
-  function toggleFeatured(i: number) {
-    updateProject(i, { featured: !projects[i].featured });
+  async function toggleFeatured(i: number) {
+    const project = projects[i];
+    const newFeatured = !project.featured;
+    if (project.id) {
+      try {
+        const res = await fetch(`/api/fbx-mashups/${project.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ featured: newFeatured }),
+        });
+        if (!res.ok) {
+          const r = await res.json().catch(() => ({}));
+          throw new Error(r.error || "Update failed");
+        }
+      } catch (e: any) {
+        toast.error(e.message || "Failed to update featured status");
+        return;
+      }
+    }
+    updateProject(i, { featured: newFeatured });
   }
 
   function moveProject(i: number, dir: number) {
@@ -232,18 +281,6 @@ export function FbxMashupSection() {
     next.forEach((p, idx) => (p.sort_order = idx));
     setProjects(next);
     markDirty();
-  }
-
-  async function uploadMashupImage(file: File, mashupId?: string): Promise<{ id: string; url: string; path: string } | null> {
-    const ext = file.name.split(".").pop();
-    const storagePath = `fbx-mashups/${mashupId || "temp"}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { data: uploadData, error: uploadError } = await sb.storage
-      .from("fbx-mashups")
-      .upload(storagePath, file, { cacheControl: "3600", upsert: true });
-    if (uploadError || !uploadData) return null;
-    const { data: urlData } = sb.storage.from("fbx-mashups").getPublicUrl(storagePath);
-    const url = urlData.publicUrl;
-    return { id: "", url, path: storagePath };
   }
 
   async function handleGalleryUpload(projectIndex: number, files: FileList | null) {
@@ -259,23 +296,26 @@ export function FbxMashupSection() {
       const temp: FbxGalleryImage = { url: "", sort_order: (galleryImages[mashupId] || []).length + i };
       setGalleryImages((prev) => ({ ...prev, [mashupId]: [...(prev[mashupId] || []), temp] }));
       try {
-        const uploaded = await uploadMashupImage(file, mashupId);
-        if (uploaded) {
-          const { data: dbData, error: dbError } = await sb
-            .from("fbx_gallery")
-            .insert([{ mashup_id: mashupId, url: uploaded.url, path: uploaded.path, sort_order: temp.sort_order }])
-            .select();
-          if (dbError || !dbData || dbData.length === 0) throw new Error("DB insert failed");
-          setGalleryImages((prev) => {
-            const current = prev[mashupId] || [];
-            return { ...prev, [mashupId]: current.map((img, idx) => (img === temp ? { id: dbData[0].id, url: dbData[0].url, path: dbData[0].path, sort_order: temp.sort_order } : img)) };
-          });
-          toast.success("Image uploaded");
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch(`/api/fbx-mashups/${mashupId}/gallery`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) {
+          const r = await res.json().catch(() => ({}));
+          throw new Error(r.error || "Upload failed");
         }
+        const uploaded = await res.json();
+        setGalleryImages((prev) => {
+          const current = prev[mashupId] || [];
+          return { ...prev, [mashupId]: current.map((img) => (img === temp ? { id: uploaded.id, url: uploaded.url, path: uploaded.path, sort_order: temp.sort_order } : img)) };
+        });
+        toast.success("Image uploaded");
       } catch {
         setGalleryImages((prev) => {
           const current = prev[mashupId] || [];
-          return { ...prev, [mashupId]: current.map((img, idx) => (img === temp ? { ...img, uploading: false, error: "Upload failed" } : img)) };
+          return { ...prev, [mashupId]: current.map((img) => (img === temp ? { ...img, error: "Upload failed" } : img)) };
         });
         toast.error("Failed to upload image");
       }
@@ -304,45 +344,73 @@ export function FbxMashupSection() {
     setBeforeAfters((prev) => ({ ...prev, [mashupId]: [...(prev[mashupId] || []), temp] }));
 
     try {
-      const uploaded = await uploadMashupImage(file, mashupId);
-      if (uploaded) {
-        const field = type === "before" ? "before_url" : "after_url";
-        const pathField = type === "before" ? "before_path" : "after_path";
-        const { data: dbData, error: dbError } = await sb
-          .from("fbx_before_after")
-          .insert([{ mashup_id: mashupId, [field]: uploaded.url, [pathField]: uploaded.path, label: "", sort_order: temp.sort_order }])
-          .select();
-        if (dbError || !dbData || dbData.length === 0) throw new Error("DB insert failed");
-        setBeforeAfters((prev) => {
-          const current = prev[mashupId] || [];
-          return { ...prev, [mashupId]: current.map((img, idx) => (img === temp ? { id: dbData[0].id, mashup_id: mashupId, before_url: dbData[0].before_url, after_url: dbData[0].after_url, before_path: dbData[0].before_path, after_path: dbData[0].after_path, label: dbData[0].label, sort_order: temp.sort_order } : img)) };
-        });
-        toast.success(`${type === "before" ? "Before" : "After"} image uploaded`);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", type);
+      const res = await fetch(`/api/fbx-mashups/${mashupId}/before-after`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const r = await res.json().catch(() => ({}));
+        throw new Error(r.error || "Upload failed");
       }
+      const uploaded = await res.json();
+      setBeforeAfters((prev) => {
+        const current = prev[mashupId] || [];
+        const urlField = type === "before" ? "before_url" : "after_url";
+        const pathField = type === "before" ? "before_path" : "after_path";
+        return { ...prev, [mashupId]: current.map((img) => (img === temp ? { ...img, id: uploaded.id || img.id, [urlField]: uploaded.url, [pathField]: uploaded.path } : img)) };
+      });
+      toast.success(`${type === "before" ? "Before" : "After"} image uploaded`);
     } catch {
       toast.error("Failed to upload image");
     }
   }
 
   async function deleteGalleryImage(mashupId: string, imageId: string, path?: string) {
-    if (path) await sb.storage.from("fbx-mashups").remove([path]);
-    await sb.from("fbx_gallery").delete().eq("id", imageId);
-    setGalleryImages((prev) => ({
-      ...prev,
-      [mashupId]: (prev[mashupId] || []).filter((img) => img.id !== imageId),
-    }));
-    toast.success("Image deleted");
+    try {
+      const params = new URLSearchParams();
+      if (imageId) params.set("imageId", imageId);
+      if (path) params.set("path", path);
+      const res = await fetch(`/api/fbx-mashups/${mashupId}/gallery?${params.toString()}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const r = await res.json().catch(() => ({}));
+        throw new Error(r.error || "Delete failed");
+      }
+      setGalleryImages((prev) => ({
+        ...prev,
+        [mashupId]: (prev[mashupId] || []).filter((img) => img.id !== imageId),
+      }));
+      toast.success("Image deleted");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to delete image");
+    }
   }
 
   async function deleteBeforeAfter(mashupId: string, baId: string, beforePath?: string, afterPath?: string) {
-    if (beforePath) await sb.storage.from("fbx-mashups").remove([beforePath]);
-    if (afterPath) await sb.storage.from("fbx-mashups").remove([afterPath]);
-    await sb.from("fbx_before_after").delete().eq("id", baId);
-    setBeforeAfters((prev) => ({
-      ...prev,
-      [mashupId]: (prev[mashupId] || []).filter((ba) => ba.id !== baId),
-    }));
-    toast.success("Comparison deleted");
+    try {
+      const params = new URLSearchParams();
+      if (baId) params.set("id", baId);
+      if (beforePath) params.set("beforePath", beforePath);
+      if (afterPath) params.set("afterPath", afterPath);
+      const res = await fetch(`/api/fbx-mashups/${mashupId}/before-after?${params.toString()}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const r = await res.json().catch(() => ({}));
+        throw new Error(r.error || "Delete failed");
+      }
+      setBeforeAfters((prev) => ({
+        ...prev,
+        [mashupId]: (prev[mashupId] || []).filter((ba) => ba.id !== baId),
+      }));
+      toast.success("Comparison deleted");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to delete comparison");
+    }
   }
 
   if (!isSupabaseConfigured) {
