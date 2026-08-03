@@ -1,11 +1,15 @@
 "use client";
 
 import { useId, useState } from "react";
-import { CheckCircle2, Send, Paperclip, AlertCircle } from "lucide-react";
+import { CheckCircle2, Send, Paperclip, AlertCircle, Check, ShieldCheck } from "lucide-react";
 
 export default function ContactCommissionForm() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [ownsAssets, setOwnsAssets] = useState(false);
+  const [fbxProof, setFbxProof] = useState(false);
+  const [refundsUnderstood, setRefundsUnderstood] = useState(false);
   const nameId = useId();
   const discordId = useId();
   const descId = useId();
@@ -17,6 +21,12 @@ export default function ContactCommissionForm() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(false);
+
+    if (!agreed || !ownsAssets) {
+      setError(true);
+      return;
+    }
+
     const form = e.currentTarget;
     const formData = new FormData(form);
     const data = {
@@ -27,6 +37,10 @@ export default function ContactCommissionForm() {
       deadline: formData.get("deadline"),
       references: formData.get("references"),
       notes: formData.get("notes"),
+      agreed,
+      owns_assets: ownsAssets,
+      fbx_proof: fbxProof,
+      refunds_understood: refundsUnderstood,
     };
 
     try {
@@ -78,7 +92,9 @@ export default function ContactCommissionForm() {
       {error && (
         <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
           <AlertCircle className="h-4 w-4 shrink-0" />
-          Failed to send request. Please try again or contact me directly on Discord.
+          {(!agreed || !ownsAssets)
+            ? "You must agree to the Terms of Service and confirm asset ownership before submitting."
+            : "Failed to send request. Please try again or contact me directly on Discord."}
         </div>
       )}
 
@@ -128,6 +144,54 @@ export default function ContactCommissionForm() {
         <div>
           <label htmlFor={notesId} className="mb-2 block text-xs font-semibold text-[var(--text-secondary)]">Notes</label>
           <textarea id={notesId} name="notes" rows={3} placeholder="Platform, special requests..." className="field resize-y" />
+        </div>
+
+        {/* Agreement Checkboxes */}
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-5 space-y-4">
+          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-[var(--accent)]" />
+            Agreement
+          </h3>
+
+          <label className="flex cursor-pointer items-start gap-3 text-sm text-[var(--text-secondary)]">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
+            />
+            <span>I have read and agree to the <a href="/tos" className="text-[var(--accent)] hover:underline">Terms of Service</a>.</span>
+          </label>
+
+          <label className="flex cursor-pointer items-start gap-3 text-sm text-[var(--text-secondary)]">
+            <input
+              type="checkbox"
+              checked={ownsAssets}
+              onChange={(e) => setOwnsAssets(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
+            />
+            <span>I confirm that I legally own or have permission to use every asset supplied.</span>
+          </label>
+
+          <label className="flex cursor-pointer items-start gap-3 text-sm text-[var(--text-secondary)]">
+            <input
+              type="checkbox"
+              checked={fbxProof}
+              onChange={(e) => setFbxProof(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
+            />
+            <span>I understand that proof of ownership may be requested for FBX Mashup commissions.</span>
+          </label>
+
+          <label className="flex cursor-pointer items-start gap-3 text-sm text-[var(--text-secondary)]">
+            <input
+              type="checkbox"
+              checked={refundsUnderstood}
+              onChange={(e) => setRefundsUnderstood(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
+            />
+            <span>I understand that refunds are limited once work has begun.</span>
+          </label>
         </div>
 
         <button type="submit" className="btn-primary w-full !justify-center !py-3.5">

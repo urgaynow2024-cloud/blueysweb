@@ -134,71 +134,173 @@ export const nsfwPricingTiers = [
 
 export const tosSections = [
   {
-    title: "Payment Terms",
+    title: "General Terms",
+    icon: "📋",
+    items: [
+      "Bluey Commissions reserves the right to accept or refuse any commission request.",
+      "Clients must provide accurate information and references.",
+      "Prices may change depending on commission complexity.",
+      "Estimated completion times are estimates only.",
+      "Communication must remain respectful.",
+    ],
+    highlight_box: null,
+  },
+  {
+    title: "Services",
+    icon: "🛠",
+    items: [
+      "VRChat Avatar Editing",
+      "FBX Editing",
+      "FBX Mashups",
+      "Clothing Creation",
+      "Avatar Optimisation",
+      "Unity Setup",
+      "Blender Work",
+      "Texture Editing",
+      "Material Setup",
+      "Quest Optimisation",
+    ],
+    highlight_box: null,
+  },
+  {
+    title: "Asset Ownership",
+    icon: "🧩",
+    items: [
+      "Clients must legally own or have permission to use every asset they provide.",
+      "This includes Avatar Bases, Clothing, Accessories, Textures, Models, Materials, and any third-party assets.",
+      "Providing a file does not automatically prove ownership.",
+      "Bluey Commissions may request proof of ownership before beginning or continuing a commission.",
+    ],
+    highlight_box: "You must own or have the rights to all provided assets.",
+  },
+  {
+    title: "FBX Mashup Policy",
+    icon: "🔄",
+    items: [
+      "For FBX Mashup commissions, clients must own every original avatar base being used.",
+      "Accepted proof includes: Store receipts, Marketplace receipts, Creator receipts, Purchase confirmations.",
+      "If ownership cannot be verified, the commission may be refused.",
+      "Bluey Commissions does not work with leaked avatars, ripped avatars, stolen assets, pirated files, or unauthorised conversions.",
+    ],
+    highlight_box: "Proof of ownership is required for all FBX Mashup commissions.",
+  },
+  {
+    title: "Payments",
     icon: "💳",
     items: [
-      "50% deposit is required before any work begins",
-      "Remaining 50% must be paid before final file delivery",
-      "Work will not be fully transferred until payment is complete",
-      "Payments accepted via PayPal or Payhip only",
-      "Chargebacks will result in blacklist from future commissions",
+      "Payment is required before work begins unless otherwise agreed.",
+      "Prices are based on the agreed scope of work.",
+      "Additional work may require additional payment.",
     ],
-  },
-  {
-    title: "Delivery & Workflow",
-    icon: "📦",
-    items: [
-      "Estimated completion time will be given per commission",
-      "Delays may occur depending on workload or complexity",
-      "You will receive progress updates when appropriate",
-      "Final delivery includes Unity-ready VRChat avatar files (if applicable)",
-    ],
-  },
-  {
-    title: "Revisions",
-    icon: "🔁",
-    items: [
-      "Minor adjustments are included during development",
-      "Major changes after approval may cost extra",
-      "Once final delivery is accepted, free revisions are no longer included",
-    ],
+    highlight_box: null,
   },
   {
     title: "Refund Policy",
     icon: "💸",
     items: [
-      "Refunds are based on work completed at time of request",
-      "No full refund after significant progress has been made",
-      "If I cancel the commission, a partial refund will be issued",
+      "Refunds are considered on a case-by-case basis.",
+      "Refunds are generally not available once work has started.",
+      "Refund decisions depend on: Time spent, Amount of work completed, Project progress.",
     ],
+    highlight_box: "Refunds are limited once work has begun.",
   },
   {
-    title: "Assets & Ownership",
-    icon: "🧩",
+    title: "Revisions",
+    icon: "🔁",
     items: [
-      "You must own or have rights to all provided assets",
-      "I am not responsible for stolen or unlicensed content",
-      "Client-provided assets are used at your own risk",
+      "Reasonable revisions are included where appropriate.",
+      "Large changes outside the original request may require additional payment.",
+      "Unlimited revisions are not included.",
     ],
+    highlight_box: null,
   },
   {
-    title: "Rights & Usage",
+    title: "Delivery",
+    icon: "📦",
+    items: [
+      "Delivered files depend on the purchased service.",
+      "Unless agreed otherwise, source files are not included.",
+    ],
+    highlight_box: null,
+  },
+  {
+    title: "Usage Rights",
     icon: "🚫",
     items: [
-      "I reserve the right to decline any commission",
-      "I may cancel work if rules are broken or disrespect occurs",
-      "I may showcase finished work in my portfolio unless requested otherwise",
-      "You may use the finished avatar for personal VRChat use only",
+      "Clients may use completed work for personal use.",
+      "Clients may not: Claim the work as their own, Redistribute files, Sell my work, Remove required credits, Use my work commercially without permission.",
     ],
+    highlight_box: "You may use the finished avatar for personal VRChat use only.",
   },
   {
-    title: "Final Notes",
+    title: "Portfolio Rights",
+    icon: "🎨",
+    items: [
+      "Bluey Commissions may display completed commissions in: Portfolio, Website, Social Media, Advertising.",
+      "Private commissions must be agreed before work begins.",
+    ],
+    highlight_box: null,
+  },
+  {
+    title: "Client Conduct",
+    icon: "🤝",
+    items: [
+      "Clients are expected to remain respectful.",
+      "The following behaviour is not accepted: Harassment, Abuse, Threats, Discrimination, Spam, Manipulation, Repeated disrespect.",
+    ],
+    highlight_box: "Respectful communication is required at all times.",
+  },
+  {
+    title: "Blacklist Policy",
+    icon: "🚫",
+    items: [
+      "Bluey Commissions reserves the right to refuse future work.",
+      "Reasons include: Harassment, Harassment of other clients, Abuse, Threats, Fraud, Chargeback abuse, Lying about asset ownership, Providing stolen assets, Asset theft, Redistributing my work, Claiming my work as your own, Removing required credits, Repeated Terms of Service violations.",
+      "Blacklisted users may lose access to: Future commissions, Support, Updates, Any future services.",
+    ],
+    highlight_box: "Violations may result in a permanent blacklist.",
+  },
+  {
+    title: "Intellectual Property",
+    icon: "🛡",
+    items: [
+      "Bluey Commissions retains ownership of all original work unless otherwise agreed.",
+      "Third-party assets remain the property of their original creators.",
+    ],
+    highlight_box: null,
+  },
+  {
+    title: "Privacy",
+    icon: "🔒",
+    items: [
+      "Client information will remain private unless: Permission is given, Required by law, Required to report stolen or unauthorised assets.",
+    ],
+    highlight_box: null,
+  },
+  {
+    title: "Limitation of Liability",
     icon: "⚠️",
     items: [
-      "These terms may be updated at any time",
-      "Commissioning me means you agree to all listed terms",
-      "Failure to follow rules may result in refusal of service",
+      "Bluey Commissions is not responsible for: Client misuse of files, Copyright issues caused by client-supplied assets, Third-party software updates, Delays caused by missing assets or poor communication.",
     ],
+    highlight_box: null,
+  },
+  {
+    title: "Changes to these Terms",
+    icon: "📝",
+    items: [
+      "These Terms of Service may be updated at any time.",
+      "The latest published version will apply to future commissions.",
+    ],
+    highlight_box: null,
+  },
+  {
+    title: "Agreement",
+    icon: "✅",
+    items: [
+      "By commissioning Bluey Commissions, the client confirms: They have read the Terms of Service, They agree to the Terms of Service, They legally own every supplied asset, They understand proof of ownership may be requested, They understand refunds are limited after work begins, They understand stolen or leaked assets are prohibited.",
+    ],
+    highlight_box: "By commissioning, you confirm you have read and agree to all listed terms.",
   },
 ];
 

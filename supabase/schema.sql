@@ -63,6 +63,19 @@ CREATE TABLE IF NOT EXISTS faq_items (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Terms of Service sections (editable from admin)
+CREATE TABLE IF NOT EXISTS tos_sections (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  icon TEXT DEFAULT '📄',
+  items TEXT[] DEFAULT '{}',
+  highlight_box TEXT,
+  sort_order INTEGER DEFAULT 0,
+  visible BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Workflow / process steps
 CREATE TABLE IF NOT EXISTS workflow_steps (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -207,6 +220,7 @@ ALTER TABLE social_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fbx_mashups ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fbx_gallery ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fbx_before_after ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tos_sections ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies before recreating
 DO $$ BEGIN
@@ -251,6 +265,10 @@ CREATE POLICY "Public read fbx_gallery" ON fbx_gallery FOR SELECT USING (true);
 CREATE POLICY "Authenticated write fbx_gallery" ON fbx_gallery FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Public read fbx_before_after" ON fbx_before_after FOR SELECT USING (true);
 CREATE POLICY "Authenticated write fbx_before_after" ON fbx_before_after FOR ALL USING (auth.role() = 'authenticated');
+
+-- TOS sections: public read, authenticated write
+CREATE POLICY "Public read tos_sections" ON tos_sections FOR SELECT USING (true);
+CREATE POLICY "Authenticated write tos_sections" ON tos_sections FOR ALL USING (auth.role() = 'authenticated');
 
 -- Allow authenticated users to modify
 CREATE POLICY "Authenticated write portfolio_images" ON portfolio_images FOR ALL USING (auth.role() = 'authenticated');

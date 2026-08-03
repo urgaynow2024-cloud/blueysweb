@@ -266,6 +266,20 @@ export async function deleteSocialLink(id: string) {
   return !error;
 }
 
+export async function getTosSections() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase
+    .from("tos_sections")
+    .select("*")
+    .eq("visible", true)
+    .order("sort_order", { ascending: true });
+  if (error) {
+    console.error("Failed to load TOS sections:", error);
+    return [];
+  }
+  return data || [];
+}
+
 export async function getFbxMashups() {
   if (!isSupabaseConfigured || !supabase) return [];
   const { data, error } = await supabase.from("fbx_mashups").select("*").order("sort_order", { ascending: true });

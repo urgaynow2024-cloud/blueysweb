@@ -6,7 +6,11 @@ const WEBHOOK_URL = "https://discord.com/api/webhooks/1525237333664989184/cvq6GJ
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const { name, discord, email, description, budget, deadline, references, notes } = data;
+    const { name, discord, email, description, budget, deadline, references, notes, agreed, owns_assets, fbx_proof, refunds_understood } = data;
+
+    if (!agreed || !owns_assets) {
+      return NextResponse.json({ error: "Agreement required" }, { status: 400 });
+    }
 
     const message = {
       embeds: [
@@ -21,6 +25,10 @@ export async function POST(request: Request) {
             { name: "Deadline", value: deadline || "N/A", inline: true },
             { name: "References", value: references || "None", inline: false },
             { name: "Notes", value: notes || "None", inline: false },
+            { name: "Agreed to TOS", value: agreed ? "Yes" : "No", inline: true },
+            { name: "Owns Assets", value: owns_assets ? "Yes" : "No", inline: true },
+            { name: "FBX Proof Required", value: fbx_proof ? "Yes" : "No", inline: true },
+            { name: "Refunds Understood", value: refunds_understood ? "Yes" : "No", inline: true },
           ],
           timestamp: new Date().toISOString(),
         },

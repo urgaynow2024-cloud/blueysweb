@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const { site, pricing, faq, workflow, reviews, socialLinks } = data;
+    const { site, pricing, faq, workflow, reviews, socialLinks, tos } = data;
 
     if (!supabaseAdmin) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
@@ -45,6 +45,14 @@ export async function POST(request: Request) {
     if (socialLinks && socialLinks.length > 0) {
       for (const item of socialLinks) {
         await supabaseAdmin.from("social_links").upsert({ ...item, id: item.id || undefined });
+      }
+    }
+
+    // TOS sections
+    await supabaseAdmin.from("tos_sections").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    if (tos && tos.length > 0) {
+      for (const item of tos) {
+        await supabaseAdmin.from("tos_sections").upsert({ ...item, id: item.id || undefined });
       }
     }
 

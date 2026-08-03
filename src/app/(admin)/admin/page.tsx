@@ -21,6 +21,7 @@ import { QueueSection } from "@/components/admin/sections/QueueSection";
 import { SiteInfoSection } from "@/components/admin/sections/SiteInfoSection";
 import { ModeratorsSection } from "@/components/admin/sections/ModeratorsSection";
 import { FbxMashupSection } from "@/components/admin/sections/FbxMashupSection";
+import { TosSection } from "@/components/admin/sections/TosSection";
 
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -54,7 +55,7 @@ const defaultWorkflow = [
   { id: "5", emoji: "📦", title: "Delivery", desc: "Final files sent once the remaining payment is done." },
 ];
 
-type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "fbx-mashups";
+type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "fbx-mashups" | "tos";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -69,14 +70,15 @@ export default function AdminPage() {
   const [workflow, setWorkflow] = useState<any[]>(defaultWorkflow);
   const [reviews, setReviews] = useState<any[]>([]);
   const [links, setLinks] = useState<any[]>([]);
+  const [tos, setTos] = useState<any[]>([]);
 
   const { markDirty, register } = useSave();
   const toast = useToast();
 
-  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links });
+  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links, tos });
   useEffect(() => {
-    dataRef.current = { site, pricing, faq, workflow, reviews, links };
-  }, [site, pricing, faq, workflow, reviews, links]);
+    dataRef.current = { site, pricing, faq, workflow, reviews, links, tos };
+  }, [site, pricing, faq, workflow, reviews, links, tos]);
 
   useEffect(() => {
     if (authed) loadAllData();
@@ -101,13 +103,14 @@ export default function AdminPage() {
         setLoading(false);
         return;
       }
-      const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }] = await Promise.all([
+      const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }, { data: tosData }] = await Promise.all([
         supabase.from("site_config").select("*"),
         supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }),
         supabase.from("faq_items").select("*").order("sort_order", { ascending: true }),
         supabase.from("workflow_steps").select("*").order("sort_order", { ascending: true }),
         supabase.from("reviews").select("*").order("created_at", { ascending: false }),
         supabase.from("social_links").select("*").order("sort_order", { ascending: true }),
+        supabase.from("tos_sections").select("*").order("sort_order", { ascending: true }),
       ]);
       if (siteData && siteData.length > 0) {
         const s: any = { ...defaultSite };
@@ -119,6 +122,7 @@ export default function AdminPage() {
       if (workflowData && workflowData.length > 0) setWorkflow(workflowData);
       if (reviewsData && reviewsData.length > 0) setReviews(reviewsData);
       if (linksData && linksData.length > 0) setLinks(linksData);
+      if (tosData && tosData.length > 0) setTos(tosData);
     } catch (e) {
       console.error("Failed to load data:", e);
     } finally {
@@ -127,11 +131,11 @@ export default function AdminPage() {
   }
 
   const contentSaver = useCallback(async () => {
-    const { site, pricing, faq, workflow, reviews, links } = dataRef.current;
+    const { site, pricing, faq, workflow, reviews, links, tos } = dataRef.current;
     const res = await fetch("/api/admin/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ site, pricing, faq, workflow, reviews, socialLinks: links }),
+      body: JSON.stringify({ site, pricing, faq, workflow, reviews, socialLinks: links, tos }),
     });
     if (!res.ok) {
       const r = await res.json().catch(() => ({}));
@@ -240,6 +244,7 @@ export default function AdminPage() {
       {tab === "queue" && <QueueSection />}
       {tab === "moderators" && <ModeratorsSection />}
       {tab === "fbx-mashups" && <FbxMashupSection />}
+      {tab === "tos" && <TosSection value={tos} onChange={(n) => { setTos(n); markDirty(); }} />}
       {tab === "site" && <SiteInfoSection value={site} onChange={(n) => { setSite(n); markDirty(); }} />}
 
       <Modal
