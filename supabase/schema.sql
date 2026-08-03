@@ -124,6 +124,48 @@ CREATE TABLE IF NOT EXISTS social_links (
 );
 
 -- =============================================================================
+-- FBX MASHUPS
+-- =============================================================================
+
+-- FBX Mashup projects (separate from portfolio)
+CREATE TABLE IF NOT EXISTS fbx_mashups (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  avatar_base TEXT,
+  software_used TEXT[] DEFAULT '{}',
+  price TEXT,
+  featured BOOLEAN DEFAULT FALSE,
+  visible BOOLEAN DEFAULT TRUE,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- FBX Mashup gallery images
+CREATE TABLE IF NOT EXISTS fbx_gallery (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  mashup_id UUID NOT NULL REFERENCES fbx_mashups(id) ON DELETE CASCADE,
+  url TEXT NOT NULL,
+  path TEXT,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- FBX Mashup before & after comparisons
+CREATE TABLE IF NOT EXISTS fbx_before_after (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  mashup_id UUID NOT NULL REFERENCES fbx_mashups(id) ON DELETE CASCADE,
+  before_url TEXT NOT NULL,
+  after_url TEXT NOT NULL,
+  before_path TEXT,
+  after_path TEXT,
+  label TEXT,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =============================================================================
 -- MIGRATIONS
 -- =============================================================================
 
@@ -162,6 +204,9 @@ ALTER TABLE site_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE nsfw_portfolio_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE queue_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE social_links ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fbx_mashups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fbx_gallery ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fbx_before_after ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies before recreating
 DO $$ BEGIN
@@ -199,6 +244,14 @@ CREATE POLICY "Public read nsfw_portfolio_images" ON nsfw_portfolio_images FOR S
 CREATE POLICY "Public read queue_items" ON queue_items FOR SELECT USING (true);
 CREATE POLICY "Public read social_links" ON social_links FOR SELECT USING (true);
 
+-- FBX Mashups: public read, authenticated write
+CREATE POLICY "Public read fbx_mashups" ON fbx_mashups FOR SELECT USING (true);
+CREATE POLICY "Authenticated write fbx_mashups" ON fbx_mashups FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Public read fbx_gallery" ON fbx_gallery FOR SELECT USING (true);
+CREATE POLICY "Authenticated write fbx_gallery" ON fbx_gallery FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Public read fbx_before_after" ON fbx_before_after FOR SELECT USING (true);
+CREATE POLICY "Authenticated write fbx_before_after" ON fbx_before_after FOR ALL USING (auth.role() = 'authenticated');
+
 -- Allow authenticated users to modify
 CREATE POLICY "Authenticated write portfolio_images" ON portfolio_images FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write reviews" ON reviews FOR ALL USING (auth.role() = 'authenticated');
@@ -227,6 +280,25 @@ CREATE POLICY "Public uploads portfolio-images" ON storage.objects FOR INSERT WI
 CREATE POLICY "Public reads portfolio-images" ON storage.objects FOR SELECT USING (bucket_id = 'portfolio-images');
 CREATE POLICY "Public updates portfolio-images" ON storage.objects FOR UPDATE USING (bucket_id = 'portfolio-images');
 CREATE POLICY "Public deletes portfolio-images" ON storage.objects FOR DELETE USING (bucket_id = 'portfolio-images');
+
+-- FBX mashups storage bucket and policies
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'fbx-mashups') THEN
+    INSERT INTO storage.buckets (id, name, public) VALUES ('fbx-mashups', 'fbx-mashups', true);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  DROP POLICY IF EXISTS "Public uploads fbx-mashups" ON storage.objects;
+  DROP POLICY IF EXISTS "Public reads fbx-mashups" ON storage.objects;
+  DROP POLICY IF EXISTS "Public updates fbx-mashups" ON storage.objects;
+  DROP POLICY IF EXISTS "Public deletes fbx-mashups" ON storage.objects;
+END $$;
+
+CREATE POLICY "Public uploads fbx-mashups" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'fbx-mashups');
+CREATE POLICY "Public reads fbx-mashups" ON storage.objects FOR SELECT USING (bucket_id = 'fbx-mashups');
+CREATE POLICY "Public updates fbx-mashups" ON storage.objects FOR UPDATE USING (bucket_id = 'fbx-mashups');
+CREATE POLICY "Public deletes fbx-mashups" ON storage.objects FOR DELETE USING (bucket_id = 'fbx-mashups');
 
 -- =============================================================================
 -- DEFAULT DATA

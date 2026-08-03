@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { Tag, HelpCircle, Workflow, Star, Image as ImageIcon, Link as LinkIcon, Info, BarChart3, ShieldAlert, LogOut, Lock, UserCog } from "lucide-react";
+import { Tag, HelpCircle, Workflow, Star, Image as ImageIcon, Link as LinkIcon, Info, BarChart3, ShieldAlert, LogOut, Lock, UserCog, Layers, GitCompare } from "lucide-react";
 
 export interface NavItem {
   id: string;
@@ -23,6 +23,7 @@ export const ADMIN_NAV: NavGroup[] = [
       { id: "pricing", label: "Pricing", icon: <Tag className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "faq", label: "FAQ", icon: <HelpCircle className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "workflow", label: "Process", icon: <Workflow className="ad-nav-icon h-[18px] w-[18px]" /> },
+      { id: "fbx-mashups", label: "FBX Mashups", icon: <Layers className="ad-nav-icon h-[18px] w-[18px]" /> },
       { id: "reviews", label: "Reviews", icon: <Star className="ad-nav-icon h-[18px] w-[18px]" /> },
     ],
   },

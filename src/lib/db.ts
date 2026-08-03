@@ -265,3 +265,33 @@ export async function deleteSocialLink(id: string) {
   const { error } = await supabase.from("social_links").delete().eq("id", id);
   return !error;
 }
+
+export async function getFbxMashups() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("fbx_mashups").select("*").order("sort_order", { ascending: true });
+  if (error) {
+    console.error("Failed to load FBX mashups:", error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function getFbxGallery() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("fbx_gallery").select("*").order("sort_order", { ascending: true });
+  if (error) {
+    console.error("Failed to load FBX gallery:", error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function getFbxBeforeAfters() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("fbx_before_after").select("*").order("sort_order", { ascending: true });
+  if (error) {
+    console.error("Failed to load FBX before/after:", error);
+    return [];
+  }
+  return data || [];
+}

@@ -20,6 +20,7 @@ import { LinksSection } from "@/components/admin/sections/LinksSection";
 import { QueueSection } from "@/components/admin/sections/QueueSection";
 import { SiteInfoSection } from "@/components/admin/sections/SiteInfoSection";
 import { ModeratorsSection } from "@/components/admin/sections/ModeratorsSection";
+import { FbxMashupSection } from "@/components/admin/sections/FbxMashupSection";
 
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -53,7 +54,7 @@ const defaultWorkflow = [
   { id: "5", emoji: "📦", title: "Delivery", desc: "Final files sent once the remaining payment is done." },
 ];
 
-type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators";
+type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "fbx-mashups";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -238,6 +239,7 @@ export default function AdminPage() {
       {tab === "social-links" && <LinksSection value={links} onChange={(n) => { setLinks(n); markDirty(); }} />}
       {tab === "queue" && <QueueSection />}
       {tab === "moderators" && <ModeratorsSection />}
+      {tab === "fbx-mashups" && <FbxMashupSection />}
       {tab === "site" && <SiteInfoSection value={site} onChange={(n) => { setSite(n); markDirty(); }} />}
 
       <Modal
