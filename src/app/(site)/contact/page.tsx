@@ -1,19 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
-import { ButtonLink } from "@/components/ui/Button";
 import ContactCommissionForm from "@/components/ContactCommissionForm";
-import { MessageSquare, Clock, CheckCircle2, HelpCircle } from "lucide-react";
-import { getFaqItems } from "@/lib/db";
-
-interface FaqItem {
-  id?: string;
-  question: string;
-  answer: string;
-  created_at?: string;
-}
+import { MessageSquare, Clock, CheckCircle2 } from "lucide-react";
 
 const CHANNELS = [
   { icon: <MessageSquare className="h-5 w-5" />, label: "Discord", value: "BlueyBarks", note: "Fastest way to reach me" },
@@ -28,20 +18,6 @@ const CHECKLIST = [
 ];
 
 export default function ContactPage() {
-  const [faqItems, setFaqItems] = useState<FaqItem[]>([]);
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const faq = await getFaqItems();
-        setFaqItems(faq || []);
-      } catch (e) {
-        console.error("Failed to load contact data:", e);
-      }
-    }
-    load();
-  }, []);
-
   return (
     <div className="relative">
       <section className="page relative overflow-hidden">
@@ -87,27 +63,6 @@ export default function ContactPage() {
                   </ul>
                 </div>
               </Reveal>
-
-              {/* FAQ shortcuts */}
-              {faqItems.length > 0 && (
-                <Reveal delay={180}>
-                  <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-6">
-                    <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-white">
-                      <HelpCircle className="h-4 w-4 text-[var(--accent)]" />
-                      Quick FAQ
-                    </h3>
-                    <ul className="space-y-3">
-                      {faqItems.slice(0, 4).map((item) => (
-                        <li key={item.id}>
-                          <ButtonLink href="/faq" variant="ghost" className="justify-start text-xs">
-                            {item.question}
-                          </ButtonLink>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </Reveal>
-              )}
             </div>
 
             {/* Form */}

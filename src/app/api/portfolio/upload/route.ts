@@ -1,12 +1,10 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const folder = (formData.get("folder") as string) || "portfolio";
-    const category = (formData.get("category") as string) || "VRChat Avatars";
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -17,10 +15,10 @@ export async function POST(request: Request) {
     }
 
     const ext = file.name.split(".").pop();
-    const storagePath = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const storagePath = `portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from("media")
+      .from("portfolio-images")
       .upload(storagePath, file, {
         cacheControl: "3600",
         upsert: true,
@@ -31,17 +29,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Upload failed" }, { status: 500 });
     }
 
-    const { data: urlData } = supabaseAdmin.storage.from("media").getPublicUrl(storagePath);
+    const { data: urlData } = supabaseAdmin.storage.from("portfolio-images").getPublicUrl(storagePath);
     const url = urlData.publicUrl;
 
     const { data: dbData, error: dbError } = await supabaseAdmin
       .from("portfolio_images")
-      .insert([{ url, category }])
+      .insert([{ url }])
       .select();
 
     if (dbError || !dbData || dbData.length === 0) {
       console.error("DB insert error:", dbError);
-      await supabaseAdmin.storage.from("media").remove([storagePath]);
+      await supabaseAdmin.storage.from("portfolio-images").remove([storagePath]);
       return NextResponse.json({ error: "Database error" }, { status: 500 });
     }
 
@@ -51,4 +49,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
-

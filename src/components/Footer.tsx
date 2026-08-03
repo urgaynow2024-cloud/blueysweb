@@ -1,76 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { getNavigationItems, getSiteConfig } from "@/lib/db";
-import { Home, Scissors, Package, Clock, Tag, ShoppingCart, HelpCircle, Star, Phone, Mail, Send } from "lucide-react";
-import { useState, useEffect } from "react";
-
-const linkIcons: Record<string, React.ElementType> = {
-  "/": Home,
-  "/services": Scissors,
-  "/portfolio": Package,
-  "/process": Clock,
-  "/pricing": Tag,
-  "/before-ordering": ShoppingCart,
-  "/faq": HelpCircle,
-  "/reviews": Star,
-  "/contact": Phone,
-};
 
 export default function Footer() {
-  const [navItems, setNavItems] = useState<any[]>([]);
-  const [navLoaded, setNavLoaded] = useState(false);
-  const [site, setSite] = useState<any>({});
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const [navData, siteData] = await Promise.all([getNavigationItems(), getSiteConfig()]);
-        if (navData && navData.length > 0) {
-          setNavItems(navData);
-        } else {
-          setNavItems([
-            { href: "/services", label: "Services", is_visible: true },
-            { href: "/portfolio", label: "Portfolio", is_visible: true },
-            { href: "/process", label: "Process", is_visible: true },
-            { href: "/pricing", label: "Pricing", is_visible: true },
-            { href: "/faq", label: "FAQ", is_visible: true },
-          ]);
-        }
-        setSite(siteData || {});
-      } catch (e) {
-        console.error("Failed to load navigation:", e);
-        setNavItems([
-          { href: "/services", label: "Services", is_visible: true },
-          { href: "/portfolio", label: "Portfolio", is_visible: true },
-          { href: "/process", label: "Process", is_visible: true },
-          { href: "/pricing", label: "Pricing", is_visible: true },
-          { href: "/faq", label: "FAQ", is_visible: true },
-        ]);
-      } finally {
-        setNavLoaded(true);
-      }
-    }
-    load();
-  }, []);
-
-  const displayNav = navItems.filter((l: any) => l.is_visible !== false);
-  const exploreLinks = displayNav.filter((l: any) => l.href !== "/contact");
-  const discordRaw = site.discord_url || site.discord;
-  const discordUrl = discordRaw
-    ? discordRaw.startsWith("http")
-      ? discordRaw
-      : `https://discord.com/users/${encodeURIComponent(discordRaw)}`
-    : "";
-  const supportLinks = [
-    { href: "/contact", label: "Contact", icon: Phone },
-    { href: "/before-ordering", label: "Before Ordering", icon: ShoppingCart },
-    { href: "/tos", label: "Terms of Service", icon: Mail },
-    ...(discordUrl ? [{ href: discordUrl, label: "Discord", icon: Send, external: true }] : []),
-  ];
-
   return (
     <footer className="relative mt-20 border-t border-[var(--border)] overflow-hidden">
+      {/* Accent top border + glow */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent" />
       <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[500px] h-48 bg-[var(--accent)] opacity-[0.06] blur-[100px] rounded-full pointer-events-none" />
 
@@ -81,11 +16,10 @@ export default function Footer() {
               <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-[#05070a] text-sm font-bold shadow-lg shadow-[var(--accent)]/15 group-hover:shadow-[var(--accent)]/30 transition-shadow">
                 B
               </span>
-              Bluey<span className="text-[var(--accent)]">&apos;s</span>
+              Bluey<span className="text-[var(--accent)]">'s</span>
             </Link>
             <p className="mt-4 text-sm text-[var(--text-secondary)] leading-relaxed max-w-xs">
-              Custom VRChat avatars crafted in Blender &amp; Unity. Avatar edits,
-              clothing creation, and performance optimisation with care.
+              Custom VRChat avatars crafted in Blender & Unity. Edits, overhauls, and polish with care.
             </p>
           </div>
 
@@ -94,44 +28,42 @@ export default function Footer() {
               Explore
             </h4>
             <ul className="space-y-3 text-sm">
-              {exploreLinks.map((l: any) => {
-                const Icon = linkIcons[l.href];
-                return (
-                  <li key={l.href}>
-                    <Link
-                      href={l.href}
-                      className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-white transition-all hover:translate-x-1"
-                    >
-                      {Icon && <Icon className="h-3.5 w-3.5" />}
-                      {l.label}
-                    </Link>
-                  </li>
-                );
-              })}
+              {[
+                { href: "/about", label: "About" },
+                { href: "/services", label: "Services" },
+                { href: "/pricing", label: "Pricing" },
+                { href: "/faq", label: "FAQ" },
+                { href: "/portfolio", label: "Portfolio" },
+              ].map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className="text-[var(--text-secondary)] hover:text-white hover:translate-x-1 inline-block transition-all">
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div className="md:justify-self-end">
             <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-dim)] mb-5">
-              Support
+              Get in touch
             </h4>
             <ul className="space-y-3 text-sm">
-              {supportLinks.map((l) => {
-                const Icon = l.icon;
-                return (
-                  <li key={l.href}>
-                    <Link
-                      href={l.href}
-                      className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-white transition-all hover:translate-x-1"
-                      {...(l.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                      prefetch={false}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                      {l.label}
-                    </Link>
-                  </li>
-                );
-              })}
+              <li>
+                <Link href="/contact" className="text-[var(--text-secondary)] hover:text-white hover:translate-x-1 inline-block transition-all">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link href="/commission" className="text-[var(--text-secondary)] hover:text-white hover:translate-x-1 inline-block transition-all">
+                  Commission
+                </Link>
+              </li>
+              <li>
+                <Link href="/tos" className="text-[var(--text-secondary)] hover:text-white hover:translate-x-1 inline-block transition-all">
+                  Terms of Service
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
@@ -141,7 +73,7 @@ export default function Footer() {
             <span className="w-6 h-6 rounded-md bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-[#05070a] text-xs font-bold">
               B
             </span>
-            <span suppressHydrationWarning>&copy; {new Date().getFullYear()} Bluey&apos;s Avatar Commissions</span>
+            <span suppressHydrationWarning>© {new Date().getFullYear()} Bluey&rsquo;s Avatar Commissions</span>
           </div>
           <div className="flex gap-7">
             <Link href="/tos" className="hover:text-white transition-colors">Terms</Link>

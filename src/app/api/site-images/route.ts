@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 function sanitiseFileName(name: string): string {
@@ -63,12 +63,12 @@ export async function POST(request: Request) {
       uploadOptions.contentType = file.type;
     }
 
-    const bucketCheck = await supabaseAdmin.storage.getBucket("media");
+    const bucketCheck = await supabaseAdmin.storage.getBucket("portfolio-images");
     if (bucketCheck.error) {
       console.error("Bucket check error:", bucketCheck.error);
       return NextResponse.json(
         {
-          error: "Storage bucket 'media' not found. Create it in Supabase Dashboard â†’ Storage â†’ New bucket.",
+          error: "Storage bucket 'portfolio-images' not found. Create it in Supabase Dashboard → Storage → New bucket.",
           details: bucketCheck.error.message,
         },
         { status: 500 }
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     }
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from("media")
+      .from("portfolio-images")
       .upload(storagePath, file, uploadOptions);
 
     if (uploadError || !uploadData) {
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: urlData } = supabaseAdmin.storage.from("media").getPublicUrl(storagePath);
+    const { data: urlData } = supabaseAdmin.storage.from("portfolio-images").getPublicUrl(storagePath);
     const url = urlData.publicUrl;
 
     const { error: dbError } = await supabaseAdmin
@@ -118,7 +118,7 @@ export async function DELETE(request: Request) {
     }
 
     if (path) {
-      await supabaseAdmin.storage.from("media").remove([path]);
+      await supabaseAdmin.storage.from("portfolio-images").remove([path]);
     }
 
     const { error } = await supabaseAdmin.from("site_images").delete().eq("key", key);
@@ -133,4 +133,3 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
-

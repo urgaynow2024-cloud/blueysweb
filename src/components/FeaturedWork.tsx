@@ -30,7 +30,7 @@ export default function FeaturedWork() {
               if (data.portfolioImages && data.portfolioImages.length > 0) {
                 setImages(data.portfolioImages.slice(0, 4));
               }
-            } catch {}
+            } catch (e) {}
           }
           setLoading(false);
           return;

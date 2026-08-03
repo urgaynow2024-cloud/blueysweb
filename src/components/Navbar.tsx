@@ -1,20 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
-import { Zap, Menu, X, ArrowUpRight, Home, Scissors, Package, Tag, HelpCircle, Star, Phone, Layers } from "lucide-react";
-import { getNavigationItems } from "@/lib/db";
-
-const linkIcons: Record<string, React.ElementType> = {
-  "/": Home,
-  "/services": Scissors,
-  "/portfolio": Package,
-  "/fbx-mashups": Layers,
-  "/pricing": Tag,
-  "/faq": HelpCircle,
-  "/reviews": Star,
-  "/contact": Phone,
-};
+import { Zap, Menu, X, ArrowUpRight } from "lucide-react";
+import { navLinks } from "@/data/site";
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -25,52 +14,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-  const [navItems, setNavItems] = useState<any[]>([]);
-  const [queueStatus, setQueueStatus] = useState<{ status_text: string; status_color: string } | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const [navData, queueData] = await Promise.all([
-          getNavigationItems(),
-          fetch("/api/queue/config").then(r => r.ok ? r.json() : null).catch(() => null),
-        ]);
-        if (navData && navData.length > 0) {
-          setNavItems(navData);
-        } else {
-          setNavItems([
-            { href: "/", label: "Home", is_visible: true },
-            { href: "/portfolio", label: "Portfolio", is_visible: true },
-            { href: "/services", label: "Services", is_visible: true },
-            { href: "/fbx-mashups", label: "FBX Mashups", is_visible: true },
-            { href: "/pricing", label: "Pricing", is_visible: true },
-            { href: "/faq", label: "FAQ", is_visible: true },
-            { href: "/reviews", label: "Reviews", is_visible: true },
-            { href: "/contact", label: "Contact", is_visible: true },
-          ]);
-        }
-        if (queueData) {
-          setQueueStatus({ status_text: queueData.status_text || "Open", status_color: queueData.status_color || "green" });
-        }
-      } catch (e) {
-        console.error("Failed to load navigation:", e);
-        setNavItems([
-          { href: "/", label: "Home", is_visible: true },
-          { href: "/portfolio", label: "Portfolio", is_visible: true },
-          { href: "/services", label: "Services", is_visible: true },
-          { href: "/fbx-mashups", label: "FBX Mashups", is_visible: true },
-          { href: "/pricing", label: "Pricing", is_visible: true },
-          { href: "/faq", label: "FAQ", is_visible: true },
-          { href: "/reviews", label: "Reviews", is_visible: true },
-          { href: "/contact", label: "Contact", is_visible: true },
-        ]);
-      }
-    }
-    load();
-  }, []);
-
-  const displayNav = navItems.filter((l: any) => l.is_visible !== false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
@@ -111,45 +55,35 @@ export default function Navbar() {
           <a
             href="/"
             className="group flex items-center gap-2.5 shrink-0"
-            aria-label="Bluey's Commissions â home"
+            aria-label="Bluey's Commissions — home"
           >
             <span className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] text-sm font-extrabold shadow-lg shadow-[var(--accent)]/30 transition-transform duration-500 group-hover:scale-105">
               <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               B
             </span>
             <span className="hidden text-lg font-bold tracking-tight text-white sm:inline font-display">
-              Bluey<span className="text-[var(--accent)]">&apos;s</span>
+              Bluey<span className="text-[var(--accent)]">'s</span>
             </span>
           </a>
 
           {/* Desktop links */}
           <div ref={navRef} className="hidden lg:flex items-center gap-0.5">
-            {displayNav.map((link: any) => {
+            {navLinks.map((link) => {
               const active = isActive(pathname, link.href);
-              const Icon = linkIcons[link.href];
               return (
                 <a
                   key={link.href}
                   href={link.href}
                   aria-current={active ? "page" : undefined}
-                  className={`group relative px-4 py-2.5 text-sm font-medium transition-all duration-300 rounded-xl ${
+                  className={`relative px-4 py-2 text-sm font-medium transition-all duration-300 rounded-xl ${
                     active
                       ? "text-white"
                       : "text-[var(--text-secondary)] hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  <span className="relative z-10 flex items-center gap-1.5">
-                    {Icon && (() => { const Ic = Icon; return <Ic className="h-4 w-4" />; })()}
-                    {link.label}
-                  </span>
+                  {link.label}
                   {active && (
-                    <>
-                      <span className="absolute -bottom-1 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-100 shadow-lg shadow-[var(--accent)]/40 transition-all duration-500" />
-                      <span className="absolute inset-0 -z-10 rounded-xl bg-[var(--accent-soft)]" />
-                    </>
-                  )}
-                  {!active && (
-                    <span className="absolute -bottom-1 left-1/2 h-0.5 w-0 -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-0 shadow-lg shadow-[var(--accent)]/40 transition-all duration-300 group-hover:w-6 group-hover:opacity-60" />
+                    <span className="absolute inset-0 rounded-xl bg-[var(--accent-soft)] border border-[var(--border-accent)] -z-10" />
                   )}
                 </a>
               );
@@ -157,29 +91,13 @@ export default function Navbar() {
           </div>
 
           {/* Desktop CTA */}
-          <div className="hidden lg:flex items-center gap-3">
-            {queueStatus && (
-              <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                queueStatus.status_color === "green" ? "bg-emerald-500/15 text-emerald-400" :
-                queueStatus.status_color === "yellow" ? "bg-yellow-500/15 text-yellow-400" :
-                "bg-red-500/15 text-red-400"
-              }`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${
-                  queueStatus.status_color === "green" ? "bg-emerald-400" :
-                  queueStatus.status_color === "yellow" ? "bg-yellow-400" :
-                  "bg-red-400"
-                }`} />
-                {queueStatus.status_text}
-              </span>
-            )}
-            <a
-              href="/contact"
-              className="btn-primary !py-2 !px-5 !text-sm !rounded-xl inline-flex items-center gap-2"
-            >
-              <Zap className="h-3.5 w-3.5" />
-              Commission
-            </a>
-          </div>
+          <a
+            href="/contact"
+            className="hidden lg:inline-flex btn-primary !py-2 !px-5 !text-sm !rounded-xl items-center gap-2"
+          >
+            <Zap className="h-3.5 w-3.5" />
+            Commission
+          </a>
 
           {/* Mobile toggle */}
           <button
@@ -210,9 +128,8 @@ export default function Navbar() {
           }`}
         >
           <div className="glass-strong overflow-hidden rounded-3xl p-3 shadow-2xl shadow-black/50">
-            {displayNav.map((link: any, i: number) => {
+            {navLinks.map((link, i) => {
               const active = isActive(pathname, link.href);
-              const Icon = linkIcons[link.href];
               return (
                 <a
                   key={link.href}
@@ -233,40 +150,21 @@ export default function Navbar() {
                       : undefined
                   }
                 >
-                  <span className="relative z-10 flex items-center gap-2.5">
-                    {Icon && (() => { const Ic = Icon; return <Ic className="h-4 w-4" />; })()}
-                    {link.label}
-                  </span>
+                  {link.label}
                   {active && (
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)]" />
                   )}
                 </a>
               );
             })}
-            {queueStatus && (
-              <div className="mb-2 flex justify-center">
-                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                  queueStatus.status_color === "green" ? "bg-emerald-500/15 text-emerald-400" :
-                  queueStatus.status_color === "yellow" ? "bg-yellow-500/15 text-yellow-400" :
-                  "bg-red-500/15 text-red-400"
-                }`}>
-                  <span className={`h-1.5 w-1.5 rounded-full ${
-                    queueStatus.status_color === "green" ? "bg-emerald-400" :
-                    queueStatus.status_color === "yellow" ? "bg-yellow-400" :
-                    "bg-red-400"
-                  }`} />
-                  {queueStatus.status_text}
-                </span>
-              </div>
-            )}
             <a
               href="/contact"
               onClick={() => setOpen(false)}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] px-5 py-3.5 font-bold text-[#04060a]"
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] px-5 py-3.5 font-bold text-[#04060a]"
               style={
                 open
                   ? {
-                      animationDelay: `${displayNav.length * 40}ms`,
+                      animationDelay: `${navLinks.length * 40}ms`,
                       animation: "animateIn 0.4s var(--ease-out) both",
                     }
                   : undefined

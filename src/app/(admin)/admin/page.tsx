@@ -21,51 +21,39 @@ import { QueueSection } from "@/components/admin/sections/QueueSection";
 import { SiteInfoSection } from "@/components/admin/sections/SiteInfoSection";
 import { ModeratorsSection } from "@/components/admin/sections/ModeratorsSection";
 
-import { HeroSection } from "@/components/admin/sections/HeroSection";
-import { StatsSection } from "@/components/admin/sections/StatsSection";
-import { ServicesSection } from "@/components/admin/sections/ServicesSection";
-import { BeforeOrderingSection } from "@/components/admin/sections/BeforeOrderingSection";
-import { TosSection } from "@/components/admin/sections/TosSection";
-import { NavigationSection } from "@/components/admin/sections/NavigationSection";
-import { WebsiteSettingsSection } from "@/components/admin/sections/WebsiteSettingsSection";
-import { PortfolioCategoriesSection } from "@/components/admin/sections/PortfolioCategoriesSection";
-import { CommissionFormSection } from "@/components/admin/sections/CommissionFormSection";
-import { MediaLibrarySection } from "@/components/admin/sections/MediaLibrarySection";
-import { HomepageSectionsSection } from "@/components/admin/sections/HomepageSectionsSection";
-import { CommissionsSection } from "@/components/admin/sections/CommissionsSection";
-import { NotificationsSection } from "@/components/admin/sections/NotificationsSection";
-import { MaintenanceSection } from "@/components/admin/sections/MaintenanceSection";
-import { ChangelogSection } from "@/components/admin/sections/ChangelogSection";
-import { RolesSection } from "@/components/admin/sections/RolesSection";
-import { FbxMashupSection } from "@/components/admin/sections/FbxMashupSection";
-
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 const ADMIN_PASSWORD = "blueyadmin";
 
 const defaultSite = {
-  name: "",
-  tagline: "",
-  description: "",
-  discord: "",
+  name: "Bluey's Avatar Commissions",
+  tagline: "VRChat Avatar Edits • Blender Work • Unity Setup",
+  description: "Clean, stylish, performance-friendly avatars built for VRChat.",
+  discord: "BlueyBarks",
 };
 
-const defaultPricing: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
-const defaultFaq: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
-const defaultWorkflow: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
-const defaultNavigation = [
-  { id: undefined, label: "Work", href: "/", icon: "", is_external: false, is_visible: true },
-  { id: undefined, label: "Services", href: "/services", icon: "", is_external: false, is_visible: true },
-  { id: undefined, label: "Portfolio", href: "/portfolio", icon: "", is_external: false, is_visible: true },
-  { id: undefined, label: "Process", href: "/process", icon: "", is_external: false, is_visible: true },
-  { id: undefined, label: "Pricing", href: "/pricing", icon: "", is_external: false, is_visible: true },
-  { id: undefined, label: "Before Ordering", href: "/before-ordering", icon: "", is_external: false, is_visible: true },
-  { id: undefined, label: "FAQ", href: "/faq", icon: "", is_external: false, is_visible: true },
-  { id: undefined, label: "Reviews", href: "/reviews", icon: "", is_external: false, is_visible: true },
-  { id: undefined, label: "Contact", href: "/contact", icon: "", is_external: false, is_visible: true },
+const defaultPricing = [
+  { id: "light", name: "Light Blender Work", emoji: "✨", price: "£15 - £25", badge: null, popular: false, features: ["Easy asset additions", "Custom jewellery", "Simple clothing fitting", "Texture recolours", "Minor avatar fixes"] },
+  { id: "custom", name: "Avatar Customisation", emoji: "🛠", price: "£30 - £55", badge: "Most Requested", popular: true, features: ["Multiple asset additions", "Advanced clothing fitting", "Hair combinations", "Toggles setup", "Basic optimisation"] },
+  { id: "overhaul", name: "Avatar Overhaul", emoji: "🔥", price: "£60 - £90", badge: null, popular: false, features: ["Heavy Blender work", "Full avatar redesign", "Advanced toggle systems", "Large asset integration", "Performance optimisation"] },
 ];
 
-type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "hero" | "stats" | "services" | "before-ordering" | "tos" | "navigation" | "website-settings" | "portfolio-categories" | "commission-form" | "media-library" | "homepage-sections" | "commissions" | "notifications" | "maintenance" | "changelog" | "roles" | "fbx-mashups";
+const defaultFaq = [
+  { id: "1", question: "What do I need to provide?", answer: "What you want done, avatar base name, reference images, and any required assets." },
+  { id: "2", question: "How long does a commission take?", answer: "Depends on complexity. Light work is faster, overhauls take longer." },
+  { id: "3", question: "Do you work on Quest?", answer: "Quest compatibility depends on the tier. Overhauls include Quest optimisation." },
+  { id: "4", question: "What payment methods?", answer: "PayPal and Payhip only. 50% deposit before work begins." },
+];
+
+const defaultWorkflow = [
+  { id: "1", emoji: "💬", title: "Enquiry", desc: "Message me on Discord with what you're looking for." },
+  { id: "2", emoji: "📋", title: "Quote", desc: "I'll let you know the price and how long it'll take." },
+  { id: "3", emoji: "💳", title: "Deposit", desc: "50% deposit before I start work." },
+  { id: "4", emoji: "🎨", title: "Work", desc: "I'll send progress updates and previews as I go." },
+  { id: "5", emoji: "📦", title: "Delivery", desc: "Final files sent once the remaining payment is done." },
+];
+
+type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -74,154 +62,75 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [resetOpen, setResetOpen] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [site, setSite] = useState<any>(defaultSite);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [pricing, setPricing] = useState<any[]>(defaultPricing);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [faq, setFaq] = useState<any[]>(defaultFaq);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [workflow, setWorkflow] = useState<any[]>(defaultWorkflow);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [reviews, setReviews] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [links, setLinks] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [hero, setHero] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [stats, setStats] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [services, setServices] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [beforeOrdering, setBeforeOrdering] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [tosSections, setTosSections] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [navigation, setNavigation] = useState<any[]>(defaultNavigation);
-  const [websiteSettings, setWebsiteSettings] = useState<Record<string, string>>({});
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [portfolioCategories, setPortfolioCategories] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [commissionForm, setCommissionForm] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [mediaLibrary, setMediaLibrary] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [homepageSections, setHomepageSections] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [commissions, setCommissions] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [notifications, setNotifications] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [maintenanceMode, setMaintenanceMode] = useState<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [changelog, setChangelog] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [roles, setRoles] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [fbxMashups, setFbxMashups] = useState<any[]>([]);
 
   const { markDirty, register } = useSave();
   const toast = useToast();
 
-  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles, fbxMashups });
+  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links });
   useEffect(() => {
-    dataRef.current = { site, pricing, faq, workflow, reviews, links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles, fbxMashups };
-  }, [site, pricing, faq, workflow, reviews, links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles, fbxMashups]);
+    dataRef.current = { site, pricing, faq, workflow, reviews, links };
+  }, [site, pricing, faq, workflow, reviews, links]);
 
   useEffect(() => {
-    if (!authed) return;
-
-    async function loadAllData() {
-      setLoading(true);
-      try {
-        if (!isSupabaseConfigured || !supabase) {
-          const stored = localStorage.getItem("adminData");
-          if (stored) {
-            try {
-              const data = JSON.parse(stored);
-              if (data.site) setSite(data.site);
-              if (data.pricing) setPricing(data.pricing);
-              if (data.faq) setFaq(data.faq);
-              if (data.workflow) setWorkflow(data.workflow);
-              if (data.reviews) setReviews(data.reviews);
-              if (data.links) setLinks(data.links);
-              if (data.hero) setHero(data.hero);
-               if (data.stats) setStats(data.stats);
-               if (data.services) setServices(data.services);
-               if (data.beforeOrdering) setBeforeOrdering(data.beforeOrdering);
-              if (data.tosSections) setTosSections(data.tosSections);
-              if (data.navigation) setNavigation(data.navigation);
-              if (data.websiteSettings) setWebsiteSettings(data.websiteSettings);
-              if (data.portfolioCategories) setPortfolioCategories(data.portfolioCategories);
-              if (data.commissionForm) setCommissionForm(data.commissionForm);
-              if (data.mediaLibrary) setMediaLibrary(data.mediaLibrary);
-              if (data.homepageSections) setHomepageSections(data.homepageSections);
-            } catch {}
-          }
-          setLoading(false);
-          return;
-        }
-        const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }, { data: heroData }, { data: statsData }, { data: servicesData }, { data: beforeData }, { data: tosData }, { data: navData }, { data: settingsData }, { data: catsData }, { data: formData }, { data: mediaData }, { data: hsData }, { data: fbxData }] = await Promise.all([
-          supabase.from("site_config").select("*"),
-          supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }),
-          supabase.from("faq_items").select("*").order("sort_order", { ascending: true }),
-          supabase.from("workflow_steps").select("*").order("sort_order", { ascending: true }),
-          supabase.from("reviews").select("*").order("created_at", { ascending: false }),
-          supabase.from("social_links").select("*").order("sort_order", { ascending: true }),
-          supabase.from("hero_content").select("*").order("sort_order", { ascending: true }),
-          supabase.from("homepage_stats").select("*").order("sort_order", { ascending: true }),
-          supabase.from("services").select("*").order("sort_order", { ascending: true }),
-          supabase.from("before_ordering_items").select("*").order("sort_order", { ascending: true }),
-          supabase.from("tos_sections").select("*").order("sort_order", { ascending: true }),
-          supabase.from("navigation_items").select("*").order("sort_order", { ascending: true }),
-          supabase.from("website_settings").select("*"),
-          supabase.from("portfolio_categories").select("*").order("sort_order", { ascending: true }),
-          supabase.from("commission_form_fields").select("*").order("sort_order", { ascending: true }),
-          supabase.from("media_library").select("*").order("sort_order", { ascending: true }),
-          supabase.from("homepage_sections").select("*").order("sort_order", { ascending: true }),
-          supabase.from("fbx_mashups").select("*").order("sort_order", { ascending: true }),
-        ]);
-        if (siteData && siteData.length > 0) {
-          const s: Record<string, string> = { ...defaultSite };
-          siteData.forEach((row: Record<string, string>) => { s[row.key] = row.value; });
-          setSite(s);
-        }
-        if (pricingData && pricingData.length > 0) setPricing(pricingData);
-        if (faqData && faqData.length > 0) setFaq(faqData);
-        if (workflowData && workflowData.length > 0) setWorkflow(workflowData);
-        if (reviewsData && reviewsData.length > 0) setReviews(reviewsData);
-        if (linksData && linksData.length > 0) setLinks(linksData);
-        if (heroData && heroData.length > 0) setHero(heroData);
-        if (statsData && statsData.length > 0) setStats(statsData);
-        if (servicesData && servicesData.length > 0) setServices(servicesData);
-        if (beforeData && beforeData.length > 0) setBeforeOrdering(beforeData);
-        if (tosData && tosData.length > 0) setTosSections(tosData);
-        if (navData && navData.length > 0) setNavigation(navData);
-        if (settingsData && settingsData.length > 0) {
-          const s: Record<string, string> = {};
-          settingsData.forEach((row: Record<string, string>) => { s[row.key] = row.value; });
-          setWebsiteSettings(s);
-        }
-        if (catsData && catsData.length > 0) setPortfolioCategories(catsData);
-        if (formData && formData.length > 0) setCommissionForm(formData);
-        if (mediaData && mediaData.length > 0) setMediaLibrary(mediaData);
-        if (hsData && hsData.length > 0) setHomepageSections(hsData);
-        if (fbxData && fbxData.length > 0) setFbxMashups(fbxData);
-      } catch (e) {
-        console.error("Failed to load data:", e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadAllData();
+    if (authed) loadAllData();
   }, [authed]);
 
+  async function loadAllData() {
+    setLoading(true);
+    try {
+      if (!isSupabaseConfigured || !supabase) {
+        const stored = localStorage.getItem("adminData");
+        if (stored) {
+          try {
+            const data = JSON.parse(stored);
+            if (data.site) setSite(data.site);
+            if (data.pricing) setPricing(data.pricing);
+            if (data.faq) setFaq(data.faq);
+            if (data.workflow) setWorkflow(data.workflow);
+            if (data.reviews) setReviews(data.reviews);
+            if (data.links) setLinks(data.links);
+          } catch {}
+        }
+        setLoading(false);
+        return;
+      }
+      const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }] = await Promise.all([
+        supabase.from("site_config").select("*"),
+        supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }),
+        supabase.from("faq_items").select("*").order("sort_order", { ascending: true }),
+        supabase.from("workflow_steps").select("*").order("sort_order", { ascending: true }),
+        supabase.from("reviews").select("*").order("created_at", { ascending: false }),
+        supabase.from("social_links").select("*").order("sort_order", { ascending: true }),
+      ]);
+      if (siteData && siteData.length > 0) {
+        const s: any = { ...defaultSite };
+        siteData.forEach((row: any) => { s[row.key] = row.value; });
+        setSite(s);
+      }
+      if (pricingData && pricingData.length > 0) setPricing(pricingData);
+      if (faqData && faqData.length > 0) setFaq(faqData);
+      if (workflowData && workflowData.length > 0) setWorkflow(workflowData);
+      if (reviewsData && reviewsData.length > 0) setReviews(reviewsData);
+      if (linksData && linksData.length > 0) setLinks(linksData);
+    } catch (e) {
+      console.error("Failed to load data:", e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const contentSaver = useCallback(async () => {
-     const { site, pricing, faq, workflow, reviews, links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles, fbxMashups } = dataRef.current;
+    const { site, pricing, faq, workflow, reviews, links } = dataRef.current;
     const res = await fetch("/api/admin/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ site, pricing, faq, workflow, reviews, socialLinks: links, hero, stats, services, beforeOrdering, tosSections, navigation, websiteSettings, portfolioCategories, commissionForm, mediaLibrary, homepageSections, commissions, notifications, maintenanceMode, changelog, roles, fbxMashups }),
+      body: JSON.stringify({ site, pricing, faq, workflow, reviews, socialLinks: links }),
     });
     if (!res.ok) {
       const r = await res.json().catch(() => ({}));
@@ -235,6 +144,7 @@ export default function AdminPage() {
 
   async function doLogin(e: React.FormEvent) {
     e.preventDefault();
+    // Establish an owner session (sets the httpOnly cookie used by moderator APIs).
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -248,6 +158,7 @@ export default function AdminPage() {
       toast.error("Incorrect password");
       return;
     }
+    // Fallback for local/demo mode (Supabase not configured): use the hardcoded check.
     if (pw === ADMIN_PASSWORD) {
       setAuthed(true);
     } else {
@@ -267,26 +178,9 @@ export default function AdminPage() {
     setWorkflow(defaultWorkflow);
     setReviews([]);
     setLinks([]);
-    setHero([]);
-    setStats([]);
-     setServices([]);
-     setBeforeOrdering([]);
-    setTosSections([]);
-    setNavigation([]);
-    setWebsiteSettings({});
-    setPortfolioCategories([]);
-    setCommissionForm([]);
-    setMediaLibrary([]);
-    setHomepageSections([]);
-    setCommissions([]);
-    setNotifications([]);
-    setMaintenanceMode(null);
-    setChangelog([]);
-    setRoles([]);
-    setFbxMashups([]);
     localStorage.removeItem("adminData");
     setResetOpen(false);
-    toast.info("Content reset to defaults â press Save Changes to apply");
+    toast.info("Content reset to defaults — press Save Changes to apply");
     markDirty();
   }
 
@@ -324,30 +218,6 @@ export default function AdminPage() {
     );
   }
 
-  if (!isSupabaseConfigured) {
-    return (
-      <DashboardLayout
-        active={tab}
-        onSelect={(id) => {
-          if (id === "__reset") setResetOpen(true);
-          else setTab(id as Tab);
-        }}
-        onLogout={doLogout}
-        onReset={() => setResetOpen(true)}
-      >
-        <div className="ad-panel rounded-xl border border-[var(--warning-border)] bg-[var(--warning-soft)] p-6">
-          <h2 className="text-lg font-bold text-white">Supabase Not Configured</h2>
-          <p className="mt-2 text-sm text-[var(--text-secondary)]">
-            Your admin changes cannot be saved because Supabase credentials are missing. Create a <code className="rounded bg-[var(--bg)] px-1.5 py-0.5 text-xs text-[var(--accent)]">.env.local</code> file with your Supabase URL, anon key, and service role key.
-          </p>
-          <p className="mt-2 text-sm text-[var(--text-secondary)]">
-            Without Supabase, changes you make here will not persist and may be lost when you navigate away.
-          </p>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
   return (
     <DashboardLayout
       active={tab}
@@ -369,30 +239,6 @@ export default function AdminPage() {
       {tab === "queue" && <QueueSection />}
       {tab === "moderators" && <ModeratorsSection />}
       {tab === "site" && <SiteInfoSection value={site} onChange={(n) => { setSite(n); markDirty(); }} />}
-      {tab === "hero" && <HeroSection value={hero} onChange={(n) => { setHero(n); markDirty(); }} />}
-      {tab === "stats" && <StatsSection value={stats} onChange={(n) => { setStats(n); markDirty(); }} />}
-      {tab === "services" && <ServicesSection value={services} onChange={(n) => { setServices(n); markDirty(); }} />}
-      {tab === "before-ordering" && <BeforeOrderingSection value={beforeOrdering} onChange={(n) => { setBeforeOrdering(n); markDirty(); }} />}
-      {tab === "tos" && (
-        <TosSection
-          value={tosSections}
-          onChange={(n) => { setTosSections(n); markDirty(); }}
-          siteValue={site}
-          onSiteChange={(siteUpdate) => { setSite(siteUpdate); markDirty(); }}
-        />
-      )}
-      {tab === "navigation" && <NavigationSection value={navigation} onChange={(n) => { setNavigation(n); markDirty(); }} />}
-      {tab === "website-settings" && <WebsiteSettingsSection value={websiteSettings} onChange={(n) => { setWebsiteSettings(n); markDirty(); }} />}
-      {tab === "portfolio-categories" && <PortfolioCategoriesSection value={portfolioCategories} onChange={(n) => { setPortfolioCategories(n); markDirty(); }} />}
-      {tab === "commission-form" && <CommissionFormSection value={commissionForm} onChange={(n) => { setCommissionForm(n); markDirty(); }} />}
-      {tab === "media-library" && <MediaLibrarySection value={mediaLibrary} onChange={(n) => { setMediaLibrary(n); markDirty(); }} />}
-      {tab === "homepage-sections" && <HomepageSectionsSection value={homepageSections} onChange={(n) => { setHomepageSections(n); markDirty(); }} />}
-      {tab === "commissions" && <CommissionsSection />}
-      {tab === "notifications" && <NotificationsSection />}
-      {tab === "maintenance" && <MaintenanceSection />}
-      {tab === "changelog" && <ChangelogSection />}
-      {tab === "roles" && <RolesSection />}
-      {tab === "fbx-mashups" && <FbxMashupSection value={fbxMashups} onChange={(n) => { setFbxMashups(n); markDirty(); }} />}
 
       <Modal
         open={resetOpen}

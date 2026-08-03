@@ -1,17 +1,80 @@
 import { NextResponse } from "next/server";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
+
+const QUEUE_KEYS = [
+  "queue_status",
+  "queue_slots_total",
+  "queue_slots_used",
+  "queue_wait_time",
+  "queue_notes",
+  "queue_last_updated",
+];
 
 export async function GET() {
-  if (!isSupabaseConfigured || !supabase) return NextResponse.json(null);
-  const { data, error } = await supabase.from("queue_config").select("*").limit(1).single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+  try {
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("site_config")
+      .select("key, value")
+      .in("key", QUEUE_KEYS);
+
+    if (error) {
+      console.error("Fetch queue config error:", error);
+      return NextResponse.json({ error: "Failed to fetch queue config" }, { status: 500 });
+    }
+
+    const result: Record<string, string> = {};
+    if (data) {
+      data.forEach((row: any) => {
+        result[row.key] = row.value;
+      });
+    }
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("API error:", error);
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
 }
 
-export async function PUT(request: Request) {
-  if (!isSupabaseConfigured || !supabase) return NextResponse.json({ error: "Not configured" }, { status: 500 });
-  const body = await request.json();
-  const { data, error } = await supabase.from("queue_config").update(body).eq("id", body.id || (await supabase.from("queue_config").select("id").limit(1).single()).data?.id).select();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data?.[0] || null);
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+    }
+
+    const updates: any = {};
+    for (const key of QUEUE_KEYS) {
+      if (body[key] !== undefined) {
+        updates[key] = String(body[key]);
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "No updates provided" }, { status: 400 });
+    }
+
+    const rows = Object.entries(updates).map(([key, value]) => ({ key, value }));
+    
+    for (const row of rows) {
+      const { error } = await supabaseAdmin
+        .from("site_config")
+        .upsert({ key: row.key, value: row.value, updated_at: new Date().toISOString() }, { onConflict: "key" });
+
+      if (error) {
+        console.error("Queue config update error:", error);
+        return NextResponse.json({ error: "Failed to update queue config" }, { status: 500 });
+      }
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("API error:", error);
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
 }

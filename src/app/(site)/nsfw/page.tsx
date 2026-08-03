@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import AgeVerifier from "@/components/AgeVerifier";
+import { nsfwPricingTiers, nsfwRules } from "@/data/site";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { getPricingTiers, getNsfwRules, getSiteConfig } from "@/lib/db";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
 import SectionHeading from "@/components/ui/SectionHeading";
 import PricingCard from "@/components/ui/PricingCard";
@@ -22,8 +22,6 @@ function SkeletonCard() {
 export default function NsfwPage() {
   const [isVerified, setIsVerified] = useState(false);
   const [images, setImages] = useState<string[]>([]);
-  const [nsfwPricing, setNsfwPricing] = useState<any[]>([]);
-  const [nsfwRules, setNsfwRules] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -39,20 +37,26 @@ export default function NsfwPage() {
       if (!isVerified) return;
       setLoading(true);
       try {
-        const [pricing, rules, nsfwImages] = await Promise.all([
-          getPricingTiers(),
-          getNsfwRules(),
-          isSupabaseConfigured && supabase
-            ? supabase.from("nsfw_portfolio_images").select("url").order("sort_order", { ascending: true })
-            : { data: null },
-        ]);
-        setNsfwPricing((pricing || []).filter((t: any) => t.is_nsfw));
-        setNsfwRules(rules);
-        if (nsfwImages?.data && nsfwImages.data.length > 0) {
-          setImages(nsfwImages.data.map((img: any) => img.url));
+        if (!isSupabaseConfigured || !supabase) {
+          const stored = localStorage.getItem("adminData");
+          if (stored) {
+            try {
+              const data = JSON.parse(stored);
+              if (data.nsfwPortfolioImages && data.nsfwPortfolioImages.length > 0) {
+                setImages(data.nsfwPortfolioImages);
+              }
+            } catch (e) {}
+          }
+          setLoading(false);
+          return;
         }
+        const { data } = await supabase
+          .from("nsfw_portfolio_images")
+          .select("url")
+          .order("sort_order", { ascending: true });
+        if (data && data.length > 0) setImages(data.map((img) => img.url));
       } catch (e) {
-        console.error("Failed to load NSFW data:", e);
+        console.error("Failed to load NSFW portfolio:", e);
       } finally {
         setLoading(false);
       }
@@ -76,47 +80,39 @@ export default function NsfwPage() {
             subtitle="Mature avatar customisation for verified adults. All work is delivered privately and discreetly."
           />
 
-          {(nsfwRules.requirements?.length > 0 || nsfwRules.notAllowed?.length > 0 || nsfwRules.note) && (
-            <Reveal>
-              <div className="mb-14 rounded-[var(--r-lg)] border border-red-500/30 bg-red-500/10 p-6 md:p-8">
-                <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-white">
-                  <ShieldAlert className="h-5 w-5 text-red-400" />
-                  Age Verification &amp; Rules
-                </h3>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  {nsfwRules.requirements?.length > 0 && (
-                    <div>
-                      <h4 className="mb-2 text-sm font-semibold text-red-400">Requirements</h4>
-                      <ul className="space-y-1.5">
-                        {nsfwRules.requirements.map((req: string, i: number) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
-                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
-                            {req}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {nsfwRules.notAllowed?.length > 0 && (
-                    <div>
-                      <h4 className="mb-2 text-sm font-semibold text-red-400">What&rsquo;s Not Allowed</h4>
-                      <ul className="space-y-1.5">
-                        {nsfwRules.notAllowed.map((rule: string, i: number) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
-                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
-                            {rule}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+          <Reveal>
+            <div className="mb-14 rounded-[var(--r-lg)] border border-red-500/30 bg-red-500/10 p-6 md:p-8">
+              <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-white">
+                <ShieldAlert className="h-5 w-5 text-red-400" />
+                Age Verification &amp; Rules
+              </h3>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div>
+                  <h4 className="mb-2 text-sm font-semibold text-red-400">Requirements</h4>
+                  <ul className="space-y-1.5">
+                    {nsfwRules.requirements.map((req, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
+                        {req}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                {nsfwRules.note && (
-                  <p className="mt-4 text-sm italic text-[var(--text-dim)]">{nsfwRules.note}</p>
-                )}
+                <div>
+                  <h4 className="mb-2 text-sm font-semibold text-red-400">What&rsquo;s Not Allowed</h4>
+                  <ul className="space-y-1.5">
+                    {nsfwRules.notAllowed.map((rule, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
+                        {rule}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-            </Reveal>
-          )}
+              <p className="mt-4 text-sm italic text-[var(--text-dim)]">{nsfwRules.note}</p>
+            </div>
+          </Reveal>
 
           {/* NSFW Portfolio Gallery */}
           <div className="mb-16">
@@ -157,19 +153,13 @@ export default function NsfwPage() {
           {/* NSFW Pricing */}
           <SectionHeading align="center" eyebrow="NSFW Rates" title="Pricing" subtitle="Adult content commissions are priced separately from SFW work." />
 
-          {nsfwPricing.length > 0 ? (
-            <div className="mb-16 grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
-              {nsfwPricing.map((tier, i) => (
-                <Reveal key={tier.id} delay={i * 80}>
-                  <PricingCard tier={tier} />
-                </Reveal>
-              ))}
-            </div>
-          ) : (
-            <div className="mb-16 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] py-12 text-center">
-              <p className="text-[var(--text-dim)]">No NSFW pricing tiers have been added yet.</p>
-            </div>
-          )}
+          <div className="mb-16 grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+            {nsfwPricingTiers.map((tier, i) => (
+              <Reveal key={tier.id} delay={i * 80}>
+                <PricingCard tier={tier} />
+              </Reveal>
+            ))}
+          </div>
 
           <div className="text-center">
             <p className="mb-4 text-sm text-[var(--text-dim)]">All NSFW work requires age verification and is delivered privately.</p>

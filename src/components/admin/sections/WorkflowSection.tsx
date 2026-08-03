@@ -20,7 +20,7 @@ export function WorkflowSection({ value, onChange }: Props) {
     onChange(value.filter((_, j) => j !== i));
   }
   function add() {
-    onChange([...value, { id: undefined, emoji: "📝", title: "New Step", description: "What happens in this step." }]);
+    onChange([...value, { id: undefined, emoji: "📝", title: "New Step", desc: "Description here." }]);
   }
 
   return (
@@ -51,7 +51,7 @@ export function WorkflowSection({ value, onChange }: Props) {
                 <Input value={step.title} onChange={(e) => update(i, { title: e.target.value })} />
               </Field>
               <Field label="Description">
-                <Input value={step.description} onChange={(e) => update(i, { description: e.target.value })} />
+                <Input value={step.desc} onChange={(e) => update(i, { desc: e.target.value })} />
               </Field>
             </div>
           </div>

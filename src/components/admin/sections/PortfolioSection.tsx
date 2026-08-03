@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { getPortfolioImages, getPortfolioCategories } from "@/lib/db";
+import { getPortfolioImages } from "@/lib/db";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { useSave } from "../SaveProvider";
 import { useToast } from "../Toast";
@@ -10,15 +10,11 @@ import { UploadArea } from "../UploadArea";
 import { PortfolioGrid, type PortfolioImage } from "../PortfolioGrid";
 import { Modal } from "../Modal";
 import { Button } from "../Button";
-import { Field, Input } from "../Field";
 
 export function PortfolioSection() {
   const [images, setImages] = useState<PortfolioImage[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [newCategory, setNewCategory] = useState("");
   const [loading, setLoading] = useState(true);
   const [editIndex, setEditIndex] = useState<number | null>(null);
-  const [uploadCategory, setUploadCategory] = useState("VRChat Avatars");
   const imagesRef = useRef<PortfolioImage[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceIndexRef = useRef<number | null>(null);
@@ -37,16 +33,10 @@ export function PortfolioSection() {
     }
     (async () => {
       try {
-        const [imgs, cats] = await Promise.all([
-          getPortfolioImages(),
-          getPortfolioCategories(),
-        ]);
-        setImages(imgs.map((i: any) => ({ id: i.id, url: i.url, path: i.path, category: i.category })).filter((x: any) => x.url));
-        const catNames = cats.map((c: any) => c.name).filter(Boolean);
-        setCategories(catNames);
-        if (catNames.length > 0) setUploadCategory(catNames[0]);
+        const imgs = await getPortfolioImages();
+        setImages(imgs.map((i: any) => ({ id: i.id, url: i.url, path: i.path })).filter((x: any) => x.url));
       } catch {
-        toast.error("Failed to load portfolio data");
+        toast.error("Failed to load portfolio images");
       } finally {
         setLoading(false);
       }
@@ -74,46 +64,14 @@ export function PortfolioSection() {
     return register("portfolio", savePortfolio);
   }, [register, savePortfolio]);
 
-  async function uploadOne(file: File): Promise<{ id: string; url: string; path: string; category: string } | null> {
+  async function uploadOne(file: File): Promise<{ id: string; url: string; path: string } | null> {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("folder", "portfolio");
-    formData.append("category", uploadCategory);
     const res = await fetch("/api/portfolio/upload", { method: "POST", body: formData });
     const result = await res.json();
-    if (res.ok && result.id) return { id: result.id, url: result.url, path: result.path, category: result.category || uploadCategory };
+    if (res.ok && result.id) return { id: result.id, url: result.url, path: result.path };
     throw new Error(result.error || "Upload failed");
-  }
-
-  async function addCategory() {
-    const name = newCategory.trim();
-    if (!name || categories.includes(name)) return;
-    const res = await fetch("/api/portfolio/categories", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
-    if (res.ok) {
-      setCategories([...categories, name]);
-      setNewCategory("");
-      setUploadCategory(name);
-      toast.success("Category added");
-    } else {
-      toast.error("Failed to add category");
-    }
-  }
-
-  async function removeCategory(name: string) {
-    const res = await fetch(`/api/portfolio/categories?name=${encodeURIComponent(name)}`, { method: "DELETE" });
-    if (res.ok) {
-      setCategories(categories.filter((c) => c !== name));
-      if (uploadCategory === name && categories.length > 1) {
-        setUploadCategory(categories.find((c) => c !== name) || "");
-      }
-      toast.success("Category removed");
-    } else {
-      toast.error("Failed to remove category");
-    }
   }
 
   async function handleFiles(files: FileList | null) {
@@ -124,7 +82,7 @@ export function PortfolioSection() {
       setImages((prev) => [...prev, temp]);
       try {
         const uploaded = await uploadOne(file);
-        setImages((prev) => prev.map((img) => (img === temp ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path, category: uploaded!.category } : img)));
+        setImages((prev) => prev.map((img) => (img === temp ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path } : img)));
         toast.success("Image uploaded");
       } catch (e: any) {
         setImages((prev) => prev.map((img) => (img === temp ? { ...img, uploading: false, error: e.message || "Upload failed" } : img)));
@@ -143,7 +101,7 @@ export function PortfolioSection() {
       setImages((prev) => prev.map((img, i) => (i === index ? { ...img, uploading: true, error: undefined, retrying: true } : img)));
       try {
         const uploaded = await uploadOne(file);
-        setImages((prev) => prev.map((img, i) => (i === index ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path, category: uploaded!.category, uploading: false, retrying: false, error: undefined } : img)));
+        setImages((prev) => prev.map((img, i) => (i === index ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path, uploading: false, retrying: false, error: undefined } : img)));
         toast.success("Image uploaded");
       } catch {
         setImages((prev) => prev.map((img, i) => (i === index ? { ...img, uploading: false, retrying: false, error: "Upload failed" } : img)));
@@ -222,41 +180,6 @@ export function PortfolioSection() {
           description="Upload artwork. Drag cards to reorder — your arrangement is saved with the global Save button."
         />
         <div className="mt-6">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)]">Category</label>
-            <select
-              value={uploadCategory}
-              onChange={(e) => setUploadCategory(e.target.value)}
-              className="ad-field rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]"
-            >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            {categories.map((cat) => (
-              <span key={cat} className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg)] px-3 py-1 text-xs text-[var(--text-secondary)]">
-                {cat}
-                <button
-                  type="button"
-                  onClick={() => removeCategory(cat)}
-                  className="text-[var(--text-dim)] hover:text-[var(--danger)] transition-colors"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-            <div className="flex items-center gap-1.5">
-              <Input
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-                placeholder="New category"
-                className="!h-8 !text-xs !py-1 !px-2 w-40"
-              />
-              <Button size="sm" variant="secondary" onClick={addCategory} className="!h-8 !text-xs">Add</Button>
-            </div>
-          </div>
           <UploadArea onFiles={handleFiles} uploading={images.some((i) => i.uploading)} />
         </div>
       </Card>

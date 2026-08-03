@@ -7,85 +7,30 @@ import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { ButtonLink } from "@/components/ui/Button";
 import PricingCard from "@/components/ui/PricingCard";
-import ClientTestimonials from "@/components/ClientTestimonials";
-import {
-  getWorkflowSteps,
-  getPricingTiers,
-  getApprovedReviews,
-  getSiteConfig,
-  getHomepageStats,
-  getServices,
-  getFaqItems,
-  getAutoStats,
-} from "@/lib/db";
+import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages } from "@/lib/db";
 import Link from "next/link";
-import { Star, ArrowRight, Plus, Minus, Sparkles, Users, Zap } from "lucide-react";
+import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles, MessageSquarePlus, Users } from "lucide-react";
 import CommissionAvailability from "@/components/CommissionAvailability";
 
-interface SiteConfig {
-  discord_url?: string;
-  discord?: string;
-  stat_delivery?: string;
-  queue_wait_time?: string;
-  [k: string]: string | number | undefined;
-}
-interface WorkflowStep {
-  id?: string;
-  title?: string;
-  description?: string;
-  emoji?: string;
-  sort_order?: number;
-}
-interface PricingTier {
-  id?: string;
-  name: string;
-  price: string;
-  is_nsfw?: boolean;
-  features?: string[];
-  emoji?: string;
-  badge?: string | null;
-  popular?: boolean;
-}
-interface Review {
-  id?: string;
-  display_name?: string;
-  image_url?: string;
-  rating?: number;
-  review_text?: string;
-  created_at?: string;
-}
-interface StatItem {
-  id?: string;
-  label: string;
-  value: number | string;
-  suffix: string;
-  sublabel: string;
-}
-interface Service {
-  id?: string;
-  title: string;
-  image_url?: string;
-  emoji?: string;
-  desc?: string;
-  description?: string;
-  features?: string[];
-}
-interface FaqItem {
-  id?: string;
-  question?: string;
-  answer?: string;
-  sort_order?: number;
+function Stars({ rating, size = "h-4 w-4" }: { rating?: number; size?: string }) {
+  const value = rating || 5;
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star key={i} className={`${size} ${i <= value ? "fill-[var(--accent)] text-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
+      ))}
+    </div>
+  );
 }
 
 export default function Home() {
-  const [site, setSite] = useState<SiteConfig>({});
-  const [workflow, setWorkflow] = useState<WorkflowStep[]>([]);
-  const [pricing, setPricing] = useState<PricingTier[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [homepageStats, setHomepageStats] = useState<StatItem[]>([]);
-  const [autoStats, setAutoStats] = useState<any>(null);
-  const [services, setServices] = useState<Service[]>([]);
-  const [faqItems, setFaqItems] = useState<FaqItem[]>([]);
+  const [site, setSite] = useState<any>({});
+  const [workflow, setWorkflow] = useState<any[]>([]);
+  const [pricing, setPricing] = useState<any[]>([]);
+  const [faq, setFaq] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [siteImages, setSiteImages] = useState<Record<string, { url: string }>>({});
+  const [returningClients, setReturningClients] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
@@ -93,24 +38,23 @@ export default function Home() {
     async function load() {
       setLoading(true);
       try {
-        const [s, w, p, r, stats, svcs, faq, auto] = await Promise.all([
+        const [s, w, p, f, r, images] = await Promise.all([
           getSiteConfig(),
           getWorkflowSteps(),
           getPricingTiers(),
-          getApprovedReviews(),
-          getHomepageStats(),
-          getServices(),
           getFaqItems(),
-          getAutoStats(),
+          getApprovedReviews(),
+          getSiteImages(),
         ]);
         setSite(s);
         setWorkflow(w);
         setPricing(p);
+        setFaq(f);
         setReviews(r);
-        setHomepageStats(stats);
-        setServices(svcs);
-        setFaqItems(faq);
-        setAutoStats(auto);
+        setSiteImages(images);
+
+        const statsRes = await fetch("/api/stats").then((res) => res.json()).catch(() => ({ returningClients: 0 }));
+        setReturningClients(Number(statsRes.returningClients) || 0);
       } catch (e) {
         console.error("Failed to load home data:", e);
       } finally {
@@ -143,279 +87,221 @@ export default function Home() {
     );
   }
 
-  const discordUrl = site.discord_url || site.discord
-    ? site.discord_url?.startsWith("http")
-      ? site.discord_url
-      : `https://discord.com/users/${encodeURIComponent(site.discord ?? "")}`
-    : "";
-  const minPrice = pricing.filter((t) => !t.is_nsfw).sort((a, b) => {
-    const na = Number(String(a.price || "").replace(/[^0-9.]/g, ""));
-    const nb = Number(String(b.price || "").replace(/[^0-9.]/g, ""));
-    return na - nb;
-  })[0]?.price;
-  const turnaround = site.stat_delivery || site.queue_wait_time || "";
-
   return (
     <div className="relative">
       <Hero />
 
       <div className="relative z-10">
-        {/* Portfolio showcase */}
-        <section className="section" id="portfolio">
+        <FeaturedWork />
+
+        <StatsBand site={site} reviews={reviews} returningClients={returningClients} />
+
+        <div className="divider" />
+
+        {/* Services */}
+        <section className="section section-alt">
           <div className="container">
-            <div className="mb-10 flex flex-wrap items-end justify-between gap-4 md:mb-14">
-              <div>
-                <span className="section-label">Portfolio</span>
-                <h2 className="display-lg text-white">Recent Work</h2>
-                <p className="mt-3 max-w-xl text-[var(--text-secondary)]">VRChat avatar edits, FBX mashups, custom clothing, and texture work.</p>
-              </div>
-              <a href="/portfolio" className="btn-secondary inline-flex items-center gap-2">
-                View All Work
-                <ArrowRight className="h-4 w-4" />
-              </a>
+            <SectionHeading
+              eyebrow="Services"
+              title="What I provide"
+              subtitle="I work on VRChat avatars in a few different ways — from subtle edits to complete overhauls."
+            />
+
+            <div className="space-y-6 md:space-y-10">
+              <ServiceRow
+                emoji="✏️"
+                image={siteImages.avatar_editing?.url}
+                eyebrow="Avatar Editing"
+                title="Avatar Editing"
+                desc="Texture recolours, accessory additions, clothing fitting, hair combinations, and minor geometry tweaks to existing bases."
+                features={["Texture recolours", "Accessory additions", "Clothing fitting", "Hair combinations", "Minor fixes"]}
+              />
+              <ServiceRow
+                emoji="🔧"
+                image={siteImages.blender_work?.url}
+                eyebrow="Blender"
+                title="Blender Work"
+                desc="Asset creation, retopology, UV work, material setup, and mesh adjustments for clean avatar bases."
+                features={["Asset creation", "Retopology", "UV & material work", "Mesh adjustments", "Clean topology"]}
+                reverse
+              />
+              <ServiceRow
+                emoji="⚙️"
+                image={siteImages.unity_work?.url}
+                eyebrow="Unity"
+                title="Unity Setup"
+                desc="Material configuration, toggles, optimisation, viseme setup, and VRChat-ready packaging."
+                features={["Material config", "Toggle systems", "Performance tuning", "Viseme setup", "VRChat packaging"]}
+              />
             </div>
-            <FeaturedWork />
           </div>
         </section>
 
-        {/* Why Choose Bluey */}
-        <section className="section" id="why">
+        <div className="divider" />
+
+        {/* Process timeline */}
+        <section className="section">
           <div className="container">
-            <div className="mb-12 text-center">
-              <span className="section-label">Why Bluey</span>
-              <h2 className="display-lg text-white">Why Choose Bluey Commissions</h2>
-              <p className="lead mx-auto mt-4 max-w-2xl">
-                Professional VRChat avatar services built on quality, trust, and performance.
-              </p>
+            <SectionHeading
+              align="center"
+              eyebrow="Process"
+              title="How it works"
+              subtitle="A simple, transparent workflow from first message to final delivery."
+            />
+            <ProcessTimeline steps={workflow} />
+            <div className="mt-12 text-center">
+              <ButtonLink href="/contact" variant="secondary">
+                Start Your Commission
+                <ArrowRight className="h-4 w-4" />
+              </ButtonLink>
             </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-              {[
-                { icon: "🎨", title: "VRChat Specialised", desc: "Built specifically for VRChat creators. I understand the platform, the limits, and the workflow." },
-                { icon: "⚡", title: "Performance First", desc: "Every avatar is optimised for smooth performance in VRChat. No lag, no crashes." },
-                { icon: "🔒", title: "Asset Safe", desc: "Full proof of ownership required for all avatar bases. No stolen assets, no exceptions." },
-                { icon: "🚀", title: "Fast Turnaround", desc: "Most commissions completed within 2-3 weeks. Rush orders available on request." },
-              ].map((item, i) => (
-                <Reveal key={item.title} delay={i * 80}>
-                  <div className="group h-full rounded-[var(--r-xl)] border border-[var(--border)] bg-[var(--bg-card)] p-7 shadow-lg shadow-black/20 transition-all duration-500 hover:-translate-y-2 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/50">
-                    <div className="mb-4 text-4xl transition-transform duration-300 group-hover:scale-110">{item.icon}</div>
-                    <h3 className="mb-2 text-lg font-bold text-white">{item.title}</h3>
-                    <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{item.desc}</p>
+          </div>
+        </section>
+
+        <div className="divider" />
+
+        {/* Reviews */}
+        <section className="section section-alt">
+          <div className="container">
+            <SectionHeading
+              eyebrow="Client Feedback"
+              title="Reviews"
+              subtitle="What clients say about working together."
+            />
+            {reviews.length > 0 && <ReviewSummary reviews={reviews} />}
+            {reviews.length > 0 ? (
+              <>
+                <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+                  {reviews.slice(0, 6).map((review, i) => (
+                    <Reveal key={review.id || i} delay={i * 60}>
+                      <article className="premium-card group relative h-full overflow-hidden p-6 md:p-7">
+                        <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[var(--accent)] opacity-[0.04] blur-3xl transition-opacity duration-500 group-hover:opacity-[0.08]" />
+                        <div className="relative flex items-center gap-4">
+                          <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)]/20 to-[var(--accent-2)]/20 text-lg">
+                            {review.display_name?.[0]?.toUpperCase() || "★"}
+                          </div>
+                          <div>
+                            <p className="font-bold text-white">{review.display_name}</p>
+                            <Stars rating={review.rating} />
+                          </div>
+                        </div>
+                        <p className="relative mt-4 text-[var(--text-secondary)] leading-relaxed">"{review.review_text}"</p>
+                        {review.image_url && (
+                          <img src={review.image_url} alt="Commission preview" className="relative mt-4 w-full rounded-xl border border-[var(--border)] object-cover" />
+                        )}
+                      </article>
+                    </Reveal>
+                  ))}
+                </div>
+                {reviews.length > 3 && (
+                  <div className="mt-10 text-center">
+                    <ButtonLink href="/reviews" variant="secondary">
+                      View All Reviews
+                      <ArrowRight className="h-4 w-4" />
+                    </ButtonLink>
                   </div>
+                )}
+              </>
+            ) : (
+              <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-16 text-center">
+                <div className="mb-4 text-5xl opacity-20">💬</div>
+                <p className="mx-auto mb-6 max-w-md text-lg text-[var(--text-dim)]">
+                  Client reviews will appear here after commissions are completed.
+                </p>
+                <ButtonLink href="/reviews">Leave a Review</ButtonLink>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <div className="divider" />
+
+        {/* FAQ */}
+        <section className="section">
+          <div className="container max-w-3xl">
+            <SectionHeading
+              align="center"
+              eyebrow="Common questions"
+              title="FAQ"
+              subtitle="Quick answers to the things people ask most."
+            />
+            <div className="space-y-3">
+              {faq.map((item, i) => {
+                const open = openFaq === i;
+                return (
+                  <div
+                    key={i}
+                    className="overflow-hidden rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--bg-card)] transition-colors duration-300 hover:border-[var(--border-hover)]"
+                  >
+                    <button
+                      onClick={() => setOpenFaq(open ? null : i)}
+                      aria-expanded={open}
+                      className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left"
+                    >
+                      <span className={`font-semibold transition-colors ${open ? "text-white" : "text-[var(--text)]"}`}>
+                        {item.question}
+                      </span>
+                      <span
+                        className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--accent)] transition-all duration-300 ${
+                          open ? "rotate-180 bg-[var(--accent-soft)]" : ""
+                        }`}
+                      >
+                        {open ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                      </span>
+                    </button>
+                    <div
+                      className="grid transition-all duration-500 ease-out"
+                      style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+                    >
+                      <div className="overflow-hidden">
+                        <p className="px-5 pb-5 text-sm leading-relaxed text-[var(--text-secondary)]">{item.answer}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-10 text-center">
+              <ButtonLink href="/contact" variant="secondary">
+                Have more questions?
+              </ButtonLink>
+            </div>
+          </div>
+        </section>
+
+        <div className="divider" />
+
+        {/* Pricing */}
+        <section className="section section-alt">
+          <div className="container">
+            <SectionHeading
+              align="center"
+              eyebrow="Rates"
+              title="Pricing"
+              subtitle="Clear, per-avatar pricing that scales with complexity. A 50% deposit starts the work; the balance is due on delivery."
+            />
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+              {pricing.map((tier, i) => (
+                <Reveal key={tier.id || i} delay={i * 80}>
+                  <PricingCard tier={tier} />
                 </Reveal>
               ))}
             </div>
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center">
+              <p className="text-xs text-[var(--text-dim)]">
+                Starting from <span className="font-semibold text-[var(--text-secondary)]">£15</span> · typical turnaround{" "}
+                <span className="font-semibold text-[var(--text-secondary)]">{site.stat_delivery || "5–10 days"}</span>
+              </p>
+              <Link href="/nsfw" className="text-sm text-[var(--accent)] transition-colors hover:text-white">
+                View NSFW Pricing &rarr;
+              </Link>
+            </div>
           </div>
         </section>
 
-        {/* Services */}
-        {services.length > 0 && (
-          <section className="section section-alt" id="services">
-            <div className="container">
-              <SectionHeading
-                eyebrow="Services"
-                title="What I provide"
-                subtitle="Specialised VRChat avatar services — from subtle edits to complete FBX mashups."
-              />
-
-              <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {services.map((svc, i) => (
-                  <ServiceShowcaseCard key={svc.title || i} service={svc} delay={i * 80} />
-                ))}
-              </div>
-
-              <div className="mt-12 text-center">
-                <ButtonLink href="/services" variant="secondary">
-                  View All Services
-                  <ArrowRight className="h-4 w-4" />
-                </ButtonLink>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Stats band */}
-        {(homepageStats.length > 0 || autoStats) && (
-          <section className="section">
-            <div className="container">
-              <div className="mb-12 text-center">
-                <span className="section-label">Statistics</span>
-                <h2 className="display-lg text-white">Numbers Speak Louder</h2>
-                <p className="lead mx-auto mt-4 max-w-2xl">
-                  Built with care, delivered with pride — here&apos;s what the numbers look like.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-                {autoStats ? (
-                  [
-                    { label: "Completed Commissions", value: autoStats.completedCommissions, suffix: "", sublabel: "Finished projects", icon: "✅" },
-                    { label: "Portfolio Projects", value: autoStats.totalProjects, suffix: "", sublabel: "Total projects", icon: "🖼️" },
-                    { label: "FBX Mashups", value: autoStats.totalFbxMashups, suffix: "", sublabel: "Pre-made mashups", icon: "🧬" },
-                    { label: "Client Reviews", value: autoStats.totalReviews, suffix: "", sublabel: autoStats.avgRating ? `Avg ${autoStats.avgRating}/5` : "Verified reviews", icon: "⭐" },
-                  ].map((stat, i) => (
-                    <StatCard
-                      key={i}
-                      icon={<StatIcon label={stat.label} />}
-                      label={stat.label}
-                      value={stat.value}
-                      suffix={stat.suffix}
-                      sublabel={stat.sublabel}
-                    />
-                  ))
-                ) : (
-                  homepageStats.map((stat, i) => (
-                    <StatCard
-                      key={stat.id || i}
-                      icon={<StatIcon label={stat.label} />}
-                      label={stat.label}
-                      value={stat.value}
-                      suffix={stat.suffix}
-                      sublabel={stat.sublabel}
-                    />
-                  ))
-                )}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Testimonials */}
-        {reviews.length > 0 && (
-          <section className="section section-alt">
-            <div className="container">
-              <div className="mb-12 text-center">
-                <span className="section-label">Client Feedback</span>
-                <h2 className="display-lg text-white">What Clients Say</h2>
-                <p className="lead mx-auto mt-4 max-w-2xl">
-                  Don’t just take my word for it — here’s what clients have to say about their commissioned avatars.
-                </p>
-              </div>
-
-              <ClientTestimonials
-                testimonials={reviews.slice(0, 6).map((review) => ({
-                  id: review.id ?? "",
-                  name: review.display_name ?? "",
-                  avatar: review.image_url || "",
-                  rating: review.rating ?? 5,
-                  text: review.review_text ?? "",
-                  commissioned: review.created_at
-                    ? new Date(review.created_at).toLocaleDateString()
-                    : "",
-                }))}
-              />
-            </div>
-          </section>
-        )}
-
-        {/* Process timeline */}
-        {workflow.length > 0 && (
-          <section className="section">
-            <div className="container">
-              <SectionHeading
-                align="center"
-                eyebrow="Process"
-                title="How it works"
-                subtitle="A simple, transparent workflow from first message to final delivery."
-              />
-              <ProcessTimeline steps={workflow} />
-              <div className="mt-12 text-center">
-                <ButtonLink href="/contact" variant="secondary">
-                  Start Your Commission
-                  <ArrowRight className="h-4 w-4" />
-                </ButtonLink>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* FAQ */}
-        {faqItems.length > 0 && (
-          <section className="section section-alt">
-            <div className="container max-w-3xl">
-              <SectionHeading
-                align="center"
-                eyebrow="Common questions"
-                title="FAQ"
-                subtitle="Quick answers to the things people ask most."
-              />
-              <div className="space-y-3">
-                {faqItems.map((item, i) => {
-                  const open = openFaq === i;
-                  return (
-                    <div
-                      key={item.id || i}
-                      className="overflow-hidden rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--bg-card)] transition-colors duration-300 hover:border-[var(--border-hover)]"
-                    >
-                      <button
-                        onClick={() => setOpenFaq(open ? null : i)}
-                        aria-expanded={open}
-                        className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left"
-                      >
-                        <span className={`font-semibold transition-colors ${open ? "text-white" : "text-[var(--text)]"}`}>
-                          {item.question}
-                        </span>
-                        <span
-                          className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--accent)] transition-all duration-300 ${
-                            open ? "rotate-180 bg-[var(--accent-soft)]" : ""
-                          }`}
-                        >
-                          {open ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                        </span>
-                      </button>
-                      <div
-                        className="grid transition-all duration-500 ease-out"
-                        style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
-                      >
-                        <div className="overflow-hidden">
-                          <p className="px-5 pb-5 text-sm leading-relaxed text-[var(--text-secondary)]">{item.answer}</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="mt-10 text-center">
-                <ButtonLink href="/contact" variant="secondary">
-                  Have more questions?
-                </ButtonLink>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Pricing */}
-        {pricing.filter((t) => !t.is_nsfw).length > 0 && (
-          <section className="section">
-            <div className="container">
-              <SectionHeading
-                align="center"
-                eyebrow="Rates"
-                title="Pricing"
-                subtitle="Clear, per-avatar pricing that scales with complexity. A 50% deposit starts the work; the balance is due on delivery."
-              />
-              <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
-                {pricing.filter((t) => !t.is_nsfw).map((tier, i) => (
-                  <Reveal key={tier.id || i} delay={i * 80}>
-                    <PricingCard tier={tier} />
-                  </Reveal>
-                ))}
-              </div>
-              <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center">
-                {minPrice && (
-                  <p className="text-xs text-[var(--text-dim)]">
-                    Starting from <span className="font-semibold text-[var(--text-secondary)]">{minPrice}</span>
-                    {turnaround && <span> · typical turnaround <span className="font-semibold text-[var(--text-secondary)]">{turnaround}</span></span>}
-                  </p>
-                )}
-                <Link href="/nsfw" className="text-sm text-[var(--accent)] transition-colors hover:text-white">
-                  View NSFW Pricing &rarr;
-                </Link>
-              </div>
-            </div>
-          </section>
-        )}
-
         <CommissionAvailability />
+
+        <div className="divider" />
 
         {/* CTA */}
         <section className="section relative overflow-hidden">
@@ -430,26 +316,18 @@ export default function Home() {
               </span>
               <h2 className="display-lg mt-5 text-white">Ready to commission?</h2>
               <p className="lead mx-auto mt-4">
-                Send me a message on Discord
-                {site.discord ? (
-                  <strong className="font-semibold text-white"> {site.discord}</strong>
-                ) : null}
-                , or submit a request and I’ll get back to you.
+                Send me a message on Discord at{" "}
+                <strong className="font-semibold text-white">{site.discord}</strong>, or submit a request and
+                I&rsquo;ll get back to you.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-4">
                 <ButtonLink href="/contact">
                   <Zap className="h-4 w-4" />
                   Start a Commission
                 </ButtonLink>
-                <ButtonLink href="/queue" variant="secondary">
-                  View Commission Queue
-                  <Users className="h-4 w-4" />
+                <ButtonLink href="https://discord.com/" variant="secondary" external>
+                  Open Discord
                 </ButtonLink>
-                {discordUrl && (
-                  <ButtonLink href={discordUrl} variant="secondary" external>
-                    Open Discord
-                  </ButtonLink>
-                )}
               </div>
             </div>
           </div>
@@ -459,99 +337,122 @@ export default function Home() {
   );
 }
 
-const STAT_ICONS: Record<string, React.ReactNode> = {
-  Commissions: <span className="text-2xl">🎨</span>,
-  Clients: <span className="text-2xl">👥</span>,
-  Rating: <span className="text-2xl">⭐</span>,
-  Reviews: <span className="text-2xl">💬</span>,
-  Blender: <span className="text-2xl">🔧</span>,
-  Unity: <span className="text-2xl">⚙️</span>,
-  Response: <span className="text-2xl">⏱</span>,
-  Delivery: <span className="text-2xl">🚚</span>,
-};
-
-function StatIcon({ label }: { label: string }) {
-  return STAT_ICONS[label] || <Star className="h-5 w-5 text-[var(--accent)]" />;
-}
-
-function StatCard({
-  icon,
-  label,
-  value,
-  suffix,
-  sublabel,
-}: {
-  icon?: React.ReactNode;
-  label: string;
-  value: number | string;
-  suffix?: string;
-  sublabel: string;
-}) {
+function StatsBand({ site, reviews, returningClients }: { site: any; reviews: any[]; returningClients: number }) {
+  const approved = reviews || [];
+  const totalReviews = approved.length;
+  const avgRating = totalReviews
+    ? (approved.reduce((sum: number, r: any) => sum + (Number(r.rating) || 5), 0) / totalReviews).toFixed(1)
+    : "—";
+  const stats = [
+    { label: "Average rating", value: avgRating, icon: <Star className="h-4 w-4" /> },
+    { label: "Total reviews", value: totalReviews, icon: <MessageSquarePlus className="h-4 w-4" /> },
+    { label: "Turnaround", value: site.stat_delivery || "5-10 days", icon: <Zap className="h-4 w-4" /> },
+    { label: "Returning clients", value: String(returningClients), icon: <Users className="h-4 w-4" /> },
+  ];
   return (
-    <Reveal>
-      <div className="group relative overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-8 text-center shadow-lg transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/50">
-        <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[80px] transition-opacity duration-500 group-hover:opacity-[0.08]" />
-        <div className="relative mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] transition-transform duration-500 group-hover:scale-110 group-hover:bg-[var(--accent-glow)]/20">
-          {icon}
-        </div>
-        <div className="relative">
-          <p className="text-2xl font-bold text-white">
-            {value}
-            {suffix}
-          </p>
-          <p className="mt-0.5 text-xs font-semibold text-[var(--accent)] uppercase tracking-wider">{label}</p>
-          <p className="mt-1 text-xs text-[var(--text-dim)]">{sublabel}</p>
+    <section className="section !pb-0">
+      <div className="container">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+          {stats.map((s, i) => (
+            <Reveal key={s.label} delay={i * 60}>
+              <div className="group relative overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-5 text-center transition-colors duration-500 hover:border-[var(--border-hover)]">
+                <div className="mx-auto mb-3 grid h-9 w-9 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                  {s.icon}
+                </div>
+                <p className="font-display text-2xl font-bold text-white">{s.value}</p>
+                <p className="mt-1 text-xs text-[var(--text-dim)]">{s.label}</p>
+              </div>
+            </Reveal>
+          ))}
         </div>
       </div>
-    </Reveal>
+    </section>
   );
 }
 
-function ServiceShowcaseCard({ service, delay }: { service: Service; delay?: number }) {
+function ReviewSummary({ reviews }: { reviews: any[] }) {
+  const avg = reviews.length
+    ? (reviews.reduce((sum, r) => sum + (Number(r.rating) || 5), 0) / reviews.length).toFixed(1)
+    : "5.0";
   return (
-    <Reveal delay={delay}>
-      <div className="group relative h-full overflow-hidden rounded-[var(--r-xl)] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-lg shadow-black/30 transition-all duration-500 hover:-translate-y-2 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/50">
-        <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[var(--accent)] opacity-[0.03] blur-[80px] transition-opacity duration-500 group-hover:opacity-[0.06]" />
+    <div className="mb-8 flex flex-wrap items-center gap-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] px-4 py-3">
+      <div className="flex gap-0.5">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Star key={i} className={`h-4 w-4 ${i <= Math.round(Number(avg)) ? "fill-[var(--accent)] text-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
+        ))}
+      </div>
+      <span className="font-semibold text-white">{avg}</span>
+      <span className="text-sm text-[var(--text-secondary)]">
+        from {reviews.length} verified client {reviews.length === 1 ? "review" : "reviews"}
+      </span>
+    </div>
+  );
+}
 
-        <div className="relative mb-5 aspect-[16/9] overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)]">
-          {service.image_url ? (
-            <img
-              src={service.image_url}
-              alt={service.title}
-              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
-            />
-          ) : (
-            <div className="grid h-full w-full place-items-center text-3xl opacity-30">{service.emoji || "✨"}</div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-card)] via-transparent to-transparent opacity-50" />
-          <div className="absolute bottom-3 left-3 flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/10 text-xl backdrop-blur">
-            {service.emoji || "✨"}
-          </div>
-        </div>
+/* -------------------------------------------------------------------------- */
 
-        <div className="relative">
-          <span className="section-label mb-2">Service</span>
-          <h3 className="heading-md text-white">{service.title}</h3>
-          <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">{service.desc || service.description}</p>
-
-          <ul className="mt-4 grid grid-cols-1 gap-2 text-xs text-[var(--text-secondary)]">
-            {(service.features || []).map((f) => (
-              <li key={f} className="flex items-center gap-1.5">
-                <span className="h-1 w-1 shrink-0 rounded-full bg-[var(--accent)]" />
+function ServiceRow({
+  emoji,
+  image,
+  eyebrow,
+  title,
+  desc,
+  features,
+  reverse = false,
+}: {
+  emoji?: string;
+  image?: string;
+  eyebrow: string;
+  title: string;
+  desc: string;
+  features: string[];
+  reverse?: boolean;
+}) {
+  return (
+    <Reveal>
+      <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12">
+        <div className={`lg:col-span-5 ${reverse ? "lg:order-2" : "order-2 lg:order-1"}`}>
+          <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[var(--border-strong)] bg-white/[0.03] px-3 py-1 text-xs font-bold uppercase tracking-wider text-[var(--accent)]">
+            {eyebrow}
+          </span>
+          <h3 className="heading-md text-white">{title}</h3>
+          <p className="mt-4 leading-relaxed text-[var(--text-secondary)]">{desc}</p>
+          <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {features.map((f) => (
+              <li key={f} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
+                <span className="grid h-5 w-5 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+                  <Check className="h-3 w-3" />
+                </span>
                 {f}
               </li>
             ))}
           </ul>
         </div>
+        <div className={`lg:col-span-7 ${reverse ? "lg:order-1" : "order-1 lg:order-2"}`}>
+          <div className="group relative aspect-[16/10] overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] shadow-lg shadow-black/30">
+            {image ? (
+              <img src={image} alt={title} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]" />
+            ) : (
+              <div className="grid h-full place-items-center text-5xl opacity-30">{emoji}</div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)]/80 via-transparent to-transparent" />
+            {emoji && (
+              <div className="absolute bottom-4 left-4 grid h-12 w-12 place-items-center rounded-xl border border-white/10 bg-[var(--bg-float)]/80 text-2xl backdrop-blur-md">
+                {emoji}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </Reveal>
   );
 }
 
-function ProcessTimeline({ steps }: { steps: WorkflowStep[] }) {
-  if (!steps || steps.length === 0) return null;
+function ProcessTimeline({ steps }: { steps: any[] }) {
+  if (!steps.length) return null;
   return (
     <div className="relative">
+      {/* connecting line (desktop) */}
       <div className="absolute left-0 right-0 top-7 hidden h-px bg-gradient-to-r from-transparent via-[var(--border-strong)] to-transparent lg:block" />
       <ol className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5">
         {steps.map((step, i) => (
@@ -563,7 +464,7 @@ function ProcessTimeline({ steps }: { steps: WorkflowStep[] }) {
               </span>
             </div>
             <h3 className="text-sm font-bold text-white">{step.title}</h3>
-            <p className="mt-1.5 px-1 text-xs leading-relaxed text-[var(--text-dim)]">{step.description}</p>
+            <p className="mt-1.5 px-1 text-xs leading-relaxed text-[var(--text-dim)]">{step.desc}</p>
           </li>
         ))}
       </ol>
