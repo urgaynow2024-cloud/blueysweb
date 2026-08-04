@@ -31,7 +31,14 @@ const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 
 const defaultSite: Record<string, string> = {};
 const defaultPricing: any[] = [];
-const defaultFaq: any[] = [];
+const defaultFaq: any[] = [
+  { question: "What do I need to provide?", answer: "What you want done, avatar base name, reference images, and any required assets provided.", sort_order: 0 },
+  { question: "How long does a commission take?", answer: "Depends on the tier and complexity. Light work is faster, full overhauls take longer.", sort_order: 1 },
+  { question: "Do you work on Quest?", answer: "Quest compatibility depends on the tier. Overhauls include Quest optimisation.", sort_order: 2 },
+  { question: "What payment methods?", answer: "PayPal and Payhip only. 50% deposit before work begins.", sort_order: 3 },
+  { question: "Can I request NSFW work?", answer: "Limited NSFW commissions are accepted case-by-case for 18+ clients. See NSFW page for details.", sort_order: 4 },
+  { question: "What files do I get?", answer: "Unity-ready VRChat avatar files. Blender source files on request.", sort_order: 5 },
+];
 const defaultWorkflow: any[] = [];
 
 type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "fbx-mashups" | "tos";
