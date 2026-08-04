@@ -147,7 +147,7 @@ export function TosSection({ value, onChange }: Props) {
 
         <div className="mt-6 space-y-4">
           {sections.map((section, i) => (
-            <div key={section.id || i} className="ad-panel ad-panel-hover p-5">
+            <div key={section.id || i} className="ad-section-card ad-section-card-hover p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <button type="button" onClick={() => moveSection(i, -1)} disabled={i === 0} className="grid h-7 w-7 place-items-center rounded-lg text-[var(--text-dim)] hover:text-white disabled:opacity-30" aria-label="Move up">

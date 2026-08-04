@@ -222,80 +222,75 @@ export default function AdminPage() {
     const remainingSeconds = isLocked ? Math.ceil((lockedUntil! - Date.now()) / 1000) : 0;
 
     return (
-      <div className="relative grid min-h-screen place-items-center overflow-hidden px-4">
+      <div className="ad-login-bg relative grid min-h-screen place-items-center overflow-hidden px-4">
         <div className="pointer-events-none absolute inset-0 bg-dots opacity-30" />
-        <div className="pointer-events-none absolute left-1/2 top-1/3 h-72 w-[500px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.06] blur-[120px]" />
-        <div className="pointer-events-none absolute right-[-10%] bottom-[-10%] h-60 w-60 rounded-full bg-[var(--accent-2)] opacity-[0.04] blur-[100px]" />
-
         <form
           onSubmit={doLogin}
-          className="ad-panel relative w-full max-w-sm p-8"
+          className="ad-login-card relative"
           noValidate
         >
-          <div className="mx-auto mb-6 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] shadow-lg shadow-[var(--accent)]/20">
+          <div className="ad-login-icon">
             <ShieldCheck className="h-7 w-7" />
           </div>
-          <h1 className="text-center text-2xl font-bold text-white">Admin Access</h1>
-          <p className="mb-6 mt-1.5 text-center text-sm text-[var(--text-dim)]">Enter the admin password to continue.</p>
+          <h1 className="ad-login-title">Admin Access</h1>
+          <p className="ad-login-subtitle">Enter the admin password to continue.</p>
 
           {loginError && (
-            <div className="mb-4 flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-sm text-red-400" role="alert">
+            <div className="ad-login-error mt-5" role="alert">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
               <span>{loginError}</span>
             </div>
           )}
 
-          <div className="relative">
-            <Input
-              ref={pwRef}
-              type={showPw ? "text" : "password"}
-              value={pw}
-              onChange={(e) => {
-                setPw(e.target.value);
-                setLoginError("");
-              }}
-              placeholder="Password"
-              autoFocus
-              disabled={isLocked}
-              aria-label="Admin password"
-              aria-describedby={loginError ? "login-error" : undefined}
-              aria-invalid={!!loginError}
-              className={loginError ? "border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20" : ""}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPw(!showPw)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)] hover:text-white transition-colors"
-              aria-label={showPw ? "Hide password" : "Show password"}
-              tabIndex={0}
+          <div className="ad-login-form">
+            <div className="ad-login-field">
+              <Input
+                ref={pwRef}
+                type={showPw ? "text" : "password"}
+                value={pw}
+                onChange={(e) => {
+                  setPw(e.target.value);
+                  setLoginError("");
+                }}
+                placeholder="Password"
+                autoFocus
+                disabled={isLocked}
+                aria-label="Admin password"
+                aria-describedby={loginError ? "login-error" : undefined}
+                aria-invalid={!!loginError}
+                className={loginError ? "border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20" : ""}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw(!showPw)}
+                className="ad-login-toggle"
+                aria-label={showPw ? "Hide password" : "Show password"}
+                tabIndex={0}
+              >
+                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full"
+              size="md"
+              disabled={isLocked || loginLoading}
+              loading={loginLoading}
             >
-              {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+              {loginLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Signing in…
+                </>
+              ) : (
+                <>
+                  <Lock className="h-4 w-4" />
+                  Sign In
+                </>
+              )}
+            </Button>
           </div>
-
-          <Button
-            type="submit"
-            className="mt-4 w-full"
-            size="md"
-            disabled={isLocked || loginLoading}
-            loading={loginLoading}
-          >
-            {loginLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Signing in…
-              </>
-            ) : (
-              <>
-                <Lock className="h-4 w-4" />
-                Sign In
-              </>
-            )}
-          </Button>
-
-          <p className="mt-5 text-center text-xs text-[var(--text-dim)]">
-            Default: blueyadmin
-          </p>
         </form>
       </div>
     );

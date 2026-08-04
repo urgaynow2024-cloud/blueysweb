@@ -42,11 +42,11 @@ export function DashboardLayout({ active, onSelect, onLogout, onReset, userName,
   }, [sidebarOpen]);
 
   return (
-    <div className="admin-shell flex min-h-screen flex-col">
+    <div className="ad-login-bg flex min-h-screen flex-col">
       <AdminTopbar onToggleSidebar={() => setSidebarOpen(true)} onLogout={onLogout} userName={userName} />
 
-      <div className="admin-body">
-        <aside className="hidden w-[260px] shrink-0 border-r border-[var(--border)] bg-[var(--bg-elevated)] lg:block">
+      <div className="ad-main">
+        <aside className="ad-sidebar hidden w-[260px] shrink-0 border-r border-[var(--border)] lg:block">
           <div className="sticky top-[72px] h-[calc(100vh-72px)]">
             <AdminSidebar active={active} onSelect={onSelect} onLogout={onLogout} onReset={onReset} />
           </div>
@@ -89,8 +89,8 @@ export function DashboardLayout({ active, onSelect, onLogout, onReset, userName,
           </div>
         )}
 
-        <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
-          <div className="mx-auto max-w-[1100px]">{children}</div>
+        <main className="ad-main-inner">
+          {children}
         </main>
       </div>
     </div>

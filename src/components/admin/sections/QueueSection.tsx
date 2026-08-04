@@ -166,7 +166,7 @@ export function QueueSection() {
         />
         <div className="mt-6 space-y-4">
           {items.map((item, i) => (
-            <div key={item.id || i} className="ad-panel ad-panel-hover p-5">
+            <div key={item.id || i} className="ad-section-card ad-section-card-hover p-5">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Field label="Title">
                   <Input value={item.title} onChange={(e) => updateItem(i, "title", e.target.value)} placeholder="VRChat Avatar Edit" />

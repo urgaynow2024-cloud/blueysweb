@@ -16,6 +16,7 @@ import {
   Loader2,
   KeyRound,
   UserCog,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/admin/Button";
 import { Card, CardHeader } from "@/components/admin/Card";
@@ -186,31 +187,32 @@ export default function ModeratorPage() {
 
   if (!session) {
     return (
-      <div className="relative grid min-h-screen place-items-center overflow-hidden px-4">
+      <div className="ad-login-bg relative grid min-h-screen place-items-center overflow-hidden px-4">
         <div className="pointer-events-none absolute inset-0 bg-dots opacity-30" />
-        <div className="pointer-events-none absolute left-1/2 top-1/3 h-72 w-[500px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.06] blur-[120px]" />
-        <form onSubmit={doLogin} className="ad-panel relative w-full max-w-sm p-8">
-          <div className="mx-auto mb-6 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] shadow-lg shadow-[var(--accent)]/20">
+        <form onSubmit={doLogin} className="ad-login-card relative">
+          <div className="ad-login-icon">
             <ShieldCheck className="h-7 w-7" />
           </div>
-          <h1 className="text-center text-2xl font-bold text-white">Moderator Access</h1>
-          <p className="mb-6 mt-1.5 text-center text-sm text-[var(--text-dim)]">
-            Sign in with your moderator or owner account.
-          </p>
-          <Field label="Username">
-            <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" autoFocus />
-          </Field>
-          <Field label="Password" className="mt-4">
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
-          </Field>
-          {loginError && (
-            <p className="mt-4 rounded-lg border border-[var(--danger-border)] bg-[var(--danger-soft)] px-3 py-2 text-sm text-[var(--danger)]">
-              {loginError}
-            </p>
-          )}
-          <Button type="submit" className="mt-5 w-full" size="md" leftIcon={<KeyRound className="h-4 w-4" />}>
-            Sign In
-          </Button>
+          <h1 className="ad-login-title">Moderator Access</h1>
+          <p className="ad-login-subtitle">Sign in with your moderator or owner account.</p>
+
+          <div className="ad-login-form">
+            <Field label="Username">
+              <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" autoFocus />
+            </Field>
+            <Field label="Password">
+              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
+            </Field>
+            {loginError && (
+              <div className="ad-login-error" role="alert">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>{loginError}</span>
+              </div>
+            )}
+            <Button type="submit" className="w-full" size="md" leftIcon={<KeyRound className="h-4 w-4" />}>
+              Sign In
+            </Button>
+          </div>
         </form>
       </div>
     );
@@ -454,7 +456,7 @@ function QueueSection<T extends { id: string }>({
       {loading ? (
         <div className="space-y-4">
           {[1, 2].map((i) => (
-            <div key={i} className="ad-panel h-32 animate-pulse opacity-60" />
+            <div key={i} className="ad-section-card h-32 animate-pulse opacity-60" />
           ))}
         </div>
       ) : items.length === 0 ? (
@@ -579,7 +581,7 @@ function SubmissionBody({ submission }: { submission: Submission }) {
 
 function LogSection({ log, loading }: { log: LogEntry[]; loading: boolean }) {
   if (loading) {
-    return <div className="ad-panel h-40 animate-pulse opacity-60" />;
+    return <div className="ad-section-card h-40 animate-pulse opacity-60" />;
   }
   if (log.length === 0) {
     return (

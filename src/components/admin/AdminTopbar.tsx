@@ -32,7 +32,7 @@ export function AdminTopbar({ onToggleSidebar, onLogout, userName = "Admin" }: T
         type="button"
         onClick={onToggleSidebar}
         aria-label="Toggle navigation"
-        className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[var(--border)] text-white transition-colors hover:bg-white/10 lg:hidden"
+        className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[var(--border)] text-white transition-all hover:bg-white/10 hover:border-[var(--border-hover)] lg:hidden"
       >
         <Menu className="h-5 w-5" />
       </button>
@@ -51,7 +51,7 @@ export function AdminTopbar({ onToggleSidebar, onLogout, userName = "Admin" }: T
         <Link
           href="/"
           target="_blank"
-          className="ad-btn ad-btn-secondary ad-btn-sm hidden sm:inline-flex"
+          className="ad-btn ad-btn-secondary ad-btn-sm hidden sm:inline-flex items-center gap-2"
         >
           <Eye className="h-4 w-4" />
           Preview Website
@@ -75,7 +75,7 @@ export function AdminTopbar({ onToggleSidebar, onLogout, userName = "Admin" }: T
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             aria-label="User menu"
-            className="flex items-center gap-2 rounded-xl border border-[var(--border)] p-1 pr-2 transition-colors hover:bg-white/5"
+            className="flex items-center gap-2 rounded-xl border border-[var(--border)] p-1 pr-2.5 transition-all hover:bg-white/5 hover:border-[var(--border-hover)]"
           >
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-sm font-bold text-[#04060a]">
               B

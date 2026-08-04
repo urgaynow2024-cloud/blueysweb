@@ -119,7 +119,7 @@ export function SiteImagesSection() {
           const image = images[slot.key];
           const isUploading = saving === slot.key;
           return (
-            <div key={slot.key} className="ad-panel ad-panel-hover p-5">
+            <div key={slot.key} className="ad-section-card ad-section-card-hover p-5">
               <div className="mb-3">
                 <h3 className="text-sm font-semibold text-white">{slot.label}</h3>
                 <p className="mt-1 text-xs leading-relaxed text-[var(--text-dim)]">{slot.desc}</p>
