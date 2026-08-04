@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { LayoutDashboard, LogOut, RotateCcw, Loader2 } from "lucide-react";
+import { LayoutDashboard, LogOut, RotateCcw, Loader2, Lock, Eye, EyeOff, AlertCircle, ShieldCheck } from "lucide-react";
 import { useSave } from "@/components/admin/SaveProvider";
 import { useToast } from "@/components/admin/Toast";
 import { DashboardLayout } from "@/components/admin/DashboardLayout";
@@ -26,13 +26,12 @@ import { TosSection } from "@/components/admin/sections/TosSection";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 const ADMIN_PASSWORD = "blueyadmin";
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 
 const defaultSite: Record<string, string> = {};
-
 const defaultPricing: any[] = [];
-
 const defaultFaq: any[] = [];
-
 const defaultWorkflow: any[] = [];
 
 type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "fbx-mashups" | "tos";
@@ -40,9 +39,15 @@ type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-imag
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [pw, setPw] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [tab, setTab] = useState<Tab>("portfolio");
   const [loading, setLoading] = useState(true);
   const [resetOpen, setResetOpen] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+  const pwRef = useRef<HTMLInputElement>(null);
 
   const [site, setSite] = useState<any>(defaultSite);
   const [pricing, setPricing] = useState<any[]>(defaultPricing);
@@ -64,6 +69,21 @@ export default function AdminPage() {
     if (authed) loadAllData();
   }, [authed]);
 
+  useEffect(() => {
+    if (lockedUntil && Date.now() < lockedUntil) {
+      const remaining = Math.ceil((lockedUntil - Date.now()) / 1000);
+      const timer = setTimeout(() => setLockedUntil(lockedUntil), 1000);
+      return () => clearTimeout(timer);
+    } else if (lockedUntil && Date.now() >= lockedUntil) {
+      setLockedUntil(null);
+      setAttempts(0);
+    }
+  }, [lockedUntil]);
+
+  useEffect(() => {
+    if (authed) loadAllData();
+  }, [authed]);
+
   async function loadAllData() {
     setLoading(true);
     try {
@@ -72,7 +92,7 @@ export default function AdminPage() {
         if (stored) {
           try {
             const data = JSON.parse(stored);
-          if (data.site) setSite(data.site);
+            if (data.site) setSite(data.site);
             if (data.pricing) setPricing(data.pricing);
             if (data.faq) setFaq(data.faq);
             if (data.workflow) setWorkflow(data.workflow);
@@ -129,25 +149,58 @@ export default function AdminPage() {
 
   async function doLogin(e: React.FormEvent) {
     e.preventDefault();
-    // Establish an owner session (sets the httpOnly cookie used by moderator APIs).
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: "owner", password: pw }),
-    });
-    if (res.ok) {
-      setAuthed(true);
+    setLoginError("");
+
+    if (lockedUntil && Date.now() < lockedUntil) {
+      const remaining = Math.ceil((lockedUntil - Date.now()) / 1000);
+      setLoginError(`Account locked. Try again in ${remaining}s.`);
       return;
     }
-    if (res.status === 401) {
-      toast.error("Incorrect password");
+
+    if (!pw) {
+      setLoginError("Password is required");
+      pwRef.current?.focus();
       return;
     }
-    // Fallback for local/demo mode (Supabase not configured): use the hardcoded check.
-    if (pw === ADMIN_PASSWORD) {
-      setAuthed(true);
-    } else {
-      toast.error("Incorrect password");
+
+    setLoginLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: "owner", password: pw }),
+      });
+
+      if (res.ok) {
+        setAuthed(true);
+        setAttempts(0);
+        return;
+      }
+
+      if (res.status === 401) {
+        const newAttempts = attempts + 1;
+        setAttempts(newAttempts);
+
+        if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+          const lockUntil = Date.now() + LOCKOUT_DURATION_MS;
+          setLockedUntil(lockUntil);
+          setLoginError(`Too many failed attempts. Account locked for 15 minutes.`);
+          toast.error("Account locked due to too many failed attempts");
+        } else {
+          const remaining = MAX_LOGIN_ATTEMPTS - newAttempts;
+          setLoginError(`Incorrect password. ${remaining} attempt${remaining !== 1 ? "s" : ""} remaining.`);
+        }
+        setPw("");
+        pwRef.current?.focus();
+        return;
+      }
+
+      setLoginError("Server error. Please try again.");
+    } catch {
+      setLoginError("Network error. Please check your connection.");
+    } finally {
+      setLoginLoading(false);
     }
   }
 
@@ -170,24 +223,84 @@ export default function AdminPage() {
   }
 
   if (!authed) {
+    const isLocked = Boolean(lockedUntil && Date.now() < lockedUntil);
+    const remainingSeconds = isLocked ? Math.ceil((lockedUntil! - Date.now()) / 1000) : 0;
+
     return (
       <div className="relative grid min-h-screen place-items-center overflow-hidden px-4">
         <div className="pointer-events-none absolute inset-0 bg-dots opacity-30" />
         <div className="pointer-events-none absolute left-1/2 top-1/3 h-72 w-[500px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.06] blur-[120px]" />
+        <div className="pointer-events-none absolute right-[-10%] bottom-[-10%] h-60 w-60 rounded-full bg-[var(--accent-2)] opacity-[0.04] blur-[100px]" />
+
         <form
           onSubmit={doLogin}
           className="ad-panel relative w-full max-w-sm p-8"
+          noValidate
         >
           <div className="mx-auto mb-6 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] shadow-lg shadow-[var(--accent)]/20">
-            <LayoutDashboard className="h-7 w-7" />
+            <ShieldCheck className="h-7 w-7" />
           </div>
           <h1 className="text-center text-2xl font-bold text-white">Admin Access</h1>
           <p className="mb-6 mt-1.5 text-center text-sm text-[var(--text-dim)]">Enter the admin password to continue.</p>
-          <Input type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Password" autoFocus />
-          <Button type="submit" className="mt-4 w-full" size="md">
-            Login
+
+          {loginError && (
+            <div className="mb-4 flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-sm text-red-400" role="alert">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>{loginError}</span>
+            </div>
+          )}
+
+          <div className="relative">
+            <Input
+              ref={pwRef}
+              type={showPw ? "text" : "password"}
+              value={pw}
+              onChange={(e) => {
+                setPw(e.target.value);
+                setLoginError("");
+              }}
+              placeholder="Password"
+              autoFocus
+              disabled={isLocked}
+              aria-label="Admin password"
+              aria-describedby={loginError ? "login-error" : undefined}
+              aria-invalid={!!loginError}
+              className={loginError ? "border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20" : ""}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPw(!showPw)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)] hover:text-white transition-colors"
+              aria-label={showPw ? "Hide password" : "Show password"}
+              tabIndex={0}
+            >
+              {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+
+          <Button
+            type="submit"
+            className="mt-4 w-full"
+            size="md"
+            disabled={isLocked || loginLoading}
+            loading={loginLoading}
+          >
+            {loginLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Signing in…
+              </>
+            ) : (
+              <>
+                <Lock className="h-4 w-4" />
+                Sign In
+              </>
+            )}
           </Button>
-          <p className="mt-5 text-center text-xs text-[var(--text-dim)]">Default: blueyadmin</p>
+
+          <p className="mt-5 text-center text-xs text-[var(--text-dim)]">
+            Default: blueyadmin
+          </p>
         </form>
       </div>
     );
