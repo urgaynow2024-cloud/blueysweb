@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { Tag, HelpCircle, Workflow, Star, Image as ImageIcon, Link as LinkIcon, Info, BarChart3, ShieldAlert, LogOut, Lock, UserCog, Layers, GitCompare, FileText } from "lucide-react";
+import { Tag, HelpCircle, Workflow, Star, Image as ImageIcon, Link as LinkIcon, Info, BarChart3, ShieldAlert, LogOut, Lock, UserCog, Layers, GitCompare, FileText, Sparkles } from "lucide-react";
 
 export interface NavItem {
   id: string;
@@ -64,7 +64,11 @@ export function AdminSidebar({ active, onSelect, onLogout, onReset }: SidebarPro
       <div className="flex-1 overflow-y-auto px-3 py-4">
         {ADMIN_NAV.map((group, gi) => (
           <div key={group.label || gi}>
-            {group.label && <p className="ad-nav-section">{group.label}</p>}
+            {group.label && (
+              <p className="ad-nav-section">
+                {group.label}
+              </p>
+            )}
             <div className="space-y-1">
               {group.items.map((item) => {
                 const isActive = active === item.id;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { LayoutDashboard, LogOut, RotateCcw, Loader2, Lock, Eye, EyeOff, AlertCircle, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, LogOut, RotateCcw, Loader2, Lock, Eye, EyeOff, AlertCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { useSave } from "@/components/admin/SaveProvider";
 import { useToast } from "@/components/admin/Toast";
 import { DashboardLayout } from "@/components/admin/DashboardLayout";
@@ -71,7 +71,6 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (lockedUntil && Date.now() < lockedUntil) {
-      const remaining = Math.ceil((lockedUntil - Date.now()) / 1000);
       const timer = setTimeout(() => setLockedUntil(lockedUntil), 1000);
       return () => clearTimeout(timer);
     } else if (lockedUntil && Date.now() >= lockedUntil) {
@@ -79,10 +78,6 @@ export default function AdminPage() {
       setAttempts(0);
     }
   }, [lockedUntil]);
-
-  useEffect(() => {
-    if (authed) loadAllData();
-  }, [authed]);
 
   async function loadAllData() {
     setLoading(true);

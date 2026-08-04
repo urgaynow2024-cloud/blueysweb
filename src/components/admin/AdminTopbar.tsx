@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { LayoutDashboard, Save, Eye, Menu, LogOut, ChevronDown, User, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { LayoutDashboard, Save, Eye, Menu, LogOut, ChevronDown, User, CheckCircle2, AlertCircle, Loader2, Sparkles } from "lucide-react";
 import { Button } from "./Button";
 import { useSave } from "./SaveProvider";
 
@@ -27,7 +27,7 @@ export function AdminTopbar({ onToggleSidebar, onLogout, userName = "Admin" }: T
   }, [menuOpen]);
 
   return (
-    <header className="ad-topbar sticky top-0 z-50 flex items-center gap-3 border-b border-[var(--border)] px-4 lg:px-6">
+    <header className="ad-topbar sticky top-0 z-50 flex items-center gap-3 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-xl px-4 lg:px-6">
       <button
         type="button"
         onClick={onToggleSidebar}
@@ -39,7 +39,7 @@ export function AdminTopbar({ onToggleSidebar, onLogout, userName = "Admin" }: T
 
       <div className="flex min-w-0 items-center gap-3">
         <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] shadow-lg shadow-[var(--accent)]/20">
-          <LayoutDashboard className="h-[18px] w-[18px]" />
+          <Sparkles className="h-[18px] w-[18px]" />
         </div>
         <div className="min-w-0">
           <h1 className="truncate text-[15px] font-semibold leading-tight text-white">Admin Dashboard</h1>
