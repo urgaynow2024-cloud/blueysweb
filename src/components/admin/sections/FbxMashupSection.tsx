@@ -220,13 +220,39 @@ export function FbxMashupSection() {
     markDirty();
   }
 
-  function addProject() {
-    setProjects([
-      ...projects,
-      { title: "", description: "", avatar_base: "", software_used: [], price: "", featured: false, visible: true, sort_order: projects.length },
-    ]);
-    setEditingProject(projects.length);
-    markDirty();
+  async function addProject() {
+    if (!isSupabaseConfigured || !sb) {
+      setProjects([
+        ...projects,
+        { title: "", description: "", avatar_base: "", software_used: [], price: "", featured: false, visible: true, sort_order: projects.length },
+      ]);
+      setEditingProject(projects.length);
+      markDirty();
+      return;
+    }
+    try {
+      const res = await fetch("/api/fbx-mashups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "", description: "", avatar_base: "", software_used: [], price: "", featured: false, visible: true, sort_order: projects.length }),
+      });
+      if (!res.ok) {
+        const r = await res.json().catch(() => ({}));
+        throw new Error(r.error || "Failed to create project");
+      }
+      const data = await res.json();
+      if (data && data.id) {
+        setProjects([
+          ...projects,
+          { id: data.id, title: "", description: "", avatar_base: "", software_used: [], price: "", featured: false, visible: true, sort_order: projects.length },
+        ]);
+        setEditingProject(projects.length);
+        originalIdsRef.current.add(data.id);
+        markDirty();
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Failed to create project");
+    }
   }
 
   async function clearAllProjects() {
@@ -301,13 +327,54 @@ export function FbxMashupSection() {
     markDirty();
   }
 
+  async function ensureProjectHasId(projectIndex: number): Promise<string | null> {
+    const project = projects[projectIndex];
+    if (project.id) return project.id;
+    try {
+      const res = await fetch("/api/fbx-mashups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: project.title,
+          description: project.description,
+          avatar_base: project.avatar_base,
+          software_used: project.software_used,
+          price: project.price,
+          featured: project.featured,
+          visible: project.visible,
+          sort_order: project.sort_order,
+        }),
+      });
+      if (!res.ok) {
+        const r = await res.json().catch(() => ({}));
+        throw new Error(r.error || "Failed to create project");
+      }
+      const data = await res.json();
+      if (data && data.id) {
+        const next = projects.slice();
+        next[projectIndex] = { ...next[projectIndex], id: data.id };
+        setProjects(next);
+        originalIdsRef.current.add(data.id);
+        markDirty();
+        return data.id;
+      }
+      return null;
+    } catch (e: any) {
+      toast.error(e.message || "Failed to create project");
+      return null;
+    }
+  }
+
   async function handleGalleryUpload(projectIndex: number, files: FileList | null) {
     if (!files || files.length === 0) return;
     const project = projects[projectIndex];
-    const mashupId = project.id;
+    let mashupId: string | null = project.id ?? null;
     if (!mashupId) {
-      toast.error("Save the project first before uploading images");
-      return;
+      mashupId = await ensureProjectHasId(projectIndex);
+      if (!mashupId) {
+        toast.error("Save the project first before uploading images");
+        return;
+      }
     }
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -343,10 +410,13 @@ export function FbxMashupSection() {
   async function handleBeforeAfterUpload(projectIndex: number, type: "before" | "after", files: FileList | null) {
     if (!files || files.length === 0) return;
     const project = projects[projectIndex];
-    const mashupId = project.id;
+    let mashupId: string | null = project.id ?? null;
     if (!mashupId) {
-      toast.error("Save the project first before uploading images");
-      return;
+      mashupId = await ensureProjectHasId(projectIndex);
+      if (!mashupId) {
+        toast.error("Save the project first before uploading images");
+        return;
+      }
     }
     const file = files[0];
     const temp: FbxBeforeAfter = {
