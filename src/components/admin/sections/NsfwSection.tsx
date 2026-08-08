@@ -65,7 +65,12 @@ export function NsfwSection() {
     const formData = new FormData();
     formData.append("file", file);
     const res = await fetch("/api/nsfw/upload", { method: "POST", body: formData });
-    const result = await res.json();
+    let result: any;
+    try {
+      result = await res.json();
+    } catch {
+      result = {};
+    }
     if (res.ok && result.id) return { id: result.id, url: result.url, path: result.path };
     throw new Error(result.error || result.details || `Upload failed (${res.status})`);
   }
