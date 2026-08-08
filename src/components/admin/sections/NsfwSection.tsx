@@ -67,7 +67,7 @@ export function NsfwSection() {
     const res = await fetch("/api/nsfw/upload", { method: "POST", body: formData });
     const result = await res.json();
     if (res.ok && result.id) return { id: result.id, url: result.url, path: result.path };
-    throw new Error(result.error || "Upload failed");
+    throw new Error(result.error || result.details || `Upload failed (${res.status})`);
   }
 
   async function handleFiles(files: FileList | null) {
@@ -82,8 +82,9 @@ export function NsfwSection() {
         toast.success("NSFW image uploaded");
       } catch (err) {
         console.error("NSFW upload error:", err);
-        setImages((prev) => prev.map((img) => (img === temp ? { ...img, uploading: false, error: "Upload failed" } : img)));
-        toast.error("Failed to upload NSFW image");
+        const message = err instanceof Error ? err.message : "Upload failed";
+        setImages((prev) => prev.map((img) => (img === temp ? { ...img, uploading: false, error: message } : img)));
+        toast.error(message);
       }
     }
   }
@@ -129,7 +130,8 @@ export function NsfwSection() {
       toast.success("NSFW image replaced");
     } catch (err) {
       console.error("NSFW replace error:", err);
-      toast.error("Failed to replace NSFW image");
+      const message = err instanceof Error ? err.message : "Replace failed";
+      toast.error(message);
     }
   }
 
