@@ -1,8 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { authorize } from "@/lib/auth";
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
+    const auth = authorize(request);
+    if (!auth.ok) return auth.response!;
+
     const { id, path } = await request.json();
 
     if (!supabaseAdmin) {
@@ -28,8 +32,11 @@ export async function DELETE(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const auth = authorize(request);
+    if (!auth.ok) return auth.response!;
+
     const items = await request.json();
 
     if (!supabaseAdmin) {

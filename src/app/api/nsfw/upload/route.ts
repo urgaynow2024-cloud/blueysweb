@@ -1,8 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { authorize } from "@/lib/auth";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const auth = authorize(request);
+    if (!auth.ok) return auth.response!;
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
 
@@ -12,6 +16,14 @@ export async function POST(request: Request) {
 
     if (!supabaseAdmin) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+    }
+
+    if (!file.type.startsWith("image/")) {
+      return NextResponse.json({ error: "Only image files are allowed" }, { status: 400 });
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ error: "File size must be under 10MB" }, { status: 400 });
     }
 
     const ext = file.name.split(".").pop() || "bin";
@@ -26,7 +38,7 @@ export async function POST(request: Request) {
 
     if (uploadError || !uploadData) {
       console.error("NSFW storage upload error:", uploadError);
-      return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+      return NextResponse.json({ error: "Upload failed", details: uploadError?.message || "Unknown storage error" }, { status: 500 });
     }
 
     const { data: urlData } = supabaseAdmin.storage.from("portfolio-images").getPublicUrl(storagePath);
@@ -40,7 +52,7 @@ export async function POST(request: Request) {
     if (dbError || !dbData || dbData.length === 0) {
       console.error("NSFW DB insert error:", dbError);
       await supabaseAdmin.storage.from("portfolio-images").remove([storagePath]);
-      return NextResponse.json({ error: "Database error" }, { status: 500 });
+      return NextResponse.json({ error: "Database error", details: dbError?.message || "Unknown database error" }, { status: 500 });
     }
 
     return NextResponse.json({ id: dbData[0].id, url, path: storagePath });

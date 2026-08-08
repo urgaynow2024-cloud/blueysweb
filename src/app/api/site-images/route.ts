@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { authorize } from "@/lib/auth";
 
 function sanitiseFileName(name: string): string {
   return name
@@ -35,8 +36,11 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const auth = authorize(request);
+    if (!auth.ok) return auth.response!;
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const key = (formData.get("key") as string | null)?.trim();
@@ -47,6 +51,14 @@ export async function POST(request: Request) {
 
     if (!supabaseAdmin) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+    }
+
+    if (!file.type.startsWith("image/")) {
+      return NextResponse.json({ error: "Only image files are allowed" }, { status: 400 });
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ error: "File size must be under 10MB" }, { status: 400 });
     }
 
     const originalName = file.name || "upload";
@@ -99,7 +111,7 @@ export async function POST(request: Request) {
 
     if (dbError) {
       console.error("DB error:", dbError);
-      return NextResponse.json({ error: "Database error" }, { status: 500 });
+      return NextResponse.json({ error: "Database error", details: dbError.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, url, path: storagePath });
@@ -109,8 +121,11 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
+    const auth = authorize(request);
+    if (!auth.ok) return auth.response!;
+
     const { key, path } = await request.json();
 
     if (!key || !supabaseAdmin) {

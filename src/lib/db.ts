@@ -124,7 +124,7 @@ export async function uploadNsfwPortfolioImage(file: File) {
 
   const { data: dbData, error: dbError } = await supabase
     .from("nsfw_portfolio_images")
-    .insert([{ url }])
+    .insert([{ url, path: storagePath }])
     .select();
 
   if (dbError || !dbData || dbData.length === 0) {
