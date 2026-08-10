@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getSiteConfig } from "@/lib/db";
 import { tosSections } from "@/data/site";
-import Reveal from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
 import { ArrowUp, Search, FileText, ShieldCheck, Clock } from "lucide-react";
 
@@ -22,20 +21,6 @@ interface TosSection {
   box_title: string;
   sort_order: number;
   visible: boolean;
-}
-
-function SkeletonCard() {
-  return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
-      <div className="h-8 w-3/4 animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
-      <div className="p-6 space-y-3">
-        <div className="h-4 w-full rounded bg-[var(--bg)] animate-pulse" />
-        <div className="h-4 w-2/3 rounded bg-[var(--bg)] animate-pulse" />
-        <div className="h-4 w-full rounded bg-[var(--bg)] animate-pulse" />
-        <div className="h-4 w-1/2 rounded bg-[var(--bg)] animate-pulse" />
-      </div>
-    </div>
-  );
 }
 
 function renderMarkdown(text: string): string {
@@ -57,23 +42,6 @@ function renderMarkdown(text: string): string {
     })
     .join("");
   return html;
-}
-
-function BoxIcon({ type }: { type: string }) {
-  if (type === "warning") return <span className="text-amber-400">⚠</span>;
-  if (type === "error") return <span className="text-red-400">✕</span>;
-  return <span className="text-blue-400">ℹ</span>;
-}
-
-function getBoxClasses(type: string) {
-  switch (type) {
-    case "warning":
-      return "border-amber-500/30 bg-amber-500/10 text-amber-200";
-    case "error":
-      return "border-red-500/30 bg-red-500/10 text-red-200";
-    default:
-      return "border-blue-500/30 bg-blue-500/10 text-blue-200";
-  }
 }
 
 function SectionContent({ section }: { section: TosSection }) {
@@ -158,13 +126,6 @@ export default function ToSPage() {
       s.items?.some((item: string) => item.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -215,92 +176,55 @@ export default function ToSPage() {
         </div>
       </section>
 
-      {sections.length > 0 && (
-        <section className="!pt-0 !pb-8 md:!pb-10">
-          <div className="container">
-            <div className="mx-auto max-w-3xl">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-4">Contents</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
-                {sections.map((section, i) => {
-                  const num = section.number || String(i + 1).padStart(2, "0");
-                  return (
-                    <a
-                      key={section.id || i}
-                      href={`#${section.id || ""}`}
-                      className="group flex items-center gap-3 py-2 text-left text-sm text-[var(--text-secondary)] transition-colors hover:text-white no-underline"
-                    >
-                      <span className="text-xs font-bold text-[var(--accent)] opacity-60 group-hover:opacity-100 transition-opacity w-6">{num}</span>
-                      <span className="border-b border-transparent group-hover:border-[var(--border)] transition-colors">{section.title}</span>
-                    </a>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
       <section className="!pt-0">
         <div className="container max-w-3xl">
           {loading ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {[1, 2, 3, 4].map((i) => (
-                <SkeletonCard key={i} />
+                <div key={i} className="h-32 animate-pulse rounded-2xl bg-[var(--bg-elevated)]" />
               ))}
             </div>
           ) : filteredSections.length > 0 ? (
             <div>
               {filteredSections.map((section, i) => (
-                <Reveal key={section.id || i} delay={(i % 4) * 60}>
-                  <div
-                    id={section.id || ""}
-                    className="scroll-mt-24 md:scroll-mt-28"
-                  >
-                    <div className="flex items-baseline gap-4 mb-3">
-                      <span className="text-sm font-bold text-[var(--accent)] tabular-nums">
-                        {section.number || String(i + 1).padStart(2, "0")}
-                      </span>
-                      <h2 className="text-xl md:text-2xl font-bold text-white">{section.title}</h2>
-                    </div>
-                    {section.description && (
-                      <p className="text-sm text-[var(--text-dim)] mb-5 max-w-2xl">{section.description}</p>
+                <div
+                  key={section.id || i}
+                  id={section.id || ""}
+                  className="scroll-mt-24 md:scroll-mt-28"
+                >
+                  <div className="flex items-baseline gap-4 mb-4">
+                    <span className="text-sm font-bold text-[var(--accent)] tabular-nums">
+                      {section.number || String(i + 1).padStart(2, "0")}
+                    </span>
+                    <h2 className="text-xl md:text-2xl font-bold text-white">{section.title}</h2>
+                  </div>
+                  {section.description && (
+                    <p className="text-sm text-[var(--text-dim)] mb-5 max-w-2xl">{section.description}</p>
+                  )}
+                  <div>
+                    {section.highlight_box && (
+                      <div className="mb-5 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
+                        <p className="text-sm text-[var(--text-secondary)]">{section.highlight_box}</p>
+                      </div>
                     )}
-                    <div>
-                      {section.highlight_box && (
-                        <div className={`mb-5 rounded-xl border p-4 ${getBoxClasses(section.box_type || "info")}`}>
-                          <div className="flex items-start gap-3">
-                            {BoxIcon({ type: section.box_type || "info" })}
-                            <div>
-                              {section.box_title && (
-                                <p className="font-semibold mb-1">{section.box_title}</p>
-                              )}
-                              <p className="text-sm">{section.highlight_box}</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
 
-                      {section.section_type === "paragraphs" && section.content ? (
-                        <div
-                          className="prose prose-invert max-w-none text-sm text-[var(--text-secondary)]"
-                          dangerouslySetInnerHTML={{ __html: renderMarkdown(section.content) }}
-                        />
-                      ) : (
-                        <SectionContent section={section} />
-                      )}
-                    </div>
-                    {i < filteredSections.length - 1 && (
-                      <div className="mt-10 md:mt-12 border-b border-[var(--border)]" />
+                    {section.section_type === "paragraphs" && section.content ? (
+                      <div
+                        className="prose prose-invert max-w-none text-sm text-[var(--text-secondary)]"
+                        dangerouslySetInnerHTML={{ __html: renderMarkdown(section.content) }}
+                      />
+                    ) : (
+                      <SectionContent section={section} />
                     )}
                   </div>
-                </Reveal>
+                  {i < filteredSections.length - 1 && (
+                    <div className="mt-10 md:mt-12 border-b border-[var(--border)]" />
+                  )}
+                </div>
               ))}
             </div>
           ) : (
-            <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-20 text-center">
-              <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                <FileText className="h-6 w-6" />
-              </div>
+            <div className="py-20 text-center">
               <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
                 {searchQuery ? "No matching sections found." : "Terms of Service sections will appear here once configured."}
               </p>
@@ -336,11 +260,9 @@ export default function ToSPage() {
               These Terms of Service constitute the entire agreement between you and Bluey Commissions regarding the use of our services. By commissioning work, you acknowledge that you have read, understood, and agreed to these Terms.
             </p>
             <div className="mt-4 flex justify-center">
-              <Reveal>
-                <ButtonLink href="/commission" variant="secondary" size="sm">
-                  <span>Back to Commission Form</span>
-                </ButtonLink>
-              </Reveal>
+              <ButtonLink href="/commission" variant="secondary" size="sm">
+                <span>Back to Commission Form</span>
+              </ButtonLink>
             </div>
           </div>
         </div>
