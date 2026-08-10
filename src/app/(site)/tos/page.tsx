@@ -179,7 +179,7 @@ export default function ToSPage() {
 
   return (
     <div className="relative" ref={contentRef}>
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden pt-20 sm:pt-24 md:pt-28">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
         <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px]" />
 
@@ -207,7 +207,7 @@ export default function ToSPage() {
         </div>
       </section>
 
-      <section className="section !pt-0">
+      <section className="!pt-0 !pb-4 md:!pb-6">
         <div className="container">
           <div className="relative max-w-xl mx-auto">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--text-dim)]" />
@@ -216,12 +216,12 @@ export default function ToSPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search terms, sections, keywords..."
-              className="field w-full pl-12 pr-4 py-3 text-sm"
+              className="field w-full !pl-12 pr-4 py-3 text-sm"
               aria-label="Search Terms of Service"
             />
           </div>
 
-          <div className="mt-8 flex justify-center">
+          <div className="mt-4 md:mt-6 flex justify-center">
             <button
               type="button"
               onClick={expandAll}
@@ -235,16 +235,16 @@ export default function ToSPage() {
 
       {sections.length > 0 && (
         <section className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-xl">
-          <div className="container py-4 overflow-x-auto">
+          <div className="container py-3 md:py-4 overflow-x-auto">
             <div className="flex items-center gap-3">
-              <span className="shrink-0 text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider">Contents</span>
-              <div className="flex flex-wrap gap-2">
+              <span className="shrink-0 text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider hidden sm:inline">Contents</span>
+              <div className="flex flex-nowrap gap-2">
                 {sections.map((section) => (
                   <button
                     key={section.id}
                     type="button"
                     onClick={() => scrollToSection(section.id || "")}
-                    className="shrink-0 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-4 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:text-white"
+                    className="shrink-0 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-3 md:px-4 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:text-white whitespace-nowrap"
                   >
                     {section.icon} {section.title}
                   </button>
@@ -255,7 +255,7 @@ export default function ToSPage() {
         </section>
       )}
 
-      <section className="section">
+      <section className="section !pt-4 md:!pt-6">
         <div className="container max-w-4xl">
           {loading ? (
             <div className="space-y-6">
@@ -339,7 +339,7 @@ export default function ToSPage() {
           )}
 
           {showBackToTop && (
-            <div className="fixed bottom-8 right-8 z-40">
+            <div className="fixed bottom-24 lg:bottom-8 right-4 md:right-8 z-40">
               <button
                 type="button"
                 onClick={scrollToTop}
