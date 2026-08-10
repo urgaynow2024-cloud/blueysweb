@@ -7,13 +7,14 @@ import { tosSections } from "@/data/site";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
-import { ArrowUp, Search, FileText, ShieldCheck, Clock, AlertCircle, AlertTriangle, Info, ChevronDown } from "lucide-react";
+import { ArrowUp, Search, FileText, ShieldCheck, Clock, AlertCircle, AlertTriangle, Info } from "lucide-react";
 
 interface TosSection {
   id?: string;
   title: string;
   icon: string;
   description?: string;
+  number?: string;
   section_type: "bullets" | "paragraphs";
   content: string;
   items: string[];
@@ -27,7 +28,7 @@ interface TosSection {
 function SkeletonCard() {
   return (
     <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
-      <div className="h-24 w-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
+      <div className="h-8 w-3/4 animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
       <div className="p-6 space-y-3">
         <div className="h-4 w-full rounded bg-[var(--bg)] animate-pulse" />
         <div className="h-4 w-2/3 rounded bg-[var(--bg)] animate-pulse" />
@@ -104,7 +105,6 @@ export default function ToSPage() {
   const [sections, setSections] = useState<TosSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [version, setVersion] = useState<string>("");
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -216,8 +216,34 @@ export default function ToSPage() {
         </div>
       </section>
 
-      <section className="section !pt-2 md:!pt-4">
-        <div className="container max-w-4xl">
+      {sections.length > 0 && (
+        <section className="!pt-0 !pb-8 md:!pb-10">
+          <div className="container">
+            <div className="mx-auto max-w-3xl">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-4">Contents</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
+                {sections.map((section, i) => {
+                  const num = section.number || String(i + 1).padStart(2, "0");
+                  return (
+                    <button
+                      key={section.id || i}
+                      type="button"
+                      onClick={() => scrollToSection(section.id || "")}
+                      className="group flex items-center gap-3 py-2 text-left text-sm text-[var(--text-secondary)] transition-colors hover:text-white"
+                    >
+                      <span className="text-xs font-bold text-[var(--accent)] opacity-60 group-hover:opacity-100 transition-opacity">{num}</span>
+                      <span className="border-b border-transparent group-hover:border-[var(--border)] transition-colors">{section.title}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="!pt-0">
+        <div className="container max-w-3xl">
           {loading ? (
             <div className="space-y-4">
               {[1, 2, 3, 4].map((i) => (
@@ -225,67 +251,49 @@ export default function ToSPage() {
               ))}
             </div>
           ) : filteredSections.length > 0 ? (
-            <div className="space-y-4" id="toc-content">
+            <div className="space-y-10 md:space-y-12">
               {filteredSections.map((section, i) => (
                 <Reveal key={section.id || i} delay={(i % 4) * 60}>
                   <div
                     id={section.id || ""}
-                    className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden transition-all duration-500 hover:border-[var(--border-hover)]"
+                    className="scroll-mt-24 md:scroll-mt-28"
                   >
-                    <button
-                      type="button"
-                      onClick={() => setExpandedSection(expandedSection === (section.id || i.toString()) ? null : (section.id || i.toString()))}
-                      className="flex w-full items-start gap-4 px-6 py-5 text-left"
-                      aria-expanded={expandedSection === (section.id || i.toString())}
-                    >
-                      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-2xl">
-                        {section.icon}
+                    <div className="flex items-baseline gap-4 mb-3">
+                      <span className="text-sm font-bold text-[var(--accent)] tabular-nums">
+                        {section.number || String(i + 1).padStart(2, "0")}
                       </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-4">
-                          <h2 className="text-lg font-bold text-white">{section.title}</h2>
-                          <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--accent)] transition-all duration-300 ${
-                            expandedSection === (section.id || i.toString()) ? "rotate-180 bg-[var(--accent-soft)]" : ""
-                          }`}>
-                            <ChevronDown className="h-4 w-4" />
-                          </span>
-                        </div>
-                        {section.description && (
-                          <p className="mt-1 text-sm text-[var(--text-dim)]">{section.description}</p>
-                        )}
-                      </div>
-                    </button>
-
-                    <div
-                      className={`grid transition-all duration-500 ease-out ${
-                        expandedSection === (section.id || i.toString()) ? "max-h-[5000px] opacity-100" : "max-h-0 opacity-0"
-                      }`}
-                    >
-                      <div className="overflow-hidden px-6 pb-6">
-                        {section.highlight_box && (
-                          <div className={`mb-5 rounded-xl border p-4 ${getBoxClasses(section.box_type || "info")}`}>
-                            <div className="flex items-start gap-3">
-                              {BoxIcon({ type: section.box_type || "info" })}
-                              <div>
-                                {section.box_title && (
-                                  <p className="font-semibold mb-1">{section.box_title}</p>
-                                )}
-                                <p className="text-sm">{section.highlight_box}</p>
-                              </div>
+                      <h2 className="text-xl md:text-2xl font-bold text-white">{section.title}</h2>
+                    </div>
+                    {section.description && (
+                      <p className="text-sm text-[var(--text-dim)] mb-5 max-w-2xl">{section.description}</p>
+                    )}
+                    <div className="pl-0 md:pl-10">
+                      {section.highlight_box && (
+                        <div className={`mb-5 rounded-xl border p-4 ${getBoxClasses(section.box_type || "info")}`}>
+                          <div className="flex items-start gap-3">
+                            {BoxIcon({ type: section.box_type || "info" })}
+                            <div>
+                              {section.box_title && (
+                                <p className="font-semibold mb-1">{section.box_title}</p>
+                              )}
+                              <p className="text-sm">{section.highlight_box}</p>
                             </div>
                           </div>
-                        )}
+                        </div>
+                      )}
 
-                        {section.section_type === "paragraphs" && section.content ? (
-                          <div
-                            className="prose prose-invert max-w-none text-sm text-[var(--text-secondary)]"
-                            dangerouslySetInnerHTML={{ __html: renderMarkdown(section.content) }}
-                          />
-                        ) : (
-                          <SectionContent section={section} />
-                        )}
-                      </div>
+                      {section.section_type === "paragraphs" && section.content ? (
+                        <div
+                          className="prose prose-invert max-w-none text-sm text-[var(--text-secondary)]"
+                          dangerouslySetInnerHTML={{ __html: renderMarkdown(section.content) }}
+                        />
+                      ) : (
+                        <SectionContent section={section} />
+                      )}
                     </div>
+                    {i < filteredSections.length - 1 && (
+                      <div className="mt-10 md:mt-12 border-b border-[var(--border)]" />
+                    )}
                   </div>
                 </Reveal>
               ))}
@@ -316,7 +324,7 @@ export default function ToSPage() {
         </div>
       </section>
 
-      <section className="section">
+      <section className="section !pt-4 md:!pt-6">
         <div className="container max-w-3xl text-center">
           <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-6 md:p-10">
             <div className="mb-4 flex items-center justify-center gap-2 text-sm text-[var(--text-dim)]">
