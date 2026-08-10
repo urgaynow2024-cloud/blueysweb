@@ -4,8 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getSiteConfig } from "@/lib/db";
 import { tosSections } from "@/data/site";
-import { ButtonLink } from "@/components/ui/Button";
-import { ArrowUp, Search, FileText, ShieldCheck, Clock } from "lucide-react";
+import { FileText, ShieldCheck, Clock } from "lucide-react";
 
 interface TosSection {
   id?: string;
@@ -71,10 +70,8 @@ function SectionContent({ section }: { section: TosSection }) {
 export default function ToSPage() {
   const [sections, setSections] = useState<TosSection[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [version, setVersion] = useState<string>("");
-  const [showBackToTop, setShowBackToTop] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -111,25 +108,6 @@ export default function ToSPage() {
     load();
   }, []);
 
-  useEffect(() => {
-    function onScroll() {
-      setShowBackToTop(window.scrollY > 400);
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  const filteredSections = sections.filter(
-    (s) =>
-      s.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.items?.some((item: string) => item.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   return (
     <div className="relative" ref={contentRef}>
       <section className="relative overflow-hidden pt-20 sm:pt-24 md:pt-28">
@@ -160,22 +138,6 @@ export default function ToSPage() {
         </div>
       </section>
 
-      <section className="!pt-0 !pb-4 md:!pb-6">
-        <div className="container">
-          <div className="relative max-w-xl mx-auto">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--text-dim)]" />
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search terms, sections, keywords..."
-              className="field w-full !pl-12 pr-4 py-3 text-sm"
-              aria-label="Search Terms of Service"
-            />
-          </div>
-        </div>
-      </section>
-
       <section className="!pt-0">
         <div className="container max-w-3xl">
           {loading ? (
@@ -184,13 +146,13 @@ export default function ToSPage() {
                 <div key={i} className="h-32 animate-pulse rounded-2xl bg-[var(--bg-elevated)]" />
               ))}
             </div>
-          ) : filteredSections.length > 0 ? (
+          ) : sections.length > 0 ? (
             <div>
-              {filteredSections.map((section, i) => (
+              {sections.map((section, i) => (
                 <div
                   key={section.id || i}
                   id={section.id || ""}
-                  className="scroll-mt-24 md:scroll-mt-28"
+                  className={i > 0 ? "mt-10 md:mt-12 pt-10 md:pt-12 border-t border-[var(--border)]" : ""}
                 >
                   <div className="flex items-baseline gap-4 mb-4">
                     <span className="text-sm font-bold text-[var(--accent)] tabular-nums">
@@ -217,30 +179,14 @@ export default function ToSPage() {
                       <SectionContent section={section} />
                     )}
                   </div>
-                  {i < filteredSections.length - 1 && (
-                    <div className="mt-10 md:mt-12 border-b border-[var(--border)]" />
-                  )}
                 </div>
               ))}
             </div>
           ) : (
             <div className="py-20 text-center">
               <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
-                {searchQuery ? "No matching sections found." : "Terms of Service sections will appear here once configured."}
+                Terms of Service sections will appear here once configured.
               </p>
-            </div>
-          )}
-
-          {showBackToTop && (
-            <div className="fixed bottom-24 lg:bottom-8 right-4 md:right-8 z-40">
-              <button
-                type="button"
-                onClick={scrollToTop}
-                className="flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-4 py-3 text-sm font-medium text-[var(--text-secondary)] shadow-lg transition-all hover:border-[var(--accent)] hover:text-white"
-              >
-                <ArrowUp className="h-4 w-4" />
-                Back to Top
-              </button>
             </div>
           )}
         </div>
@@ -259,11 +205,6 @@ export default function ToSPage() {
             <p className="text-sm text-[var(--text-secondary)]">
               These Terms of Service constitute the entire agreement between you and Bluey Commissions regarding the use of our services. By commissioning work, you acknowledge that you have read, understood, and agreed to these Terms.
             </p>
-            <div className="mt-4 flex justify-center">
-              <ButtonLink href="/commission" variant="secondary" size="sm">
-                <span>Back to Commission Form</span>
-              </ButtonLink>
-            </div>
           </div>
         </div>
       </section>
