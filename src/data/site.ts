@@ -163,6 +163,7 @@ export const tosSections = [
   {
     title: "General Terms",
     icon: "📋",
+    description: "Basic terms and conditions for all commission requests",
     section_type: "bullets",
     content: "",
     items: [
@@ -179,6 +180,7 @@ export const tosSections = [
   {
     title: "Services",
     icon: "🛠",
+    description: "Services offered by Bluey Commissions",
     section_type: "bullets",
     content: "",
     items: [
@@ -200,6 +202,7 @@ export const tosSections = [
   {
     title: "Asset Ownership",
     icon: "🧩",
+    description: "Client responsibilities for provided assets",
     section_type: "bullets",
     content: "",
     items: [
@@ -215,6 +218,7 @@ export const tosSections = [
   {
     title: "FBX Mashups",
     icon: "🔗",
+    description: "Requirements and proof for FBX Mashup commissions",
     section_type: "bullets",
     content: "",
     items: [
@@ -230,6 +234,7 @@ export const tosSections = [
   {
     title: "Payments",
     icon: "💳",
+    description: "Payment methods, invoices, and deposit requirements",
     section_type: "bullets",
     content: "",
     items: [
@@ -247,6 +252,7 @@ export const tosSections = [
   {
     title: "Refund Policy",
     icon: "💸",
+    description: "Refund eligibility and limitations",
     section_type: "bullets",
     content: "",
     items: [
@@ -261,6 +267,7 @@ export const tosSections = [
   {
     title: "Revisions",
     icon: "🔁",
+    description: "Revision policies and additional change costs",
     section_type: "bullets",
     content: "",
     items: [
@@ -275,6 +282,7 @@ export const tosSections = [
   {
     title: "Delivery",
     icon: "📦",
+    description: "File formats, delivery methods, and source file policies",
     section_type: "bullets",
     content: "",
     items: [
@@ -288,6 +296,7 @@ export const tosSections = [
   {
     title: "Usage Rights",
     icon: "🚫",
+    description: "How completed work may and may not be used",
     section_type: "bullets",
     content: "",
     items: [
@@ -301,6 +310,7 @@ export const tosSections = [
   {
     title: "Portfolio Rights",
     icon: "🎨",
+    description: "Rights to display completed commissions",
     section_type: "bullets",
     content: "",
     items: [
@@ -314,6 +324,7 @@ export const tosSections = [
   {
     title: "Client Conduct",
     icon: "🤝",
+    description: "Expected behavior and communication standards",
     section_type: "bullets",
     content: "",
     items: [
@@ -327,6 +338,7 @@ export const tosSections = [
   {
     title: "Blacklist Policy",
     icon: "🚫",
+    description: "Consequences for Terms violations",
     section_type: "bullets",
     content: "",
     items: [
@@ -341,6 +353,7 @@ export const tosSections = [
   {
     title: "Intellectual Property",
     icon: "🛡",
+    description: "Ownership of original work and third-party assets",
     section_type: "bullets",
     content: "",
     items: [
@@ -354,6 +367,7 @@ export const tosSections = [
   {
     title: "Privacy",
     icon: "🔒",
+    description: "Client data handling and privacy exceptions",
     section_type: "bullets",
     content: "",
     items: [
@@ -366,6 +380,7 @@ export const tosSections = [
   {
     title: "Limitation of Liability",
     icon: "⚠️",
+    description: "Scope of Bluey Commissions' responsibility",
     section_type: "bullets",
     content: "",
     items: [
@@ -378,6 +393,7 @@ export const tosSections = [
   {
     title: "Changes to these Terms",
     icon: "📝",
+    description: "How and when Terms may be updated",
     section_type: "bullets",
     content: "",
     items: [
@@ -391,6 +407,7 @@ export const tosSections = [
   {
     title: "Agreement",
     icon: "✅",
+    description: "Confirmation of Terms acceptance",
     section_type: "bullets",
     content: "",
     items: [

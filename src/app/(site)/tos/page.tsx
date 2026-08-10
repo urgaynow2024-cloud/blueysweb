@@ -7,12 +7,13 @@ import { tosSections } from "@/data/site";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
-import { ArrowUp, Search, FileText, ShieldCheck, Clock, AlertCircle, AlertTriangle, Info, ChevronUp, ChevronDown } from "lucide-react";
+import { ArrowUp, Search, FileText, ShieldCheck, Clock, AlertCircle, AlertTriangle, Info, ChevronDown } from "lucide-react";
 
 interface TosSection {
   id?: string;
   title: string;
   icon: string;
+  description?: string;
   section_type: "bullets" | "paragraphs";
   content: string;
   items: string[];
@@ -26,7 +27,7 @@ interface TosSection {
 function SkeletonCard() {
   return (
     <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
-      <div className="h-8 w-3/4 animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
+      <div className="h-24 w-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
       <div className="p-6 space-y-3">
         <div className="h-4 w-full rounded bg-[var(--bg)] animate-pulse" />
         <div className="h-4 w-2/3 rounded bg-[var(--bg)] animate-pulse" />
@@ -169,14 +170,6 @@ export default function ToSPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const expandAll = () => {
-    const ids = sections.map((s) => s.id || "").filter(Boolean);
-    setExpandedSection(ids[0] || null);
-    ids.forEach((id) => {
-      setTimeout(() => scrollToSection(id), 50);
-    });
-  };
-
   return (
     <div className="relative" ref={contentRef}>
       <section className="relative overflow-hidden pt-20 sm:pt-24 md:pt-28">
@@ -220,51 +213,19 @@ export default function ToSPage() {
               aria-label="Search Terms of Service"
             />
           </div>
-
-          <div className="mt-4 md:mt-6 flex justify-center">
-            <button
-              type="button"
-              onClick={expandAll}
-              className="text-sm text-[var(--text-secondary)] hover:text-white transition-colors"
-            >
-              Jump to first section
-            </button>
-          </div>
         </div>
       </section>
 
-      {sections.length > 0 && (
-        <section className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-xl">
-          <div className="container py-3 md:py-4 overflow-x-auto">
-            <div className="flex items-center gap-3">
-              <span className="shrink-0 text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider hidden sm:inline">Contents</span>
-              <div className="flex flex-nowrap gap-2">
-                {sections.map((section) => (
-                  <button
-                    key={section.id}
-                    type="button"
-                    onClick={() => scrollToSection(section.id || "")}
-                    className="shrink-0 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-3 md:px-4 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:text-white whitespace-nowrap"
-                  >
-                    {section.icon} {section.title}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      <section className="section !pt-4 md:!pt-6">
+      <section className="section !pt-2 md:!pt-4">
         <div className="container max-w-4xl">
           {loading ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {[1, 2, 3, 4].map((i) => (
                 <SkeletonCard key={i} />
               ))}
             </div>
           ) : filteredSections.length > 0 ? (
-            <div className="space-y-6" id="toc-content">
+            <div className="space-y-4" id="toc-content">
               {filteredSections.map((section, i) => (
                 <Reveal key={section.id || i} delay={(i % 4) * 60}>
                   <div
@@ -274,23 +235,25 @@ export default function ToSPage() {
                     <button
                       type="button"
                       onClick={() => setExpandedSection(expandedSection === (section.id || i.toString()) ? null : (section.id || i.toString()))}
-                      className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+                      className="flex w-full items-start gap-4 px-6 py-5 text-left"
                       aria-expanded={expandedSection === (section.id || i.toString())}
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-xl">
-                          {section.icon}
-                        </span>
-                        <div className="flex flex-col">
-                          <h2 className="text-lg font-bold text-white">{section.title}</h2>
-                          <span className="text-xs text-[var(--text-dim)] capitalize">{section.section_type}</span>
-                        </div>
-                      </div>
-                      <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--accent)] transition-all duration-300 ${
-                        expandedSection === (section.id || i.toString()) ? "rotate-180 bg-[var(--accent-soft)]" : ""
-                      }`}>
-                        {expandedSection === (section.id || i.toString()) ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-2xl">
+                        {section.icon}
                       </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-4">
+                          <h2 className="text-lg font-bold text-white">{section.title}</h2>
+                          <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--accent)] transition-all duration-300 ${
+                            expandedSection === (section.id || i.toString()) ? "rotate-180 bg-[var(--accent-soft)]" : ""
+                          }`}>
+                            <ChevronDown className="h-4 w-4" />
+                          </span>
+                        </div>
+                        {section.description && (
+                          <p className="mt-1 text-sm text-[var(--text-dim)]">{section.description}</p>
+                        )}
+                      </div>
                     </button>
 
                     <div
