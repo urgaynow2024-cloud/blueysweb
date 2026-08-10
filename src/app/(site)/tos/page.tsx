@@ -4,10 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getSiteConfig } from "@/lib/db";
 import { tosSections } from "@/data/site";
-import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
-import { ArrowUp, Search, FileText, ShieldCheck, Clock, AlertCircle, AlertTriangle, Info } from "lucide-react";
+import { ArrowUp, Search, FileText, ShieldCheck, Clock } from "lucide-react";
 
 interface TosSection {
   id?: string;
@@ -61,9 +60,9 @@ function renderMarkdown(text: string): string {
 }
 
 function BoxIcon({ type }: { type: string }) {
-  if (type === "warning") return <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400" />;
-  if (type === "error") return <AlertCircle className="h-5 w-5 shrink-0 text-red-400" />;
-  return <Info className="h-5 w-5 shrink-0 text-blue-400" />;
+  if (type === "warning") return <span className="text-amber-400">⚠</span>;
+  if (type === "error") return <span className="text-red-400">✕</span>;
+  return <span className="text-blue-400">ℹ</span>;
 }
 
 function getBoxClasses(type: string) {
@@ -184,7 +183,7 @@ export default function ToSPage() {
             </span>
             <h1 className="display-xl mt-5 text-white">Terms of Service</h1>
             <p className="lead mx-auto mt-4">
-              These Terms govern all commissions, services, and interactions with Bluey Commissions. Please read them carefully before engaging our services.
+              These Terms govern commissions, services, and interactions with Bluey Commissions. Please read them carefully before engaging our services.
             </p>
             <div className="mt-6 flex items-center justify-center gap-4 text-sm text-[var(--text-dim)]">
               <div className="flex items-center gap-1.5">
@@ -225,15 +224,14 @@ export default function ToSPage() {
                 {sections.map((section, i) => {
                   const num = section.number || String(i + 1).padStart(2, "0");
                   return (
-                    <button
+                    <a
                       key={section.id || i}
-                      type="button"
-                      onClick={() => scrollToSection(section.id || "")}
-                      className="group flex items-center gap-3 py-2 text-left text-sm text-[var(--text-secondary)] transition-colors hover:text-white"
+                      href={`#${section.id || ""}`}
+                      className="group flex items-center gap-3 py-2 text-left text-sm text-[var(--text-secondary)] transition-colors hover:text-white no-underline"
                     >
-                      <span className="text-xs font-bold text-[var(--accent)] opacity-60 group-hover:opacity-100 transition-opacity">{num}</span>
+                      <span className="text-xs font-bold text-[var(--accent)] opacity-60 group-hover:opacity-100 transition-opacity w-6">{num}</span>
                       <span className="border-b border-transparent group-hover:border-[var(--border)] transition-colors">{section.title}</span>
-                    </button>
+                    </a>
                   );
                 })}
               </div>
@@ -251,7 +249,7 @@ export default function ToSPage() {
               ))}
             </div>
           ) : filteredSections.length > 0 ? (
-            <div className="space-y-10 md:space-y-12">
+            <div>
               {filteredSections.map((section, i) => (
                 <Reveal key={section.id || i} delay={(i % 4) * 60}>
                   <div
@@ -267,7 +265,7 @@ export default function ToSPage() {
                     {section.description && (
                       <p className="text-sm text-[var(--text-dim)] mb-5 max-w-2xl">{section.description}</p>
                     )}
-                    <div className="pl-0 md:pl-10">
+                    <div>
                       {section.highlight_box && (
                         <div className={`mb-5 rounded-xl border p-4 ${getBoxClasses(section.box_type || "info")}`}>
                           <div className="flex items-start gap-3">
