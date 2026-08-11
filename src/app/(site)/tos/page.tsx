@@ -4,15 +4,14 @@ import { useState, useEffect, useRef } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getSiteConfig } from "@/lib/db";
 import { tosSections } from "@/data/site";
-import SectionHeading from "@/components/ui/SectionHeading";
-import Reveal from "@/components/ui/Reveal";
-import { ButtonLink } from "@/components/ui/Button";
-import { ArrowUp, Search, FileText, ShieldCheck, Clock, AlertCircle, AlertTriangle, Info, ChevronUp, ChevronDown } from "lucide-react";
+import { FileText, ShieldCheck, Clock } from "lucide-react";
 
 interface TosSection {
   id?: string;
   title: string;
   icon: string;
+  description?: string;
+  number?: string;
   section_type: "bullets" | "paragraphs";
   content: string;
   items: string[];
@@ -21,20 +20,6 @@ interface TosSection {
   box_title: string;
   sort_order: number;
   visible: boolean;
-}
-
-function SkeletonCard() {
-  return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
-      <div className="h-8 w-3/4 animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
-      <div className="p-6 space-y-3">
-        <div className="h-4 w-full rounded bg-[var(--bg)] animate-pulse" />
-        <div className="h-4 w-2/3 rounded bg-[var(--bg)] animate-pulse" />
-        <div className="h-4 w-full rounded bg-[var(--bg)] animate-pulse" />
-        <div className="h-4 w-1/2 rounded bg-[var(--bg)] animate-pulse" />
-      </div>
-    </div>
-  );
 }
 
 function renderMarkdown(text: string): string {
@@ -56,23 +41,6 @@ function renderMarkdown(text: string): string {
     })
     .join("");
   return html;
-}
-
-function BoxIcon({ type }: { type: string }) {
-  if (type === "warning") return <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400" />;
-  if (type === "error") return <AlertCircle className="h-5 w-5 shrink-0 text-red-400" />;
-  return <Info className="h-5 w-5 shrink-0 text-blue-400" />;
-}
-
-function getBoxClasses(type: string) {
-  switch (type) {
-    case "warning":
-      return "border-amber-500/30 bg-amber-500/10 text-amber-200";
-    case "error":
-      return "border-red-500/30 bg-red-500/10 text-red-200";
-    default:
-      return "border-blue-500/30 bg-blue-500/10 text-blue-200";
-  }
 }
 
 function SectionContent({ section }: { section: TosSection }) {
@@ -102,11 +70,8 @@ function SectionContent({ section }: { section: TosSection }) {
 export default function ToSPage() {
   const [sections, setSections] = useState<TosSection[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [version, setVersion] = useState<string>("");
-  const [showBackToTop, setShowBackToTop] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -143,43 +108,9 @@ export default function ToSPage() {
     load();
   }, []);
 
-  useEffect(() => {
-    function onScroll() {
-      setShowBackToTop(window.scrollY > 400);
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  const filteredSections = sections.filter(
-    (s) =>
-      s.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.items?.some((item: string) => item.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const expandAll = () => {
-    const ids = sections.map((s) => s.id || "").filter(Boolean);
-    setExpandedSection(ids[0] || null);
-    ids.forEach((id) => {
-      setTimeout(() => scrollToSection(id), 50);
-    });
-  };
-
   return (
     <div className="relative" ref={contentRef}>
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden pt-20 sm:pt-24 md:pt-28">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
         <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px]" />
 
@@ -191,7 +122,7 @@ export default function ToSPage() {
             </span>
             <h1 className="display-xl mt-5 text-white">Terms of Service</h1>
             <p className="lead mx-auto mt-4">
-              These Terms govern all commissions, services, and interactions with Bluey Commissions. Please read them carefully before engaging our services.
+              These Terms govern commissions, services, and interactions with Bluey Commissions. Please read them carefully before engaging our services.
             </p>
             <div className="mt-6 flex items-center justify-center gap-4 text-sm text-[var(--text-dim)]">
               <div className="flex items-center gap-1.5">
@@ -207,153 +138,61 @@ export default function ToSPage() {
         </div>
       </section>
 
-      <section className="section !pt-0">
-        <div className="container">
-          <div className="relative max-w-xl mx-auto">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--text-dim)]" />
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search terms, sections, keywords..."
-              className="field w-full pl-12 pr-4 py-3 text-sm"
-              aria-label="Search Terms of Service"
-            />
-          </div>
-
-          <div className="mt-8 flex justify-center">
-            <button
-              type="button"
-              onClick={expandAll}
-              className="text-sm text-[var(--text-secondary)] hover:text-white transition-colors"
-            >
-              Jump to first section
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {sections.length > 0 && (
-        <section className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-xl">
-          <div className="container py-4 overflow-x-auto">
-            <div className="flex items-center gap-3">
-              <span className="shrink-0 text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider">Contents</span>
-              <div className="flex flex-wrap gap-2">
-                {sections.map((section) => (
-                  <button
-                    key={section.id}
-                    type="button"
-                    onClick={() => scrollToSection(section.id || "")}
-                    className="shrink-0 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-4 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:text-white"
-                  >
-                    {section.icon} {section.title}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      <section className="section">
-        <div className="container max-w-4xl">
+      <section className="!pt-0">
+        <div className="container max-w-3xl">
           {loading ? (
             <div className="space-y-6">
               {[1, 2, 3, 4].map((i) => (
-                <SkeletonCard key={i} />
+                <div key={i} className="h-32 animate-pulse rounded-2xl bg-[var(--bg-elevated)]" />
               ))}
             </div>
-          ) : filteredSections.length > 0 ? (
-            <div className="space-y-6" id="toc-content">
-              {filteredSections.map((section, i) => (
-                <Reveal key={section.id || i} delay={(i % 4) * 60}>
-                  <div
-                    id={section.id || ""}
-                    className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden transition-all duration-500 hover:border-[var(--border-hover)]"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setExpandedSection(expandedSection === (section.id || i.toString()) ? null : (section.id || i.toString()))}
-                      className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
-                      aria-expanded={expandedSection === (section.id || i.toString())}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-xl">
-                          {section.icon}
-                        </span>
-                        <div className="flex flex-col">
-                          <h2 className="text-lg font-bold text-white">{section.title}</h2>
-                          <span className="text-xs text-[var(--text-dim)] capitalize">{section.section_type}</span>
-                        </div>
-                      </div>
-                      <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--accent)] transition-all duration-300 ${
-                        expandedSection === (section.id || i.toString()) ? "rotate-180 bg-[var(--accent-soft)]" : ""
-                      }`}>
-                        {expandedSection === (section.id || i.toString()) ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                      </span>
-                    </button>
-
-                    <div
-                      className={`grid transition-all duration-500 ease-out ${
-                        expandedSection === (section.id || i.toString()) ? "max-h-[5000px] opacity-100" : "max-h-0 opacity-0"
-                      }`}
-                    >
-                      <div className="overflow-hidden px-6 pb-6">
-                        {section.highlight_box && (
-                          <div className={`mb-5 rounded-xl border p-4 ${getBoxClasses(section.box_type || "info")}`}>
-                            <div className="flex items-start gap-3">
-                              {BoxIcon({ type: section.box_type || "info" })}
-                              <div>
-                                {section.box_title && (
-                                  <p className="font-semibold mb-1">{section.box_title}</p>
-                                )}
-                                <p className="text-sm">{section.highlight_box}</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {section.section_type === "paragraphs" && section.content ? (
-                          <div
-                            className="prose prose-invert max-w-none text-sm text-[var(--text-secondary)]"
-                            dangerouslySetInnerHTML={{ __html: renderMarkdown(section.content) }}
-                          />
-                        ) : (
-                          <SectionContent section={section} />
-                        )}
-                      </div>
-                    </div>
+          ) : sections.length > 0 ? (
+            <div>
+              {sections.map((section, i) => (
+                <div
+                  key={section.id || i}
+                  id={section.id || ""}
+                  className={i > 0 ? "mt-10 md:mt-12 pt-10 md:pt-12 border-t border-[var(--border)]" : ""}
+                >
+                  <div className="flex items-baseline gap-4 mb-4">
+                    <span className="text-sm font-bold text-[var(--accent)] tabular-nums">
+                      {section.number || String(i + 1).padStart(2, "0")}
+                    </span>
+                    <h2 className="text-xl md:text-2xl font-bold text-white">{section.title}</h2>
                   </div>
-                </Reveal>
+                  {section.description && (
+                    <p className="text-sm text-[var(--text-dim)] mb-5 max-w-2xl">{section.description}</p>
+                  )}
+                  <div>
+                    {section.highlight_box && (
+                      <div className="mb-5 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
+                        <p className="text-sm text-[var(--text-secondary)]">{section.highlight_box}</p>
+                      </div>
+                    )}
+
+                    {section.section_type === "paragraphs" && section.content ? (
+                      <div
+                        className="prose prose-invert max-w-none text-sm text-[var(--text-secondary)]"
+                        dangerouslySetInnerHTML={{ __html: renderMarkdown(section.content) }}
+                      />
+                    ) : (
+                      <SectionContent section={section} />
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
-            <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-20 text-center">
-              <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                <FileText className="h-6 w-6" />
-              </div>
+            <div className="py-20 text-center">
               <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
-                {searchQuery ? "No matching sections found." : "Terms of Service sections will appear here once configured."}
+                Terms of Service sections will appear here once configured.
               </p>
-            </div>
-          )}
-
-          {showBackToTop && (
-            <div className="fixed bottom-8 right-8 z-40">
-              <button
-                type="button"
-                onClick={scrollToTop}
-                className="flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-4 py-3 text-sm font-medium text-[var(--text-secondary)] shadow-lg transition-all hover:border-[var(--accent)] hover:text-white"
-              >
-                <ArrowUp className="h-4 w-4" />
-                Back to Top
-              </button>
             </div>
           )}
         </div>
       </section>
 
-      <section className="section">
+      <section className="section !pt-4 md:!pt-6">
         <div className="container max-w-3xl text-center">
           <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-6 md:p-10">
             <div className="mb-4 flex items-center justify-center gap-2 text-sm text-[var(--text-dim)]">
@@ -366,13 +205,6 @@ export default function ToSPage() {
             <p className="text-sm text-[var(--text-secondary)]">
               These Terms of Service constitute the entire agreement between you and Bluey Commissions regarding the use of our services. By commissioning work, you acknowledge that you have read, understood, and agreed to these Terms.
             </p>
-            <div className="mt-4 flex justify-center">
-              <Reveal>
-                <ButtonLink href="/commission" variant="secondary" size="sm">
-                  <span>Back to Commission Form</span>
-                </ButtonLink>
-              </Reveal>
-            </div>
           </div>
         </div>
       </section>

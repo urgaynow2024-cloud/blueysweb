@@ -163,6 +163,8 @@ export const tosSections = [
   {
     title: "General Terms",
     icon: "📋",
+    number: "01",
+    description: "Basic terms and conditions for all commission requests",
     section_type: "bullets",
     content: "",
     items: [
@@ -179,6 +181,8 @@ export const tosSections = [
   {
     title: "Services",
     icon: "🛠",
+    number: "02",
+    description: "Services offered by Bluey Commissions",
     section_type: "bullets",
     content: "",
     items: [
@@ -200,6 +204,8 @@ export const tosSections = [
   {
     title: "Asset Ownership",
     icon: "🧩",
+    number: "03",
+    description: "Client responsibilities for provided assets",
     section_type: "bullets",
     content: "",
     items: [
@@ -215,6 +221,8 @@ export const tosSections = [
   {
     title: "FBX Mashups",
     icon: "🔗",
+    number: "04",
+    description: "Requirements and proof for FBX Mashup commissions",
     section_type: "bullets",
     content: "",
     items: [
@@ -230,13 +238,11 @@ export const tosSections = [
   {
     title: "Payments",
     icon: "💳",
-    section_type: "bullets",
-    content: "",
-    items: [
-      "Payment is required before work begins unless otherwise agreed.",
-      "Prices are based on the agreed scope of work.",
-      "Additional work may require additional payment.",
-    ],
+    number: "05",
+    description: "Payment methods, invoices, and deposit requirements",
+    section_type: "paragraphs",
+    content: "Bluey Commissions accepts **PayPal only**.\n\nAll commission payments must be made through a PayPal invoice issued by Bluey Commissions. No other payment methods are accepted unless explicitly agreed to by Bluey Commissions.\n\nA commission is not considered paid until the PayPal invoice has been successfully paid.\n\nPayment is required before work begins unless otherwise agreed. Prices are based on the agreed scope of work. Additional work may require additional payment.",
+    items: [],
     highlight_box: null,
     box_type: "info",
     box_title: null,
@@ -244,6 +250,8 @@ export const tosSections = [
   {
     title: "Refund Policy",
     icon: "💸",
+    number: "06",
+    description: "Refund eligibility and limitations",
     section_type: "bullets",
     content: "",
     items: [
@@ -258,6 +266,8 @@ export const tosSections = [
   {
     title: "Revisions",
     icon: "🔁",
+    number: "07",
+    description: "Revision policies and additional change costs",
     section_type: "bullets",
     content: "",
     items: [
@@ -272,6 +282,8 @@ export const tosSections = [
   {
     title: "Delivery",
     icon: "📦",
+    number: "08",
+    description: "File formats, delivery methods, and source file policies",
     section_type: "bullets",
     content: "",
     items: [
@@ -285,6 +297,8 @@ export const tosSections = [
   {
     title: "Usage Rights",
     icon: "🚫",
+    number: "09",
+    description: "How completed work may and may not be used",
     section_type: "bullets",
     content: "",
     items: [
@@ -298,6 +312,8 @@ export const tosSections = [
   {
     title: "Portfolio Rights",
     icon: "🎨",
+    number: "10",
+    description: "Rights to display completed commissions",
     section_type: "bullets",
     content: "",
     items: [
@@ -311,6 +327,8 @@ export const tosSections = [
   {
     title: "Client Conduct",
     icon: "🤝",
+    number: "11",
+    description: "Expected behavior and communication standards",
     section_type: "bullets",
     content: "",
     items: [
@@ -324,6 +342,8 @@ export const tosSections = [
   {
     title: "Blacklist Policy",
     icon: "🚫",
+    number: "12",
+    description: "Consequences for Terms violations",
     section_type: "bullets",
     content: "",
     items: [
@@ -338,6 +358,8 @@ export const tosSections = [
   {
     title: "Intellectual Property",
     icon: "🛡",
+    number: "13",
+    description: "Ownership of original work and third-party assets",
     section_type: "bullets",
     content: "",
     items: [
@@ -351,6 +373,8 @@ export const tosSections = [
   {
     title: "Privacy",
     icon: "🔒",
+    number: "14",
+    description: "Client data handling and privacy exceptions",
     section_type: "bullets",
     content: "",
     items: [
@@ -363,6 +387,8 @@ export const tosSections = [
   {
     title: "Limitation of Liability",
     icon: "⚠️",
+    number: "15",
+    description: "Scope of Bluey Commissions' responsibility",
     section_type: "bullets",
     content: "",
     items: [
@@ -375,6 +401,8 @@ export const tosSections = [
   {
     title: "Changes to these Terms",
     icon: "📝",
+    number: "16",
+    description: "How and when Terms may be updated",
     section_type: "bullets",
     content: "",
     items: [
@@ -388,6 +416,8 @@ export const tosSections = [
   {
     title: "Agreement",
     icon: "✅",
+    number: "17",
+    description: "Confirmation of Terms acceptance",
     section_type: "bullets",
     content: "",
     items: [

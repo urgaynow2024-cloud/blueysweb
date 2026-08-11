@@ -65,9 +65,14 @@ export function NsfwSection() {
     const formData = new FormData();
     formData.append("file", file);
     const res = await fetch("/api/nsfw/upload", { method: "POST", body: formData });
-    const result = await res.json();
+    let result: any;
+    try {
+      result = await res.json();
+    } catch {
+      result = {};
+    }
     if (res.ok && result.id) return { id: result.id, url: result.url, path: result.path };
-    throw new Error(result.error || "Upload failed");
+    throw new Error(result.error || result.details || `Upload failed (${res.status})`);
   }
 
   async function handleFiles(files: FileList | null) {
@@ -80,9 +85,11 @@ export function NsfwSection() {
         const uploaded = await uploadOne(file);
         setImages((prev) => prev.map((img) => (img === temp ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path } : img)));
         toast.success("NSFW image uploaded");
-      } catch {
-        setImages((prev) => prev.map((img) => (img === temp ? { ...img, uploading: false, error: "Upload failed" } : img)));
-        toast.error("Failed to upload NSFW image");
+      } catch (err) {
+        console.error("NSFW upload error:", err);
+        const message = err instanceof Error ? err.message : "Upload failed";
+        setImages((prev) => prev.map((img) => (img === temp ? { ...img, uploading: false, error: message } : img)));
+        toast.error(message);
       }
     }
   }
@@ -97,7 +104,9 @@ export function NsfwSection() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: image.id, path: image.path }),
         });
-      } catch {}
+      } catch (err) {
+        console.error("NSFW delete error:", err);
+      }
     }
   }
 
@@ -124,8 +133,10 @@ export function NsfwSection() {
         });
       }
       toast.success("NSFW image replaced");
-    } catch {
-      toast.error("Failed to replace NSFW image");
+    } catch (err) {
+      console.error("NSFW replace error:", err);
+      const message = err instanceof Error ? err.message : "Replace failed";
+      toast.error(message);
     }
   }
 

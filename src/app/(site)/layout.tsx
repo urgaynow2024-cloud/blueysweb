@@ -9,7 +9,7 @@ export default function SiteLayout({
   return (
     <>
       <Navbar />
-      <main className="relative z-10 flex min-h-screen flex-col pb-20 md:pb-0">
+      <main className="relative z-10 flex min-h-screen flex-col pb-safe-mobile md:pb-0">
         {children}
       </main>
       <Footer />
