@@ -3,7 +3,7 @@ export const siteConfig = {
   tagline: "VRChat Avatar Edits • Blender Work • Unity Setup",
   description: "Clean, stylish, performance-friendly avatars built for VRChat.",
   discord: "BlueyBarks",
-  discordUrl: "https://discord.com/",
+  discordUrl: "https://discord.gg/zt48MZm5kD",
   nav: [
     { href: "/", label: "Work" },
     { href: "/portfolio", label: "Portfolio" },

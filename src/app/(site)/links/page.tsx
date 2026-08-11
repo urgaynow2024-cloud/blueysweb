@@ -9,7 +9,7 @@ import { ExternalLink, Link2 } from "lucide-react";
 import { getSocialLinks } from "@/lib/db";
 
 const MOCK_LINKS = [
-  { id: "mock-link-1", name: "Discord", url: "https://discord.com/", description: "Chat with me directly on Discord" },
+  { id: "mock-link-1", name: "Discord", url: "https://discord.gg/zt48MZm5kD", description: "Chat with me directly on Discord" },
   { id: "mock-link-2", name: "Booth", url: "https://booth.pm/en", description: "Buy avatar bases and assets" },
   { id: "mock-link-3", name: "Gumroad", url: "https://gumroad.com", description: "Commission marketplace" },
   { id: "mock-link-4", name: "VRChat", url: "https://vrchat.com", description: "The platform I build for" },

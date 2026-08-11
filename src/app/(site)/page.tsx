@@ -336,7 +336,7 @@ export default function Home() {
                   <Zap className="h-4 w-4" />
                   Start a Commission
                 </ButtonLink>
-                <ButtonLink href="https://discord.com/" variant="secondary" external>
+                <ButtonLink href="https://discord.gg/zt48MZm5kD" variant="secondary" external>
                   Open Discord
                 </ButtonLink>
               </div>

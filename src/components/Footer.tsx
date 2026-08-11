@@ -26,7 +26,7 @@ export default function Footer() {
             </p>
             <div className="mt-6 flex items-center gap-3">
               <a
-                href="https://discord.com/"
+                 href="https://discord.gg/zt48MZm5kD"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="grid h-10 w-10 place-items-center rounded-xl border border-[var(--border)] bg-white/[0.03] text-[var(--text-secondary)] transition-all hover:border-[var(--accent)]/40 hover:text-[var(--accent)] hover:bg-[var(--accent-soft)]"
