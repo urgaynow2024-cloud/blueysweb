@@ -1516,6 +1516,7 @@ select.field option {
 }
 .ad-panel-hover:hover {
   border-color: var(--border-hover);
+  box-shadow: var(--shadow-md);
 }
 
 /* ---------- Fields ---------- */
@@ -1551,10 +1552,11 @@ select.field option {
 /* ---------- Topbar glass ---------- */
 .ad-topbar {
   height: var(--topbar-h);
-  background: rgba(8, 11, 18, 0.85);
-  backdrop-filter: blur(16px) saturate(1.3);
-  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  background: rgba(8, 11, 18, 0.92);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
   border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px -8px rgba(0, 0, 0, 0.55);
 }
 
 /* ---------- Sidebar nav item ---------- */
@@ -1586,6 +1588,7 @@ select.field option {
   color: #fff;
   background: linear-gradient(135deg, rgba(90, 176, 240, 0.16), rgba(167, 139, 250, 0.12));
   border-color: rgba(90, 176, 240, 0.28);
+  box-shadow: 0 0 16px -8px var(--accent-glow);
 }
 .ad-nav-item-active .ad-nav-icon {
   color: var(--accent);
@@ -1762,6 +1765,478 @@ select.field option {
   .ad-modal-backdrop {
     animation: none !important;
   }
+}
+
+/* ============================================================================   Enhanced Admin UI — login, dashboard polish   ============================================================================ */
+
+/* ---------- Section header ---------- */
+.ad-section {
+  margin-bottom: 32px;
+}
+.ad-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.ad-section-title {
+  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--text);
+}
+.ad-section-desc {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+/* ---------- Stat cards ---------- */
+.ad-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.ad-stat {
+  padding: 20px;
+  border-radius: var(--r-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  transition: border-color 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+}
+.ad-stat:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-sm);
+}
+.ad-stat-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.ad-stat-value {
+  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--text);
+}
+.ad-stat-change {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.ad-stat-change.up { color: var(--success); }
+.ad-stat-change.down { color: var(--danger); }
+
+/* ---------- Form groups ---------- */
+.ad-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.ad-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.ad-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ad-form-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+}
+
+/* ---------- Tables ---------- */
+.ad-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.ad-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+}
+.ad-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+.ad-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ---------- Tabs ---------- */
+.ad-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  width: fit-content;
+}
+.ad-tab {
+  padding: 8px 16px;
+  border-radius: var(--r-xs);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-dim);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: color 0.25s, background 0.25s;
+}
+.ad-tab:hover {
+  color: var(--text-secondary);
+}
+.ad-tab-active {
+  color: #fff;
+  background: rgba(90, 176, 240, 0.12);
+  box-shadow: 0 0 12px -6px var(--accent-glow);
+}
+
+/* ---------- Toggle switch ---------- */
+.ad-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.ad-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.ad-toggle-track {
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--border);
+  transition: background 0.3s var(--ease-out);
+  position: relative;
+}
+.ad-toggle-track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--text-dim);
+  transition: transform 0.3s var(--ease-out), background 0.3s var(--ease-out);
+}
+.ad-toggle input:checked + .ad-toggle-track {
+  background: var(--accent);
+}
+.ad-toggle input:checked + .ad-toggle-track::after {
+  transform: translateX(18px);
+  background: #04060a;
+}
+.ad-toggle input:focus-visible + .ad-toggle-track {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Login page background enhancements */
+.ad-login-bg {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(90, 176, 240, 0.08), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(167, 139, 250, 0.06), transparent 55%),
+    radial-gradient(ellipse 40% 30% at 20% 70%, rgba(79, 209, 197, 0.04), transparent 50%);
+}
+.ad-login-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(90, 176, 240, 0.08), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(167, 139, 250, 0.06), transparent 55%),
+    radial-gradient(ellipse 40% 30% at 20% 70%, rgba(79, 209, 197, 0.04), transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Login card — glass morphism with subtle animated border */
+.ad-login-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  padding: 40px 32px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.04), transparent 45%), var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+  animation: loginEnter 0.6s var(--ease-out) both;
+}
+.ad-login-card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(90, 176, 240, 0.25), rgba(167, 139, 250, 0.15), transparent 60%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.6;
+}
+@keyframes loginEnter {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Login icon glow ring */
+.ad-login-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 24px;
+  height: 64px;
+  width: 64px;
+  border-radius: var(--r-md);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #04060a;
+  box-shadow: 0 12px 32px -8px var(--accent-glow), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+}
+.ad-login-icon::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  background: inherit;
+  filter: blur(18px);
+  opacity: 0.35;
+  z-index: -1;
+}
+
+/* Login heading refinements */
+.ad-login-title {
+  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: #fff;
+  text-align: center;
+}
+.ad-login-subtitle {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* Login error alert */
+.ad-login-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--danger-border);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  animation: animateIn 0.35s var(--ease-out) both;
+}
+
+/* Login form spacing */
+.ad-login-form {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ad-login-field {
+  position: relative;
+}
+.ad-login-field .field {
+  padding-right: 44px;
+}
+.ad-login-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  height: 32px;
+  width: 32px;
+  border-radius: var(--r-xs);
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.25s, background 0.25s;
+}
+.ad-login-toggle:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Dashboard topbar polish */
+.ad-topbar {
+  height: var(--topbar-h);
+  background: rgba(8, 11, 18, 0.92);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px -8px rgba(0, 0, 0, 0.55);
+}
+
+/* Sidebar polish */
+.ad-sidebar {
+  background: linear-gradient(180deg, var(--bg-elevated), var(--bg));
+}
+.ad-sidebar-section {
+  margin-top: 24px;
+  margin-bottom: 10px;
+  padding: 0 14px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.ad-sidebar-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 14px;
+  margin: 2px 8px;
+  border-radius: var(--r-xs);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: all 0.25s var(--ease-out);
+}
+.ad-sidebar-item:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.04);
+}
+.ad-sidebar-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.ad-sidebar-item-active {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(90, 176, 240, 0.18), rgba(167, 139, 250, 0.12));
+  border-color: rgba(90, 176, 240, 0.28);
+  box-shadow: 0 0 20px -10px var(--accent-glow);
+}
+.ad-sidebar-item-active .ad-sidebar-icon {
+  color: var(--accent);
+}
+.ad-sidebar-indicator {
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  height: 20px;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 12px var(--accent-glow);
+  transform: translateY(-50%);
+}
+.ad-sidebar-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--text-secondary);
+  transition: color 0.25s;
+}
+
+/* Main content area polish */
+.ad-main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  padding: 24px;
+}
+@media (min-width: 1024px) {
+  .ad-main {
+    padding: 32px;
+  }
+}
+.ad-main-inner {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Section card polish */
+.ad-section-card {
+  position: relative;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.03), transparent 45%), var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.35s var(--ease-out), box-shadow 0.35s var(--ease-out);
+}
+.ad-section-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-md);
+}
+
+/* Loading shimmer for admin */
+.ad-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--r-sm);
+}
+.ad-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 /* ============================================================================
