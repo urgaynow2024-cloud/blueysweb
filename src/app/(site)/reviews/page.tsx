@@ -79,7 +79,7 @@ export default function ReviewsPage() {
                         <p className="font-bold text-white">{review.display_name}</p>
                         <div className="mt-1 flex gap-0.5">
                           {[1, 2, 3, 4, 5].map((star) => (
-                            <Star key={star} className={`h-4 w-4 ${star <= (review.rating || 5) ? "fill-[var(--accent)] text-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
+                            <Star key={star} className={`h-4 w-4 ${star <= (review.rating || 5) ? "text-[var(--accent)]" : "text-[var(--text-dim)]"}`} style={{ fill: star <= (review.rating || 5) ? "currentColor" : "none" }} />
                           ))}
                         </div>
                       </div>

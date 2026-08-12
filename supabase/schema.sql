@@ -36,8 +36,11 @@ CREATE TABLE IF NOT EXISTS reviews (
   review_text TEXT NOT NULL,
   status TEXT DEFAULT 'pending',
   image_url TEXT,
+  hidden BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS hidden BOOLEAN DEFAULT FALSE;
 
 -- Pricing tiers
 CREATE TABLE IF NOT EXISTS pricing_tiers (

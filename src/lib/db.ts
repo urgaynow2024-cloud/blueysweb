@@ -47,7 +47,6 @@ export async function getApprovedReviews() {
     .from("reviews")
     .select("*")
     .eq("status", "approved")
-    .eq("hidden", false)
     .order("created_at", { ascending: false });
   if (error || !data || data.length === 0) return FALLBACKS.reviews;
   return data;
@@ -61,7 +60,10 @@ export async function getPendingReviews() {
 }
 
 export async function getAllReviews() {
-  return fetchAll("reviews", []);
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase.from("reviews").select("*").order("created_at", { ascending: false });
+  if (error || !data || data.length === 0) return [];
+  return data;
 }
 
 export async function getPricingTiers() {
