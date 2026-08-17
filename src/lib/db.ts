@@ -305,7 +305,10 @@ export async function getAdoptableBeforeAfters() {
   if (!isSupabaseConfigured || !supabase) return [];
   const { data, error } = await supabase.from("adoptable_before_after").select("*").order("sort_order", { ascending: true });
   if (error) {
-    console.error("Failed to load adoptable before/after:", error);
+    const msg = typeof error === "object" && error && "message" in error ? (error as any).message : String(error);
+    if (!/relation .* does not exist/i.test(msg)) {
+      console.error("Failed to load adoptable before/after:", error);
+    }
     return [];
   }
   return data || [];

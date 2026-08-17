@@ -183,14 +183,14 @@ export default function AdoptablesPage() {
               Adoptable <span className="text-gradient-strong">Services</span>
             </h1>
             <p className="lead mx-auto mt-4">
-              Custom avatar adoptables designed and crafted by Bluey.
-              From unique character designs to full avatar customisations, I create
-              performance-ready adoptables tailored to your vision.
+              Premade avatar adopts ready to use in VRChat.
+              Each adoptable is a unique, handcrafted design available at a fixed price —
+              pick one you love and make it yours.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <ButtonLink href="#projects">
                 <Layers className="h-4 w-4" />
-                View Projects
+                Browse Adoptables
               </ButtonLink>
               <ButtonLink href="/contact" variant="secondary">
                 Commission One
@@ -233,7 +233,7 @@ export default function AdoptablesPage() {
           <SectionHeading
             eyebrow="What is it?"
             title="What is an Adoptable?"
-            subtitle="An adoptable is a custom avatar design or edit created for you — a unique character or style you can use in VRChat."
+            subtitle="An adoptable is a premade avatar design you can purchase and use immediately — no custom work needed."
           />
           <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
            {[
@@ -267,7 +267,7 @@ export default function AdoptablesPage() {
          </div>
        </section>
 
-      {/* How it works */}
+      {/* How to adopt */}
       <section className="section section-alt relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute left-1/2 top-1/2 h-[500px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--accent-star)] opacity-[0.05] blur-[140px]" />
@@ -276,14 +276,14 @@ export default function AdoptablesPage() {
           <SectionHeading
             align="center"
             eyebrow="Process"
-            title="How it works"
-            subtitle="From idea to delivery in four simple steps."
+            title="How to adopt"
+            subtitle="Pick a design, purchase, and receive your files — it's that simple."
           />
           <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-            <StepCard icon={MessageCircle} title="1. Enquire" desc="Send me a message on Discord with your idea, references, and avatar base." delay={0} />
-            <StepCard icon={DollarSign} title="2. Quote & Deposit" desc="I review your request and send a detailed quote. A 50% deposit secures your slot." delay={80} />
-            <StepCard icon={Wand2} title="3. Creation" desc="I work on your adoptable, sharing progress updates along the way." delay={160} />
-            <StepCard icon={Rocket} title="4. Delivery" desc="You receive a Unity-ready VRChat avatar. Revisions included to make it perfect." delay={240} />
+            <StepCard icon={Layers} title="1. Browse" desc="Pick an adoptable you love from the featured designs below." delay={0} />
+            <StepCard icon={DollarSign} title="2. Purchase" desc="Pay the fixed price via PayPal or Payhip. No quotes, no waiting." delay={80} />
+            <StepCard icon={CheckCircle2} title="3. Confirm" desc="I confirm your payment and prepare your files for delivery." delay={160} />
+            <StepCard icon={Rocket} title="4. Receive" desc="Get your Unity-ready VRChat avatar files delivered straight to you." delay={240} />
           </div>
         </div>
       </section>
@@ -295,12 +295,12 @@ export default function AdoptablesPage() {
             <div className="absolute left-1/3 top-0 h-[350px] w-[500px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.06] blur-[120px]" />
           </div>
           <div className="container">
-            <SectionHeading
-              align="center"
-              eyebrow="Featured"
-              title="Featured Adoptables"
-              subtitle="Some of my latest adoptable work. Click a card to see details."
-            />
+          <SectionHeading
+            align="center"
+            eyebrow="Featured"
+            title="Featured Adoptables"
+            subtitle="Premade avatars available now at fixed prices."
+          />
             <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {featuredAdoptables.map((adoptable, i) => (
                 <Reveal key={adoptable.id || i} delay={i * 80}>
@@ -309,6 +309,7 @@ export default function AdoptablesPage() {
                       <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-cosmic)]/20 to-[var(--accent-nebula)]/20" />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <Palette className="h-12 w-12 text-[var(--accent)] opacity-40" />
+                        <span className="absolute text-3xl opacity-20">🦴</span>
                       </div>
                       <div className="absolute top-3 right-3">
                         <AvailabilityBadge status={adoptable.availability} />
@@ -354,17 +355,17 @@ export default function AdoptablesPage() {
           <SectionHeading
             align="center"
             eyebrow="Why choose us"
-            title="Why choose an Adoptable?"
-            subtitle="Professional adoptables save you time, money, and headaches compared to building an avatar from scratch."
+            title="Why choose Adoptables?"
+            subtitle="Premade avatars at cheap, fixed prices — no custom work, no waiting, no hassle."
           />
           <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
              {[
-                { icon: Zap, title: "Faster Turnaround", desc: "Get a unique adoptable design without starting from zero. Most adoptables are completed in 3–7 days." },
-                { icon: DollarSign, title: "Cost Effective", desc: "Adoptables are more affordable than full custom avatars because the design foundation is already established." },
-                { icon: ThumbsUp, title: "Proven Results", desc: "Every adoptable is tested for performance, compatibility, and visual quality before delivery." },
-                { icon: ShieldCheck, title: "Full Support", desc: "Revisions and troubleshooting included. If something breaks, I fix it." },
-                { icon: Rocket, title: "Ready to Use", desc: "You receive a Unity-ready VRChat avatar file. No extra setup required on your end." },
-                { icon: FileText, title: "Proof of Ownership", desc: "You provide all source assets. I only work with assets you own or have rights to use." },
+                { icon: Zap, title: "Instant Availability", desc: "Adoptables are premade and ready now — no waiting for custom work." },
+                { icon: DollarSign, title: "Cheap Fixed Prices", desc: "No quotes, no surprises. Every adoptable has a clear, affordable price." },
+                { icon: ThumbsUp, title: "Proven Quality", desc: "Every adoptable is tested for performance, compatibility, and visual quality before listing." },
+                { icon: ShieldCheck, title: "VRChat-Ready", desc: "All adoptables come as Unity-ready VRChat avatars. Just import and play." },
+                { icon: Rocket, title: "Fast Delivery", desc: "Receive your files immediately after purchase. No lengthy creation process." },
+                { icon: Heart, title: "Unique Designs", desc: "Each adoptable is a one-of-a-kind design. Stand out from the crowd." },
              ].map((item, i) => (
                <Reveal key={item.title} delay={i * 60}>
                  <PremiumCard variant="marketplace" className="h-full p-6" hoverGlow>
@@ -526,15 +527,15 @@ export default function AdoptablesPage() {
           <SectionHeading
             align="center"
             eyebrow="Requirements"
-            title="What you need to provide"
-            subtitle="To get started, make sure you have the following ready."
+            title="What you need"
+            subtitle="Almost nothing — just a VRChat account and Discord."
           />
           <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-2">
               {[
-                { icon: MessageCircle, title: "Clear Description", desc: "Describe what you want in the adoptable design. Be as specific as possible." },
-                { icon: ImageIcon, title: "Reference Images", desc: "Screenshots or renders of the adoptable design you want. More references = better results." },
-                { icon: Box, title: "Avatar Base", desc: "The avatar base you want to use for the adoptable. Must be your own or licensed for modification." },
-                { icon: ShieldCheck, title: "Ownership Proof", desc: "You must own or have the rights to all provided assets. This is required before work begins." },
+                { icon: CheckCircle2, title: "VRChat Account", desc: "You need a VRChat account to use the avatar files." },
+                { icon: MessageCircle, title: "Discord", desc: "Message me on Discord to purchase and receive your adoptable." },
+                { icon: DollarSign, title: "Payment", desc: "Pay via PayPal or Payhip. Fixed price, no quotes needed." },
+                { icon: Rocket, title: "Unity", desc: "Basic Unity knowledge helps, but the files are ready to import straight into VRChat." },
               ].map((item, i) => (
                <Reveal key={item.title} delay={i * 60}>
                  <PremiumCard variant="elevated" className="flex gap-4 p-6" hoverGlow>
@@ -552,7 +553,7 @@ export default function AdoptablesPage() {
          </div>
        </section>
 
-      {/* Proof of Ownership Policy */}
+      {/* Licence */}
       <section className="section relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute left-1/2 top-1/2 h-[300px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.04] blur-[100px]" />
@@ -560,30 +561,27 @@ export default function AdoptablesPage() {
         <div className="container max-w-3xl">
           <SectionHeading
             align="center"
-            eyebrow="Policy"
-            title="Proof of Ownership"
-            subtitle="I take intellectual property seriously. Here is how it works."
+            eyebrow="Licence"
+            title="Usage Rights"
+            subtitle="What you can and can't do with your adoptable."
           />
           <PremiumCard variant="elevated" className="p-8">
             <div className="space-y-5 text-sm leading-relaxed text-[var(--text-secondary)]">
-            <p>
-                <strong className="text-white">You must own or have the rights to</strong> all assets you provide,
-                including the avatar base, textures, and any other materials.
+              <p>
+                <strong className="text-white">Personal use only.</strong> Adoptables are sold for personal, non-commercial use in VRChat.
               </p>
               <p>
-                Before I begin work, I may request proof of ownership. This can be a purchase receipt,
-                license agreement, or written confirmation from the original creator.
+                <strong className="text-white">No redistribution.</strong> You may not resell, share, or redistribute the avatar files.
               </p>
               <p>
-                If I cannot verify ownership, I will not proceed with the commission. This policy protects
-                both you and me from legal issues.
+                <strong className="text-white">Modification allowed.</strong> You can tweak textures, accessories, and materials to make the avatar yours.
               </p>
-              <p className="text-[var(--accent)]">
-                No stolen or unlicensed content is accepted. Period.
+              <p>
+                <strong className="text-white">Refunds.</strong> Due to the digital nature of adoptables, refunds are not provided after file delivery.
               </p>
             </div>
-            </PremiumCard>
-          </div>
+          </PremiumCard>
+        </div>
       </section>
 
       {/* Pricing Overview */}
@@ -595,8 +593,8 @@ export default function AdoptablesPage() {
           <SectionHeading
             align="center"
             eyebrow="Rates"
-            title="Pricing Overview"
-            subtitle="Prices vary depending on complexity. I will always give you a detailed quote before starting."
+            title="Pricing"
+            subtitle="Fixed, cheap prices for premade avatars. No quotes, no surprises."
           />
           {visibleAdoptables.length > 0 ? (
             <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
@@ -611,10 +609,10 @@ export default function AdoptablesPage() {
                       badge: adoptable.featured ? "Popular" : null,
                       popular: adoptable.featured,
                       features: [
-                        ...(adoptable.category ? [`Category: ${adoptable.category}`] : []),
-                        ...(adoptable.availability ? [`Status: ${adoptable.availability}`] : []),
-                        "Revisions included",
-                        "VRChat-ready delivery",
+                        ...(adoptable.category ? [`${adoptable.category} design`] : []),
+                        ...(adoptable.availability ? [`${adoptable.availability}`] : []),
+                        "Unity-ready delivery",
+                        "Instant download",
                       ],
                     }}
                   />
@@ -633,7 +631,7 @@ export default function AdoptablesPage() {
           )}
           <div className="mt-10 text-center">
             <p className="text-xs text-[var(--text-dim)]">
-              All prices are per avatar. A 50% deposit is required before work begins.
+              All prices are fixed. No deposits required — pay and receive your files instantly.
             </p>
           </div>
         </div>
@@ -653,13 +651,12 @@ export default function AdoptablesPage() {
           />
           <div className="mt-8 space-y-3">
             {[
-              { q: "What is an adoptable?", a: "An adoptable is a custom avatar design or edit created for you — a unique character or style you can use in VRChat. This can include full designs, partial edits, or custom integrations.", icon: HelpCircle },
-              { q: "How long does an adoptable take?", a: "Most adoptables take 3–7 days depending on complexity. Simple edits are faster; full custom designs take longer.", icon: Clock },
-              { q: "Do you work with my existing avatar base?", a: "Yes. Provide the avatar base you want to use, and I will work with it. Make sure you own or have the rights to the base.", icon: Box },
-              { q: "Is Quest compatible?", a: "Quest compatibility depends on the complexity of the adoptable. I optimize for Quest where possible, but some features may be PC-only.", icon: ShieldCheck },
-              { q: "What payment methods do you accept?", a: "PayPal and Payhip only. A 50% deposit is required before I start work.", icon: DollarSign },
-              { q: "What files do I get?", a: "A Unity-ready VRChat avatar file (.unitypackage or .prefab). Blender source files available on request.", icon: Rocket },
-              { q: "Do you provide proof of ownership verification?", a: "Yes. I require proof that you own or have the rights to all provided assets before starting work.", icon: FileText },
+              { q: "What is an adoptable?", a: "An adoptable is a premade avatar design you can purchase and use right away in VRChat. No custom work needed — just pick, pay, and play.", icon: HelpCircle },
+              { q: "How much does an adoptable cost?", a: "Adoptables have fixed, cheap prices. No quotes, no hidden fees. Prices range from around £15 to £75 depending on complexity.", icon: DollarSign },
+              { q: "How do I receive my adoptable?", a: "After purchase, you'll receive a Unity-ready VRChat avatar file (.unitypackage or .prefab). Blender source files available on request.", icon: Rocket },
+              { q: "Are adoptables Quest compatible?", a: "Quest compatibility depends on the adoptable. I optimize for Quest where possible, but some features may be PC-only.", icon: ShieldCheck },
+              { q: "Can I modify my adoptable?", a: "Yes! Adoptables come with source files so you can tweak textures, accessories, and more to make them truly yours.", icon: Wand2 },
+              { q: "Do I own the adoptable?", a: "You receive a personal licence to use the adoptable in VRChat. Redistribution or resale is not permitted.", icon: FileText },
             ].map((item, i) => (
               <Reveal key={item.q} delay={(i % 4) * 60}>
                 <FaqItem question={item.q} answer={item.a} icon={item.icon} />
@@ -681,10 +678,10 @@ export default function AdoptablesPage() {
               <Heart className="h-3.5 w-3.5 text-[var(--accent)]" />
               Ready to adopt?
             </span>
-            <h2 className="display-lg mt-5 text-white">Start your <span className="text-gradient-strong">Adoptable</span></h2>
+            <h2 className="display-lg mt-5 text-white">Ready to <span className="text-gradient-strong">Adopt</span>?</h2>
             <p className="lead mx-auto mt-4">
-              Send me a message on Discord with your avatar base and what you want to achieve.
-              I will review your request and provide a detailed quote.
+              Browse the featured adoptables below, pick one you love, and send me a message on Discord to purchase.
+              Instant delivery, cheap prices, no waiting.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <ButtonLink href="/contact">
