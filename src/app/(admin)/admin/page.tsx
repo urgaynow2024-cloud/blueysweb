@@ -20,7 +20,7 @@ import { LinksSection } from "@/components/admin/sections/LinksSection";
 import { QueueSection } from "@/components/admin/sections/QueueSection";
 import { SiteInfoSection } from "@/components/admin/sections/SiteInfoSection";
 import { ModeratorsSection } from "@/components/admin/sections/ModeratorsSection";
-import { FbxMashupSection } from "@/components/admin/sections/FbxMashupSection";
+import { AdoptablesSection } from "@/components/admin/sections/AdoptablesSection";
 import { TosSection } from "@/components/admin/sections/TosSection";
 
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
@@ -41,7 +41,7 @@ const defaultFaq: any[] = [
 ];
 const defaultWorkflow: any[] = [];
 
-type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "fbx-mashups" | "tos";
+type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "adoptables" | "tos";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -333,7 +333,7 @@ export default function AdminPage() {
       {tab === "social-links" && <LinksSection value={links} onChange={(n) => { setLinks(n); markDirty(); }} />}
       {tab === "queue" && <QueueSection />}
       {tab === "moderators" && <ModeratorsSection />}
-      {tab === "fbx-mashups" && <FbxMashupSection />}
+      {tab === "adoptables" && <AdoptablesSection />}
       {tab === "tos" && <TosSection value={tos} onChange={(n) => { setTos(n); markDirty(); }} />}
       {tab === "site" && <SiteInfoSection value={site} onChange={(n) => { setSite(n); markDirty(); }} />}
 

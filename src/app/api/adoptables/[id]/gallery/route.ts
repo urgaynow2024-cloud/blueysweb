@@ -9,10 +9,9 @@ export async function POST(
     const { id } = await params;
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const type = formData.get("type") as string;
 
-    if (!file || !type) {
-      return NextResponse.json({ error: "File and type required" }, { status: 400 });
+    if (!file) {
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
     if (!supabaseAdmin) {
@@ -20,35 +19,32 @@ export async function POST(
     }
 
     const ext = file.name.split(".").pop();
-    const storagePath = `fbx-mashups/${id}/${type}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const storagePath = `adoptables/${id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from("fbx-mashups")
+      .from("adoptables")
       .upload(storagePath, file, { cacheControl: "3600", upsert: true });
 
     if (uploadError || !uploadData) {
       return NextResponse.json({ error: "Upload failed" }, { status: 500 });
     }
 
-    const { data: urlData } = supabaseAdmin.storage.from("fbx-mashups").getPublicUrl(storagePath);
+    const { data: urlData } = supabaseAdmin.storage.from("adoptables").getPublicUrl(storagePath);
     const url = urlData.publicUrl;
 
-    const field = type === "before" ? "before_url" : "after_url";
-    const pathField = type === "before" ? "before_path" : "after_path";
-
     const { data: dbData, error: dbError } = await supabaseAdmin
-      .from("fbx_before_after")
-      .insert([{ mashup_id: id, [field]: url, [pathField]: storagePath, label: "" }])
+      .from("adoptable_gallery")
+      .insert([{ adoptable_id: id, url, path: storagePath }])
       .select();
 
     if (dbError || !dbData || dbData.length === 0) {
-      await supabaseAdmin.storage.from("fbx-mashups").remove([storagePath]);
+      await supabaseAdmin.storage.from("adoptables").remove([storagePath]);
       return NextResponse.json({ error: "Database error" }, { status: 500 });
     }
 
-    return NextResponse.json({ id: dbData[0].id, url, path: storagePath, type }, { status: 201 });
+    return NextResponse.json({ id: dbData[0].id, url, path: storagePath }, { status: 201 });
   } catch (error) {
-    console.error("FBX before-after upload error:", error);
+    console.error("Adoptable gallery upload error:", error);
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
@@ -60,19 +56,19 @@ export async function DELETE(
   try {
     const { id } = await params;
     const { searchParams } = new URL(request.url);
-    const baId = searchParams.get("id");
-    const beforePath = searchParams.get("beforePath");
-    const afterPath = searchParams.get("afterPath");
+    const imageId = searchParams.get("imageId");
+    const path = searchParams.get("path");
 
     if (!supabaseAdmin) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    if (beforePath) await supabaseAdmin.storage.from("fbx-mashups").remove([beforePath]);
-    if (afterPath) await supabaseAdmin.storage.from("fbx-mashups").remove([afterPath]);
+    if (path) {
+      await supabaseAdmin.storage.from("adoptables").remove([path]);
+    }
 
-    if (baId) {
-      const { error } = await supabaseAdmin.from("fbx_before_after").delete().eq("id", baId);
+    if (imageId) {
+      const { error } = await supabaseAdmin.from("adoptable_gallery").delete().eq("id", imageId);
       if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
@@ -80,7 +76,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("FBX before-after delete error:", error);
+    console.error("Adoptable gallery delete error:", error);
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

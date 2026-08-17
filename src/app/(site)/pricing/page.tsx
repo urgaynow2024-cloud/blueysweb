@@ -30,8 +30,8 @@ export default function PricingPage() {
     <div className="relative">
       <section className="page relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-grid opacity-25" />
-        <div className="pointer-events-none absolute -top-24 right-0 h-96 w-96 rounded-full bg-[var(--accent-2)] opacity-[0.05] blur-[120px]" />
-        <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-[var(--accent-3)] opacity-[0.03] blur-[100px]" />
+        <div className="pointer-events-none absolute -top-24 right-0 h-96 w-96 rounded-full bg-[var(--accent-cosmic)] opacity-[0.08] blur-[120px]" />
+        <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-[var(--accent-nebula)] opacity-[0.06] blur-[100px]" />
 
         <div className="container">
           <SectionHeading

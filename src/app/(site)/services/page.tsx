@@ -4,7 +4,7 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
 import { PremiumCard } from "@/components/ui/Card";
-import { Check, ArrowRight, Pencil, Wrench, Settings2 } from "lucide-react";
+import { Check, ArrowRight, Pencil, Wrench, Settings2, MessageCircle, FileText, DollarSign, Rocket } from "lucide-react";
 
 const SERVICES = [
   {
@@ -28,11 +28,11 @@ const SERVICES = [
 ];
 
 const WORKFLOW = [
-  { emoji: "💬", title: "Enquiry", desc: "Message me on Discord with what you're looking for, your avatar base, and any references." },
-  { emoji: "📋", title: "Quote", desc: "I'll let you know the price and how long it'll take." },
-  { emoji: "💳", title: "Deposit", desc: "50% deposit before I start work." },
-  { emoji: "🎨", title: "Work", desc: "I'll send progress updates and previews as I go." },
-  { emoji: "📦", title: "Delivery", desc: "Final files sent once the remaining payment is done." },
+  { icon: MessageCircle, title: "Enquiry", desc: "Message me on Discord with what you're looking for, your avatar base, and any references." },
+  { icon: FileText, title: "Quote", desc: "I'll let you know the price and how long it'll take." },
+  { icon: DollarSign, title: "Deposit", desc: "50% deposit before I start work." },
+  { icon: Pencil, title: "Work", desc: "I'll send progress updates and previews as I go." },
+  { icon: Rocket, title: "Delivery", desc: "Final files sent once the remaining payment is done." },
 ];
 
 export default function ServicesPage() {
@@ -84,7 +84,9 @@ export default function ServicesPage() {
             {WORKFLOW.map((step, i) => (
               <Reveal key={step.title} delay={(i % 5) * 60}>
                 <PremiumCard variant="interactive" className="h-full p-5 text-center">
-                  <div className="mb-3 text-2xl transition-transform duration-300 group-hover:scale-110">{step.emoji}</div>
+                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                    <step.icon className="h-5 w-5" />
+                  </div>
                   <h3 className="mb-1.5 text-sm font-bold text-white">{step.title}</h3>
                   <p className="text-xs leading-relaxed text-[var(--text-dim)]">{step.desc}</p>
                 </PremiumCard>

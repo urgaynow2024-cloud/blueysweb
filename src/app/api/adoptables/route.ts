@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
-const fbxFields = ["title", "description", "avatar_base", "software_used", "price", "featured", "visible", "sort_order"] as const;
+const adoptableFields = ["title", "description", "category", "price", "availability", "featured", "visible", "sort_order"] as const;
 const skipFields = new Set<string>();
 
 function buildPayload(body: any, skip: Set<string>) {
   const payload: Record<string, any> = {};
-  for (const field of fbxFields) {
+  for (const field of adoptableFields) {
     if (!skip.has(field) && body[field] !== undefined) {
       payload[field] = body[field];
     }
@@ -24,9 +24,8 @@ export async function GET() {
     return NextResponse.json({ error: "Server not configured" }, { status: 500 });
   }
   const { data, error } = await supabaseAdmin
-    .from("fbx_mashups")
+    .from("adoptables")
     .select("*")
-    .eq("visible", true)
     .order("sort_order", { ascending: true });
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -38,9 +37,9 @@ export async function DELETE() {
   if (!supabaseAdmin) {
     return NextResponse.json({ error: "Server not configured" }, { status: 500 });
   }
-  await supabaseAdmin.from("fbx_before_after").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-  await supabaseAdmin.from("fbx_gallery").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-  const { error } = await supabaseAdmin.from("fbx_mashups").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await supabaseAdmin.from("adoptable_before_after").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await supabaseAdmin.from("adoptable_gallery").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  const { error } = await supabaseAdmin.from("adoptables").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -58,7 +57,7 @@ export async function POST(request: Request) {
     let payload = buildPayload(body, skipFields);
 
     for (let attempt = 0; attempt < 5; attempt++) {
-      const { data, error } = await supabaseAdmin.from("fbx_mashups").insert([payload]).select();
+      const { data, error } = await supabaseAdmin.from("adoptables").insert([payload]).select();
 
       if (!error) {
         return NextResponse.json(data?.[0], { status: 201 });
@@ -76,7 +75,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: "Max retries exceeded" }, { status: 500 });
   } catch (error: any) {
-    console.error("FBX mashup create error:", error);
+    console.error("Adoptable create error:", error);
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

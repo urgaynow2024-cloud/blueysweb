@@ -8,31 +8,31 @@ import { Card, CardHeader } from "../Card";
 import { UploadArea } from "../UploadArea";
 import { Button } from "../Button";
 import { Field, Input, Textarea, Select } from "../Field";
-import { Plus, Trash2, GripVertical, Eye, EyeOff, ChevronUp, ChevronDown, Image as ImageIcon, GitCompare, Layers } from "lucide-react";
+import { Plus, Trash2, GripVertical, Eye, EyeOff, ChevronUp, ChevronDown, Image as ImageIcon, GitCompare, Layers, Package } from "lucide-react";
 
-interface FbxMashup {
+interface Adoptable {
   id?: string;
   title: string;
   description: string;
-  avatar_base: string;
-  software_used: string[];
+  category: string;
   price: string;
+  availability: string;
   featured: boolean;
   visible: boolean;
   sort_order: number;
 }
 
-interface FbxGalleryImage {
+interface AdoptableGalleryImage {
   id?: string;
-  mashup_id?: string;
+  adoptable_id?: string;
   url: string;
   path?: string;
   sort_order: number;
 }
 
-interface FbxBeforeAfter {
+interface AdoptableBeforeAfter {
   id?: string;
-  mashup_id?: string;
+  adoptable_id?: string;
   before_url: string;
   after_url: string;
   before_path?: string;
@@ -41,15 +41,15 @@ interface FbxBeforeAfter {
   sort_order: number;
 }
 
-export function FbxMashupSection() {
+export function AdoptablesSection() {
   const sb = supabase!;
-  const [projects, setProjects] = useState<FbxMashup[]>([]);
+  const [projects, setProjects] = useState<Adoptable[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProject, setEditingProject] = useState<number | null>(null);
-  const [galleryImages, setGalleryImages] = useState<Record<string, FbxGalleryImage[]>>({});
-  const [beforeAfters, setBeforeAfters] = useState<Record<string, FbxBeforeAfter[]>>({});
+  const [galleryImages, setGalleryImages] = useState<Record<string, AdoptableGalleryImage[]>>({});
+  const [beforeAfters, setBeforeAfters] = useState<Record<string, AdoptableBeforeAfter[]>>({});
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
-  const projectsRef = useRef<FbxMashup[]>([]);
+  const projectsRef = useRef<Adoptable[]>([]);
   const originalIdsRef = useRef<Set<string>>(new Set());
   const { markDirty, register } = useSave();
   const toast = useToast();
@@ -67,7 +67,7 @@ export function FbxMashupSection() {
       try {
         if (!sb) throw new Error("Supabase not configured");
         const { data, error } = await sb
-          .from("fbx_mashups")
+          .from("adoptables")
           .select("*")
           .order("sort_order", { ascending: true });
         if (error) throw error;
@@ -75,9 +75,9 @@ export function FbxMashupSection() {
           id: p.id,
           title: p.title || "",
           description: p.description || "",
-          avatar_base: p.avatar_base || "",
-          software_used: p.software_used || [],
+          category: p.category || "avatar",
           price: p.price || "",
+          availability: p.availability || "available",
           featured: p.featured || false,
           visible: p.visible !== false,
           sort_order: p.sort_order || 0,
@@ -86,12 +86,12 @@ export function FbxMashupSection() {
         originalIdsRef.current = new Set(loaded.map((p) => p.id).filter(Boolean));
 
         const { data: galleryData } = await sb
-          .from("fbx_gallery")
+          .from("adoptable_gallery")
           .select("*")
           .order("sort_order", { ascending: true });
-        const galleryMap: Record<string, FbxGalleryImage[]> = {};
+        const galleryMap: Record<string, AdoptableGalleryImage[]> = {};
         (galleryData || []).forEach((img: any) => {
-          const mid = img.mashup_id;
+          const mid = img.adoptable_id;
           if (mid) {
             if (!galleryMap[mid]) galleryMap[mid] = [];
             galleryMap[mid].push(img);
@@ -100,12 +100,12 @@ export function FbxMashupSection() {
         setGalleryImages(galleryMap);
 
         const { data: baData } = await sb
-          .from("fbx_before_after")
+          .from("adoptable_before_after")
           .select("*")
           .order("sort_order", { ascending: true });
-        const baMap: Record<string, FbxBeforeAfter[]> = {};
+        const baMap: Record<string, AdoptableBeforeAfter[]> = {};
         (baData || []).forEach((ba: any) => {
-          const mid = ba.mashup_id;
+          const mid = ba.adoptable_id;
           if (mid) {
             if (!baMap[mid]) baMap[mid] = [];
             baMap[mid].push(ba);
@@ -113,7 +113,7 @@ export function FbxMashupSection() {
         });
         setBeforeAfters(baMap);
       } catch {
-        toast.error("Failed to load FBX mashups");
+        toast.error("Failed to load adoptables");
       } finally {
         setLoading(false);
       }
@@ -130,32 +130,32 @@ export function FbxMashupSection() {
       const payload = {
         title: project.title,
         description: project.description,
-        avatar_base: project.avatar_base,
-        software_used: project.software_used,
+        category: project.category,
         price: project.price,
+        availability: project.availability,
         featured: project.featured,
         visible: project.visible,
         sort_order: project.sort_order,
       };
       if (project.id) {
-        const res = await fetch(`/api/fbx-mashups/${project.id}`, {
+        const res = await fetch(`/api/adoptables/${project.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         if (!res.ok) {
           const r = await res.json().catch(() => ({}));
-          throw new Error(r.error || "Failed to update project");
+          throw new Error(r.error || "Failed to update adoptable");
         }
       } else {
-        const res = await fetch("/api/fbx-mashups", {
+        const res = await fetch("/api/adoptables", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         if (!res.ok) {
           const r = await res.json().catch(() => ({}));
-          throw new Error(r.error || "Failed to create project");
+          throw new Error(r.error || "Failed to create adoptable");
         }
         const data = await res.json();
         if (data && data.id) {
@@ -165,7 +165,7 @@ export function FbxMashupSection() {
     }
 
     const { data: reloaded, error } = await sb
-      .from("fbx_mashups")
+      .from("adoptables")
       .select("*")
       .order("sort_order", { ascending: true });
     if (!error && reloaded) {
@@ -174,9 +174,9 @@ export function FbxMashupSection() {
           id: p.id,
           title: p.title || "",
           description: p.description || "",
-          avatar_base: p.avatar_base || "",
-          software_used: p.software_used || [],
+          category: p.category || "avatar",
           price: p.price || "",
+          availability: p.availability || "available",
           featured: p.featured || false,
           visible: p.visible !== false,
           sort_order: p.sort_order || 0,
@@ -190,10 +190,10 @@ export function FbxMashupSection() {
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
-    return register("fbx-mashups", saveProjects);
+    return register("adoptables", saveProjects);
   }, [register, saveProjects]);
 
-  function updateProject(i: number, patch: Partial<FbxMashup>) {
+  function updateProject(i: number, patch: Partial<Adoptable>) {
     const next = projects.slice();
     next[i] = { ...next[i], ...patch };
     setProjects(next);
@@ -204,15 +204,15 @@ export function FbxMashupSection() {
     const project = projects[i];
     if (project.id) {
       try {
-        const res = await fetch(`/api/fbx-mashups/${project.id}`, { method: "DELETE" });
+        const res = await fetch(`/api/adoptables/${project.id}`, { method: "DELETE" });
         if (!res.ok) {
           const r = await res.json().catch(() => ({}));
           throw new Error(r.error || "Delete failed");
         }
         originalIdsRef.current.delete(project.id);
-        toast.success("Project deleted");
+        toast.success("Adoptable deleted");
       } catch (e: any) {
-        toast.error(e.message || "Failed to delete project");
+        toast.error(e.message || "Failed to delete adoptable");
         return;
       }
     }
@@ -224,52 +224,52 @@ export function FbxMashupSection() {
     if (!isSupabaseConfigured || !sb) {
       setProjects([
         ...projects,
-        { title: "", description: "", avatar_base: "", software_used: [], price: "", featured: false, visible: true, sort_order: projects.length },
+        { title: "", description: "", category: "avatar", price: "", availability: "available", featured: false, visible: true, sort_order: projects.length },
       ]);
       setEditingProject(projects.length);
       markDirty();
       return;
     }
     try {
-      const res = await fetch("/api/fbx-mashups", {
+      const res = await fetch("/api/adoptables", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "", description: "", avatar_base: "", software_used: [], price: "", featured: false, visible: true, sort_order: projects.length }),
+        body: JSON.stringify({ title: "", description: "", category: "avatar", price: "", availability: "available", featured: false, visible: true, sort_order: projects.length }),
       });
       if (!res.ok) {
         const r = await res.json().catch(() => ({}));
-        throw new Error(r.error || "Failed to create project");
+        throw new Error(r.error || "Failed to create adoptable");
       }
       const data = await res.json();
       if (data && data.id) {
         setProjects([
           ...projects,
-          { id: data.id, title: "", description: "", avatar_base: "", software_used: [], price: "", featured: false, visible: true, sort_order: projects.length },
+          { id: data.id, title: "", description: "", category: "avatar", price: "", availability: "available", featured: false, visible: true, sort_order: projects.length },
         ]);
         setEditingProject(projects.length);
         originalIdsRef.current.add(data.id);
         markDirty();
       }
     } catch (e: any) {
-      toast.error(e.message || "Failed to create project");
+      toast.error(e.message || "Failed to create adoptable");
     }
   }
 
   async function clearAllProjects() {
-    if (!window.confirm("This will permanently delete ALL FBX mashup projects, gallery images, and before/after comparisons. This cannot be undone. Continue?")) return;
+    if (!window.confirm("This will permanently delete ALL adoptables, gallery images, and comparisons. This cannot be undone. Continue?")) return;
     try {
-      const res = await fetch("/api/fbx-mashups", { method: "DELETE" });
+      const res = await fetch("/api/adoptables", { method: "DELETE" });
       if (!res.ok) {
         const r = await res.json().catch(() => ({}));
-        throw new Error(r.error || "Failed to clear projects");
+        throw new Error(r.error || "Failed to clear adoptables");
       }
       setProjects([]);
       setGalleryImages({});
       setBeforeAfters({});
       originalIdsRef.current = new Set();
-      toast.success("All FBX mashups cleared");
+      toast.success("All adoptables cleared");
     } catch (e: any) {
-      toast.error(e.message || "Failed to clear projects");
+      toast.error(e.message || "Failed to clear adoptables");
     }
   }
 
@@ -278,7 +278,7 @@ export function FbxMashupSection() {
     const newVisible = !project.visible;
     if (project.id) {
       try {
-        const res = await fetch(`/api/fbx-mashups/${project.id}`, {
+        const res = await fetch(`/api/adoptables/${project.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ visible: newVisible }),
@@ -300,7 +300,7 @@ export function FbxMashupSection() {
     const newFeatured = !project.featured;
     if (project.id) {
       try {
-        const res = await fetch(`/api/fbx-mashups/${project.id}`, {
+        const res = await fetch(`/api/adoptables/${project.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ featured: newFeatured }),
@@ -331,15 +331,15 @@ export function FbxMashupSection() {
     const project = projects[projectIndex];
     if (project.id) return project.id;
     try {
-      const res = await fetch("/api/fbx-mashups", {
+      const res = await fetch("/api/adoptables", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: project.title,
           description: project.description,
-          avatar_base: project.avatar_base,
-          software_used: project.software_used,
+          category: project.category,
           price: project.price,
+          availability: project.availability,
           featured: project.featured,
           visible: project.visible,
           sort_order: project.sort_order,
@@ -347,7 +347,7 @@ export function FbxMashupSection() {
       });
       if (!res.ok) {
         const r = await res.json().catch(() => ({}));
-        throw new Error(r.error || "Failed to create project");
+        throw new Error(r.error || "Failed to create adoptable");
       }
       const data = await res.json();
       if (data && data.id) {
@@ -360,7 +360,7 @@ export function FbxMashupSection() {
       }
       return null;
     } catch (e: any) {
-      toast.error(e.message || "Failed to create project");
+      toast.error(e.message || "Failed to create adoptable");
       return null;
     }
   }
@@ -368,22 +368,22 @@ export function FbxMashupSection() {
   async function handleGalleryUpload(projectIndex: number, files: FileList | null) {
     if (!files || files.length === 0) return;
     const project = projects[projectIndex];
-    let mashupId: string | null = project.id ?? null;
-    if (!mashupId) {
-      mashupId = await ensureProjectHasId(projectIndex);
-      if (!mashupId) {
-        toast.error("Save the project first before uploading images");
+    let adoptableId: string | null = project.id ?? null;
+    if (!adoptableId) {
+      adoptableId = await ensureProjectHasId(projectIndex);
+      if (!adoptableId) {
+        toast.error("Save the adoptable first before uploading images");
         return;
       }
     }
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const temp: FbxGalleryImage = { url: "", sort_order: (galleryImages[mashupId] || []).length + i };
-      setGalleryImages((prev) => ({ ...prev, [mashupId]: [...(prev[mashupId] || []), temp] }));
+      const temp: AdoptableGalleryImage = { url: "", sort_order: (galleryImages[adoptableId] || []).length + i };
+      setGalleryImages((prev) => ({ ...prev, [adoptableId]: [...(prev[adoptableId] || []), temp] }));
       try {
         const formData = new FormData();
         formData.append("file", file);
-        const res = await fetch(`/api/fbx-mashups/${mashupId}/gallery`, {
+        const res = await fetch(`/api/adoptables/${adoptableId}/gallery`, {
           method: "POST",
           body: formData,
         });
@@ -393,14 +393,14 @@ export function FbxMashupSection() {
         }
         const uploaded = await res.json();
         setGalleryImages((prev) => {
-          const current = prev[mashupId] || [];
-          return { ...prev, [mashupId]: current.map((img) => (img === temp ? { id: uploaded.id, url: uploaded.url, path: uploaded.path, sort_order: temp.sort_order } : img)) };
+          const current = prev[adoptableId] || [];
+          return { ...prev, [adoptableId]: current.map((img) => (img === temp ? { id: uploaded.id, url: uploaded.url, path: uploaded.path, sort_order: temp.sort_order } : img)) };
         });
         toast.success("Image uploaded");
       } catch {
         setGalleryImages((prev) => {
-          const current = prev[mashupId] || [];
-          return { ...prev, [mashupId]: current.map((img) => (img === temp ? { ...img, error: "Upload failed" } : img)) };
+          const current = prev[adoptableId] || [];
+          return { ...prev, [adoptableId]: current.map((img) => (img === temp ? { ...img, error: "Upload failed" } : img)) };
         });
         toast.error("Failed to upload image");
       }
@@ -410,32 +410,32 @@ export function FbxMashupSection() {
   async function handleBeforeAfterUpload(projectIndex: number, type: "before" | "after", files: FileList | null) {
     if (!files || files.length === 0) return;
     const project = projects[projectIndex];
-    let mashupId: string | null = project.id ?? null;
-    if (!mashupId) {
-      mashupId = await ensureProjectHasId(projectIndex);
-      if (!mashupId) {
-        toast.error("Save the project first before uploading images");
+    let adoptableId: string | null = project.id ?? null;
+    if (!adoptableId) {
+      adoptableId = await ensureProjectHasId(projectIndex);
+      if (!adoptableId) {
+        toast.error("Save the adoptable first before uploading images");
         return;
       }
     }
     const file = files[0];
-    const temp: FbxBeforeAfter = {
-      mashup_id: mashupId,
-      before_url: type === "before" ? "" : (beforeAfters[mashupId]?.[0]?.before_url || ""),
-      after_url: type === "after" ? "" : (beforeAfters[mashupId]?.[0]?.after_url || ""),
+    const temp: AdoptableBeforeAfter = {
+      adoptable_id: adoptableId,
+      before_url: type === "before" ? "" : (beforeAfters[adoptableId]?.[0]?.before_url || ""),
+      after_url: type === "after" ? "" : (beforeAfters[adoptableId]?.[0]?.after_url || ""),
       label: "",
-      sort_order: (beforeAfters[mashupId] || []).length,
+      sort_order: (beforeAfters[adoptableId] || []).length,
     };
     if (type === "before") temp.before_url = "";
     else temp.after_url = "";
 
-    setBeforeAfters((prev) => ({ ...prev, [mashupId]: [...(prev[mashupId] || []), temp] }));
+    setBeforeAfters((prev) => ({ ...prev, [adoptableId]: [...(prev[adoptableId] || []), temp] }));
 
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("type", type);
-      const res = await fetch(`/api/fbx-mashups/${mashupId}/before-after`, {
+      const res = await fetch(`/api/adoptables/${adoptableId}/before-after`, {
         method: "POST",
         body: formData,
       });
@@ -445,10 +445,10 @@ export function FbxMashupSection() {
       }
       const uploaded = await res.json();
       setBeforeAfters((prev) => {
-        const current = prev[mashupId] || [];
+        const current = prev[adoptableId] || [];
         const urlField = type === "before" ? "before_url" : "after_url";
         const pathField = type === "before" ? "before_path" : "after_path";
-        return { ...prev, [mashupId]: current.map((img) => (img === temp ? { ...img, id: uploaded.id || img.id, [urlField]: uploaded.url, [pathField]: uploaded.path } : img)) };
+        return { ...prev, [adoptableId]: current.map((img) => (img === temp ? { ...img, id: uploaded.id || img.id, [urlField]: uploaded.url, [pathField]: uploaded.path } : img)) };
       });
       toast.success(`${type === "before" ? "Before" : "After"} image uploaded`);
     } catch {
@@ -456,12 +456,12 @@ export function FbxMashupSection() {
     }
   }
 
-  async function deleteGalleryImage(mashupId: string, imageId: string, path?: string) {
+  async function deleteGalleryImage(adoptableId: string, imageId: string, path?: string) {
     try {
       const params = new URLSearchParams();
       if (imageId) params.set("imageId", imageId);
       if (path) params.set("path", path);
-      const res = await fetch(`/api/fbx-mashups/${mashupId}/gallery?${params.toString()}`, {
+      const res = await fetch(`/api/adoptables/${adoptableId}/gallery?${params.toString()}`, {
         method: "DELETE",
       });
       if (!res.ok) {
@@ -470,7 +470,7 @@ export function FbxMashupSection() {
       }
       setGalleryImages((prev) => ({
         ...prev,
-        [mashupId]: (prev[mashupId] || []).filter((img) => img.id !== imageId),
+        [adoptableId]: (prev[adoptableId] || []).filter((img) => img.id !== imageId),
       }));
       toast.success("Image deleted");
     } catch (e: any) {
@@ -478,13 +478,13 @@ export function FbxMashupSection() {
     }
   }
 
-  async function deleteBeforeAfter(mashupId: string, baId: string, beforePath?: string, afterPath?: string) {
+  async function deleteBeforeAfter(adoptableId: string, baId: string, beforePath?: string, afterPath?: string) {
     try {
       const params = new URLSearchParams();
       if (baId) params.set("id", baId);
       if (beforePath) params.set("beforePath", beforePath);
       if (afterPath) params.set("afterPath", afterPath);
-      const res = await fetch(`/api/fbx-mashups/${mashupId}/before-after?${params.toString()}`, {
+      const res = await fetch(`/api/adoptables/${adoptableId}/before-after?${params.toString()}`, {
         method: "DELETE",
       });
       if (!res.ok) {
@@ -493,7 +493,7 @@ export function FbxMashupSection() {
       }
       setBeforeAfters((prev) => ({
         ...prev,
-        [mashupId]: (prev[mashupId] || []).filter((ba) => ba.id !== baId),
+        [adoptableId]: (prev[adoptableId] || []).filter((ba) => ba.id !== baId),
       }));
       toast.success("Comparison deleted");
     } catch (e: any) {
@@ -504,8 +504,8 @@ export function FbxMashupSection() {
   if (!isSupabaseConfigured) {
     return (
       <Card className="p-8">
-        <CardHeader title="FBX Mashups" description="Manage FBX mashup projects." />
-        <p className="mt-4 text-sm text-[var(--text-secondary)]">Supabase is not configured. Add your credentials to enable FBX mashup management.</p>
+        <CardHeader title="Adoptables" description="Manage adoptable listings." />
+        <p className="mt-4 text-sm text-[var(--text-secondary)]">Supabase is not configured. Add your credentials to enable adoptable management.</p>
       </Card>
     );
   }
@@ -514,8 +514,8 @@ export function FbxMashupSection() {
     <div className="space-y-6">
       <Card className="p-8">
         <CardHeader
-          title="FBX Mashup Projects"
-          description="Manage your FBX mashup services. Each project is a separate mashup offering with its own gallery and before/after comparisons."
+          title="Adoptables"
+          description="Manage your adoptable listings. Each adoptable can have gallery images and before/after comparisons."
           actions={
             <>
               {projects.length > 0 && (
@@ -524,7 +524,7 @@ export function FbxMashupSection() {
                 </Button>
               )}
               <Button size="sm" variant="primary" onClick={addProject} leftIcon={<Plus className="h-4 w-4" />}>
-                Add Project
+                Add Adoptable
               </Button>
             </>
           }
@@ -548,16 +548,16 @@ export function FbxMashupSection() {
                     <button type="button" onClick={() => moveProject(i, 1)} disabled={i === projects.length - 1} className="grid h-7 w-7 place-items-center rounded-lg text-[var(--text-dim)] hover:text-white disabled:opacity-30" aria-label="Move down">
                       <ChevronDown className="h-4 w-4" />
                     </button>
-                    <h3 className="text-sm font-semibold text-white">{project.title || `Project ${i + 1}`}</h3>
+                    <h3 className="text-sm font-semibold text-white">{project.title || `Adoptable ${i + 1}`}</h3>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => toggleVisibility(i)} className={`grid h-8 w-8 place-items-center rounded-lg transition-colors ${project.visible ? "text-[var(--accent)] bg-[var(--accent-soft)]" : "text-[var(--text-dim)] hover:bg-white/5"}`} aria-label={project.visible ? "Hide project" : "Show project"}>
+                    <button type="button" onClick={() => toggleVisibility(i)} className={`grid h-8 w-8 place-items-center rounded-lg transition-colors ${project.visible ? "text-[var(--accent)] bg-[var(--accent-soft)]" : "text-[var(--text-dim)] hover:bg-white/5"}`} aria-label={project.visible ? "Hide adoptable" : "Show adoptable"}>
                       {project.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                     </button>
-                    <button type="button" onClick={() => toggleFeatured(i)} className={`grid h-8 w-8 place-items-center rounded-lg transition-colors ${project.featured ? "text-[var(--accent)] bg-[var(--accent-soft)]" : "text-[var(--text-dim)] hover:bg-white/5"}`} aria-label={project.featured ? "Unfeature project" : "Feature project"}>
+                    <button type="button" onClick={() => toggleFeatured(i)} className={`grid h-8 w-8 place-items-center rounded-lg transition-colors ${project.featured ? "text-[var(--accent)] bg-[var(--accent-soft)]" : "text-[var(--text-dim)] hover:bg-white/5"}`} aria-label={project.featured ? "Unfeature adoptable" : "Feature adoptable"}>
                       <Layers className="h-4 w-4" />
                     </button>
-                    <button type="button" onClick={() => removeProject(i)} className="grid h-8 w-8 place-items-center rounded-lg text-[var(--text-dim)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]" aria-label="Delete project">
+                    <button type="button" onClick={() => removeProject(i)} className="grid h-8 w-8 place-items-center rounded-lg text-[var(--text-dim)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]" aria-label="Delete adoptable">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
@@ -570,11 +570,21 @@ export function FbxMashupSection() {
                   <Field label="Price">
                     <Input value={project.price} onChange={(e) => updateProject(i, { price: e.target.value })} placeholder="£XX - £XX" />
                   </Field>
-                  <Field label="Avatar Base">
-                    <Input value={project.avatar_base} onChange={(e) => updateProject(i, { avatar_base: e.target.value })} placeholder="e.g. VRChat Base" />
+                  <Field label="Category">
+                    <Select value={project.category} onChange={(e) => updateProject(i, { category: e.target.value })}>
+                      <option value="avatar">Avatar</option>
+                      <option value="accessory">Accessory</option>
+                      <option value="clothing">Clothing</option>
+                      <option value="texture">Texture</option>
+                      <option value="other">Other</option>
+                    </Select>
                   </Field>
-                  <Field label="Software Used (comma-separated)">
-                    <Input value={(project.software_used || []).join(", ")} onChange={(e) => updateProject(i, { software_used: e.target.value.split(",").map((s: string) => s.trim()).filter(Boolean) })} placeholder="Blender, Unity" />
+                  <Field label="Availability">
+                    <Select value={project.availability} onChange={(e) => updateProject(i, { availability: e.target.value })}>
+                      <option value="available">Available</option>
+                      <option value="sold">Sold</option>
+                      <option value="reserved">Reserved</option>
+                    </Select>
                   </Field>
                 </div>
 
@@ -585,7 +595,7 @@ export function FbxMashupSection() {
                 <div className="mt-4 flex flex-wrap items-center gap-6">
                   <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[var(--text-secondary)]">
                     <input type="checkbox" checked={project.featured} onChange={(e) => updateProject(i, { featured: e.target.checked })} className="h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]" />
-                    Featured project
+                    Featured adoptable
                   </label>
                   <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[var(--text-secondary)]">
                     <input type="checkbox" checked={project.visible} onChange={(e) => updateProject(i, { visible: e.target.checked })} className="h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]" />
@@ -632,11 +642,11 @@ export function FbxMashupSection() {
                   <div className="mt-3 flex gap-3">
                     <div className="flex-1">
                       <label className="ad-label">Before Image</label>
-                      <UploadArea onFiles={(files) => handleBeforeAfterUpload(i, "before", files)} uploading={false} title="Upload Before" formats={["PNG", "JPG", "WEBP"]} inputId={`fbx-before-${i}`} />
+                      <UploadArea onFiles={(files) => handleBeforeAfterUpload(i, "before", files)} uploading={false} title="Upload Before" formats={["PNG", "JPG", "WEBP"]} inputId={`adoptable-before-${i}`} />
                     </div>
                     <div className="flex-1">
                       <label className="ad-label">After Image</label>
-                      <UploadArea onFiles={(files) => handleBeforeAfterUpload(i, "after", files)} uploading={false} title="Upload After" formats={["PNG", "JPG", "WEBP"]} inputId={`fbx-after-${i}`} />
+                      <UploadArea onFiles={(files) => handleBeforeAfterUpload(i, "after", files)} uploading={false} title="Upload After" formats={["PNG", "JPG", "WEBP"]} inputId={`adoptable-after-${i}`} />
                     </div>
                   </div>
                 </div>
@@ -645,9 +655,9 @@ export function FbxMashupSection() {
             {projects.length === 0 && (
               <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-16 text-center">
                 <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                  <Layers className="h-6 w-6" />
+                  <Package className="h-6 w-6" />
                 </div>
-                <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">No FBX mashup projects yet. Add your first project to get started.</p>
+                <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">No adoptables yet. Add your first adoptable to get started.</p>
               </div>
             )}
           </div>

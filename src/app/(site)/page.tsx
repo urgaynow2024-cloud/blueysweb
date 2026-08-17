@@ -10,7 +10,7 @@ import PricingCard from "@/components/ui/PricingCard";
 import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages } from "@/lib/db";
 import { PremiumCard } from "@/components/ui/Card";
 import Link from "next/link";
-import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles, MessageSquarePlus, Users, Quote } from "lucide-react";
+import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles, MessageSquarePlus, Users, Quote, HelpCircle, Clock, DollarSign, ShieldCheck, Rocket } from "lucide-react";
 import CommissionAvailability from "@/components/CommissionAvailability";
 
 function Stars({ rating, size = "h-4 w-4" }: { rating?: number; size?: string }) {
@@ -92,9 +92,9 @@ export default function Home() {
   return (
     <div className="relative">
       <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute left-1/4 top-[-10%] h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[180px]" />
-        <div className="absolute bottom-[-5%] right-[-5%] h-[400px] w-[600px] rounded-full bg-[var(--accent-2)] opacity-[0.03] blur-[150px]" />
-        <div className="absolute left-[60%] top-[40%] h-[300px] w-[500px] rounded-full bg-[var(--accent-3)] opacity-[0.025] blur-[120px]" />
+        <div className="absolute left-1/4 top-[-10%] h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.08] blur-[180px]" />
+        <div className="absolute bottom-[-5%] right-[-5%] h-[400px] w-[600px] rounded-full bg-[var(--accent-nebula)] opacity-[0.06] blur-[150px]" />
+        <div className="absolute left-[60%] top-[40%] h-[300px] w-[500px] rounded-full bg-[var(--accent-star)] opacity-[0.04] blur-[120px]" />
       </div>
 
       <Hero />
@@ -239,6 +239,16 @@ export default function Home() {
             <div className="space-y-3">
               {faq.map((item, i) => {
                 const open = openFaq === i;
+                const faqIcon = item.key?.toLowerCase().includes("price") || item.key?.toLowerCase().includes("cost") || item.key?.toLowerCase().includes("payment")
+                  ? DollarSign
+                  : item.key?.toLowerCase().includes("time") || item.key?.toLowerCase().includes("long") || item.key?.toLowerCase().includes("fast")
+                  ? Clock
+                  : item.key?.toLowerCase().includes("quest") || item.key?.toLowerCase().includes("pc") || item.key?.toLowerCase().includes("performance")
+                  ? ShieldCheck
+                  : item.key?.toLowerCase().includes("file") || item.key?.toLowerCase().includes("get")
+                  ? Rocket
+                  : HelpCircle;
+                const Icon = faqIcon;
                 return (
                   <div
                     key={i}
@@ -249,8 +259,13 @@ export default function Home() {
                       aria-expanded={open}
                       className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left"
                     >
-                      <span className={`font-semibold transition-colors ${open ? "text-white" : "text-[var(--text)]"}`}>
-                        {item.question}
+                      <span className="flex items-center gap-3">
+                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        <span className={`font-semibold transition-colors ${open ? "text-white" : "text-[var(--text)]"}`}>
+                          {item.question}
+                        </span>
                       </span>
                       <span
                         className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--accent)] transition-all duration-300 ${
@@ -316,9 +331,9 @@ export default function Home() {
 
         {/* CTA */}
         <section className="section relative overflow-hidden">
-          <div className="pointer-events-none absolute inset-0 -z-10">
-            <div className="absolute left-1/2 top-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--accent)] opacity-[0.05] blur-[120px]" />
-          </div>
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute left-1/2 top-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.08] blur-[120px]" />
+        </div>
           <div className="container">
             <div className="mx-auto max-w-3xl text-center">
               <span className="eyebrow justify-center">

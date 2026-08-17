@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SpaceParticles from "@/components/SpaceParticles";
 
 export default function SiteLayout({
   children,
@@ -8,6 +9,7 @@ export default function SiteLayout({
 }>) {
   return (
     <>
+      <SpaceParticles />
       <Navbar />
       <main className="relative z-10 flex min-h-screen flex-col pb-safe-mobile md:pb-0">
         {children}

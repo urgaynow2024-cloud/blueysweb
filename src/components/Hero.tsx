@@ -31,16 +31,16 @@ export default function Hero() {
     <section className="relative flex min-h-[100svh] items-center overflow-hidden pb-20 pt-28 md:pb-24 md:pt-32">
       {/* Ambient atmosphere — layered depth */}
       <div className="pointer-events-none absolute inset-0 z-0">
-        <div className="absolute left-1/4 top-[-15%] h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.07] blur-[200px] orb-slow" />
-        <div className="absolute bottom-[-10%] right-[-5%] h-[500px] w-[700px] rounded-full bg-[var(--accent-2)] opacity-[0.05] blur-[180px] orb-med" />
-        <div className="absolute left-[70%] top-[30%] h-[350px] w-[450px] rounded-full bg-[var(--accent-3)] opacity-[0.04] blur-[150px] orb-fast" />
+        <div className="absolute left-1/4 top-[-15%] h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.15] blur-[200px] orb-slow" />
+        <div className="absolute bottom-[-10%] right-[-5%] h-[500px] w-[700px] rounded-full bg-[var(--accent-nebula)] opacity-[0.12] blur-[180px] orb-med" />
+        <div className="absolute left-[70%] top-[30%] h-[350px] w-[450px] rounded-full bg-[var(--accent-star)] opacity-[0.08] blur-[150px] orb-fast" />
         <div className="absolute inset-0 bg-grid opacity-[0.4]" />
         <div className="absolute inset-0 bg-dots opacity-20" />
       </div>
 
       {/* Animated gradient mesh overlay */}
-      <div className="pointer-events-none absolute inset-0 z-[1] opacity-[0.03]">
-        <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)] via-transparent to-[var(--accent-2)]" />
+      <div className="pointer-events-none absolute inset-0 z-[1] opacity-[0.05]">
+        <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-cosmic)] via-transparent to-[var(--accent-nebula)]" />
       </div>
 
       <div className="container relative z-10">
@@ -68,7 +68,7 @@ export default function Hero() {
 
             <div className="mt-9 flex flex-wrap gap-4 fade-in">
               <a href="/contact" className="btn-primary group relative">
-                <span className="pointer-events-none absolute -inset-1 -z-10 rounded-[calc(var(--r-xs)+6px)] bg-[var(--accent)] opacity-25 blur-xl transition-opacity duration-500 group-hover:opacity-50" />
+                <span className="pointer-events-none absolute -inset-1 -z-10 rounded-[calc(var(--r-xs)+6px)] bg-[var(--accent-cosmic)] opacity-40 blur-xl transition-opacity duration-500 group-hover:opacity-60" />
                 <Zap className="h-4 w-4" />
                 Start a Commission
               </a>

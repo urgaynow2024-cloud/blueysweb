@@ -10,7 +10,7 @@ export default function ContactCommissionForm() {
   const [submitting, setSubmitting] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [ownsAssets, setOwnsAssets] = useState(false);
-  const [fbxProof, setFbxProof] = useState(false);
+  const [adoptableProof, setAdoptableProof] = useState(false);
   const [refundsUnderstood, setRefundsUnderstood] = useState(false);
   const nameId = useId();
   const discordId = useId();
@@ -24,7 +24,7 @@ export default function ContactCommissionForm() {
     e.preventDefault();
     setError(false);
 
-    if (!agreed || !ownsAssets || !fbxProof || !refundsUnderstood) {
+    if (!agreed || !ownsAssets || !adoptableProof || !refundsUnderstood) {
       setError(true);
       return;
     }
@@ -41,7 +41,7 @@ export default function ContactCommissionForm() {
       notes: formData.get("notes"),
       agreed,
       owns_assets: ownsAssets,
-      fbx_proof: fbxProof,
+      adoptable_proof: adoptableProof,
       refunds_understood: refundsUnderstood,
     };
 
@@ -97,8 +97,8 @@ export default function ContactCommissionForm() {
       {error && (
         <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
           <AlertCircle className="h-4 w-4 shrink-0" />
-          {(!agreed || !ownsAssets || !fbxProof || !refundsUnderstood)
-            ? "Please read and agree to all terms below (Terms of Service, asset ownership, FBX proof, and refund policy) before submitting."
+          {(!agreed || !ownsAssets || !adoptableProof || !refundsUnderstood)
+            ? "Please read and agree to all terms below (Terms of Service, asset ownership, adoptable proof, and refund policy) before submitting."
             : "Failed to send request. Please try again or contact me directly on Discord."}
         </div>
       )}
@@ -157,11 +157,11 @@ export default function ContactCommissionForm() {
           <label className="flex cursor-pointer items-start gap-3 text-sm text-[var(--text-secondary)]">
             <input
               type="checkbox"
-              checked={fbxProof}
-              onChange={(e) => setFbxProof(e.target.checked)}
+              checked={adoptableProof}
+              onChange={(e) => setAdoptableProof(e.target.checked)}
               className="mt-1 h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
             />
-            <span>I understand that proof of ownership may be requested for FBX Mashup commissions.</span>
+            <span>I understand that proof of ownership may be requested for Adoptable commissions.</span>
           </label>
 
           <label className="flex cursor-pointer items-start gap-3 text-sm text-[var(--text-secondary)]">

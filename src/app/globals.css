@@ -8,11 +8,12 @@
 
 :root {
   /* Surfaces */
-  --bg: #04060a;
+  --bg: #03050a;
   --bg-elevated: #080b12;
   --bg-card: #0b0f18;
   --bg-glass: rgba(10, 14, 22, 0.62);
   --bg-float: rgba(16, 21, 33, 0.9);
+  --bg-nebula: #0a0c14;
 
   /* Borders & strokes */
   --border: rgba(255, 255, 255, 0.06);
@@ -31,6 +32,9 @@
   --accent-soft: rgba(90, 176, 240, 0.08);
   --accent-glow: rgba(90, 176, 240, 0.28);
   --accent-muted: rgba(90, 176, 240, 0.72);
+  --accent-cosmic: #7c3aed;
+  --accent-nebula: #a78bfa;
+  --accent-star: #60a5fa;
 
   /* Text */
   --text: #eef3ff;
@@ -75,6 +79,9 @@
   --color-accent-soft: var(--accent-soft);
   --color-accent-glow: var(--accent-glow);
   --color-accent-muted: var(--accent-muted);
+  --color-accent-cosmic: var(--accent-cosmic);
+  --color-accent-nebula: var(--accent-nebula);
+  --color-accent-star: var(--accent-star);
   --color-surface: var(--bg-float);
   --color-glass: var(--bg-glass);
   --color-text: var(--text);
@@ -97,7 +104,13 @@ html {
 body {
   margin: 0;
   font-family: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: var(--bg);
+  background:
+    radial-gradient(ellipse 120% 80% at 10% 0%, rgba(124, 58, 237, 0.22), transparent 50%),
+    radial-gradient(ellipse 100% 70% at 90% 10%, rgba(96, 165, 250, 0.18), transparent 50%),
+    radial-gradient(ellipse 140% 100% at 50% 100%, rgba(167, 139, 250, 0.15), transparent 55%),
+    radial-gradient(circle at 20% 80%, rgba(124, 58, 237, 0.08), transparent 40%),
+    radial-gradient(circle at 80% 60%, rgba(96, 165, 250, 0.06), transparent 40%),
+    var(--bg);
   color: var(--text);
   overflow-x: hidden;
   min-height: 100vh;
@@ -107,16 +120,47 @@ body {
   font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
 }
 
-/* Subtle dot grid on body for texture */
+/* Subtle star grid on body for texture */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.015;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-  background-size: 28px 28px;
+  opacity: 0.08;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 90px 40px, rgba(167, 139, 250, 0.8), transparent),
+    radial-gradient(2px 2px at 130px 80px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 160px 120px, rgba(96, 165, 250, 0.7), transparent),
+    radial-gradient(2px 2px at 200px 50px, rgba(255, 255, 255, 0.8), transparent);
+  background-size: 220px 180px;
+  animation: starTwinkle 4s ease-in-out infinite alternate;
+}
+
+@keyframes starTwinkle {
+  0% { opacity: 0.06; }
+  100% { opacity: 0.12; }
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 100% 80% at 50% 0%, rgba(124, 58, 237, 0.1), transparent 60%),
+    radial-gradient(ellipse 80% 60% at 20% 100%, rgba(96, 165, 250, 0.08), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(167, 139, 250, 0.06), transparent 50%);
+  animation: nebulaPulse 20s ease-in-out infinite alternate;
+}
+
+@keyframes nebulaPulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
 }
 
 .font-display {
@@ -125,12 +169,12 @@ body::before {
 }
 
 ::selection {
-  background: rgba(90, 176, 240, 0.32);
+  background: rgba(124, 58, 237, 0.35);
   color: #fff;
 }
 
 ::-moz-selection {
-  background: rgba(90, 176, 240, 0.32);
+  background: rgba(124, 58, 237, 0.35);
   color: #fff;
 }
 
@@ -165,16 +209,48 @@ select:focus {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(60% 55% at 12% 8%, rgba(90, 176, 240, 0.1), transparent 60%),
-    radial-gradient(55% 50% at 88% 4%, rgba(167, 139, 250, 0.08), transparent 60%),
-    radial-gradient(70% 60% at 50% 100%, rgba(79, 209, 197, 0.06), transparent 60%);
-  animation: meshShift 20s ease-in-out infinite alternate;
+    radial-gradient(70% 55% at 15% 10%, rgba(124, 58, 237, 0.25), transparent 55%),
+    radial-gradient(60% 50% at 85% 15%, rgba(96, 165, 250, 0.2), transparent 55%),
+    radial-gradient(80% 60% at 50% 95%, rgba(167, 139, 250, 0.18), transparent 55%),
+    radial-gradient(50% 40% at 40% 40%, rgba(90, 176, 240, 0.12), transparent 60%);
+  animation: meshShift 25s ease-in-out infinite alternate;
 }
 
 @keyframes meshShift {
   0% { opacity: 1; }
-  50% { opacity: 0.7; }
+  50% { opacity: 0.65; }
   100% { opacity: 1; }
+}
+
+.bg-nebula {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 30%, rgba(124, 58, 237, 0.15), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 70% 60%, rgba(96, 165, 250, 0.12), transparent 50%),
+    radial-gradient(ellipse 50% 50% at 50% 80%, rgba(167, 139, 250, 0.1), transparent 60%);
+  animation: nebulaShift 30s ease-in-out infinite alternate;
+}
+
+@keyframes nebulaShift {
+  0% {
+    opacity: 0.6;
+    transform: scale(1) translate(0, 0);
+  }
+  33% {
+    opacity: 0.8;
+    transform: scale(1.02) translate(1%, -0.5%);
+  }
+  66% {
+    opacity: 0.7;
+    transform: scale(0.98) translate(-0.5%, 0.5%);
+  }
+  100% {
+    opacity: 0.85;
+    transform: scale(1.01) translate(0.5%, -0.3%);
+  }
 }
 
 .bg-scene {
@@ -392,16 +468,16 @@ select:focus {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(90, 176, 240, 0.08), transparent 55%);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(90, 176, 240, 0.04) 50%, transparent 55%);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.6s var(--ease-out);
 }
 
 .card:hover {
-  border-color: rgba(90, 176, 240, 0.25);
+  border-color: rgba(124, 58, 237, 0.4);
   transform: translateY(-8px);
-  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(90, 176, 240, 0.1) inset;
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(124, 58, 237, 0.2) inset, 0 0 40px rgba(124, 58, 237, 0.15);
 }
 
 .card:hover::before {
@@ -478,8 +554,8 @@ select:focus {
 }
 
 .pricing-card.featured {
-  border-color: rgba(90, 176, 240, 0.3);
-  box-shadow: var(--shadow-glow);
+  border-color: rgba(124, 58, 237, 0.4);
+  box-shadow: 0 20px 50px -20px rgba(124, 58, 237, 0.35);
 }
 
 .pricing-card.featured::before {
@@ -488,12 +564,12 @@ select:focus {
   inset: -1px;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.8), rgba(167, 139, 250, 0.6), rgba(96, 165, 250, 0.4));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 /* Review card — personal, user-focused */
@@ -601,20 +677,20 @@ select:focus {
      0 28px 56px -36px rgba(0, 0, 0, 0.85);
  }
  
- .glass::after,
- .glass-panel::after {
-   content: "";
-   position: absolute;
-   inset: 0;
-   border-radius: inherit;
-   padding: 1px;
-   background: linear-gradient(140deg, rgba(255, 255, 255, 0.18), transparent 40%);
-   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-   -webkit-mask-composite: xor;
-   mask-composite: exclude;
-   pointer-events: none;
-   opacity: 0.7;
- }
+  .glass::after,
+  .glass-panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(140deg, rgba(124, 58, 237, 0.4), rgba(96, 165, 250, 0.3) 50%, transparent 70%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.8;
+  }
  
  /* Stronger frosted glass — used for elevated overlays (mobile menu, popovers) */
  .glass-strong {
@@ -641,8 +717,8 @@ select:focus {
    padding: 14px 28px;
    border: none;
    border-radius: var(--r-sm);
-   background: linear-gradient(135deg, var(--accent), var(--accent-4));
-   color: #04060a;
+    background: linear-gradient(135deg, #7c3aed, #a78bfa 50%, #5ab0f0);
+    color: #fff;
    font-weight: 650;
    font-size: 0.925rem;
    letter-spacing: -0.01em;
@@ -650,7 +726,7 @@ select:focus {
    text-decoration: none;
    overflow: hidden;
    isolation: isolate;
-   box-shadow: 0 8px 28px -8px var(--accent-glow), 0 1px 0 rgba(255, 255, 255, 0.25) inset;
+    box-shadow: 0 8px 28px -8px rgba(124, 58, 237, 0.5), 0 1px 0 rgba(255, 255, 255, 0.25) inset;
    transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out), filter 0.4s var(--ease-out);
  }
  
@@ -666,7 +742,7 @@ select:focus {
  
  .btn-primary:hover {
    transform: translateY(-3px) scale(1.01);
-   box-shadow: 0 16px 40px -10px var(--accent-glow), 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+    box-shadow: 0 16px 40px -10px rgba(124, 58, 237, 0.65), 0 1px 0 rgba(255, 255, 255, 0.3) inset;
    filter: brightness(1.08);
  }
  
@@ -876,19 +952,6 @@ select:focus {
   color: var(--text-secondary);
   backdrop-filter: blur(8px);
 }
-
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--border-strong);
-  background: rgba(255, 255, 255, 0.03);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: var(--text-secondary);
-  backdrop-filter: blur(8px);
 
 /* ----------------------------------------------------------------------------
    Pills & badges
@@ -1313,10 +1376,10 @@ select.field option {
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(90, 176, 240, 0.16);
+  background: rgba(124, 58, 237, 0.2);
   border-radius: 99px;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(90, 176, 240, 0.3); }
+::-webkit-scrollbar-thumb:hover { background: rgba(124, 58, 237, 0.35); }
 
 /* ----------------------------------------------------------------------------
    Misc helpers

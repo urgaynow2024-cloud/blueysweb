@@ -147,17 +147,17 @@ CREATE TABLE IF NOT EXISTS social_links (
 );
 
 -- =============================================================================
--- FBX MASHUPS
+-- ADOPTABLES
 -- =============================================================================
 
--- FBX Mashup projects (separate from portfolio)
-CREATE TABLE IF NOT EXISTS fbx_mashups (
+-- Adoptable projects (replaces FBX Mashups)
+CREATE TABLE IF NOT EXISTS adoptables (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   description TEXT NOT NULL,
-  avatar_base TEXT,
-  software_used TEXT[] DEFAULT '{}',
+  category TEXT DEFAULT 'avatar',
   price TEXT,
+  availability TEXT DEFAULT 'available' CHECK (availability IN ('available', 'sold', 'reserved')),
   featured BOOLEAN DEFAULT FALSE,
   visible BOOLEAN DEFAULT TRUE,
   sort_order INTEGER DEFAULT 0,
@@ -165,20 +165,20 @@ CREATE TABLE IF NOT EXISTS fbx_mashups (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- FBX Mashup gallery images
-CREATE TABLE IF NOT EXISTS fbx_gallery (
+-- Adoptable gallery images
+CREATE TABLE IF NOT EXISTS adoptable_gallery (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  mashup_id UUID NOT NULL REFERENCES fbx_mashups(id) ON DELETE CASCADE,
+  adoptable_id UUID NOT NULL REFERENCES adoptables(id) ON DELETE CASCADE,
   url TEXT NOT NULL,
   path TEXT,
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- FBX Mashup before & after comparisons
-CREATE TABLE IF NOT EXISTS fbx_before_after (
+-- Adoptable before & after comparisons (optional)
+CREATE TABLE IF NOT EXISTS adoptable_before_after (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  mashup_id UUID NOT NULL REFERENCES fbx_mashups(id) ON DELETE CASCADE,
+  adoptable_id UUID NOT NULL REFERENCES adoptables(id) ON DELETE CASCADE,
   before_url TEXT NOT NULL,
   after_url TEXT NOT NULL,
   before_path TEXT,
@@ -213,18 +213,18 @@ BEGIN
   END IF;
 END $$;
 
--- Migrate fbx_mashups table to ensure all columns exist (added after initial creation)
+-- Migrate adoptables table to ensure all columns exist (added after initial creation)
 DO $$
 BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'fbx_mashups') THEN
-    BEGIN ALTER TABLE fbx_mashups ADD COLUMN IF NOT EXISTS avatar_base TEXT; EXCEPTION WHEN others THEN NULL; END;
-    BEGIN ALTER TABLE fbx_mashups ADD COLUMN IF NOT EXISTS software_used TEXT[] DEFAULT '{}'; EXCEPTION WHEN others THEN NULL; END;
-    BEGIN ALTER TABLE fbx_mashups ADD COLUMN IF NOT EXISTS price TEXT; EXCEPTION WHEN others THEN NULL; END;
-    BEGIN ALTER TABLE fbx_mashups ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT FALSE; EXCEPTION WHEN others THEN NULL; END;
-    BEGIN ALTER TABLE fbx_mashups ADD COLUMN IF NOT EXISTS visible BOOLEAN DEFAULT TRUE; EXCEPTION WHEN others THEN NULL; END;
-    BEGIN ALTER TABLE fbx_mashups ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0; EXCEPTION WHEN others THEN NULL; END;
-    BEGIN ALTER TABLE fbx_mashups ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(); EXCEPTION WHEN others THEN NULL; END;
-    BEGIN ALTER TABLE fbx_mashups ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW(); EXCEPTION WHEN others THEN NULL; END;
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'adoptables') THEN
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'avatar'; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS availability TEXT DEFAULT 'available' CHECK (availability IN ('available', 'sold', 'reserved')); EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS price TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT FALSE; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS visible BOOLEAN DEFAULT TRUE; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(); EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW(); EXCEPTION WHEN others THEN NULL; END;
   END IF;
 END $$;
 
@@ -255,9 +255,9 @@ ALTER TABLE site_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE nsfw_portfolio_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE queue_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE social_links ENABLE ROW LEVEL SECURITY;
-ALTER TABLE fbx_mashups ENABLE ROW LEVEL SECURITY;
-ALTER TABLE fbx_gallery ENABLE ROW LEVEL SECURITY;
-ALTER TABLE fbx_before_after ENABLE ROW LEVEL SECURITY;
+ALTER TABLE adoptables ENABLE ROW LEVEL SECURITY;
+ALTER TABLE adoptable_gallery ENABLE ROW LEVEL SECURITY;
+ALTER TABLE adoptable_before_after ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tos_sections ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies before recreating
@@ -282,12 +282,12 @@ DO $$ BEGIN
   DROP POLICY IF EXISTS "Authenticated write queue_items" ON queue_items;
    DROP POLICY IF EXISTS "Public read social_links" ON social_links;
    DROP POLICY IF EXISTS "Authenticated write social_links" ON social_links;
-   DROP POLICY IF EXISTS "Public read fbx_mashups" ON fbx_mashups;
-   DROP POLICY IF EXISTS "Authenticated write fbx_mashups" ON fbx_mashups;
-   DROP POLICY IF EXISTS "Public read fbx_gallery" ON fbx_gallery;
-   DROP POLICY IF EXISTS "Authenticated write fbx_gallery" ON fbx_gallery;
-   DROP POLICY IF EXISTS "Public read fbx_before_after" ON fbx_before_after;
-   DROP POLICY IF EXISTS "Authenticated write fbx_before_after" ON fbx_before_after;
+    DROP POLICY IF EXISTS "Public read adoptables" ON adoptables;
+    DROP POLICY IF EXISTS "Authenticated write adoptables" ON adoptables;
+    DROP POLICY IF EXISTS "Public read adoptable_gallery" ON adoptable_gallery;
+    DROP POLICY IF EXISTS "Authenticated write adoptable_gallery" ON adoptable_gallery;
+    DROP POLICY IF EXISTS "Public read adoptable_before_after" ON adoptable_before_after;
+    DROP POLICY IF EXISTS "Authenticated write adoptable_before_after" ON adoptable_before_after;
    DROP POLICY IF EXISTS "Public read tos_sections" ON tos_sections;
    DROP POLICY IF EXISTS "Authenticated write tos_sections" ON tos_sections;
 END $$;
@@ -304,13 +304,13 @@ CREATE POLICY "Public read nsfw_portfolio_images" ON nsfw_portfolio_images FOR S
 CREATE POLICY "Public read queue_items" ON queue_items FOR SELECT USING (true);
 CREATE POLICY "Public read social_links" ON social_links FOR SELECT USING (true);
 
--- FBX Mashups: public read, authenticated write
-CREATE POLICY "Public read fbx_mashups" ON fbx_mashups FOR SELECT USING (true);
-CREATE POLICY "Authenticated write fbx_mashups" ON fbx_mashups FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Public read fbx_gallery" ON fbx_gallery FOR SELECT USING (true);
-CREATE POLICY "Authenticated write fbx_gallery" ON fbx_gallery FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Public read fbx_before_after" ON fbx_before_after FOR SELECT USING (true);
-CREATE POLICY "Authenticated write fbx_before_after" ON fbx_before_after FOR ALL USING (auth.role() = 'authenticated');
+-- Adoptables: public read, authenticated write
+CREATE POLICY "Public read adoptables" ON adoptables FOR SELECT USING (true);
+CREATE POLICY "Authenticated write adoptables" ON adoptables FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Public read adoptable_gallery" ON adoptable_gallery FOR SELECT USING (true);
+CREATE POLICY "Authenticated write adoptable_gallery" ON adoptable_gallery FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Public read adoptable_before_after" ON adoptable_before_after FOR SELECT USING (true);
+CREATE POLICY "Authenticated write adoptable_before_after" ON adoptable_before_after FOR ALL USING (auth.role() = 'authenticated');
 
 -- TOS sections: public read, authenticated write
 CREATE POLICY "Public read tos_sections" ON tos_sections FOR SELECT USING (true);
@@ -345,37 +345,37 @@ CREATE POLICY "Public reads portfolio-images" ON storage.objects FOR SELECT USIN
 CREATE POLICY "Public updates portfolio-images" ON storage.objects FOR UPDATE USING (bucket_id = 'portfolio-images');
 CREATE POLICY "Public deletes portfolio-images" ON storage.objects FOR DELETE USING (bucket_id = 'portfolio-images');
 
--- FBX mashups storage bucket and policies
+-- Adoptables storage bucket and policies
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'fbx-mashups') THEN
-    INSERT INTO storage.buckets (id, name, public) VALUES ('fbx-mashups', 'fbx-mashups', true);
+  IF NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'adoptables') THEN
+    INSERT INTO storage.buckets (id, name, public) VALUES ('adoptables', 'adoptables', true);
   END IF;
 END $$;
 
 DO $$ BEGIN
-  DROP POLICY IF EXISTS "Public uploads fbx-mashups" ON storage.objects;
-  DROP POLICY IF EXISTS "Public reads fbx-mashups" ON storage.objects;
-  DROP POLICY IF EXISTS "Public updates fbx-mashups" ON storage.objects;
-  DROP POLICY IF EXISTS "Public deletes fbx-mashups" ON storage.objects;
+  DROP POLICY IF EXISTS "Public uploads adoptables" ON storage.objects;
+  DROP POLICY IF EXISTS "Public reads adoptables" ON storage.objects;
+  DROP POLICY IF EXISTS "Public updates adoptables" ON storage.objects;
+  DROP POLICY IF EXISTS "Public deletes adoptables" ON storage.objects;
 END $$;
 
-CREATE POLICY "Public uploads fbx-mashups" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'fbx-mashups');
-CREATE POLICY "Public reads fbx-mashups" ON storage.objects FOR SELECT USING (bucket_id = 'fbx-mashups');
-CREATE POLICY "Public updates fbx-mashups" ON storage.objects FOR UPDATE USING (bucket_id = 'fbx-mashups');
-CREATE POLICY "Public deletes fbx-mashups" ON storage.objects FOR DELETE USING (bucket_id = 'fbx-mashups');
+CREATE POLICY "Public uploads adoptables" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'adoptables');
+CREATE POLICY "Public reads adoptables" ON storage.objects FOR SELECT USING (bucket_id = 'adoptables');
+CREATE POLICY "Public updates adoptables" ON storage.objects FOR UPDATE USING (bucket_id = 'adoptables');
+CREATE POLICY "Public deletes adoptables" ON storage.objects FOR DELETE USING (bucket_id = 'adoptables');
 
 -- =============================================================================
 -- DEFAULT DATA
 -- =============================================================================
 
 -- =============================================================================
--- CLEANUP: Remove all FBX mashup demo/seed data
+-- CLEANUP: Remove all adoptable demo/seed data
 -- =============================================================================
--- If demo projects exist in the database (e.g. "Cyber Fox Mashup"), run the
+-- If demo projects exist in the database, run the
 -- TRUNCATE below in the Supabase SQL Editor to permanently remove them.
 -- This is a one-time operation — it will NOT run automatically with the schema.
 --
--- TRUNCATE TABLE fbx_before_after, fbx_gallery, fbx_mashups CASCADE;
+-- TRUNCATE TABLE adoptable_before_after, adoptable_gallery, adoptables CASCADE;
 
 -- =============================================================================
 -- MODERATOR / ROLE SYSTEM
@@ -498,9 +498,9 @@ INSERT INTO pricing_tiers (id, name, emoji, price, badge, popular, features, sor
 ON CONFLICT (id) DO NOTHING;
 
 -- =============================================================================
--- Uncomment to run: removes every row from FBX tables so you can start fresh
+-- Uncomment to run: removes every row from Adoptables tables so you can start fresh
 -- =============================================================================
--- TRUNCATE TABLE fbx_before_after, fbx_gallery, fbx_mashups CASCADE;
+-- TRUNCATE TABLE adoptable_before_after, adoptable_gallery, adoptables CASCADE;
 -- SELECT pg_catalog.pg_notify('pgrst', 'reload schema');
 
 -- =============================================================================
@@ -515,7 +515,7 @@ INSERT INTO tos_sections (id, title, icon, section_type, content, items, highlig
 
 **Client**, **you**, or **your** refers to any individual or entity that engages Bluey Commissions for services, whether through commission requests, direct contact, or any other means.
 
-**Services** refers to all digital art, 3D modelling, avatar editing, avatar optimisation, clothing creation, texture editing, material setup, Unity configuration, FBX editing, FBX mashups, and any other services offered by Bluey Commissions.
+**Services** refers to all digital art, 3D modelling, avatar editing, avatar optimisation, clothing creation, texture editing, material setup, Unity configuration, FBX editing, Adoptables (custom avatar designs and edits), and any other services offered by Bluey Commissions.
 
 **Commission** or **Project** refers to any request, order, or work undertaken by Bluey Commissions at the Client''s direction, whether accepted or pending acceptance.
 
@@ -565,7 +565,7 @@ Bluey Commissions will notify you if the final price is expected to differ signi
   'Toggle Setup (clothing, accessories, expressions)',
   'PhysBone Setup and Configuration',
   'FBX Editing and Conversion',
-  'FBX Mashups (combining multiple avatar bases into a single FBX)'
+  'Adoptables (custom avatar adoptable designs and edits)'
 ], '', 'info', NULL, 5, TRUE),
 ('11111111-1111-1111-1111-111111111117', 'Client Responsibilities', '📋', 'paragraphs', 'You are responsible for providing all necessary information, references, assets, and access required to complete the Commission. This includes:
 
@@ -596,18 +596,18 @@ Bluey Commissions shall not be liable for any claims, damages, or disputes arisi
 - Direct permission from the original creator (with contact information for verification)
 - Any other documentation that demonstrates legal right to use the Asset
 
-For FBX Mashup commissions specifically, proof of ownership for every avatar base used in the mashup is mandatory. This must be provided before work can begin.
+For Adoptable commissions specifically, proof of ownership for any avatar base or asset used in the adoptable is mandatory. This must be provided before work can begin.
 
 If you cannot provide satisfactory proof of ownership, Bluey Commissions reserves the right to refuse or cancel the commission. Any deposit paid will be refunded in full if the cancellation occurs before work begins.', '{}', '', 'info', NULL, 9, TRUE),
-('11111111-1111-1111-1111-111111111121', 'FBX Mashup Policy', '🔗', 'paragraphs', 'FBX Mashups involve combining multiple avatar bases into a single FBX file. Due to the complexity and legal considerations involved, the following additional rules apply:
+('11111111-1111-1111-1111-111111111121', 'Adoptable Policy', '🔗', 'paragraphs', 'Adoptables involve creating custom avatar designs, edits, and combinations. Due to the creative and legal considerations involved, the following additional rules apply:
 
-**Proof of Ownership**: You must provide proof of ownership or licensing for every avatar base used in the mashup. Accepted proof includes receipts from Booth, Gumroad, Jinxxy, official creator stores, and other legitimate marketplaces. Without proof for every base, the commission will not be accepted.
+**Proof of Ownership**: You must provide proof of ownership or licensing for every avatar base or asset used in the adoptable. Accepted proof includes receipts from Booth, Gumroad, Jinxxy, official creator stores, and other legitimate marketplaces. Without proof for every asset, the commission will not be accepted.
 
-**No Unauthorised Assets**: Bluey Commissions will not knowingly work with leaked, ripped, pirated, stolen, or otherwise unauthorised assets. If any asset used in a mashup cannot be verified, the commission will be cancelled immediately.
+**No Unauthorised Assets**: Bluey Commissions will not knowingly work with leaked, ripped, pirated, stolen, or otherwise unauthorised assets. If any asset used in an adoptable cannot be verified, the commission will be cancelled immediately.
 
-**Single Client Use Only**: FBX mashup results are created for the individual Client who commissioned the work. Redistribution, resale, or sharing of mashup results with other parties is strictly prohibited unless explicitly agreed upon.
+**Single Client Use Only**: Adoptable results are created for the individual Client who commissioned the work. Redistribution, resale, or sharing of adoptable results with other parties is strictly prohibited unless explicitly agreed upon.
 
-**Complexity Pricing**: FBX mashup pricing depends on the number of bases being merged, the complexity of the mashup, and the amount of required Blender and Unity work. Pricing is quoted per project and may differ from standard avatar editing rates.', '{}', 'All avatar bases must be owned or licensed by you. Proof may be requested at any time before, during, or after the commission.', 'warning', 'FBX Mashup Requirements', 10, TRUE),
+**Complexity Pricing**: Adoptable pricing depends on the design complexity, the amount of required Blender and Unity work, and the uniqueness of the request. Pricing is quoted per project and may differ from standard avatar editing rates.', '{}', 'All assets must be owned or licensed by you. Proof may be requested at any time before, during, or after the commission.', 'warning', 'Adoptable Requirements', 10, TRUE),
 ('11111111-1111-1111-1111-111111111122', 'Third-Party Assets', '🧩', 'paragraphs', 'If you request work involving third-party assets (models, textures, avatars, or other digital content not created by you or Bluey Commissions), you are responsible for ensuring that you have the necessary rights to use, modify, and distribute those assets.
 
 Bluey Commissions may, at our discretion, request proof of ownership or licensing for third-party assets before proceeding with the work. If proof is not provided, we may refuse the commission or remove the third-party assets from the scope of work.

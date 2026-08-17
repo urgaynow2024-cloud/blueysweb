@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from "./supabase";
-import { pricingTiers, additionalServices, faqItems, workflowSteps, mockReviews, mockPortfolioImages, mockFbxMashups, mockFbxGallery, mockNsfwPortfolioImages } from "../data/site";
+import { pricingTiers, additionalServices, faqItems, workflowSteps, mockReviews, mockPortfolioImages, mockAdoptables, mockAdoptableGallery, mockNsfwPortfolioImages } from "../data/site";
 
 const FALLBACKS = {
   siteConfig: {
@@ -17,8 +17,8 @@ const FALLBACKS = {
   reviews: mockReviews,
   portfolioImages: mockPortfolioImages,
   nsfwPortfolioImages: mockNsfwPortfolioImages,
-  fbxMashups: mockFbxMashups,
-  fbxGallery: mockFbxGallery,
+  adoptables: mockAdoptables,
+  adoptableGallery: mockAdoptableGallery,
 };
 
 async function fetchAll<T>(table: string, fallback: T[]): Promise<T[]> {
@@ -287,26 +287,63 @@ export async function getTosSections() {
   return data || [];
 }
 
-export async function getFbxMashups() {
-  if (!isSupabaseConfigured || !supabase) return FALLBACKS.fbxMashups;
-  const { data, error } = await supabase.from("fbx_mashups").select("*").order("sort_order", { ascending: true });
-  if (error || !data || data.length === 0) return FALLBACKS.fbxMashups;
+export async function getAdoptables() {
+  if (!isSupabaseConfigured || !supabase) return FALLBACKS.adoptables;
+  const { data, error } = await supabase.from("adoptables").select("*").order("sort_order", { ascending: true });
+  if (error || !data || data.length === 0) return FALLBACKS.adoptables;
   return data;
 }
 
-export async function getFbxGallery() {
-  if (!isSupabaseConfigured || !supabase) return FALLBACKS.fbxGallery;
-  const { data, error } = await supabase.from("fbx_gallery").select("*").order("sort_order", { ascending: true });
-  if (error || !data || data.length === 0) return FALLBACKS.fbxGallery;
+export async function getAdoptableGallery() {
+  if (!isSupabaseConfigured || !supabase) return FALLBACKS.adoptableGallery;
+  const { data, error } = await supabase.from("adoptable_gallery").select("*").order("sort_order", { ascending: true });
+  if (error || !data || data.length === 0) return FALLBACKS.adoptableGallery;
   return data;
 }
 
-export async function getFbxBeforeAfters() {
+export async function getAdoptableBeforeAfters() {
   if (!isSupabaseConfigured || !supabase) return [];
-  const { data, error } = await supabase.from("fbx_before_after").select("*").order("sort_order", { ascending: true });
+  const { data, error } = await supabase.from("adoptable_before_after").select("*").order("sort_order", { ascending: true });
   if (error) {
-    console.error("Failed to load FBX before/after:", error);
+    console.error("Failed to load adoptable before/after:", error);
     return [];
   }
   return data || [];
+}
+
+export async function uploadAdoptableGalleryImage(adoptableId: string, file: File) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const ext = file.name.split(".").pop();
+  const storagePath = `adoptables/${adoptableId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const { data: uploadData, error: uploadError } = await supabase.storage.from("adoptables").upload(storagePath, file, {
+    cacheControl: "3600",
+    upsert: true,
+  });
+  if (uploadError || !uploadData) {
+    console.error("Adoptable gallery upload error:", uploadError);
+    return null;
+  }
+  const { data: urlData } = supabase.storage.from("adoptables").getPublicUrl(storagePath);
+  const url = urlData.publicUrl;
+  const { data: dbData, error: dbError } = await supabase.from("adoptable_gallery").insert([{ adoptable_id: adoptableId, url, path: storagePath }]).select();
+  if (dbError || !dbData || dbData.length === 0) {
+    await supabase.storage.from("adoptables").remove([storagePath]);
+    return null;
+  }
+  return { id: dbData[0].id, url, path: storagePath };
+}
+
+export async function deleteAdoptableGalleryImage(id: string, path?: string) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  if (path) await supabase.storage.from("adoptables").remove([path]);
+  const { error } = await supabase.from("adoptable_gallery").delete().eq("id", id);
+  return !error;
+}
+
+export async function reorderAdoptableGalleryImages(items: { id: string; sort_order: number }[]) {
+  if (!isSupabaseConfigured || !supabase) return;
+  for (const item of items) {
+    const { error } = await supabase.from("adoptable_gallery").update({ sort_order: item.sort_order }).eq("id", item.id);
+    if (error) console.error("Adoptable gallery reorder error:", error);
+  }
 }
