@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import {
   Sparkles,
@@ -238,6 +238,7 @@ export default function AdoptablesPage() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>("all");
+  const setupAttemptedRef = useRef(false);
 
   useEffect(() => {
     setAgeVerified(isAgeVerified());
@@ -245,12 +246,39 @@ export default function AdoptablesPage() {
 
   useEffect(() => {
     let cancelled = false;
+    const setupAttempted = setupAttemptedRef.current;
+
+    async function ensureDatabaseReady() {
+      if (setupAttemptedRef.current) return;
+      setupAttemptedRef.current = true;
+
+      try {
+        const checkRes = await fetch("/api/setup/database", { method: "GET" });
+        const checkData = await checkRes.json();
+
+        if (checkData.needsSetup) {
+          const setupRes = await fetch("/api/setup/database", { method: "POST" });
+          const setupData = await setupRes.json();
+
+          if (!setupData.success && setupData.error && setupData.error.includes("SUPABASE_ACCESS_TOKEN")) {
+            if (!cancelled) {
+              setError("MANUAL_SETUP_REQUIRED");
+            }
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("Database setup check failed:", e);
+      }
+    }
 
     async function load() {
       setLoading(true);
       setError(null);
 
       try {
+        await ensureDatabaseReady();
+
         const [adoptablesData, galleryData] = await Promise.all([
           getAdoptables().catch((err) => {
             console.error("getAdoptables failed:", err);
@@ -389,6 +417,55 @@ export default function AdoptablesPage() {
             ))}
           </div>
         </div>
+      ) : error === "MANUAL_SETUP_REQUIRED" ? (
+        <section className="section-sm">
+          <div className="container">
+            <div className="mx-auto max-w-lg text-center">
+              <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                <Package className="h-7 w-7" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-3">Adoptables database not set up</h2>
+              <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
+                The adoptables feature needs its Supabase tables created before it can load anything.
+              </p>
+              <p className="text-sm text-[var(--text-dim)] mb-6">
+                Go to your Supabase project → <span className="font-mono text-[var(--accent)]">SQL Editor</span> → New query, paste the contents of <span className="font-mono text-[var(--accent)]">supabase/schema.sql</span>, and run it.
+              </p>
+              <button
+                onClick={() => {
+                  setError(null);
+                  setLoading(true);
+                  setupAttemptedRef.current = false;
+                  const load = async () => {
+                    try {
+                      const [adoptablesData, galleryData] = await Promise.all([
+                        getAdoptables().catch((err) => { console.error("getAdoptables failed:", err); return [] as Adoptable[]; }),
+                        getAllAdoptableGalleryImages().catch((err) => { console.error("getAllAdoptableGalleryImages failed:", err); return [] as AdoptableGalleryImage[]; }),
+                      ]);
+                      const gMap: Record<string, AdoptableGalleryImage[]> = {};
+                      galleryData.forEach((img) => {
+                        const aid = img.adoptable_id;
+                        if (aid) { if (!gMap[aid]) gMap[aid] = []; gMap[aid].push(img); }
+                      });
+                      setAdoptables(adoptablesData);
+                      setGalleryMap(gMap);
+                    } catch (e) {
+                      console.error("Retry failed:", e);
+                      setError("DATABASE_NOT_SETUP");
+                    } finally {
+                      setLoading(false);
+                    }
+                  };
+                  load();
+                }}
+                className="btn-primary inline-flex items-center gap-2"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                Retry after setup
+              </button>
+            </div>
+          </div>
+        </section>
       ) : error === "DATABASE_NOT_SETUP" ? (
         <section className="section-sm">
           <div className="container">
