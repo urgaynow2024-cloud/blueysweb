@@ -230,7 +230,10 @@ export default function AdminPage() {
 
     return (
       <div className="ad-login-bg relative grid min-h-screen place-items-center overflow-hidden px-4">
+        <div className="pointer-events-none absolute inset-0 bg-cosmic-fog" />
         <div className="pointer-events-none absolute inset-0 bg-dots opacity-30" />
+        <div className="pointer-events-none absolute -top-32 -left-32 h-[500px] w-[500px] rounded-full bg-[var(--accent)]/15 blur-[180px] orb-slow" />
+        <div className="pointer-events-none absolute -bottom-32 -right-32 h-[400px] w-[400px] rounded-full bg-[var(--accent-2)]/10 blur-[140px] orb-med" />
         <form
           onSubmit={doLogin}
           className="ad-login-card relative"
@@ -305,8 +308,9 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="grid min-h-screen place-items-center">
-        <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+      <div className="ad-dashboard-bg grid min-h-screen place-items-center">
+        <div className="pointer-events-none absolute -top-20 left-1/4 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/10 blur-[120px] orb-slow" />
+        <div className="relative z-10 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
           <Loader2 className="h-5 w-5 animate-spin text-[var(--accent)]" /> Loading dashboard…
         </div>
       </div>

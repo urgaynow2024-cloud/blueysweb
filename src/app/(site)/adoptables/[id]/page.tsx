@@ -213,6 +213,8 @@ export default function AdoptablePage() {
 
   return (
     <div className="relative">
+      <div className="bg-nebula" />
+      <div className="bg-cosmic-fog" />
       <div className="container page">
         {/* Back link */}
         <Link

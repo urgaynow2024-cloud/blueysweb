@@ -59,7 +59,8 @@ export default function CommissionAvailability() {
 
   if (loading) {
     return (
-      <div className="animate-pulse rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-6 md:p-8">
+      <div className="relative overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-6 md:p-8">
+        <div className="pointer-events-none absolute -top-16 -right-16 h-[200px] w-[200px] rounded-full bg-[var(--accent-cosmic)] opacity-[0.05] blur-[80px]" />
         <div className="mb-4 h-6 w-1/3 rounded bg-[var(--bg)]" />
         <div className="h-4 w-1/2 rounded bg-[var(--bg)]" />
       </div>
@@ -71,8 +72,10 @@ export default function CommissionAvailability() {
   const progressPercent = slotsTotal > 0 ? (slotsUsed / slotsTotal) * 100 : 0;
 
   return (
-    <div className={`rounded-[var(--r-lg)] border ${config.border} ${config.bg} p-5 md:p-7`}>
-      <div className="flex flex-col items-start gap-5 md:flex-row md:items-center">
+    <div className={`relative overflow-hidden rounded-[var(--r-lg)] border ${config.border} ${config.bg} p-5 md:p-7`}>
+      <div className="pointer-events-none absolute -top-20 -right-20 h-[250px] w-[250px] rounded-full bg-[var(--accent-cosmic)] opacity-[0.05] blur-[80px]" />
+      <div className="pointer-events-none absolute -bottom-16 -left-16 h-[200px] w-[200px] rounded-full bg-[var(--accent-nebula)] opacity-[0.04] blur-[80px]" />
+      <div className="relative flex flex-col items-start gap-5 md:flex-row md:items-center">
         <div className="flex items-center gap-3">
           <span className={`h-2.5 w-2.5 animate-pulse rounded-full ${config.dot}`} />
           <div>
@@ -100,7 +103,7 @@ export default function CommissionAvailability() {
       </div>
 
       {note && (
-        <div className="mt-4 border-t border-[var(--border)] pt-4">
+        <div className="relative mt-4 border-t border-[var(--border)] pt-4">
           <p className="flex items-start gap-2 text-xs text-[var(--text-secondary)]">
             <CircleCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--accent)]" />
             {note}

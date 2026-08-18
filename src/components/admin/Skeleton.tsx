@@ -4,7 +4,7 @@ interface SkeletonProps {
 }
 
 export function Skeleton({ className = "", rounded = "rounded-[var(--r-sm)]" }: SkeletonProps) {
-  return <div className={`ad-skeleton ${rounded} ${className}`} aria-hidden />;
+  return <div className={`ad-skeleton glass ${rounded} ${className}`} aria-hidden />;
 }
 
 /** A card-shaped placeholder used while portfolio / sections load. */

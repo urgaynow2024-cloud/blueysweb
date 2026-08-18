@@ -44,8 +44,13 @@ export default function FeaturedWork() {
   }, []);
 
   return (
-    <section id="work" className="section">
-      <div className="container">
+    <section id="work" className="section relative">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="orb-slow absolute -top-32 -left-32 h-[500px] w-[500px] rounded-full bg-[var(--accent-cosmic)] opacity-[0.07]" />
+        <div className="orb-med absolute top-1/2 -right-24 h-[400px] w-[400px] rounded-full bg-[var(--accent-nebula)] opacity-[0.06]" />
+        <div className="orb-fast absolute -bottom-20 left-1/3 h-[300px] w-[300px] rounded-full bg-[var(--accent-star)] opacity-[0.05]" />
+      </div>
+      <div className="container relative">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-4 md:mb-14">
           <div>
             <span className="section-label">Portfolio</span>
@@ -61,7 +66,7 @@ export default function FeaturedWork() {
         {loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
+              <div key={i} className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
                 <div className="h-[220px] w-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
               </div>
             ))}
@@ -92,13 +97,16 @@ export default function FeaturedWork() {
             ))}
           </div>
         ) : (
-          <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-16 text-center">
-            <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
-              <ImageIcon className="h-6 w-6" />
+          <div className="relative overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-16 text-center">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[var(--accent)]/5 via-transparent to-[var(--accent-2)]/5" />
+            <div className="relative">
+              <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                <ImageIcon className="h-6 w-6" />
+              </div>
+              <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
+                Portfolio pieces will appear here after client approval.
+              </p>
             </div>
-            <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
-              Portfolio pieces will appear here after client approval.
-            </p>
           </div>
         )}
       </div>

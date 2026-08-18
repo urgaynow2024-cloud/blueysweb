@@ -63,7 +63,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div className="ad-toast-region" role="region" aria-live="polite" aria-label="Notifications">
         {items.map((t) => (
-          <div key={t.id} className={`ad-toast ${t.leaving ? "leaving" : ""}`} role="status">
+          <div key={t.id} className={`ad-toast glow-border ${t.leaving ? "leaving" : ""}`} role="status">
             <span className={`ad-toast-icon ad-toast-${t.type}`}>{ICONS[t.type]}</span>
             <p className="flex-1 text-sm leading-snug text-[var(--text)]">{t.message}</p>
             <button

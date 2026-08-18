@@ -35,6 +35,9 @@ export default function SectionHeading({
       {centered && (
         <div className="mx-auto mt-6 h-px w-20 bg-gradient-to-r from-transparent via-[var(--accent)] to-transparent" />
       )}
+      {!centered && (
+        <div className="mt-4 h-px w-12 bg-gradient-to-r from-[var(--accent)] to-transparent" />
+      )}
     </div>
   );
 }

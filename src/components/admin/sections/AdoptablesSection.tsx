@@ -511,8 +511,10 @@ export function AdoptablesSection() {
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="p-8">
+    <div className="space-y-6 relative">
+      <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" />
+      <Card className="p-8 relative overflow-hidden">
+        <div className="pointer-events-none absolute -top-10 -right-10 h-[200px] w-[200px] rounded-full bg-[var(--accent-2)]/5 blur-[100px] orb-med" />
         <CardHeader
           title="Adoptables"
           description="Manage your adoptable listings. Each adoptable can have gallery images and before/after comparisons."
@@ -622,7 +624,7 @@ export function AdoptablesSection() {
                   <h4 className="mb-3 text-sm font-semibold text-white flex items-center gap-2"><GitCompare className="h-4 w-4 text-[var(--accent)]" /> Before &amp; After Comparisons</h4>
                   <div className="space-y-3">
                     {(beforeAfters[project.id || ""] || []).map((ba, bi) => (
-                      <div key={ba.id || bi} className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3">
+                       <div key={ba.id || bi} className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3 glass">
                         <img src={ba.before_url} alt="Before" className="h-16 w-16 rounded-lg border border-[var(--border)] object-cover" />
                         <span className="text-[var(--text-dim)] text-xs">→</span>
                         <img src={ba.after_url} alt="After" className="h-16 w-16 rounded-lg border border-[var(--border)] object-cover" />
@@ -653,7 +655,7 @@ export function AdoptablesSection() {
               </div>
             ))}
             {projects.length === 0 && (
-              <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-16 text-center">
+              <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] glass py-16 text-center">
                 <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
                   <Package className="h-6 w-6" />
                 </div>

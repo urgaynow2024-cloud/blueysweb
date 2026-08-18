@@ -11,5 +11,5 @@ const toneClass: Record<Tone, string> = {
 };
 
 export function Badge({ tone = "default", children, className = "" }: { tone?: Tone; children: ReactNode; className?: string }) {
-  return <span className={`ad-badge ${toneClass[tone]} ${className}`}>{children}</span>;
+  return <span className={`ad-badge glass ${toneClass[tone]} ${className}`}>{children}</span>;
 }

@@ -23,9 +23,12 @@ const STATS = [
 export default function AboutPage() {
   return (
     <div className="relative">
+      <div className="bg-nebula" />
+      <div className="bg-cosmic-fog" />
       <section className="page relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-grid opacity-30" />
-        <div className="pointer-events-none absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-[var(--accent-3)] opacity-[0.04] blur-[120px]" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-[var(--accent-3)] opacity-[0.04] blur-[120px] orb-slow" />
+        <div className="pointer-events-none absolute -top-24 -right-24 h-80 w-80 rounded-full bg-[var(--accent-cosmic)] opacity-[0.04] blur-[110px] orb-med" />
 
         <div className="container">
           <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">

@@ -83,7 +83,7 @@ export default function Navbar() {
                 >
                   {link.label}
                   {active && (
-                    <span className="absolute inset-0 rounded-xl bg-[var(--accent-soft)] border border-[var(--border-accent)] -z-10" />
+                    <span className="absolute inset-0 rounded-xl bg-[var(--accent-soft)] border border-[var(--border-accent)] -z-10 shadow-[0_0_12px_var(--accent-glow)]" />
                   )}
                 </a>
               );
@@ -138,7 +138,7 @@ export default function Navbar() {
                   aria-current={active ? "page" : undefined}
                   className={`flex items-center justify-between rounded-2xl px-5 py-3.5 text-base font-medium transition-all duration-300 ${
                     active
-                      ? "bg-[var(--accent-soft)] text-white border border-[var(--border-accent)]"
+                      ? "bg-[var(--accent-soft)] text-white border border-[var(--border-accent)] shadow-[0_0_12px_var(--accent-glow)]"
                       : "text-[var(--text-secondary)] hover:bg-white/5 hover:text-white border border-transparent"
                   }`}
                   style={

@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   Bluey's Commissions — Design System
-   A cohesive, custom design language: deep studio dark, refined gradients,
-   layered depth, soft glass, and satisfying motion. Single source of truth.
+   Bluey's Commissions — Cosmic Design System
+   Deep space studio dark, refined gradients, nebula clouds, glass/glow UI,
+   dog-bone sparkles, and satisfying motion.
    ============================================================================ */
 
 :root {
@@ -105,11 +105,12 @@ body {
   margin: 0;
   font-family: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
   background:
-    radial-gradient(ellipse 120% 80% at 10% 0%, rgba(124, 58, 237, 0.22), transparent 50%),
-    radial-gradient(ellipse 100% 70% at 90% 10%, rgba(96, 165, 250, 0.18), transparent 50%),
-    radial-gradient(ellipse 140% 100% at 50% 100%, rgba(167, 139, 250, 0.15), transparent 55%),
-    radial-gradient(circle at 20% 80%, rgba(124, 58, 237, 0.08), transparent 40%),
-    radial-gradient(circle at 80% 60%, rgba(96, 165, 250, 0.06), transparent 40%),
+    radial-gradient(ellipse 120% 80% at 10% 0%, rgba(124, 58, 237, 0.25), transparent 50%),
+    radial-gradient(ellipse 100% 70% at 90% 10%, rgba(96, 165, 250, 0.2), transparent 50%),
+    radial-gradient(ellipse 140% 100% at 50% 100%, rgba(167, 139, 250, 0.18), transparent 55%),
+    radial-gradient(circle at 20% 80%, rgba(124, 58, 237, 0.1), transparent 40%),
+    radial-gradient(circle at 80% 60%, rgba(96, 165, 250, 0.08), transparent 40%),
+    radial-gradient(circle at 50% 30%, rgba(79, 209, 197, 0.04), transparent 50%),
     var(--bg);
   color: var(--text);
   overflow-x: hidden;
@@ -151,9 +152,10 @@ body::after {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 100% 80% at 50% 0%, rgba(124, 58, 237, 0.1), transparent 60%),
-    radial-gradient(ellipse 80% 60% at 20% 100%, rgba(96, 165, 250, 0.08), transparent 50%),
-    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(167, 139, 250, 0.06), transparent 50%);
+    radial-gradient(ellipse 100% 80% at 50% 0%, rgba(124, 58, 237, 0.12), transparent 60%),
+    radial-gradient(ellipse 80% 60% at 20% 100%, rgba(96, 165, 250, 0.1), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(167, 139, 250, 0.08), transparent 50%),
+    radial-gradient(circle at 30% 40%, rgba(79, 209, 197, 0.04), transparent 40%);
   animation: nebulaPulse 20s ease-in-out infinite alternate;
 }
 
@@ -161,6 +163,26 @@ body::after {
   0% { opacity: 0.6; }
   50% { opacity: 1; }
   100% { opacity: 0.7; }
+}
+
+/* Cosmic fog layer */
+.bg-cosmic-fog {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 30%, rgba(124, 58, 237, 0.08), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 70% 60%, rgba(96, 165, 250, 0.06), transparent 50%),
+    radial-gradient(ellipse 50% 50% at 50% 80%, rgba(167, 139, 250, 0.05), transparent 60%);
+  animation: fogDrift 30s ease-in-out infinite alternate;
+}
+
+@keyframes fogDrift {
+  0% { opacity: 0.5; transform: scale(1) translate(0, 0); }
+  33% { opacity: 0.7; transform: scale(1.02) translate(1%, -0.5%); }
+  66% { opacity: 0.6; transform: scale(0.98) translate(-0.5%, 0.5%); }
+  100% { opacity: 0.8; transform: scale(1.01) translate(0.5%, -0.3%); }
 }
 
 .font-display {
@@ -447,8 +469,8 @@ select:focus {
 }
 
 /* ----------------------------------------------------------------------------
-    Card system
- ---------------------------------------------------------------------------- */
+    Card system — cosmic glass panels with nebula glow
+  ---------------------------------------------------------------------------- */
 .card {
   position: relative;
   background:
@@ -468,7 +490,22 @@ select:focus {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(90, 176, 240, 0.04) 50%, transparent 55%);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(90, 176, 240, 0.05) 50%, transparent 55%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s var(--ease-out);
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(167, 139, 250, 0.2) 50%, transparent 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.6s var(--ease-out);
@@ -477,10 +514,14 @@ select:focus {
 .card:hover {
   border-color: rgba(124, 58, 237, 0.4);
   transform: translateY(-8px);
-  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(124, 58, 237, 0.2) inset, 0 0 40px rgba(124, 58, 237, 0.15);
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(124, 58, 237, 0.2) inset, 0 0 50px rgba(124, 58, 237, 0.12);
 }
 
 .card:hover::before {
+  opacity: 1;
+}
+
+.card:hover::after {
   opacity: 1;
 }
 
@@ -665,18 +706,18 @@ select:focus {
     Glass
     ---------------------------------------------------------------------------- */
  .glass,
- .glass-panel {
-   position: relative;
-   background: var(--bg-glass);
-   backdrop-filter: blur(20px) saturate(1.4);
-   -webkit-backdrop-filter: blur(20px) saturate(1.4);
-   border: 1px solid var(--border);
-   border-radius: var(--r-lg);
-   box-shadow:
-     0 1px 0 rgba(255, 255, 255, 0.04) inset,
-     0 28px 56px -36px rgba(0, 0, 0, 0.85);
- }
- 
+  .glass-panel {
+    position: relative;
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.04) inset,
+      0 28px 56px -36px rgba(0, 0, 0, 0.85);
+  }
+
   .glass::after,
   .glass-panel::after {
     content: "";
@@ -684,29 +725,30 @@ select:focus {
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(140deg, rgba(124, 58, 237, 0.4), rgba(96, 165, 250, 0.3) 50%, transparent 70%);
+    background: linear-gradient(140deg, rgba(124, 58, 237, 0.5), rgba(96, 165, 250, 0.4) 50%, transparent 70%);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
-    opacity: 0.8;
+    opacity: 0.9;
   }
- 
- /* Stronger frosted glass — used for elevated overlays (mobile menu, popovers) */
- .glass-strong {
-   position: relative;
-   background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), transparent 42%), rgba(8, 11, 18, 0.9);
-   backdrop-filter: blur(28px) saturate(1.6);
-   -webkit-backdrop-filter: blur(28px) saturate(1.6);
-   border: 1px solid var(--border-strong);
-   box-shadow:
-     0 1px 0 rgba(255, 255, 255, 0.06) inset,
-     0 36px 72px -32px rgba(0, 0, 0, 0.9);
- }
+
+  /* Stronger frosted glass — used for elevated overlays (mobile menu, popovers) */
+  .glass-strong {
+    position: relative;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), transparent 42%), rgba(8, 11, 18, 0.92);
+    backdrop-filter: blur(28px) saturate(1.6);
+    -webkit-backdrop-filter: blur(28px) saturate(1.6);
+    border: 1px solid var(--border-strong);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.06) inset,
+      0 36px 72px -32px rgba(0, 0, 0, 0.9),
+      0 0 60px rgba(90, 176, 240, 0.06);
+  }
 
 /* ----------------------------------------------------------------------------
-    Buttons
-    ---------------------------------------------------------------------------- */
+    Buttons — cosmic glow and smooth hover lift
+     ---------------------------------------------------------------------------- */
  .btn-primary {
    position: relative;
    display: inline-flex;
@@ -742,7 +784,7 @@ select:focus {
  
  .btn-primary:hover {
    transform: translateY(-3px) scale(1.01);
-    box-shadow: 0 16px 40px -10px rgba(124, 58, 237, 0.65), 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+    box-shadow: 0 16px 40px -10px rgba(124, 58, 237, 0.65), 0 1px 0 rgba(255, 255, 255, 0.3) inset, 0 0 50px rgba(90, 176, 240, 0.2);
    filter: brightness(1.08);
  }
  
@@ -777,7 +819,7 @@ select:focus {
    border-color: var(--accent);
    background: rgba(90, 176, 240, 0.1);
    transform: translateY(-2px) scale(1.01);
-   box-shadow: 0 10px 28px -10px var(--accent-glow);
+   box-shadow: 0 10px 28px -10px var(--accent-glow), 0 0 30px rgba(90, 176, 240, 0.1);
  }
  
  .btn-secondary:active {

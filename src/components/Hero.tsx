@@ -29,18 +29,24 @@ export default function Hero() {
 
   return (
     <section className="relative flex min-h-[100svh] items-center overflow-hidden pb-20 pt-28 md:pb-24 md:pt-32">
-      {/* Ambient atmosphere — layered depth */}
+      {/* Deep space atmosphere — layered nebula clouds */}
       <div className="pointer-events-none absolute inset-0 z-0">
-        <div className="absolute left-1/4 top-[-15%] h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.15] blur-[200px] orb-slow" />
-        <div className="absolute bottom-[-10%] right-[-5%] h-[500px] w-[700px] rounded-full bg-[var(--accent-nebula)] opacity-[0.12] blur-[180px] orb-med" />
-        <div className="absolute left-[70%] top-[30%] h-[350px] w-[450px] rounded-full bg-[var(--accent-star)] opacity-[0.08] blur-[150px] orb-fast" />
-        <div className="absolute inset-0 bg-grid opacity-[0.4]" />
+        <div className="absolute left-1/4 top-[-15%] h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.22] blur-[200px] orb-slow" />
+        <div className="absolute bottom-[-10%] right-[-5%] h-[500px] w-[700px] rounded-full bg-[var(--accent-nebula)] opacity-[0.18] blur-[180px] orb-med" />
+        <div className="absolute left-[70%] top-[30%] h-[350px] w-[450px] rounded-full bg-[var(--accent-star)] opacity-[0.12] blur-[150px] orb-fast" />
+        <div className="absolute left-[20%] bottom-[20%] h-[300px] w-[400px] rounded-full bg-[var(--accent-3)] opacity-[0.06] blur-[140px] orb-slow" />
+        <div className="absolute inset-0 bg-grid opacity-[0.35]" />
         <div className="absolute inset-0 bg-dots opacity-20" />
       </div>
 
       {/* Animated gradient mesh overlay */}
-      <div className="pointer-events-none absolute inset-0 z-[1] opacity-[0.05]">
+      <div className="pointer-events-none absolute inset-0 z-[1] opacity-[0.06]">
         <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-cosmic)] via-transparent to-[var(--accent-nebula)]" />
+      </div>
+
+      {/* Cosmic fog layer */}
+      <div className="pointer-events-none absolute inset-0 z-[1] opacity-30">
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[var(--bg-nebula)] to-transparent" />
       </div>
 
       <div className="container relative z-10">
@@ -119,6 +125,7 @@ export default function Hero() {
 
               {/* Decorative stacked card for depth */}
               <div className="absolute -right-4 -top-4 hidden h-full w-full rounded-[var(--r-xl)] border border-[var(--border)] bg-[var(--bg-elevated)]/40 sm:block" />
+              <div className="absolute -right-8 -top-8 hidden h-full w-full rounded-[var(--r-xl)] border border-[var(--border)] bg-[var(--bg-elevated)]/20 sm:block" />
 
               <div className="fade-in float-soft">
                 <div className="glow-border sheen relative aspect-[4/3] overflow-hidden rounded-[var(--r-xl)] border border-[var(--border)] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] shadow-2xl shadow-black/50">

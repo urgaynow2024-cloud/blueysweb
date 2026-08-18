@@ -73,6 +73,11 @@ export default function AgeVerifier({ onVerified }: { onVerified: () => void }) 
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-32 left-1/4 h-[400px] w-[400px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.08] blur-[120px]" />
+        <div className="absolute -bottom-24 right-1/4 h-[350px] w-[350px] translate-x-1/2 rounded-full bg-[var(--accent-nebula)] opacity-[0.06] blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 h-[250px] w-[250px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--accent-star)] opacity-[0.04] blur-[100px]" />
+      </div>
       <div
         role="dialog"
         aria-modal="true"

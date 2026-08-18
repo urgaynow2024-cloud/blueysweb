@@ -94,92 +94,95 @@ export function ModeratorsSection() {
   }
 
   return (
-    <div className="space-y-6">
-      <CardHeader
-        title="Moderators"
-        description="Create moderator accounts and choose exactly which actions each one can perform. Moderators can never change pricing, design, payments, or admin settings."
-        actions={
-          <Button size="sm" variant="secondary" onClick={load} leftIcon={<UserCog className="h-4 w-4" />}>
-            Refresh
-          </Button>
-        }
-      />
+    <div className="space-y-6 relative">
+      <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" />
+      <div className="relative z-10">
+        <CardHeader
+          title="Moderators"
+          description="Create moderator accounts and choose exactly which actions each one can perform. Moderators can never change pricing, design, payments, or admin settings."
+          actions={
+            <Button size="sm" variant="secondary" onClick={load} leftIcon={<UserCog className="h-4 w-4" />}>
+              Refresh
+            </Button>
+          }
+        />
 
-      {error && (
-        <div className="rounded-xl border border-[var(--danger-border)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--danger)]">
-          {error}
-        </div>
-      )}
-      {notice && <p className="text-sm text-[var(--accent)]">{notice}</p>}
-
-      {/* Create form */}
-      <Card className="p-6">
-        <p className="mb-4 text-sm font-semibold text-white">Add a moderator</p>
-        <form onSubmit={create} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Username">
-              <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="moderator1" required minLength={3} />
-            </Field>
-            <Field label="Display name">
-              <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Alex" />
-            </Field>
+        {error && (
+          <div className="rounded-xl border border-[var(--danger-border)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--danger)]">
+            {error}
           </div>
-          <Field label="Temporary password" hint="Share this with the moderator. They can't change it themselves.">
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" required minLength={6} />
-          </Field>
-          <div>
-            <p className="ad-label">Permissions</p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {PERMISSION_LIST.map((p) => (
-                <Toggle
-                  key={p.key}
-                  label={p.label}
-                  desc={p.desc}
-                  checked={perms[p.key]}
-                  onChange={(v) => setPerms((prev) => ({ ...prev, [p.key]: v }))}
-                />
-              ))}
+        )}
+        {notice && <p className="text-sm text-[var(--accent)]">{notice}</p>}
+
+        {/* Create form */}
+        <Card className="p-6">
+          <p className="mb-4 text-sm font-semibold text-white">Add a moderator</p>
+          <form onSubmit={create} className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Username">
+                <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="moderator1" required minLength={3} />
+              </Field>
+              <Field label="Display name">
+                <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Alex" />
+              </Field>
             </div>
-          </div>
-          <Button type="submit" loading={saving} leftIcon={!saving && <Plus className="h-4 w-4" />}>
-            Create moderator
-          </Button>
-        </form>
-      </Card>
-
-      {/* List */}
-      {moderators && moderators.length > 0 && (
-        <div className="space-y-4">
-          {moderators.map((m) => (
-            <Card key={m.id} className="p-5">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-white">{m.display_name}</p>
-                  <p className="text-xs text-[var(--text-dim)]">@{m.username}</p>
-                </div>
-                <Button size="sm" variant="ghost" onClick={() => remove(m.id)} leftIcon={<Trash2 className="h-4 w-4" />} className="!text-[var(--danger)] hover:!bg-[var(--danger-soft)]">
-                  Remove
-                </Button>
-              </div>
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <Field label="Temporary password" hint="Share this with the moderator. They can't change it themselves.">
+              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" required minLength={6} />
+            </Field>
+            <div>
+              <p className="ad-label">Permissions</p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {PERMISSION_LIST.map((p) => (
                   <Toggle
                     key={p.key}
                     label={p.label}
                     desc={p.desc}
-                    checked={m.permissions[p.key]}
-                    onChange={(v) => togglePerm(m.id, p.key, v)}
+                    checked={perms[p.key]}
+                    onChange={(v) => setPerms((prev) => ({ ...prev, [p.key]: v }))}
                   />
                 ))}
               </div>
-            </Card>
-          ))}
-        </div>
-      )}
+            </div>
+            <Button type="submit" loading={saving} leftIcon={!saving && <Plus className="h-4 w-4" />}>
+              Create moderator
+            </Button>
+          </form>
+        </Card>
 
-      <div className="flex items-start gap-3 rounded-xl border border-[var(--border)] bg-white/[0.02] p-4 text-sm text-[var(--text-dim)]">
-        <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
-        Moderators sign in at <span className="px-1 font-mono text-[var(--text-secondary)]">/moderator</span>. They can approve or reject content based on these toggles, but cannot edit pricing, design, payments, or owner settings, and cannot permanently delete records.
+        {/* List */}
+        {moderators && moderators.length > 0 && (
+          <div className="space-y-4">
+            {moderators.map((m) => (
+              <Card key={m.id} className="p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-white">{m.display_name}</p>
+                    <p className="text-xs text-[var(--text-dim)]">@{m.username}</p>
+                  </div>
+                  <Button size="sm" variant="ghost" onClick={() => remove(m.id)} leftIcon={<Trash2 className="h-4 w-4" />} className="!text-[var(--danger)] hover:!bg-[var(--danger-soft)]">
+                    Remove
+                  </Button>
+                </div>
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {PERMISSION_LIST.map((p) => (
+                    <Toggle
+                      key={p.key}
+                      label={p.label}
+                      desc={p.desc}
+                      checked={m.permissions[p.key]}
+                      onChange={(v) => togglePerm(m.id, p.key, v)}
+                    />
+                  ))}
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-start gap-3 rounded-xl border border-[var(--border)] bg-white/[0.02] p-4 text-sm text-[var(--text-dim)]">
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
+          Moderators sign in at <span className="px-1 font-mono text-[var(--text-secondary)]">/moderator</span>. They can approve or reject content based on these toggles, but cannot edit pricing, design, payments, or owner settings, and cannot permanently delete records.
+        </div>
       </div>
     </div>
   );

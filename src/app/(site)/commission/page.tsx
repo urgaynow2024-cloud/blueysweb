@@ -9,9 +9,12 @@ import ContactCommissionForm from "@/components/ContactCommissionForm";
 export default function CommissionPage() {
   return (
     <div className="relative">
+      <div className="bg-nebula" />
+      <div className="bg-cosmic-fog" />
       <section className="page relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-grid opacity-30" />
-        <div className="pointer-events-none absolute -top-24 left-1/2 h-64 w-[600px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.05] blur-[120px]" />
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-64 w-[600px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.05] blur-[120px] orb-slow" />
+        <div className="pointer-events-none absolute bottom-0 right-1/4 h-48 w-[350px] rounded-full bg-[var(--accent-cosmic)] opacity-[0.04] blur-[100px] orb-med" />
 
         <div className="container">
           <SectionHeading

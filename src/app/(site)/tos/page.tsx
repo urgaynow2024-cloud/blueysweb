@@ -110,9 +110,12 @@ export default function ToSPage() {
 
   return (
     <div className="relative" ref={contentRef}>
+      <div className="bg-nebula" />
+      <div className="bg-cosmic-fog" />
       <section className="relative overflow-hidden pt-20 sm:pt-24 md:pt-28">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
-        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px]" />
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px] orb-slow" />
+        <div className="pointer-events-none absolute bottom-0 right-1/4 h-56 w-[400px] rounded-full bg-[var(--accent-cosmic)] opacity-[0.03] blur-[100px] orb-med" />
 
         <div className="container">
           <div className="mx-auto max-w-3xl text-center">

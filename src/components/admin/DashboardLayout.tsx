@@ -43,10 +43,16 @@ export function DashboardLayout({ active, onSelect, onLogout, onReset, userName,
 
   return (
     <div className="ad-dashboard-bg flex min-h-screen flex-col">
+      <div className="pointer-events-none fixed inset-0 bg-cosmic-fog" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="orb orb-slow bg-[var(--accent)]/8 blur-[180px] w-[600px] h-[600px] -top-40 left-10" />
+        <div className="orb orb-med bg-[var(--accent-2)]/6 blur-[140px] w-[500px] h-[500px] bottom-0 right-10" />
+        <div className="orb orb-fast bg-[var(--accent-3)]/5 blur-[100px] w-[350px] h-[350px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+      </div>
       <AdminTopbar onToggleSidebar={() => setSidebarOpen(true)} onLogout={onLogout} userName={userName} />
 
       <div className="ad-main">
-        <aside className="ad-sidebar hidden w-[260px] shrink-0 border-r border-[var(--border)] lg:block">
+        <aside className="ad-sidebar hidden w-[260px] shrink-0 border-r border-[var(--border)] lg:block glass">
           <div className="sticky top-[72px] h-[calc(100vh-72px)]">
             <AdminSidebar active={active} onSelect={onSelect} onLogout={onLogout} onReset={onReset} />
           </div>
@@ -55,7 +61,7 @@ export function DashboardLayout({ active, onSelect, onLogout, onReset, userName,
         {sidebarOpen && (
           <div className="fixed inset-0 z-[60] lg:hidden">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-            <div className="absolute left-0 top-0 h-full w-[260px] border-r border-[var(--border)] bg-[var(--bg-elevated)] shadow-2xl shadow-black/60">
+            <div className="absolute left-0 top-0 h-full w-[260px] border-r border-[var(--border)] bg-[var(--bg-elevated)] shadow-2xl shadow-black/60 glass-strong">
               <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-3">
                 <span className="px-2 text-sm font-semibold text-white flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-[var(--accent)]" />
@@ -89,7 +95,7 @@ export function DashboardLayout({ active, onSelect, onLogout, onReset, userName,
           </div>
         )}
 
-        <main className="ad-main-inner">
+        <main className="ad-main-inner relative z-10">
           {children}
         </main>
       </div>

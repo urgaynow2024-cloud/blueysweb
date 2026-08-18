@@ -68,6 +68,8 @@ export default function ContactCommissionForm() {
     return (
       <div className="relative overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-10 text-center">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[var(--accent)]/10 via-transparent to-[var(--accent-2)]/10" />
+        <div className="absolute -top-24 -right-24 h-[300px] w-[300px] rounded-full bg-[var(--accent-cosmic)] opacity-[0.06] blur-[80px]" />
+        <div className="absolute -bottom-20 -left-20 h-[250px] w-[250px] rounded-full bg-[var(--accent-nebula)] opacity-[0.05] blur-[80px]" />
         <div className="relative">
           <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-full border border-[var(--accent)]/30 bg-[var(--accent-soft)] text-2xl text-[var(--accent)]">
             <CheckCircle2 className="h-8 w-8" />
@@ -83,112 +85,117 @@ export default function ContactCommissionForm() {
   }
 
   return (
-    <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-7 md:p-10">
-      <div className="mb-8 flex items-center gap-3">
-        <div className="grid h-11 w-11 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
-          <Send className="h-5 w-5" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-white">Commission Request</h2>
-          <p className="text-sm text-[var(--text-secondary)]">Tell me about the avatar work you need</p>
-        </div>
-      </div>
-
-      {error && (
-        <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          {(!agreed || !ownsAssets || !adoptableProof || !refundsUnderstood)
-            ? "Please read and agree to all terms below (Terms of Service, asset ownership, adoptable proof, and refund policy) before submitting."
-            : "Failed to send request. Please try again or contact me directly on Discord."}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          <Input name="name" label="Name" hint="Your name" required placeholder="e.g. Alex" />
-          <Input name="discord" label="Discord" hint="Your Discord username" required placeholder="e.g. BlueyBarks" />
-        </div>
-
-        <Textarea name="description" label="Avatar Information" hint="Describe the avatar work you need" required placeholder="Describe what you want done..." rows={4} />
-
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          <Input name="budget" label="Budget" hint="Total budget you're comfortable with" placeholder="e.g. £30-£50" />
-          <Input name="deadline" label="Deadline" hint="When you need it by" placeholder="e.g. Within 2 weeks" />
-        </div>
-
-        <div>
-          <label className="mb-2 block text-xs font-semibold text-[var(--text-secondary)]">Reference Uploads</label>
-          <div className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg)] px-5 py-7 text-center text-sm text-[var(--text-dim)] transition-all hover:border-[var(--accent)] hover:text-[var(--text-secondary)]">
-            <Paperclip className="h-4 w-4" />
-            Drop files or paste links
+    <div className="relative overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-7 md:p-10">
+      <div className="pointer-events-none absolute -top-32 -right-32 h-[400px] w-[400px] rounded-full bg-[var(--accent-cosmic)] opacity-[0.06] blur-[100px]" />
+      <div className="pointer-events-none absolute -bottom-24 -left-24 h-[350px] w-[350px] rounded-full bg-[var(--accent-nebula)] opacity-[0.05] blur-[100px]" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[var(--accent)]/5 via-transparent to-[var(--accent-2)]/5" />
+      <div className="relative">
+        <div className="mb-8 flex items-center gap-3">
+          <div className="grid h-11 w-11 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+            <Send className="h-5 w-5" />
           </div>
-          <textarea name="references" rows={3} placeholder="Paste image/video links..." className="field resize-y mt-3" />
+          <div>
+            <h2 className="text-xl font-bold text-white">Commission Request</h2>
+            <p className="text-sm text-[var(--text-secondary)]">Tell me about the avatar work you need</p>
+          </div>
         </div>
 
-        <Textarea name="notes" label="Notes" hint="Platform, special requests..." placeholder="Platform, special requests..." rows={3} />
+        {error && (
+          <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            {(!agreed || !ownsAssets || !adoptableProof || !refundsUnderstood)
+              ? "Please read and agree to all terms below (Terms of Service, asset ownership, adoptable proof, and refund policy) before submitting."
+              : "Failed to send request. Please try again or contact me directly on Discord."}
+          </div>
+        )}
 
-        {/* Agreement Checkboxes */}
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-5 space-y-4">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-[var(--accent)]" />
-            Agreement
-          </h3>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <Input name="name" label="Name" hint="Your name" required placeholder="e.g. Alex" />
+            <Input name="discord" label="Discord" hint="Your Discord username" required placeholder="e.g. BlueyBarks" />
+          </div>
 
-          <label className="flex cursor-pointer items-start gap-3 text-sm text-[var(--text-secondary)]">
-            <input
-              type="checkbox"
-              checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
-            />
-            <span>I have read and agree to the <a href="/tos" className="text-[var(--accent)] hover:underline">Terms of Service</a>.</span>
-          </label>
+          <Textarea name="description" label="Avatar Information" hint="Describe the avatar work you need" required placeholder="Describe what you want done..." rows={4} />
 
-          <label className="flex cursor-pointer items-start gap-3 text-sm text-[var(--text-secondary)]">
-            <input
-              type="checkbox"
-              checked={ownsAssets}
-              onChange={(e) => setOwnsAssets(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
-            />
-            <span>I confirm that I legally own or have permission to use every asset supplied.</span>
-          </label>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <Input name="budget" label="Budget" hint="Total budget you're comfortable with" placeholder="e.g. £30-£50" />
+            <Input name="deadline" label="Deadline" hint="When you need it by" placeholder="e.g. Within 2 weeks" />
+          </div>
 
-          <label className="flex cursor-pointer items-start gap-3 text-sm text-[var(--text-secondary)]">
-            <input
-              type="checkbox"
-              checked={adoptableProof}
-              onChange={(e) => setAdoptableProof(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
-            />
-            <span>I understand that proof of ownership may be requested for Adoptable commissions.</span>
-          </label>
+          <div>
+            <label className="mb-2 block text-xs font-semibold text-[var(--text-secondary)]">Reference Uploads</label>
+            <div className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg)] px-5 py-7 text-center text-sm text-[var(--text-dim)] transition-all hover:border-[var(--accent)] hover:text-[var(--text-secondary)]">
+              <Paperclip className="h-4 w-4" />
+              Drop files or paste links
+            </div>
+            <textarea name="references" rows={3} placeholder="Paste image/video links..." className="field resize-y mt-3" />
+          </div>
 
-          <label className="flex cursor-pointer items-start gap-3 text-sm text-[var(--text-secondary)]">
-            <input
-              type="checkbox"
-              checked={refundsUnderstood}
-              onChange={(e) => setRefundsUnderstood(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
-            />
-            <span>I understand that refunds are limited once work has begun.</span>
-          </label>
-        </div>
+          <Textarea name="notes" label="Notes" hint="Platform, special requests..." placeholder="Platform, special requests..." rows={3} />
 
-        <button type="submit" disabled={submitting} className="btn-primary w-full !justify-center !py-3.5 disabled:opacity-50">
-          {submitting ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Sending...
-            </>
-          ) : (
-            <>
-              <Send className="h-4 w-4" />
-              Submit Request
-            </>
-          )}
-        </button>
-      </form>
+          {/* Agreement Checkboxes */}
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-5 space-y-4">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-[var(--accent)]" />
+              Agreement
+            </h3>
+
+            <label className="flex cursor-pointer items-start gap-3 text-sm text-[var(--text-secondary)]">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
+              />
+              <span>I have read and agree to the <a href="/tos" className="text-[var(--accent)] hover:underline">Terms of Service</a>.</span>
+            </label>
+
+            <label className="flex cursor-pointer items-start gap-3 text-sm text-[var(--text-secondary)]">
+              <input
+                type="checkbox"
+                checked={ownsAssets}
+                onChange={(e) => setOwnsAssets(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
+              />
+              <span>I confirm that I legally own or have permission to use every asset supplied.</span>
+            </label>
+
+            <label className="flex cursor-pointer items-start gap-3 text-sm text-[var(--text-secondary)]">
+              <input
+                type="checkbox"
+                checked={adoptableProof}
+                onChange={(e) => setAdoptableProof(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
+              />
+              <span>I understand that proof of ownership may be requested for Adoptable commissions.</span>
+            </label>
+
+            <label className="flex cursor-pointer items-start gap-3 text-sm text-[var(--text-secondary)]">
+              <input
+                type="checkbox"
+                checked={refundsUnderstood}
+                onChange={(e) => setRefundsUnderstood(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
+              />
+              <span>I understand that refunds are limited once work has begun.</span>
+            </label>
+          </div>
+
+          <button type="submit" disabled={submitting} className="btn-primary w-full !justify-center !py-3.5 disabled:opacity-50">
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                Submit Request
+              </>
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

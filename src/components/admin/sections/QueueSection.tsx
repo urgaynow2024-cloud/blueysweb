@@ -128,8 +128,10 @@ export function QueueSection() {
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="p-8">
+    <div className="space-y-6 relative">
+      <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" />
+      <Card className="p-8 relative overflow-hidden">
+        <div className="pointer-events-none absolute -top-10 -right-10 h-[200px] w-[200px] rounded-full bg-[var(--accent-2)]/5 blur-[100px] orb-med" />
         <CardHeader title="Queue Settings" description="Public availability shown on the queue page." />
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label="Status">
@@ -154,7 +156,8 @@ export function QueueSection() {
         </div>
       </Card>
 
-      <Card className="p-8">
+      <Card className="p-8 relative overflow-hidden">
+        <div className="pointer-events-none absolute -top-10 -right-10 h-[200px] w-[200px] rounded-full bg-[var(--accent-2)]/5 blur-[100px] orb-med" />
         <CardHeader
           title="Queue Items"
           description="Track individual commissions through your pipeline."

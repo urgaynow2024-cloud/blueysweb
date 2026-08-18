@@ -22,7 +22,7 @@ export default function StarRating({ value, onChange, readonly }: Props) {
           onMouseEnter={() => !readonly && setHover(star)}
           onMouseLeave={() => !readonly && setHover(0)}
           className={`text-2xl transition-all ${
-            star <= (hover || value) ? "text-[var(--accent)] scale-110" : "text-[var(--text-dim)]"
+            star <= (hover || value) ? "text-[var(--accent)] scale-110 drop-shadow-[0_0_6px_rgba(90,176,240,0.35)]" : "text-[var(--text-dim)]"
           } ${!readonly ? "cursor-pointer hover:scale-110" : "cursor-default"}`}
         >
           ★

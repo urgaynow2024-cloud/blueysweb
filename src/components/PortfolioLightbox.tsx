@@ -41,6 +41,10 @@ export default function Lightbox({ images, index, onClose, onPrev, onNext }: Lig
         if (e.target === e.currentTarget) onClose();
       }}
     >
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-24 left-1/4 h-[300px] w-[300px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.06] blur-[100px]" />
+        <div className="absolute -bottom-20 right-1/4 h-[250px] w-[250px] translate-x-1/2 rounded-full bg-[var(--accent-nebula)] opacity-[0.05] blur-[100px]" />
+      </div>
       <div className="relative flex max-h-[95vh] max-w-[95vw] scale-in items-center justify-center">
         <img
           src={images[index]}

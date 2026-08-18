@@ -42,10 +42,13 @@ export default function PortfolioPage() {
 
   return (
     <div className="relative">
+      <div className="bg-nebula" />
+      <div className="bg-cosmic-fog" />
       <section className="page relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-30" />
-        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px]" />
-        <div className="pointer-events-none absolute -bottom-32 right-0 h-60 w-[500px] rounded-full bg-[var(--accent-2)] opacity-[0.03] blur-[100px]" />
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px] orb-slow" />
+        <div className="pointer-events-none absolute -bottom-32 right-0 h-60 w-[500px] rounded-full bg-[var(--accent-2)] opacity-[0.03] blur-[100px] orb-med" />
+        <div className="pointer-events-none absolute top-1/3 left-0 h-48 w-[400px] rounded-full bg-[var(--accent-cosmic)] opacity-[0.03] blur-[110px] orb-fast" />
 
         <div className="container">
           <SectionHeading

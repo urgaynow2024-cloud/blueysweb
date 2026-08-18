@@ -134,32 +134,35 @@ export function ReviewsSection({ value, onChange }: Props) {
   const approved = value.filter((r) => r.status === "approved");
 
   return (
-    <div className="space-y-6">
-      <CardHeader title="Client Reviews" description="Approve, edit, or remove client reviews." />
+    <div className="space-y-6 relative">
+      <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" />
+      <div className="relative z-10">
+        <CardHeader title="Client Reviews" description="Approve, edit, or remove client reviews." />
 
-      <div>
-        <p className="mb-4 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Pending ({pending.length})</p>
-        <div className="space-y-4">
-          {pending.length > 0 ? (
-            pending.map((review, idx) => <ReviewCard key={review.id || idx} review={review} index={idx} reviews={value} setReviews={onChange} />)
-          ) : (
-            <div className="ad-empty rounded-[var(--r-md)] border border-dashed border-[var(--border)]">
-              <p className="text-sm text-[var(--text-secondary)]">No pending reviews</p>
-            </div>
-          )}
+        <div>
+          <p className="mb-4 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Pending ({pending.length})</p>
+          <div className="space-y-4">
+            {pending.length > 0 ? (
+              pending.map((review, idx) => <ReviewCard key={review.id || idx} review={review} index={idx} reviews={value} setReviews={onChange} />)
+            ) : (
+              <div className="ad-empty rounded-[var(--r-md)] border border-dashed border-[var(--border)]">
+                <p className="text-sm text-[var(--text-secondary)]">No pending reviews</p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div>
-        <p className="mb-4 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Approved ({approved.length})</p>
-        <div className="space-y-4">
-          {approved.length > 0 ? (
-            approved.map((review, idx) => <ReviewCard key={review.id || idx} review={review} index={idx} reviews={value} setReviews={onChange} />)
-          ) : (
-            <div className="ad-empty rounded-[var(--r-md)] border border-dashed border-[var(--border)]">
-              <p className="text-sm text-[var(--text-secondary)]">No approved reviews yet</p>
-            </div>
-          )}
+        <div>
+          <p className="mb-4 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Approved ({approved.length})</p>
+          <div className="space-y-4">
+            {approved.length > 0 ? (
+              approved.map((review, idx) => <ReviewCard key={review.id || idx} review={review} index={idx} reviews={value} setReviews={onChange} />)
+            ) : (
+              <div className="ad-empty rounded-[var(--r-md)] border border-dashed border-[var(--border)]">
+                <p className="text-sm text-[var(--text-secondary)]">No approved reviews yet</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -38,7 +38,7 @@ export function AdminTopbar({ onToggleSidebar, onLogout, userName = "Admin" }: T
       </button>
 
       <div className="flex min-w-0 items-center gap-3">
-        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] shadow-lg shadow-[var(--accent)]/30">
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] shadow-lg shadow-[var(--accent)]/30 glow-border">
           <Sparkles className="h-[18px] w-[18px]" />
         </div>
         <div className="min-w-0">
@@ -87,7 +87,7 @@ export function AdminTopbar({ onToggleSidebar, onLogout, userName = "Admin" }: T
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-[calc(100%+8px)] w-52 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-float)] p-1.5 shadow-[var(--shadow-lg)] backdrop-blur-xl"
+              className="absolute right-0 top-[calc(100%+8px)] w-52 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-float)] p-1.5 shadow-[var(--shadow-lg)] backdrop-blur-xl glass-strong"
             >
               <div className="flex items-center gap-2.5 rounded-lg px-2.5 py-2">
                 <User className="h-4 w-4 text-[var(--text-dim)]" />

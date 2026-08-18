@@ -5,8 +5,10 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer className="relative mt-24 overflow-hidden">
-      {/* Ambient glow at top of footer */}
-      <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] rounded-full bg-[var(--accent)] opacity-[0.04] blur-[120px]" />
+      {/* Ambient cosmic glow at top of footer */}
+      <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] rounded-full bg-[var(--accent)] opacity-[0.06] blur-[120px]" />
+      <div className="pointer-events-none absolute top-0 left-[30%] w-[500px] h-[200px] rounded-full bg-[var(--accent-cosmic)] opacity-[0.04] blur-[100px]" />
+      <div className="pointer-events-none absolute top-0 right-[30%] w-[500px] h-[200px] rounded-full bg-[var(--accent-nebula)] opacity-[0.04] blur-[100px]" />
 
       {/* Soft gradient transition from page to footer */}
       <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-[var(--bg)] pointer-events-none" />

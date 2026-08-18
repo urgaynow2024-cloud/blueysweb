@@ -28,10 +28,13 @@ export default function PricingPage() {
 
   return (
     <div className="relative">
+      <div className="bg-nebula" />
+      <div className="bg-cosmic-fog" />
       <section className="page relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-grid opacity-25" />
-        <div className="pointer-events-none absolute -top-24 right-0 h-96 w-96 rounded-full bg-[var(--accent-cosmic)] opacity-[0.08] blur-[120px]" />
-        <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-[var(--accent-nebula)] opacity-[0.06] blur-[100px]" />
+        <div className="pointer-events-none absolute -top-24 right-0 h-96 w-96 rounded-full bg-[var(--accent-cosmic)] opacity-[0.08] blur-[120px] orb-slow" />
+        <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-[var(--accent-nebula)] opacity-[0.06] blur-[100px] orb-med" />
+        <div className="pointer-events-none absolute top-1/3 left-1/3 h-60 w-[450px] rounded-full bg-[var(--accent-4)] opacity-[0.03] blur-[120px] orb-fast" />
 
         <div className="container">
           <SectionHeading

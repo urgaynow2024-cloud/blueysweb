@@ -9,7 +9,9 @@ export default function AdminLayout({
 }>) {
   return (
     <ToastProvider>
-      <SpaceParticles count={8} />
+      <SpaceParticles count={12} />
+      <div className="pointer-events-none fixed inset-0 bg-cosmic-fog" aria-hidden="true" />
+      <div className="pointer-events-none fixed inset-0 bg-noise" aria-hidden="true" />
       <SaveProvider>{children}</SaveProvider>
     </ToastProvider>
   );

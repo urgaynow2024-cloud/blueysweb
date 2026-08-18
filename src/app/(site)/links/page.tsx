@@ -40,8 +40,12 @@ export default function LinksPage() {
 
   return (
     <div className="relative">
+      <div className="bg-nebula" />
+      <div className="bg-cosmic-fog" />
       <section className="page relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.05] blur-[130px] orb-slow" />
+        <div className="pointer-events-none absolute bottom-0 right-0 h-56 w-[400px] rounded-full bg-[var(--accent-3)] opacity-[0.03] blur-[100px] orb-med" />
         <div className="container">
           <SectionHeading
             align="center"

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import SpaceParticles from "@/components/SpaceParticles";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -32,7 +33,9 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`} style={{ colorScheme: "dark" }}>
       <body className="min-h-full bg-[var(--bg)] text-[var(--text)]">
         <div className="bg-mesh" />
+        <div className="bg-nebula" />
         <div className="bg-noise" />
+        <SpaceParticles count={40} />
         {children}
       </body>
     </html>

@@ -4,16 +4,16 @@ type CardVariant = "default" | "elevated" | "interactive" | "glass" | "marketpla
 type CardPadding = "sm" | "md" | "lg";
 
 const variantClasses: Record<CardVariant, string> = {
-  default: "premium-card border border-[var(--border)]",
-  elevated: "border border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:border-[var(--border-hover)]",
-  interactive: "premium-card group border border-[var(--border)] hover:border-[var(--border-hover)]",
+  default: "premium-card border border-[var(--border)] hover:shadow-[0_0_40px_rgba(90,176,240,0.08)]",
+  elevated: "border border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:border-[var(--border-hover)] hover:shadow-[0_0_50px_rgba(90,176,240,0.1)]",
+  interactive: "premium-card group border border-[var(--border)] hover:border-[var(--border-hover)] hover:shadow-[0_0_40px_rgba(90,176,240,0.08)]",
   glass: "glass",
-  marketplace: "marketplace-card group border border-[var(--border)] hover:border-[var(--border-hover)]",
+  marketplace: "marketplace-card group border border-[var(--border)] hover:border-[var(--border-hover)] hover:shadow-[0_0_40px_rgba(90,176,240,0.08)]",
   minimal: "border border-[var(--border)] bg-transparent hover:border-[var(--border-hover)]",
-  portfolio: "portfolio-card border border-[var(--border)]",
-  pricing: "pricing-card border border-[var(--border)]",
-  review: "review-card border border-[var(--border)]",
-  faq: "faq-card border border-[var(--border)]",
+  portfolio: "portfolio-card border border-[var(--border)] hover:shadow-[0_0_40px_rgba(90,176,240,0.1)]",
+  pricing: "pricing-card border border-[var(--border)] hover:shadow-[0_0_50px_rgba(90,176,240,0.12)]",
+  review: "review-card border border-[var(--border)] hover:shadow-[0_0_40px_rgba(90,176,240,0.08)]",
+  faq: "faq-card border border-[var(--border)] hover:shadow-[0_0_30px_rgba(90,176,240,0.06)]",
 };
 
 const paddingClasses: Record<CardPadding, string> = {

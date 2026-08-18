@@ -60,7 +60,8 @@ interface SidebarProps {
 
 export function AdminSidebar({ active, onSelect, onLogout, onReset }: SidebarProps) {
   return (
-    <nav aria-label="Admin navigation" className="flex h-full flex-col">
+    <nav aria-label="Admin navigation" className="flex h-full flex-col glass">
+      <div className="pointer-events-none absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[var(--accent)]/5 to-transparent" />
       <div className="flex-1 overflow-y-auto px-2 py-4">
         {ADMIN_NAV.map((group, gi) => (
           <div key={group.label || gi}>
@@ -105,6 +106,7 @@ export function AdminSidebar({ active, onSelect, onLogout, onReset }: SidebarPro
         ))}
       </div>
 
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[var(--accent-2)]/5 to-transparent" />
       <div className="border-t border-[var(--border)] p-3">
         <button
           type="button"

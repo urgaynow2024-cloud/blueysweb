@@ -112,7 +112,8 @@ export function SiteImagesSection() {
   }
 
   return (
-    <Card className="p-8">
+    <Card className="p-8 relative overflow-hidden">
+      <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" />
       <CardHeader title="Site Images" description="Managed images used around the public site. Changes apply immediately." />
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
         {SLOTS.map((slot) => {

@@ -314,11 +314,14 @@ export default function AdoptablesPage() {
 
   return (
     <div className="relative">
+      <div className="bg-nebula" />
+      <div className="bg-cosmic-fog" />
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
-        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.12] blur-[130px]" />
-        <div className="pointer-events-none absolute top-20 left-1/4 h-60 w-[500px] -translate-x-1/2 rounded-full bg-[var(--accent-nebula)] opacity-[0.08] blur-[120px]" />
-        <div className="pointer-events-none absolute bottom-10 right-1/4 h-48 w-[400px] rounded-full bg-[var(--accent-star)] opacity-[0.06] blur-[100px]" />
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.12] blur-[130px] orb-slow" />
+        <div className="pointer-events-none absolute top-20 left-1/4 h-60 w-[500px] -translate-x-1/2 rounded-full bg-[var(--accent-nebula)] opacity-[0.08] blur-[120px] orb-med" />
+        <div className="pointer-events-none absolute bottom-10 right-1/4 h-48 w-[400px] rounded-full bg-[var(--accent-star)] opacity-[0.06] blur-[100px] orb-fast" />
+        <div className="pointer-events-none absolute top-1/2 left-[80%] h-40 w-[350px] rounded-full bg-[var(--accent-3)] opacity-[0.03] blur-[100px] orb-slow" />
 
         <div className="container">
           <div className="mx-auto max-w-3xl text-center">

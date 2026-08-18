@@ -27,7 +27,8 @@ export function PricingSection({ value, onChange }: Props) {
   }
 
   return (
-    <Card className="p-8">
+    <Card className="p-8 relative overflow-hidden">
+      <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" />
       <CardHeader
         title="Pricing Tiers"
         description="Edit your commission pricing. NSFW tiers are shown only on the age-gated page."

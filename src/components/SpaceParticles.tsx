@@ -94,8 +94,8 @@ export default function SpaceParticles({ count }: { count?: number }) {
   const startTimeRef = useRef<number>(0);
   const prefersReducedMotion = useRef(false);
 
-  const desktopCount = count ?? 35;
-  const mobileCount = count ?? (count === undefined ? 18 : Math.max(10, Math.floor(count / 2)));
+  const desktopCount = count ?? 45;
+  const mobileCount = count ?? (count === undefined ? 22 : Math.max(10, Math.floor(count / 2)));
 
   useEffect(() => {
     setMounted(true);

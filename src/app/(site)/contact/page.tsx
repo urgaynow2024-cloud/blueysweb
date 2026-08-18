@@ -21,10 +21,13 @@ const CHECKLIST = [
 export default function ContactPage() {
   return (
     <div className="relative">
+      <div className="bg-nebula" />
+      <div className="bg-cosmic-fog" />
       <section className="page relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-30" />
-        <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[var(--accent)] opacity-[0.05] blur-[120px]" />
-        <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-[var(--accent-2)] opacity-[0.03] blur-[100px]" />
+        <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[var(--accent)] opacity-[0.05] blur-[120px] orb-slow" />
+        <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-[var(--accent-2)] opacity-[0.03] blur-[100px] orb-med" />
+        <div className="pointer-events-none absolute top-1/2 left-1/2 h-48 w-[350px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.03] blur-[100px] orb-fast" />
 
         <div className="container">
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-8">
