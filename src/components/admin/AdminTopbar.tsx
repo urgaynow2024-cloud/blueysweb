@@ -38,7 +38,7 @@ export function AdminTopbar({ onToggleSidebar, onLogout, userName = "Admin" }: T
       </button>
 
       <div className="flex min-w-0 items-center gap-3">
-        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] shadow-lg shadow-[var(--accent)]/20">
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] shadow-lg shadow-[var(--accent)]/30">
           <Sparkles className="h-[18px] w-[18px]" />
         </div>
         <div className="min-w-0">
@@ -77,7 +77,7 @@ export function AdminTopbar({ onToggleSidebar, onLogout, userName = "Admin" }: T
             aria-label="User menu"
             className="flex items-center gap-2 rounded-xl border border-[var(--border)] p-1 pr-2.5 transition-all hover:bg-white/5 hover:border-[var(--border-hover)]"
           >
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-sm font-bold text-[#04060a]">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-sm font-bold text-[#04060a] shadow-md shadow-[var(--accent)]/20">
               B
             </span>
             <span className="hidden text-sm font-medium text-white md:inline">{userName}</span>

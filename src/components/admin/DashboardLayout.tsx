@@ -42,7 +42,7 @@ export function DashboardLayout({ active, onSelect, onLogout, onReset, userName,
   }, [sidebarOpen]);
 
   return (
-    <div className="ad-login-bg flex min-h-screen flex-col">
+    <div className="ad-dashboard-bg flex min-h-screen flex-col">
       <AdminTopbar onToggleSidebar={() => setSidebarOpen(true)} onLogout={onLogout} userName={userName} />
 
       <div className="ad-main">

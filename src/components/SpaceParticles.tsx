@@ -17,6 +17,7 @@ type Particle = {
   color: string;
   rotation: number;
   twinklePhase: number;
+  kind: "bone" | "star";
 };
 
 const DOG_BONE_PATH =
@@ -37,22 +38,48 @@ function randomBetween(min: number, max: number) {
 }
 
 function generateParticles(count: number): Particle[] {
-  return Array.from({ length: count }, () => ({
-    baseX: Math.random() * 100,
-    baseY: Math.random() * 100,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: randomBetween(14, 28),
-    driftDuration: randomBetween(20, 40) * 1000,
-    driftDelay: Math.random() * -40000,
-    twinkleDuration: randomBetween(2, 5) * 1000,
-    twinkleDelay: Math.random() * -5000,
-    driftXAmplitude: randomBetween(15, 40),
-    driftYAmplitude: randomBetween(15, 40),
-    color: COLORS[Math.floor(Math.random() * COLORS.length)],
-    rotation: randomBetween(0, 360),
-    twinklePhase: Math.random() * Math.PI * 2,
-  }));
+  const particles: Particle[] = [];
+  const boneCount = Math.max(4, Math.floor(count * 0.35));
+  const starCount = count - boneCount;
+  for (let i = 0; i < boneCount; i++) {
+    particles.push({
+      baseX: Math.random() * 100,
+      baseY: Math.random() * 100,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: randomBetween(14, 28),
+      driftDuration: randomBetween(20, 40) * 1000,
+      driftDelay: Math.random() * -40000,
+      twinkleDuration: randomBetween(2, 5) * 1000,
+      twinkleDelay: Math.random() * -5000,
+      driftXAmplitude: randomBetween(15, 40),
+      driftYAmplitude: randomBetween(15, 40),
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      rotation: randomBetween(0, 360),
+      twinklePhase: Math.random() * Math.PI * 2,
+      kind: "bone",
+    });
+  }
+  for (let i = 0; i < starCount; i++) {
+    particles.push({
+      baseX: Math.random() * 100,
+      baseY: Math.random() * 100,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: randomBetween(2, 5),
+      driftDuration: randomBetween(30, 60) * 1000,
+      driftDelay: Math.random() * -60000,
+      twinkleDuration: randomBetween(1.5, 4) * 1000,
+      twinkleDelay: Math.random() * -4000,
+      driftXAmplitude: randomBetween(8, 20),
+      driftYAmplitude: randomBetween(8, 20),
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      rotation: 0,
+      twinklePhase: Math.random() * Math.PI * 2,
+      kind: "star",
+    });
+  }
+  return particles;
 }
 
 function easeInOutSine(t: number) {
@@ -67,8 +94,8 @@ export default function SpaceParticles({ count }: { count?: number }) {
   const startTimeRef = useRef<number>(0);
   const prefersReducedMotion = useRef(false);
 
-  const desktopCount = count ?? 25;
-  const mobileCount = count ?? (count === undefined ? 12 : Math.max(8, Math.floor(count / 2)));
+  const desktopCount = count ?? 35;
+  const mobileCount = count ?? (count === undefined ? 18 : Math.max(10, Math.floor(count / 2)));
 
   useEffect(() => {
     setMounted(true);
@@ -86,7 +113,7 @@ export default function SpaceParticles({ count }: { count?: number }) {
     const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
     const baseCount = isMobile ? mobileCount : desktopCount;
     const reducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const finalCount = reducedMotion ? Math.max(4, Math.floor(baseCount / 3)) : baseCount;
+    const finalCount = reducedMotion ? Math.max(6, Math.floor(baseCount / 3)) : baseCount;
     return generateParticles(finalCount);
   }, [mounted, desktopCount, mobileCount]);
 
@@ -94,7 +121,8 @@ export default function SpaceParticles({ count }: { count?: number }) {
     if (!mounted) return;
     const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
     const baseCount = isMobile ? mobileCount : desktopCount;
-    const finalCount = prefersReducedMotion.current ? Math.max(4, Math.floor(baseCount / 3)) : baseCount;
+    const reducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const finalCount = prefersReducedMotion.current ? Math.max(6, Math.floor(baseCount / 3)) : baseCount;
     particlesRef.current = generateParticles(finalCount);
     startTimeRef.current = performance.now();
 
@@ -172,29 +200,51 @@ export default function SpaceParticles({ count }: { count?: number }) {
         contain: "layout style paint",
       }}
     >
-      {particles.map((p, i) => (
-        <svg
-          key={i}
-          viewBox="0 0 24 24"
-          width={p.size}
-          height={p.size}
-          style={{
-            position: "absolute",
-            left: `${p.baseX}%`,
-            top: `${p.baseY}%`,
-            willChange: "transform, opacity",
-            color: p.color,
-            transform: "translate(0px, 0px)",
-            opacity: 0.7,
-          }}
-        >
-          <path
-            d={DOG_BONE_PATH}
-            fill="currentColor"
-            vectorEffect="non-scaling-stroke"
-          />
-        </svg>
-      ))}
+      {particles.map((p, i) => {
+        if (p.kind === "star") {
+          return (
+            <div
+              key={i}
+              style={{
+                position: "absolute",
+                left: `${p.baseX}%`,
+                top: `${p.baseY}%`,
+                width: `${p.size}px`,
+                height: `${p.size}px`,
+                borderRadius: "50%",
+                background: p.color,
+                boxShadow: `0 0 ${p.size * 2}px ${p.color}`,
+                willChange: "transform, opacity",
+                opacity: 0.8,
+              }}
+            />
+          );
+        }
+        return (
+          <svg
+            key={i}
+            viewBox="0 0 24 24"
+            width={p.size}
+            height={p.size}
+            style={{
+              position: "absolute",
+              left: `${p.baseX}%`,
+              top: `${p.baseY}%`,
+              willChange: "transform, opacity",
+              color: p.color,
+              transform: "translate(0px, 0px)",
+              opacity: 0.7,
+              filter: `drop-shadow(0 0 ${p.size * 0.3}px ${p.color})`,
+            }}
+          >
+            <path
+              d={DOG_BONE_PATH}
+              fill="currentColor"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+        );
+      })}
     </div>
   );
 }

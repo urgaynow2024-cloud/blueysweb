@@ -19,8 +19,7 @@ export async function POST(
     }
 
     const ext = file.name.split(".").pop();
-    const storagePath = `adoptables/${id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const isNsfw = formData.get("isNsfw") === "true";
+    const storagePath = `adoptables/${id}/main-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from("adoptables")
@@ -33,19 +32,19 @@ export async function POST(
     const { data: urlData } = supabaseAdmin.storage.from("adoptables").getPublicUrl(storagePath);
     const url = urlData.publicUrl;
 
-    const { data: dbData, error: dbError } = await supabaseAdmin
-      .from("adoptable_gallery")
-      .insert([{ adoptable_id: id, url, path: storagePath, is_nsfw: isNsfw }])
-      .select();
+    const { error: dbError } = await supabaseAdmin
+      .from("adoptables")
+      .update({ main_image: url, main_image_path: storagePath })
+      .eq("id", id);
 
-    if (dbError || !dbData || dbData.length === 0) {
+    if (dbError) {
       await supabaseAdmin.storage.from("adoptables").remove([storagePath]);
-      return NextResponse.json({ error: "Database error" }, { status: 500 });
+      return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ id: dbData[0].id, url, path: storagePath }, { status: 201 });
+    return NextResponse.json({ id, url, path: storagePath }, { status: 201 });
   } catch (error) {
-    console.error("Adoptable gallery upload error:", error);
+    console.error("Adoptable main image upload error:", error);
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
@@ -57,7 +56,6 @@ export async function DELETE(
   try {
     const { id } = await params;
     const { searchParams } = new URL(request.url);
-    const imageId = searchParams.get("imageId");
     const path = searchParams.get("path");
 
     if (!supabaseAdmin) {
@@ -68,16 +66,18 @@ export async function DELETE(
       await supabaseAdmin.storage.from("adoptables").remove([path]);
     }
 
-    if (imageId) {
-      const { error } = await supabaseAdmin.from("adoptable_gallery").delete().eq("id", imageId);
-      if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-      }
+    const { error } = await supabaseAdmin
+      .from("adoptables")
+      .update({ main_image: null, main_image_path: null })
+      .eq("id", id);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Adoptable gallery delete error:", error);
+    console.error("Adoptable main image delete error:", error);
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

@@ -234,11 +234,11 @@ export default function ModeratorPage() {
   ];
 
   return (
-    <div className="min-h-screen">
-      <div className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg-elevated)]/90 backdrop-blur-xl">
+    <div className="ad-dashboard-bg min-h-screen">
+      <div className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg-elevated)]/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a]">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] shadow-lg shadow-[var(--accent)]/30">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>

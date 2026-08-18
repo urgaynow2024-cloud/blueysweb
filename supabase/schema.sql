@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS social_links (
 CREATE TABLE IF NOT EXISTS adoptables (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
-  description TEXT NOT NULL,
+  description TEXT,
   category TEXT DEFAULT 'avatar',
   price TEXT,
   availability TEXT DEFAULT 'available' CHECK (availability IN ('available', 'sold', 'reserved')),
@@ -162,7 +162,19 @@ CREATE TABLE IF NOT EXISTS adoptables (
   visible BOOLEAN DEFAULT TRUE,
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  species TEXT,
+  included_items TEXT,
+  rules_license TEXT,
+  vrchat_info TEXT,
+  sfw_price TEXT,
+  nsfw_price TEXT,
+  bundle_price TEXT,
+  sfw_available BOOLEAN DEFAULT FALSE,
+  nsfw_available BOOLEAN DEFAULT FALSE,
+  bundle_available BOOLEAN DEFAULT FALSE,
+  main_image TEXT,
+  main_image_path TEXT
 );
 
 -- Adoptable gallery images
@@ -172,6 +184,7 @@ CREATE TABLE IF NOT EXISTS adoptable_gallery (
   url TEXT NOT NULL,
   path TEXT,
   sort_order INTEGER DEFAULT 0,
+  is_nsfw BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -225,6 +238,26 @@ BEGIN
     BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(); EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW(); EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS species TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS included_items TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS rules_license TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS vrchat_info TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS sfw_price TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS nsfw_price TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS bundle_price TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS sfw_available BOOLEAN DEFAULT FALSE; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS nsfw_available BOOLEAN DEFAULT FALSE; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS bundle_available BOOLEAN DEFAULT FALSE; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS main_image TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS main_image_path TEXT; EXCEPTION WHEN others THEN NULL; END;
+  END IF;
+END $$;
+
+-- Migrate adoptable_gallery table to add is_nsfw column
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'adoptable_gallery') THEN
+    BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS is_nsfw BOOLEAN DEFAULT FALSE; EXCEPTION WHEN others THEN NULL; END;
   END IF;
 END $$;
 

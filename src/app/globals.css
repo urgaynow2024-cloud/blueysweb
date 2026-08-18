@@ -2030,35 +2030,44 @@ select.field option {
   position: relative;
   overflow: hidden;
   background: var(--bg);
-  background-image:
-    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(90, 176, 240, 0.08), transparent 60%),
-    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(167, 139, 250, 0.06), transparent 55%),
-    radial-gradient(ellipse 40% 30% at 20% 70%, rgba(79, 209, 197, 0.04), transparent 50%);
 }
 .ad-login-bg::before {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(90, 176, 240, 0.08), transparent 60%),
-    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(167, 139, 250, 0.06), transparent 55%),
-    radial-gradient(ellipse 40% 30% at 20% 70%, rgba(79, 209, 197, 0.04), transparent 50%);
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(124, 58, 237, 0.18), transparent 55%),
+    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(96, 165, 250, 0.12), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 10% 70%, rgba(167, 139, 250, 0.1), transparent 50%);
   pointer-events: none;
   z-index: 0;
+  animation: nebulaPulse 18s ease-in-out infinite alternate;
+}
+.ad-login-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 20%, transparent 70%);
 }
 
-/* Login card — glass morphism with subtle animated border */
+/* Login card — glass morphism with cosmic animated border */
 .ad-login-card {
   position: relative;
   z-index: 1;
   width: 100%;
   max-width: 420px;
   padding: 40px 32px;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.04), transparent 45%), var(--bg-card);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.05), transparent 45%), var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
-  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
-  animation: loginEnter 0.6s var(--ease-out) both;
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.03) inset, 0 0 80px -20px var(--accent-glow);
+  animation: loginEnter 0.7s var(--ease-out) both;
 }
 .ad-login-card::before {
   content: "";
@@ -2066,12 +2075,17 @@ select.field option {
   inset: -1px;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(90, 176, 240, 0.25), rgba(167, 139, 250, 0.15), transparent 60%);
+  background: linear-gradient(135deg, rgba(90, 176, 240, 0.4), rgba(124, 58, 237, 0.3), rgba(167, 139, 250, 0.2), transparent 60%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.8;
+  animation: loginBorderPulse 4s ease-in-out infinite alternate;
+}
+@keyframes loginBorderPulse {
+  0% { opacity: 0.5; }
+  100% { opacity: 0.9; }
 }
 @keyframes loginEnter {
   from { opacity: 0; transform: translateY(24px) scale(0.97); }
@@ -2169,10 +2183,41 @@ select.field option {
   background: rgba(255, 255, 255, 0.06);
 }
 
+/* Dashboard background — deep space with nebula and starfield */
+.ad-dashboard-bg {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+}
+.ad-dashboard-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% -20%, rgba(124, 58, 237, 0.16), transparent 55%),
+    radial-gradient(ellipse 70% 60% at 100% 100%, rgba(96, 165, 250, 0.1), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 0% 80%, rgba(167, 139, 250, 0.08), transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+  animation: nebulaPulse 22s ease-in-out infinite alternate;
+}
+.ad-dashboard-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 26px 26px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000 20%, transparent 70%);
+}
+
 /* Dashboard topbar polish */
 .ad-topbar {
   height: var(--topbar-h);
-  background: rgba(8, 11, 18, 0.92);
+  background: rgba(8, 11, 18, 0.85);
   backdrop-filter: blur(24px) saturate(1.5);
   -webkit-backdrop-filter: blur(24px) saturate(1.5);
   border-bottom: 1px solid var(--border);
@@ -2181,7 +2226,17 @@ select.field option {
 
 /* Sidebar polish */
 .ad-sidebar {
-  background: linear-gradient(180deg, var(--bg-elevated), var(--bg));
+  background: linear-gradient(180deg, rgba(16, 21, 33, 0.95), rgba(8, 11, 18, 0.98));
+  border-right: 1px solid var(--border);
+}
+.ad-sidebar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 0% 20%, rgba(124, 58, 237, 0.06), transparent 50%),
+    radial-gradient(ellipse 50% 50% at 0% 80%, rgba(96, 165, 250, 0.04), transparent 50%);
+  pointer-events: none;
 }
 .ad-sidebar-section {
   margin-top: 24px;
@@ -2222,9 +2277,9 @@ select.field option {
 }
 .ad-sidebar-item-active {
   color: #fff;
-  background: linear-gradient(135deg, rgba(90, 176, 240, 0.18), rgba(167, 139, 250, 0.12));
-  border-color: rgba(90, 176, 240, 0.28);
-  box-shadow: 0 0 20px -10px var(--accent-glow);
+  background: linear-gradient(135deg, rgba(90, 176, 240, 0.22), rgba(124, 58, 237, 0.18));
+  border-color: rgba(90, 176, 240, 0.35);
+  box-shadow: 0 0 24px -12px var(--accent-glow), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
 }
 .ad-sidebar-item-active .ad-sidebar-icon {
   color: var(--accent);
@@ -2237,7 +2292,7 @@ select.field option {
   width: 3px;
   border-radius: 0 4px 4px 0;
   background: linear-gradient(180deg, var(--accent), var(--accent-2));
-  box-shadow: 0 0 12px var(--accent-glow);
+  box-shadow: 0 0 14px var(--accent-glow), 0 0 4px var(--accent-glow);
   transform: translateY(-50%);
 }
 .ad-sidebar-icon {
@@ -2256,6 +2311,8 @@ select.field option {
   min-width: 0;
   flex: 1;
   padding: 24px;
+  position: relative;
+  z-index: 1;
 }
 @media (min-width: 1024px) {
   .ad-main {
@@ -2271,7 +2328,7 @@ select.field option {
 /* Section card polish */
 .ad-section-card {
   position: relative;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.03), transparent 45%), var(--bg-card);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.04), transparent 45%), var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   box-shadow: var(--shadow-sm);
@@ -2279,7 +2336,7 @@ select.field option {
 }
 .ad-section-card:hover {
   border-color: var(--border-hover);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md), 0 0 40px -16px var(--accent-glow);
 }
 
 /* Loading shimmer for admin */
@@ -2530,8 +2587,8 @@ select.field option {
 .bob-delayed { animation: bob 6.5s ease-in-out infinite; animation-delay: -2s; }
 
 /* ----------------------------------------------------------------------------
-   Reduced motion (global)
----------------------------------------------------------------------------- */
+    Reduced motion (global)
+    ---------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -2544,4 +2601,92 @@ select.field option {
   .reveal { opacity: 1; transform: none; }
   /* Skip the heavy blurred aurora entirely for reduced-motion users */
   .hero-aurora { display: none; }
+}
+
+/* ============================================================================
+    Adoptables — SOLD overlay
+    A massive, unmistakable overlay that covers the entire image area.
+    ============================================================================ */
+.adoptable-sold-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(153, 23, 23, 0.85);
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+}
+
+.adoptable-sold-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.03) 10px,
+    rgba(255, 255, 255, 0.06) 10px,
+    rgba(255, 255, 255, 0.06) 20px
+  );
+  pointer-events: none;
+}
+
+.adoptable-sold-text {
+  position: relative;
+  z-index: 21;
+  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+  font-size: clamp(2.5rem, 8vw, 6rem);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: #fff;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 10px rgba(255, 255, 255, 0.8),
+    0 0 30px rgba(255, 255, 255, 0.5),
+    0 0 60px rgba(251, 113, 133, 0.7),
+    0 0 100px rgba(251, 113, 133, 0.5);
+  pointer-events: none;
+  animation: pulse-glow 1.5s ease-in-out infinite alternate;
+}
+
+.adoptable-sold-subtext {
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 21;
+  font-size: clamp(0.875rem, 2vw, 1.25rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.adoptable-card-sold-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(153, 23, 23, 0.9);
+  pointer-events: none;
+}
+
+.adoptable-card-sold-text {
+  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+  font-size: clamp(1.5rem, 5vw, 3rem);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: #fff;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.9),
+    0 0 20px rgba(255, 255, 255, 0.7),
+    0 0 40px rgba(251, 113, 133, 0.8);
+  pointer-events: none;
 }

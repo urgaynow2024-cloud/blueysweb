@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from "./supabase";
-import { pricingTiers, additionalServices, faqItems, workflowSteps, mockReviews, mockPortfolioImages, mockAdoptables, mockAdoptableGallery, mockNsfwPortfolioImages } from "../data/site";
+import { pricingTiers, additionalServices, faqItems, workflowSteps, mockReviews, mockPortfolioImages, mockNsfwPortfolioImages } from "../data/site";
 
 const FALLBACKS = {
   siteConfig: {
@@ -17,8 +17,8 @@ const FALLBACKS = {
   reviews: mockReviews,
   portfolioImages: mockPortfolioImages,
   nsfwPortfolioImages: mockNsfwPortfolioImages,
-  adoptables: mockAdoptables,
-  adoptableGallery: mockAdoptableGallery,
+  adoptables: [],
+  adoptableGallery: [],
 };
 
 async function fetchAll<T>(table: string, fallback: T[]): Promise<T[]> {
@@ -289,21 +289,48 @@ export async function getTosSections() {
 
 export async function getAdoptables() {
   if (!isSupabaseConfigured || !supabase) return FALLBACKS.adoptables;
-  const { data, error } = await supabase.from("adoptables").select("*").order("sort_order", { ascending: true });
+  const { data, error } = await supabase
+    .from("adoptables")
+    .select("id, title, description, category, price, availability, featured, visible, sort_order, species, included_items, rules_license, vrchat_info, sfw_price, nsfw_price, bundle_price, sfw_available, nsfw_available, bundle_available, main_image, main_image_path, created_at, updated_at")
+    .eq("visible", true)
+    .order("sort_order", { ascending: true });
   if (error || !data || data.length === 0) return FALLBACKS.adoptables;
   return data;
 }
 
-export async function getAdoptableGallery() {
-  if (!isSupabaseConfigured || !supabase) return FALLBACKS.adoptableGallery;
-  const { data, error } = await supabase.from("adoptable_gallery").select("*").order("sort_order", { ascending: true });
-  if (error || !data || data.length === 0) return FALLBACKS.adoptableGallery;
+export async function getAdoptableById(id: string) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data, error } = await supabase
+    .from("adoptables")
+    .select("*")
+    .eq("id", id)
+    .eq("visible", true)
+    .single();
+  if (error || !data) return null;
   return data;
 }
 
-export async function getAdoptableBeforeAfters() {
+export async function getAdoptableGalleryImages(adoptableId: string) {
   if (!isSupabaseConfigured || !supabase) return [];
-  const { data, error } = await supabase.from("adoptable_before_after").select("*").order("sort_order", { ascending: true });
+  const { data, error } = await supabase
+    .from("adoptable_gallery")
+    .select("*")
+    .eq("adoptable_id", adoptableId)
+    .order("sort_order", { ascending: true });
+  if (error) {
+    console.error("Failed to load adoptable gallery:", error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function getAdoptableBeforeAfters(adoptableId?: string) {
+  if (!isSupabaseConfigured || !supabase) return [];
+  let query = supabase.from("adoptable_before_after").select("*").order("sort_order", { ascending: true });
+  if (adoptableId) {
+    query = query.eq("adoptable_id", adoptableId);
+  }
+  const { data, error } = await query;
   if (error) {
     const msg = typeof error === "object" && error && "message" in error ? (error as any).message : String(error);
     if (!/relation .* does not exist/i.test(msg)) {
@@ -314,7 +341,7 @@ export async function getAdoptableBeforeAfters() {
   return data || [];
 }
 
-export async function uploadAdoptableGalleryImage(adoptableId: string, file: File) {
+export async function uploadAdoptableGalleryImage(adoptableId: string, file: File, isNsfw = false) {
   if (!isSupabaseConfigured || !supabase) return null;
   const ext = file.name.split(".").pop();
   const storagePath = `adoptables/${adoptableId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -328,12 +355,12 @@ export async function uploadAdoptableGalleryImage(adoptableId: string, file: Fil
   }
   const { data: urlData } = supabase.storage.from("adoptables").getPublicUrl(storagePath);
   const url = urlData.publicUrl;
-  const { data: dbData, error: dbError } = await supabase.from("adoptable_gallery").insert([{ adoptable_id: adoptableId, url, path: storagePath }]).select();
+  const { data: dbData, error: dbError } = await supabase.from("adoptable_gallery").insert([{ adoptable_id: adoptableId, url, path: storagePath, is_nsfw: isNsfw }]).select();
   if (dbError || !dbData || dbData.length === 0) {
     await supabase.storage.from("adoptables").remove([storagePath]);
     return null;
   }
-  return { id: dbData[0].id, url, path: storagePath };
+  return { id: dbData[0].id, url, path: storagePath, is_nsfw: isNsfw };
 }
 
 export async function deleteAdoptableGalleryImage(id: string, path?: string) {
@@ -349,4 +376,39 @@ export async function reorderAdoptableGalleryImages(items: { id: string; sort_or
     const { error } = await supabase.from("adoptable_gallery").update({ sort_order: item.sort_order }).eq("id", item.id);
     if (error) console.error("Adoptable gallery reorder error:", error);
   }
+}
+
+export async function getAllAdoptableGalleryImages() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase
+    .from("adoptable_gallery")
+    .select("*")
+    .order("sort_order", { ascending: true });
+  if (error) {
+    console.error("Failed to load adoptable gallery:", error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function updateAdoptableStatus(id: string, status: "available" | "sold" | "reserved") {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data, error } = await supabase
+    .from("adoptables")
+    .update({ availability: status, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select();
+  if (error) return null;
+  return data?.[0];
+}
+
+export async function updateAdoptableMainImage(adoptableId: string, url: string | null, path?: string | null) {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data, error } = await supabase
+    .from("adoptables")
+    .update({ main_image: url, main_image_path: path, updated_at: new Date().toISOString() })
+    .eq("id", adoptableId)
+    .select();
+  if (error) return null;
+  return data?.[0];
 }

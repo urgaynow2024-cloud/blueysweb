@@ -475,50 +475,9 @@ export const mockNsfwPortfolioImages: { id: string; url: string; sort_order: num
   { id: "mock-nsfw-4", url: "https://images.unsplash.com/photo-1578496541671-4d7f6d6e7c61?auto=format&fit=crop&w=800&q=60", sort_order: 3 },
 ];
 
-export const mockAdoptables = [
-  {
-    id: "mock-adoptable-1",
-    title: "Cosmic Fox Adoptable",
-    description: "A custom avatar adoptable featuring a cyberpunk fox design with unique accessories and colour scheme.",
-    category: "avatar",
-    price: "£65",
-    availability: "available",
-    featured: true,
-    visible: true,
-    sort_order: 0,
-  },
-  {
-    id: "mock-adoptable-2",
-    title: "Bunny Companion Adoptable",
-    description: "Full body adoptable merging a bunny base with custom wolf ears, tail, and proportions.",
-    category: "avatar",
-    price: "£75",
-    availability: "available",
-    featured: true,
-    visible: true,
-    sort_order: 1,
-  },
-  {
-    id: "mock-adoptable-3",
-    title: "Catgirl Demon Overlay",
-    description: "Partial mesh adoptable overlay with demonic horns, wings, and tail onto a standard catgirl base.",
-    category: "avatar",
-    price: "£55",
-    availability: "sold",
-    featured: false,
-    visible: true,
-    sort_order: 2,
-  },
-];
+export const mockAdoptables: any[] = [];
 
-export const mockAdoptableGallery: string[] = [
-  "https://images.unsplash.com/photo-1505379918443-6f7e9f9c0e00?auto=format&fit=crop&w=800&q=60",
-  "https://images.unsplash.com/photo-1519389950414-1a9bcb3f3f2e?auto=format&fit=crop&w=800&q=60",
-  "https://images.unsplash.com/photo-1526318472392-4a4d0a3b0e0e?auto=format&fit=crop&w=800&q=60",
-  "https://images.unsplash.com/photo-1518705083311-89d0b0c54657?auto=format&fit=crop&w=800&q=60",
-  "https://images.unsplash.com/photo-1452860604562-f3dc9c558129?auto=format&fit=crop&w=800&q=60",
-  "https://images.unsplash.com/photo-1502082950510-8d33a9f2f4d0?auto=format&fit=crop&w=800&q=60",
-];
+export const mockAdoptableGallery: any[] = [];
 
 export const mockReviews = [
   {

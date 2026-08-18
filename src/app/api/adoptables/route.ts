@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
-const adoptableFields = ["title", "description", "category", "price", "availability", "featured", "visible", "sort_order"] as const;
+const adoptableFields = ["title", "description", "category", "price", "availability", "featured", "visible", "sort_order", "species", "included_items", "rules_license", "vrchat_info", "sfw_price", "nsfw_price", "bundle_price", "sfw_available", "nsfw_available", "bundle_available", "main_image", "main_image_path"] as const;
 const skipFields = new Set<string>();
 
 function buildPayload(body: any, skip: Set<string>) {
