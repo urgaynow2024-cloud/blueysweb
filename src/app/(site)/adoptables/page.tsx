@@ -232,6 +232,7 @@ export default function AdoptablesPage() {
   const [adoptables, setAdoptables] = useState<Adoptable[]>([]);
   const [galleryMap, setGalleryMap] = useState<Record<string, AdoptableGalleryImage[]>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [ageVerified, setAgeVerified] = useState(false);
   const [showAgeGate, setShowAgeGate] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -243,13 +244,25 @@ export default function AdoptablesPage() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function load() {
       setLoading(true);
+      setError(null);
+
       try {
         const [adoptablesData, galleryData] = await Promise.all([
-          getAdoptables(),
-          getAllAdoptableGalleryImages(),
+          getAdoptables().catch((err) => {
+            console.error("getAdoptables failed:", err);
+            return [] as Adoptable[];
+          }),
+          getAllAdoptableGalleryImages().catch((err) => {
+            console.error("getAllAdoptableGalleryImages failed:", err);
+            return [] as AdoptableGalleryImage[];
+          }),
         ]);
+
+        if (cancelled) return;
 
         const gMap: Record<string, AdoptableGalleryImage[]> = {};
         galleryData.forEach((img) => {
@@ -262,13 +275,27 @@ export default function AdoptablesPage() {
 
         setAdoptables(adoptablesData);
         setGalleryMap(gMap);
+
+        if (adoptablesData.length === 0 && galleryData.length === 0) {
+          setError("Unable to load adoptables. Please try again later.");
+        }
       } catch (e) {
-        console.error("Failed to load adoptables:", e);
+        if (!cancelled) {
+          console.error("Failed to load adoptables:", e);
+          setError("Unable to load adoptables. Please try again later.");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
+
     load();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const filters = [
@@ -351,6 +378,51 @@ export default function AdoptablesPage() {
             ))}
           </div>
         </div>
+      ) : error ? (
+        <section className="section-sm">
+          <div className="container">
+            <div className="mx-auto max-w-md text-center">
+              <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                <Package className="h-7 w-7" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-3">Unable to load adoptables</h2>
+              <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
+                Something went wrong while loading adoptables. This might be a temporary issue.
+              </p>
+              <button
+                onClick={() => {
+                  setError(null);
+                  setLoading(true);
+                  const load = async () => {
+                    try {
+                      const [adoptablesData, galleryData] = await Promise.all([
+                        getAdoptables().catch((err) => { console.error("getAdoptables failed:", err); return [] as Adoptable[]; }),
+                        getAllAdoptableGalleryImages().catch((err) => { console.error("getAllAdoptableGalleryImages failed:", err); return [] as AdoptableGalleryImage[]; }),
+                      ]);
+                      const gMap: Record<string, AdoptableGalleryImage[]> = {};
+                      galleryData.forEach((img) => {
+                        const aid = img.adoptable_id;
+                        if (aid) { if (!gMap[aid]) gMap[aid] = []; gMap[aid].push(img); }
+                      });
+                      setAdoptables(adoptablesData);
+                      setGalleryMap(gMap);
+                    } catch (e) {
+                      console.error("Retry failed:", e);
+                      setError("Unable to load adoptables. Please try again later.");
+                    } finally {
+                      setLoading(false);
+                    }
+                  };
+                  load();
+                }}
+                className="btn-primary inline-flex items-center gap-2"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                Retry
+              </button>
+            </div>
+          </div>
+        </section>
       ) : totalAdoptables === 0 ? (
         <section className="section-sm">
           <div className="container">
