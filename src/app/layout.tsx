@@ -22,6 +22,11 @@ export const metadata: Metadata = {
     template: "%s | Bluey's Commissions",
   },
   description: "I create and customise VRChat avatars using Blender and Unity. Around 2 years of experience.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

@@ -5,7 +5,7 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import { PremiumCard } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/Button";
-import { ExternalLink, Link2 } from "lucide-react";
+import { ExternalLink, Link2, Globe } from "lucide-react";
 import { getSocialLinks } from "@/lib/db";
 
 const MOCK_LINKS = [
@@ -15,9 +15,23 @@ const MOCK_LINKS = [
   { id: "mock-link-4", name: "VRChat", url: "https://vrchat.com", description: "The platform I build for" },
 ];
 
+function getDomain(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+function getFaviconUrl(url: string): string {
+  const domain = getDomain(url);
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+}
+
 export default function LinksPage() {
   const [links, setLinks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [faviconErrors, setFaviconErrors] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function load() {
@@ -71,24 +85,46 @@ export default function LinksPage() {
             <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
               {links.map((link, i) => (
                 <Reveal key={link.id || i} delay={(i % 4) * 60}>
-                  <div className="group h-full">
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className="flex h-full items-start justify-between gap-4 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-md)] transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-lg)] group-hover:text-white"
-                    >
-                      <div className="min-w-0">
-                        <h3 className="truncate font-semibold text-white transition-colors group-hover:text-[var(--accent)]">{link.name}</h3>
-                        {link.description && <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">{link.description}</p>}
-                        <p className="mt-3 break-all text-xs text-[var(--text-dim)]">{link.url}</p>
-                      </div>
-                      <span className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2.5 py-1 text-xs text-[var(--text-dim)] transition-colors group-hover:border-[var(--accent)]/40 group-hover:text-[var(--accent)]">
-                        Visit
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </span>
-                    </a>
-                  </div>
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="group flex h-full items-center gap-5 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-5 shadow-[var(--shadow-md)] transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)] hover:shadow-[0_0_40px_rgba(90,176,240,0.08)]"
+                  >
+                    {/* Favicon */}
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-2.5 shadow-inner">
+                      {!faviconErrors.has(link.url) ? (
+                        <img
+                          src={getFaviconUrl(link.url)}
+                          alt=""
+                          className="h-8 w-8 object-contain"
+                          onError={() => {
+                            setFaviconErrors((prev) => new Set(prev).add(link.url));
+                          }}
+                        />
+                      ) : (
+                        <Globe className="h-7 w-7 text-[var(--text-dim)]" />
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate font-semibold text-white transition-colors group-hover:text-[var(--accent)]">
+                        {link.name}
+                      </h3>
+                      {link.description && (
+                        <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-[var(--text-secondary)]">
+                          {link.description}
+                        </p>
+                      )}
+                      <p className="mt-2 break-all text-xs text-[var(--text-dim)]">{getDomain(link.url)}</p>
+                    </div>
+
+                    {/* Arrow */}
+                    <span className="flex shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2.5 text-[var(--text-dim)] transition-all group-hover:border-[var(--accent)]/40 group-hover:text-[var(--accent)] group-hover:shadow-[0_0_12px_var(--accent-glow)]">
+                      <ExternalLink className="h-4 w-4" />
+                    </span>
+                  </a>
                 </Reveal>
               ))}
             </div>

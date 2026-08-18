@@ -28,7 +28,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative flex min-h-[100svh] items-center overflow-hidden pb-20 pt-28 md:pb-24 md:pt-32">
+    <section className="relative flex min-h-[100svh] items-center overflow-hidden pb-16 pt-20 md:pb-24 md:pt-32">
       {/* Deep space atmosphere — layered nebula clouds */}
       <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute left-1/4 top-[-15%] h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.22] blur-[200px] orb-slow" />
@@ -50,7 +50,7 @@ export default function Hero() {
       </div>
 
       <div className="container relative z-10">
-        <div className="grid grid-cols-1 items-center gap-14 lg:grid-cols-12 lg:gap-12">
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-12">
           {/* Content — Left */}
           <div className="lg:col-span-6">
             <div className="fade-in">
