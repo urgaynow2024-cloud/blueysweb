@@ -254,10 +254,16 @@ export default function AdoptablesPage() {
         const [adoptablesData, galleryData] = await Promise.all([
           getAdoptables().catch((err) => {
             console.error("getAdoptables failed:", err);
+            if (err && typeof err === "object" && "message" in err && typeof (err as any).message === "string" && (err as any).message.includes("TABLE_MISSING")) {
+              throw err;
+            }
             return [] as Adoptable[];
           }),
           getAllAdoptableGalleryImages().catch((err) => {
             console.error("getAllAdoptableGalleryImages failed:", err);
+            if (err && typeof err === "object" && "message" in err && typeof (err as any).message === "string" && (err as any).message.includes("TABLE_MISSING")) {
+              throw err;
+            }
             return [] as AdoptableGalleryImage[];
           }),
         ]);
@@ -277,12 +283,17 @@ export default function AdoptablesPage() {
         setGalleryMap(gMap);
 
         if (adoptablesData.length === 0 && galleryData.length === 0) {
-          setError("Unable to load adoptables. Please try again later.");
+          setError("EMPTY");
         }
-      } catch (e) {
+      } catch (e: any) {
         if (!cancelled) {
           console.error("Failed to load adoptables:", e);
-          setError("Unable to load adoptables. Please try again later.");
+          const msg = e?.message || "Unable to load adoptables.";
+          if (msg.includes("TABLE_MISSING")) {
+            setError("DATABASE_NOT_SETUP");
+          } else {
+            setError("ERROR");
+          }
         }
       } finally {
         if (!cancelled) {
@@ -378,16 +389,19 @@ export default function AdoptablesPage() {
             ))}
           </div>
         </div>
-      ) : error ? (
+      ) : error === "DATABASE_NOT_SETUP" ? (
         <section className="section-sm">
           <div className="container">
-            <div className="mx-auto max-w-md text-center">
+            <div className="mx-auto max-w-lg text-center">
               <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
                 <Package className="h-7 w-7" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-3">Unable to load adoptables</h2>
-              <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
-                Something went wrong while loading adoptables. This might be a temporary issue.
+              <h2 className="text-2xl font-bold text-white mb-3">Adoptables database not set up</h2>
+              <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
+                The adoptables feature needs its Supabase tables created before it can load anything.
+              </p>
+              <p className="text-sm text-[var(--text-dim)] mb-6">
+                Go to your Supabase project → <span className="font-mono text-[var(--accent)]">SQL Editor</span> → New query, paste the contents of <span className="font-mono text-[var(--accent)]">supabase/schema.sql</span>, and run it.
               </p>
               <button
                 onClick={() => {
@@ -408,7 +422,7 @@ export default function AdoptablesPage() {
                       setGalleryMap(gMap);
                     } catch (e) {
                       console.error("Retry failed:", e);
-                      setError("Unable to load adoptables. Please try again later.");
+                      setError("DATABASE_NOT_SETUP");
                     } finally {
                       setLoading(false);
                     }
@@ -418,12 +432,12 @@ export default function AdoptablesPage() {
                 className="btn-primary inline-flex items-center gap-2"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
-                Retry
+                Retry after setup
               </button>
             </div>
           </div>
         </section>
-      ) : totalAdoptables === 0 ? (
+      ) : error === "EMPTY" ? (
         <section className="section-sm">
           <div className="container">
             <div className="mx-auto max-w-md text-center">

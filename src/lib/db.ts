@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from "./supabase";
 import { pricingTiers, additionalServices, faqItems, workflowSteps, mockReviews, mockPortfolioImages, mockNsfwPortfolioImages } from "../data/site";
+import type { Adoptable, AdoptableGalleryImage } from "../types/adoptables";
 
 const FALLBACKS = {
   siteConfig: {
@@ -290,14 +291,25 @@ export async function getTosSections() {
   return data || [];
 }
 
-export async function getAdoptables() {
+export async function getAdoptables(): Promise<Adoptable[]> {
   if (!isSupabaseConfigured || !supabase) return FALLBACKS.adoptables;
   const { data, error } = await supabase
     .from("adoptables")
     .select("id, title, description, category, price, availability, featured, visible, sort_order, species, included_items, rules_license, vrchat_info, sfw_price, nsfw_price, bundle_price, sfw_available, nsfw_available, bundle_available, main_image, main_image_path, created_at, updated_at")
     .eq("visible", true)
     .order("sort_order", { ascending: true });
-  if (error || !data || data.length === 0) return FALLBACKS.adoptables;
+
+  if (error) {
+    const msg = typeof error === "object" && error && "message" in error ? (error as any).message : String(error);
+    if (/relation .* does not exist/i.test(msg) || /schema .* does not exist/i.test(msg) || error.code === "42P01") {
+      console.error("Adoptables table is missing in Supabase. Run supabase/schema.sql in the SQL Editor.", error);
+      throw new Error("ADOPTABLES_TABLE_MISSING");
+    }
+    console.error("Failed to load adoptables:", error);
+    return FALLBACKS.adoptables;
+  }
+
+  if (!data || data.length === 0) return FALLBACKS.adoptables;
   return data;
 }
 
@@ -382,16 +394,23 @@ export async function reorderAdoptableGalleryImages(items: { id: string; sort_or
   }
 }
 
-export async function getAllAdoptableGalleryImages() {
+export async function getAllAdoptableGalleryImages(): Promise<AdoptableGalleryImage[]> {
   if (!isSupabaseConfigured || !supabase) return [];
   const { data, error } = await supabase
     .from("adoptable_gallery")
     .select("*")
     .order("sort_order", { ascending: true });
+
   if (error) {
+    const msg = typeof error === "object" && error && "message" in error ? (error as any).message : String(error);
+    if (/relation .* does not exist/i.test(msg) || /schema .* does not exist/i.test(msg) || error.code === "42P01") {
+      console.error("adoptable_gallery table is missing in Supabase. Run supabase/schema.sql in the SQL Editor.", error);
+      throw new Error("ADOPTABLE_GALLERY_TABLE_MISSING");
+    }
     console.error("Failed to load adoptable gallery:", error);
     return [];
   }
+
   return data || [];
 }
 
