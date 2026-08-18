@@ -3,7 +3,7 @@
 import imageCompression from "browser-image-compression";
 
 const COMPRESSION_OPTIONS = {
-  maxSizeMB: 2,
+  maxSizeMB: 1,
   maxWidthOrHeight: 1920,
   useWebWorker: true,
   fileType: "image/webp" as const,
@@ -19,7 +19,7 @@ export async function compressFileClient(file: File): Promise<File> {
     return compressed;
   } catch (error) {
     console.error("Client-side compression failed:", error);
-    return file;
+    throw new Error("Failed to compress image. Please try a different image.");
   }
 }
 

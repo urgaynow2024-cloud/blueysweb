@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { uploadToSupabaseStorage, deleteFromSupabaseStorage } from "@/lib/supabase-storage";
 import { useSave } from "../SaveProvider";
 import { useToast } from "../Toast";
 import { Card, CardHeader } from "../Card";
@@ -377,18 +378,20 @@ export function AdoptablesSection() {
     }
     const file = files[0];
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch(`/api/adoptables/${adoptableId}/main-image`, {
-        method: "POST",
-        body: formData,
+      const storagePath = `adoptables/${adoptableId}/main-${Date.now()}-${Math.random().toString(36).slice(2)}.${file.name.split(".").pop() || "bin"}`;
+      const { url, path: uploadedPath } = await uploadToSupabaseStorage("adoptables", storagePath, file);
+
+      const res = await fetch(`/api/adoptables/${adoptableId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ main_image: url, main_image_path: uploadedPath }),
       });
       if (!res.ok) {
         const r = await res.json().catch(() => ({}));
-        throw new Error(r.error || "Upload failed");
+        throw new Error(r.error || "Failed to update adoptable");
       }
-      const uploaded = await res.json();
-      setMainImages((prev) => ({ ...prev, [adoptableId!]: uploaded.url }));
+
+      setMainImages((prev) => ({ ...prev, [adoptableId!]: url }));
       toast.success("Main image uploaded");
     } catch {
       toast.error("Failed to upload main image");
@@ -400,13 +403,20 @@ export function AdoptablesSection() {
     if (!project.id) return;
     const path = (project as any).main_image_path;
     try {
-      const url = new URL(`/api/adoptables/${project.id}/main-image`, window.location.origin);
-      if (path) url.searchParams.set("path", path);
-      const res = await fetch(url.toString(), { method: "DELETE" });
+      if (path) {
+        await deleteFromSupabaseStorage("adoptables", path);
+      }
+
+      const res = await fetch(`/api/adoptables/${project.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ main_image: null, main_image_path: null }),
+      });
       if (!res.ok) {
         const r = await res.json().catch(() => ({}));
-        throw new Error(r.error || "Delete failed");
+        throw new Error(r.error || "Failed to update adoptable");
       }
+
       setMainImages((prev) => {
         const next = { ...prev };
         delete next[project.id!];
@@ -488,11 +498,13 @@ export function AdoptablesSection() {
       const temp: AdoptableGalleryImage = { url: "", sort_order: (galleryImages[adoptableId] || []).length + i };
       setGalleryImages((prev) => ({ ...prev, [adoptableId]: [...(prev[adoptableId] || []), temp] }));
       try {
-        const formData = new FormData();
-        formData.append("file", file);
+        const storagePath = `adoptables/${adoptableId}/gallery-${Date.now()}-${Math.random().toString(36).slice(2)}-${i}.${file.name.split(".").pop() || "bin"}`;
+        const { url, path: uploadedPath } = await uploadToSupabaseStorage("adoptables", storagePath, file);
+
         const res = await fetch(`/api/adoptables/${adoptableId}/gallery`, {
           method: "POST",
-          body: formData,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url, path: uploadedPath }),
         });
         if (!res.ok) {
           const r = await res.json().catch(() => ({}));
@@ -539,12 +551,13 @@ export function AdoptablesSection() {
     setBeforeAfters((prev) => ({ ...prev, [adoptableId]: [...(prev[adoptableId] || []), temp] }));
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("type", type);
+      const storagePath = `adoptables/${adoptableId}/${type}-${Date.now()}-${Math.random().toString(36).slice(2)}.${file.name.split(".").pop() || "bin"}`;
+      const { url, path: uploadedPath } = await uploadToSupabaseStorage("adoptables", storagePath, file);
+
       const res = await fetch(`/api/adoptables/${adoptableId}/before-after`, {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, url, path: uploadedPath }),
       });
       if (!res.ok) {
         const r = await res.json().catch(() => ({}));
@@ -565,9 +578,12 @@ export function AdoptablesSection() {
 
   async function deleteGalleryImage(adoptableId: string, imageId: string, path?: string) {
     try {
+      if (path) {
+        await deleteFromSupabaseStorage("adoptables", path);
+      }
+
       const params = new URLSearchParams();
       if (imageId) params.set("imageId", imageId);
-      if (path) params.set("path", path);
       const res = await fetch(`/api/adoptables/${adoptableId}/gallery?${params.toString()}`, {
         method: "DELETE",
       });
@@ -587,10 +603,11 @@ export function AdoptablesSection() {
 
   async function deleteBeforeAfter(adoptableId: string, baId: string, beforePath?: string, afterPath?: string) {
     try {
+      if (beforePath) await deleteFromSupabaseStorage("adoptables", beforePath);
+      if (afterPath) await deleteFromSupabaseStorage("adoptables", afterPath);
+
       const params = new URLSearchParams();
       if (baId) params.set("id", baId);
-      if (beforePath) params.set("beforePath", beforePath);
-      if (afterPath) params.set("afterPath", afterPath);
       const res = await fetch(`/api/adoptables/${adoptableId}/before-after?${params.toString()}`, {
         method: "DELETE",
       });

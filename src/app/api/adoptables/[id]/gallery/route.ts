@@ -8,6 +8,32 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    const contentType = request.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+      const body = await request.json();
+      const { url, path } = body;
+
+      if (!url || !path) {
+        return NextResponse.json({ error: "url and path are required" }, { status: 400 });
+      }
+
+      if (!supabaseAdmin) {
+        return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+      }
+
+      const { data: dbData, error: dbError } = await supabaseAdmin
+        .from("adoptable_gallery")
+        .insert([{ adoptable_id: id, url, path, is_nsfw: false }])
+        .select();
+
+      if (dbError || !dbData || dbData.length === 0) {
+        return NextResponse.json({ error: "Database error", details: dbError?.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ id: dbData[0].id, url, path }, { status: 201 });
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
 
