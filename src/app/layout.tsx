@@ -17,6 +17,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.blueycomissions.website"),
   title: {
     default: "Bluey's Avatar Commissions",
     template: "%s | Bluey's Commissions",
@@ -26,6 +27,27 @@ export const metadata: Metadata = {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
     apple: "/favicon.svg",
+  },
+  openGraph: {
+    title: "Bluey's Avatar Commissions",
+    description: "I create and customise VRChat avatars using Blender and Unity. Around 2 years of experience.",
+    url: "https://www.blueycomissions.website",
+    siteName: "Bluey's Commissions",
+    type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Bluey's Avatar Commissions - VRChat Avatar Commissions",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bluey's Avatar Commissions",
+    description: "I create and customise VRChat avatars using Blender and Unity. Around 2 years of experience.",
+    images: ["/opengraph-image"],
   },
 };
 
