@@ -62,7 +62,7 @@ export default function Hero() {
 
             <h1 className="display-xl mt-6 text-white fade-in">
               Avatars that feel
-              <br className="hidden sm:block" />
+              <br />
               <span className="text-gradient-animated">unmistakably yours</span>
             </h1>
 
