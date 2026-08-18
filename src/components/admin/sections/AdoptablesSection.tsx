@@ -16,6 +16,12 @@ interface Adoptable {
   description: string;
   category: string;
   price: string;
+  sfw_price: string;
+  nsfw_price: string;
+  bundle_price: string;
+  sfw_available: boolean;
+  nsfw_available: boolean;
+  bundle_available: boolean;
   availability: string;
   featured: boolean;
   visible: boolean;
@@ -77,6 +83,12 @@ export function AdoptablesSection() {
           description: p.description || "",
           category: p.category || "avatar",
           price: p.price || "",
+          sfw_price: p.sfw_price || "",
+          nsfw_price: p.nsfw_price || "",
+          bundle_price: p.bundle_price || "",
+          sfw_available: p.sfw_available || false,
+          nsfw_available: p.nsfw_available || false,
+          bundle_available: p.bundle_available || false,
           availability: p.availability || "available",
           featured: p.featured || false,
           visible: p.visible !== false,
@@ -132,6 +144,12 @@ export function AdoptablesSection() {
         description: project.description,
         category: project.category,
         price: project.price,
+        sfw_price: project.sfw_price,
+        nsfw_price: project.nsfw_price,
+        bundle_price: project.bundle_price,
+        sfw_available: project.sfw_available,
+        nsfw_available: project.nsfw_available,
+        bundle_available: project.bundle_available,
         availability: project.availability,
         featured: project.featured,
         visible: project.visible,
@@ -176,6 +194,12 @@ export function AdoptablesSection() {
           description: p.description || "",
           category: p.category || "avatar",
           price: p.price || "",
+          sfw_price: p.sfw_price || "",
+          nsfw_price: p.nsfw_price || "",
+          bundle_price: p.bundle_price || "",
+          sfw_available: p.sfw_available || false,
+          nsfw_available: p.nsfw_available || false,
+          bundle_available: p.bundle_available || false,
           availability: p.availability || "available",
           featured: p.featured || false,
           visible: p.visible !== false,
@@ -224,7 +248,7 @@ export function AdoptablesSection() {
     if (!isSupabaseConfigured || !sb) {
       setProjects([
         ...projects,
-        { title: "", description: "", category: "avatar", price: "", availability: "available", featured: false, visible: true, sort_order: projects.length },
+        { title: "", description: "", category: "avatar", price: "", sfw_price: "", nsfw_price: "", bundle_price: "", sfw_available: false, nsfw_available: false, bundle_available: false, availability: "available", featured: false, visible: true, sort_order: projects.length },
       ]);
       setEditingProject(projects.length);
       markDirty();
@@ -234,7 +258,7 @@ export function AdoptablesSection() {
       const res = await fetch("/api/adoptables", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "", description: "", category: "avatar", price: "", availability: "available", featured: false, visible: true, sort_order: projects.length }),
+        body: JSON.stringify({ title: "", description: "", category: "avatar", price: "", sfw_price: "", nsfw_price: "", bundle_price: "", sfw_available: false, nsfw_available: false, bundle_available: false, availability: "available", featured: false, visible: true, sort_order: projects.length }),
       });
       if (!res.ok) {
         const r = await res.json().catch(() => ({}));
@@ -244,7 +268,7 @@ export function AdoptablesSection() {
       if (data && data.id) {
         setProjects([
           ...projects,
-          { id: data.id, title: "", description: "", category: "avatar", price: "", availability: "available", featured: false, visible: true, sort_order: projects.length },
+          { id: data.id, title: "", description: "", category: "avatar", price: "", sfw_price: "", nsfw_price: "", bundle_price: "", sfw_available: false, nsfw_available: false, bundle_available: false, availability: "available", featured: false, visible: true, sort_order: projects.length },
         ]);
         setEditingProject(projects.length);
         originalIdsRef.current.add(data.id);
@@ -339,6 +363,12 @@ export function AdoptablesSection() {
           description: project.description,
           category: project.category,
           price: project.price,
+          sfw_price: project.sfw_price,
+          nsfw_price: project.nsfw_price,
+          bundle_price: project.bundle_price,
+          sfw_available: project.sfw_available,
+          nsfw_available: project.nsfw_available,
+          bundle_available: project.bundle_available,
           availability: project.availability,
           featured: project.featured,
           visible: project.visible,
@@ -588,6 +618,47 @@ export function AdoptablesSection() {
                       <option value="reserved">Reserved</option>
                     </Select>
                   </Field>
+
+                <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-4 space-y-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)]">Pricing</p>
+
+                  <div className="flex items-center gap-3">
+                    <label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--text-secondary)]">
+                      <input type="checkbox" checked={project.sfw_available} onChange={(e) => updateProject(i, { sfw_available: e.target.checked })} className="h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]" />
+                      SFW available
+                    </label>
+                    <div className="flex-1">
+                      <Input value={project.sfw_price} onChange={(e) => updateProject(i, { sfw_price: e.target.value })} placeholder="SFW price, e.g. £20" disabled={!project.sfw_available} />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--text-secondary)]">
+                      <input type="checkbox" checked={project.nsfw_available} onChange={(e) => updateProject(i, { nsfw_available: e.target.checked })} className="h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]" />
+                      NSFW available
+                    </label>
+                    <div className="flex-1">
+                      <Input value={project.nsfw_price} onChange={(e) => updateProject(i, { nsfw_price: e.target.value })} placeholder="NSFW price, e.g. £30" disabled={!project.nsfw_available} />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--text-secondary)]">
+                      <input type="checkbox" checked={project.bundle_available} onChange={(e) => updateProject(i, { bundle_available: e.target.checked })} className="h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]" />
+                      Bundle available
+                    </label>
+                    <div className="flex-1">
+                      <Input value={project.bundle_price} onChange={(e) => updateProject(i, { bundle_price: e.target.value })} placeholder="Bundle price, e.g. £40" disabled={!project.bundle_available} />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-[var(--text-secondary)]">Legacy price</span>
+                    <div className="flex-1">
+                      <Input value={project.price} onChange={(e) => updateProject(i, { price: e.target.value })} placeholder="Fallback price (optional)" />
+                    </div>
+                  </div>
+                </div>
                 </div>
 
                 <Field label="Description" className="mt-4">
