@@ -16,8 +16,8 @@ export function UploadArea({
   onFiles,
   uploading = false,
   disabled = false,
-  title = "Upload Images",
-  formats = ["PNG", "JPG", "WEBP"],
+  title = "Upload Media",
+  formats = ["PNG", "JPG", "WEBP", "GIF", "MP4", "WEBM"],
   inputId = "admin-upload",
 }: UploadAreaProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -61,7 +61,7 @@ export function UploadArea({
         ref={inputRef}
         id={inputId}
         type="file"
-        accept="image/*"
+        accept="image/*,video/mp4,video/webm,video/quicktime"
         multiple
         className="hidden"
         onChange={(e) => {

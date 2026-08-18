@@ -173,7 +173,7 @@ export function PortfolioSection() {
   return (
     <div className="space-y-6 relative">
       <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" />
-      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onReplaceFile} />
+      <input ref={fileInputRef} type="file" accept="image/*,video/mp4,video/webm" className="hidden" onChange={onReplaceFile} />
       <Card className="p-8 relative overflow-hidden">
         <div className="pointer-events-none absolute -top-10 -right-10 h-[200px] w-[200px] rounded-full bg-[var(--accent-2)]/5 blur-[100px] orb-med" />
         <CardHeader

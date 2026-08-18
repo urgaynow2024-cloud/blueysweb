@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { compressImageBuffer, getCompressedExtension, validateUploadSize, validateUploadType, isImageType } from "@/lib/compression";
 
 export async function POST(
   request: Request,
@@ -19,12 +20,30 @@ export async function POST(
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const ext = file.name.split(".").pop();
-    const storagePath = `adoptables/${id}/${type}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const typeValidation = validateUploadType(file.type);
+    if (!typeValidation.valid) {
+      return NextResponse.json({ error: typeValidation.error }, { status: 400 });
+    }
+
+    const sizeValidation = validateUploadSize(file.size, file.type);
+    if (!sizeValidation.valid) {
+      return NextResponse.json({ error: sizeValidation.error }, { status: 400 });
+    }
+
+    let uploadBuffer: Buffer = Buffer.from(await file.arrayBuffer());
+    let fileExtension = file.name.split(".").pop() || "bin";
+
+    if (isImageType(file.type)) {
+      const compressed = await compressImageBuffer(uploadBuffer, file.type);
+      uploadBuffer = compressed;
+      fileExtension = getCompressedExtension(file.type);
+    }
+
+    const storagePath = `adoptables/${id}/${type}-${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExtension}`;
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from("adoptables")
-      .upload(storagePath, file, { cacheControl: "3600", upsert: true });
+      .upload(storagePath, uploadBuffer, { cacheControl: "3600", upsert: true, contentType: isImageType(file.type) ? "image/webp" : file.type });
 
     if (uploadError || !uploadData) {
       return NextResponse.json({ error: "Upload failed" }, { status: 500 });

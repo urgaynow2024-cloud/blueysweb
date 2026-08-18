@@ -74,7 +74,7 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
             <Textarea rows={3} value={editData.review_text} onChange={(e) => setEditData({ ...editData, review_text: e.target.value })} />
           </Field>
           <Field label="Review image (optional)">
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+            <input ref={fileInputRef} type="file" accept="image/*,video/mp4,video/webm" onChange={handleImageUpload} className="hidden" />
             {editData.image_url ? (
               <div className="group relative w-fit">
                 <img src={editData.image_url} alt="Review preview" className="h-40 rounded-xl border border-[var(--border)] object-cover" />

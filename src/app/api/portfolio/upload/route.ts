@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { authorize } from "@/lib/auth";
+import { compressImageBuffer, getCompressedExtension, validateUploadSize, validateUploadType, isImageType } from "@/lib/compression";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,22 +19,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    if (!file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "Only image files are allowed" }, { status: 400 });
+    const typeValidation = validateUploadType(file.type);
+    if (!typeValidation.valid) {
+      return NextResponse.json({ error: typeValidation.error }, { status: 400 });
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: "File size must be under 10MB" }, { status: 400 });
+    const sizeValidation = validateUploadSize(file.size, file.type);
+    if (!sizeValidation.valid) {
+      return NextResponse.json({ error: sizeValidation.error }, { status: 400 });
     }
 
-    const ext = file.name.split(".").pop() || "bin";
-    const storagePath = `portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    let uploadBuffer: Buffer = Buffer.from(await file.arrayBuffer());
+    let fileExtension = file.name.split(".").pop() || "bin";
+
+    if (isImageType(file.type)) {
+      const compressed = await compressImageBuffer(uploadBuffer, file.type);
+      uploadBuffer = compressed;
+      fileExtension = getCompressedExtension(file.type);
+    }
+
+    const storagePath = `portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExtension}`;
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from("portfolio-images")
-      .upload(storagePath, file, {
+      .upload(storagePath, uploadBuffer, {
         cacheControl: "3600",
         upsert: true,
+        contentType: isImageType(file.type) ? "image/webp" : file.type,
       });
 
     if (uploadError || !uploadData) {

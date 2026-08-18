@@ -106,7 +106,7 @@ export async function getNsfwPortfolioImages() {
 
 export async function uploadNsfwPortfolioImage(file: File) {
   if (!isSupabaseConfigured || !supabase) return null;
-  const ext = file.name.split(".").pop();
+  const ext = file.name.split(".").pop() || "bin";
   const storagePath = `nsfw/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   
   const { data: uploadData, error: uploadError } = await supabase.storage
@@ -114,6 +114,7 @@ export async function uploadNsfwPortfolioImage(file: File) {
     .upload(storagePath, file, {
       cacheControl: "3600",
       upsert: true,
+      contentType: file.type,
     });
 
   if (uploadError || !uploadData) {
@@ -162,11 +163,12 @@ export async function reorderNsfwPortfolioImages(items: { id: string; sort_order
 
 export async function uploadImage(file: File, path?: string): Promise<string | null> {
   if (!isSupabaseConfigured || !supabase) return null;
-  const ext = file.name.split(".").pop();
+  const ext = file.name.split(".").pop() || "bin";
   const fileName = `${path || "portfolio"}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const { data, error } = await supabase.storage.from("portfolio-images").upload(fileName, file, {
     cacheControl: "3600",
     upsert: true,
+    contentType: file.type,
   });
   if (error || !data) {
     console.error("Upload error:", error);
@@ -178,11 +180,12 @@ export async function uploadImage(file: File, path?: string): Promise<string | n
 
 export async function uploadPortfolioImage(file: File) {
   if (!isSupabaseConfigured || !supabase) return null;
-  const ext = file.name.split(".").pop();
+  const ext = file.name.split(".").pop() || "bin";
   const storagePath = `portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const { data: uploadData, error: uploadError } = await supabase.storage.from("portfolio-images").upload(storagePath, file, {
     cacheControl: "3600",
     upsert: true,
+    contentType: file.type,
   });
   if (uploadError || !uploadData) {
     console.error("Storage upload error:", uploadError);
@@ -343,11 +346,12 @@ export async function getAdoptableBeforeAfters(adoptableId?: string) {
 
 export async function uploadAdoptableGalleryImage(adoptableId: string, file: File, isNsfw = false) {
   if (!isSupabaseConfigured || !supabase) return null;
-  const ext = file.name.split(".").pop();
+  const ext = file.name.split(".").pop() || "bin";
   const storagePath = `adoptables/${adoptableId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const { data: uploadData, error: uploadError } = await supabase.storage.from("adoptables").upload(storagePath, file, {
     cacheControl: "3600",
     upsert: true,
+    contentType: file.type,
   });
   if (uploadError || !uploadData) {
     console.error("Adoptable gallery upload error:", uploadError);

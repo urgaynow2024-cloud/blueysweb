@@ -12,6 +12,7 @@ export default function ClientReviewForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [starRating, setStarRating] = useState(5);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [previewType, setPreviewType] = useState<"image" | "video" | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -64,28 +65,38 @@ export default function ClientReviewForm() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      alert("Please upload an image file");
+    const isImage = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+
+    if (!isImage && !isVideo) {
+      alert("Please upload an image or video file");
       return;
     }
 
     setUploadingImage(true);
     try {
+      let uploadFile = file;
+      if (isImage) {
+        const { compressFileClient } = await import("@/lib/client-compression");
+        uploadFile = await compressFileClient(file);
+      }
+
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", uploadFile);
       formData.append("folder", "reviews");
 
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       const result = await res.json();
       if (res.ok && result.url) {
         setImagePreview(result.url);
+        setPreviewType(isVideo ? "video" : "image");
       } else {
         console.error("Upload failed:", result.error);
-        alert("Image upload failed: " + (result.error || "Unknown error"));
+        alert("Upload failed: " + (result.error || "Unknown error"));
       }
     } catch (e) {
-      console.error("Image upload failed:", e);
-      alert("Image upload failed. Please try again.");
+      console.error("Upload failed:", e);
+      alert("Upload failed. Please try again.");
     } finally {
       setUploadingImage(false);
     }
@@ -143,15 +154,19 @@ export default function ClientReviewForm() {
 
           <div>
             <label className="mb-2 block text-xs font-semibold text-[var(--text-secondary)]">Commission image (optional)</label>
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+            <input ref={fileInputRef} type="file" accept="image/*,video/mp4,video/webm" onChange={handleImageUpload} className="hidden" />
             {imagePreview ? (
               <div className="group relative">
-                <img src={imagePreview} alt="Preview" className="h-48 w-full rounded-xl border border-[var(--border)] object-cover" />
+                {previewType === "video" ? (
+                  <video src={imagePreview} controls className="h-48 w-full rounded-xl border border-[var(--border)] object-cover" />
+                ) : (
+                  <img src={imagePreview} alt="Preview" className="h-48 w-full rounded-xl border border-[var(--border)] object-cover" />
+                )}
                 <button
                   type="button"
-                  onClick={() => setImagePreview(null)}
+                  onClick={() => { setImagePreview(null); setPreviewType(null); }}
                   className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-lg bg-red-500 text-white transition-colors hover:bg-red-600"
-                  aria-label="Remove image"
+                  aria-label="Remove media"
                 >
                   <X className="h-4 w-4" />
                 </button>
