@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { compressImageBuffer, getCompressedExtension, isImageType } from "@/lib/compression";
 
 export async function POST(
   request: Request,
@@ -18,15 +19,33 @@ export async function POST(
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const ext = file.name.split(".").pop();
-    const storagePath = `adoptables/${id}/main-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const ext = file.name.split(".").pop() || "bin";
+    let uploadBuffer: Buffer = Buffer.from(await file.arrayBuffer());
+    let fileExtension = ext;
+
+    if (isImageType(file.type)) {
+      try {
+        const compressed = await compressImageBuffer(uploadBuffer, file.type);
+        uploadBuffer = compressed as Buffer;
+        fileExtension = getCompressedExtension(file.type);
+      } catch (compressionError) {
+        console.error("Image compression failed, using original:", compressionError);
+      }
+    }
+
+    const storagePath = `adoptables/${id}/main-${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExtension}`;
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from("adoptables")
-      .upload(storagePath, file, { cacheControl: "3600", upsert: true });
+      .upload(storagePath, uploadBuffer, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: isImageType(file.type) ? "image/webp" : file.type,
+      });
 
     if (uploadError || !uploadData) {
-      return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+      console.error("Storage upload error:", uploadError);
+      return NextResponse.json({ error: "Upload failed", details: uploadError?.message || "Unknown storage error" }, { status: 500 });
     }
 
     const { data: urlData } = supabaseAdmin.storage.from("adoptables").getPublicUrl(storagePath);
@@ -43,9 +62,9 @@ export async function POST(
     }
 
     return NextResponse.json({ id, url, path: storagePath }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Adoptable main image upload error:", error);
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    return NextResponse.json({ error: error?.message || "Invalid request" }, { status: 400 });
   }
 }
 

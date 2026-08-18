@@ -58,6 +58,7 @@ export function AdoptablesSection() {
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const projectsRef = useRef<Adoptable[]>([]);
   const originalIdsRef = useRef<Set<string>>(new Set());
+  const mainImageInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const { markDirty, register } = useSave();
   const toast = useToast();
 
@@ -711,24 +712,23 @@ export function AdoptablesSection() {
                     <div>
                       <input
                         ref={(el) => {
-                          if (el) {
-                            el.addEventListener("change", (e) => {
-                              const files = (e.target as HTMLInputElement).files;
-                              if (files && files.length > 0) {
-                                handleMainImageUpload(i, files);
-                              }
-                            });
-                          }
+                          mainImageInputRefs.current[i] = el;
                         }}
                         type="file"
                         accept="image/*"
                         className="hidden"
+                        onChange={(e) => {
+                          const files = e.target.files;
+                          if (files && files.length > 0) {
+                            handleMainImageUpload(i, files);
+                          }
+                        }}
                       />
                       <button
                         type="button"
                         onClick={() => {
-                          const input = document.querySelector(`input[type="file"]`);
-                          if (input) (input as HTMLInputElement).click();
+                          const input = mainImageInputRefs.current[i];
+                          if (input) input.click();
                         }}
                         className="btn-secondary !py-1.5 !px-3 !text-xs"
                       >
