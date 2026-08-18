@@ -54,6 +54,7 @@ export function AdoptablesSection() {
   const [editingProject, setEditingProject] = useState<number | null>(null);
   const [galleryImages, setGalleryImages] = useState<Record<string, AdoptableGalleryImage[]>>({});
   const [beforeAfters, setBeforeAfters] = useState<Record<string, AdoptableBeforeAfter[]>>({});
+  const [mainImages, setMainImages] = useState<Record<string, string>>({});
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const projectsRef = useRef<Adoptable[]>([]);
   const originalIdsRef = useRef<Set<string>>(new Set());
@@ -96,6 +97,12 @@ export function AdoptablesSection() {
         }));
         setProjects(loaded);
         originalIdsRef.current = new Set(loaded.map((p) => p.id).filter(Boolean));
+
+        const mainImgMap: Record<string, string> = {};
+        loaded.forEach((p: any) => {
+          if (p.main_image) mainImgMap[p.id] = p.main_image;
+        });
+        setMainImages(mainImgMap);
 
         const { data: galleryData } = await sb
           .from("adoptable_gallery")
@@ -154,6 +161,8 @@ export function AdoptablesSection() {
         featured: project.featured,
         visible: project.visible,
         sort_order: project.sort_order,
+        main_image: (project as any).main_image || null,
+        main_image_path: (project as any).main_image_path || null,
       };
       if (project.id) {
         const res = await fetch(`/api/adoptables/${project.id}`, {
@@ -206,6 +215,11 @@ export function AdoptablesSection() {
           sort_order: p.sort_order || 0,
         })),
       );
+      const mainImgMap: Record<string, string> = {};
+      reloaded.forEach((p: any) => {
+        if (p.main_image) mainImgMap[p.id] = p.main_image;
+      });
+      setMainImages(mainImgMap);
       originalIdsRef.current = new Set(
         reloaded.map((p: any) => p.id).filter(Boolean),
       );
@@ -241,6 +255,13 @@ export function AdoptablesSection() {
       }
     }
     setProjects(projects.filter((_, j) => j !== i));
+    if (project.id) {
+      setMainImages((prev) => {
+        const next = { ...prev };
+        delete next[project.id!];
+        return next;
+      });
+    }
     markDirty();
   }
 
@@ -290,6 +311,7 @@ export function AdoptablesSection() {
       setProjects([]);
       setGalleryImages({});
       setBeforeAfters({});
+      setMainImages({});
       originalIdsRef.current = new Set();
       toast.success("All adoptables cleared");
     } catch (e: any) {
@@ -339,6 +361,60 @@ export function AdoptablesSection() {
       }
     }
     updateProject(i, { featured: newFeatured });
+  }
+
+  async function handleMainImageUpload(i: number, files: FileList | null) {
+    if (!files || files.length === 0) return;
+    const project = projects[i];
+    let adoptableId: string | null = project.id ?? null;
+    if (!adoptableId) {
+      adoptableId = await ensureProjectHasId(i);
+      if (!adoptableId) {
+        toast.error("Save the adoptable first before uploading images");
+        return;
+      }
+    }
+    const file = files[0];
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`/api/adoptables/${adoptableId}/main-image`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const r = await res.json().catch(() => ({}));
+        throw new Error(r.error || "Upload failed");
+      }
+      const uploaded = await res.json();
+      setMainImages((prev) => ({ ...prev, [adoptableId!]: uploaded.url }));
+      toast.success("Main image uploaded");
+    } catch {
+      toast.error("Failed to upload main image");
+    }
+  }
+
+  async function deleteMainImage(i: number) {
+    const project = projects[i];
+    if (!project.id) return;
+    const path = (project as any).main_image_path;
+    try {
+      const url = new URL(`/api/adoptables/${project.id}/main-image`, window.location.origin);
+      if (path) url.searchParams.set("path", path);
+      const res = await fetch(url.toString(), { method: "DELETE" });
+      if (!res.ok) {
+        const r = await res.json().catch(() => ({}));
+        throw new Error(r.error || "Delete failed");
+      }
+      setMainImages((prev) => {
+        const next = { ...prev };
+        delete next[project.id!];
+        return next;
+      });
+      toast.success("Main image removed");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to remove main image");
+    }
   }
 
   function moveProject(i: number, dir: number) {
@@ -618,6 +694,50 @@ export function AdoptablesSection() {
                       <option value="reserved">Reserved</option>
                     </Select>
                   </Field>
+
+                <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-3">Main Image</p>
+                  <div className="flex items-center gap-4">
+                    {mainImages[project.id || ""] ? (
+                      <div className="relative group">
+                        <img src={mainImages[project.id || ""]} alt="Main" className="h-20 w-20 rounded-lg border border-[var(--border)] object-cover" />
+                        <button type="button" onClick={() => project.id && deleteMainImage(i)} className="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-[var(--danger)] text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Delete main image">×</button>
+                      </div>
+                    ) : (
+                      <div className="h-20 w-20 rounded-lg border border-dashed border-[var(--border)] flex items-center justify-center text-[var(--text-dim)]">
+                        <ImageIcon className="h-6 w-6" />
+                      </div>
+                    )}
+                    <div>
+                      <input
+                        ref={(el) => {
+                          if (el) {
+                            el.addEventListener("change", (e) => {
+                              const files = (e.target as HTMLInputElement).files;
+                              if (files && files.length > 0) {
+                                handleMainImageUpload(i, files);
+                              }
+                            });
+                          }
+                        }}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const input = document.querySelector(`input[type="file"]`);
+                          if (input) (input as HTMLInputElement).click();
+                        }}
+                        className="btn-secondary !py-1.5 !px-3 !text-xs"
+                      >
+                        {mainImages[project.id || ""] ? "Replace" : "Upload"} Main Image
+                      </button>
+                      <p className="mt-1 text-[10px] text-[var(--text-dim)]">Recommended: 1200x1200px or larger</p>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-4 space-y-4">
                   <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)]">Pricing</p>
