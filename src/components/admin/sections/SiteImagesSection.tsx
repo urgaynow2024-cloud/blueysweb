@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Upload, Trash2, Loader2, Image as ImageIcon } from "lucide-react";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { uploadToSupabaseStorage, deleteFromSupabaseStorage } from "@/lib/supabase-storage";
 import { useToast } from "../Toast";
 import { Card, CardHeader } from "../Card";
 import { Button } from "../Button";
@@ -40,10 +41,14 @@ export function SiteImagesSection() {
   async function handleUpload(key: string, file: File) {
     setSaving(key);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("key", key);
-      const res = await fetch("/api/site-images", { method: "POST", body: formData });
+      const storagePath = `site/${key}-${Date.now()}-${Math.random().toString(36).slice(2)}.${file.name.split(".").pop() || "bin"}`;
+      const { url, path } = await uploadToSupabaseStorage("portfolio-images", storagePath, file);
+
+      const res = await fetch("/api/site-images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, url, path }),
+      });
       const result = await res.json();
       if (res.ok && result.url) {
         setImages((prev) => ({ ...prev, [key]: { url: result.url, path: result.path } }));
@@ -62,6 +67,9 @@ export function SiteImagesSection() {
     const image = images[key];
     if (!image) return;
     try {
+      if (image.path) {
+        await deleteFromSupabaseStorage("portfolio-images", image.path);
+      }
       const res = await fetch("/api/site-images", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },

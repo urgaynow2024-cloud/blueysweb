@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getNsfwPortfolioImages } from "@/lib/db";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { uploadToSupabaseStorage, deleteFromSupabaseStorage } from "@/lib/supabase-storage";
 import { useSave } from "../SaveProvider";
 import { useToast } from "../Toast";
 import { Card, CardHeader } from "../Card";
@@ -62,17 +63,28 @@ export function NsfwSection() {
   }, [register, saveNsfw]);
 
   async function uploadOne(file: File) {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/nsfw/upload", { method: "POST", body: formData });
-    let result: any;
+    const storagePath = `nsfw/${Date.now()}-${Math.random().toString(36).slice(2)}.${file.name.split(".").pop() || "bin"}`;
     try {
-      result = await res.json();
-    } catch {
-      result = {};
+      const { url, path } = await uploadToSupabaseStorage("portfolio-images", storagePath, file);
+
+      const res = await fetch("/api/nsfw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, path }),
+      });
+      let result: any;
+      try {
+        result = await res.json();
+      } catch {
+        result = {};
+      }
+      if (res.ok && result.id) return { id: result.id, url, path };
+      throw new Error(result.error || result.details || `Upload failed (${res.status})`);
+    } catch (err) {
+      console.error("NSFW upload error:", err);
+      const message = err instanceof Error ? err.message : "Upload failed";
+      throw new Error(message);
     }
-    if (res.ok && result.id) return { id: result.id, url: result.url, path: result.path };
-    throw new Error(result.error || result.details || `Upload failed (${res.status})`);
   }
 
   async function handleFiles(files: FileList | null) {
@@ -99,6 +111,9 @@ export function NsfwSection() {
     setImages((prev) => prev.filter((_, i) => i !== index));
     if (image.id) {
       try {
+        if (image.path) {
+          await deleteFromSupabaseStorage("portfolio-images", image.path);
+        }
         await fetch("/api/nsfw", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
@@ -124,6 +139,9 @@ export function NsfwSection() {
     const old = images[index];
     try {
       const uploaded = await uploadOne(file);
+      if (uploaded && old?.id && old.path) {
+        await deleteFromSupabaseStorage("portfolio-images", old.path);
+      }
       setImages((prev) => prev.map((img, i) => (i === index ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path } : img)));
       if (old?.id) {
         await fetch("/api/nsfw", {

@@ -5,6 +5,7 @@ import { Upload, Image as ImageIcon, CheckCircle2, X, Loader2, AlertCircle, Send
 import StarRating from "./StarRating";
 import { Textarea } from "@/components/ui/Input";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { uploadToSupabaseStorage } from "@/lib/supabase-storage";
 
 export default function ClientReviewForm() {
   const [submitted, setSubmitted] = useState(false);
@@ -81,19 +82,11 @@ export default function ClientReviewForm() {
         uploadFile = await compressFileClient(file);
       }
 
-      const formData = new FormData();
-      formData.append("file", uploadFile);
-      formData.append("folder", "reviews");
+      const storagePath = `reviews/${Date.now()}-${Math.random().toString(36).slice(2)}.${file.name.split(".").pop() || "bin"}`;
+      const { url } = await uploadToSupabaseStorage("portfolio-images", storagePath, uploadFile);
 
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const result = await res.json();
-      if (res.ok && result.url) {
-        setImagePreview(result.url);
-        setPreviewType(isVideo ? "video" : "image");
-      } else {
-        console.error("Upload failed:", result.error);
-        alert("Upload failed: " + (result.error || "Unknown error"));
-      }
+      setImagePreview(url);
+      setPreviewType(isVideo ? "video" : "image");
     } catch (e) {
       console.error("Upload failed:", e);
       alert("Upload failed. Please try again.");

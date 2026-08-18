@@ -41,16 +41,38 @@ export async function POST(request: NextRequest) {
     const auth = authorize(request);
     if (!auth.ok) return auth.response!;
 
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+    }
+
+    const contentType = request.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+      const body = await request.json();
+      const { key, url, path } = body;
+
+      if (!key || !url || !path) {
+        return NextResponse.json({ error: "key, url, and path are required" }, { status: 400 });
+      }
+
+      const { error: dbError } = await supabaseAdmin
+        .from("site_images")
+        .upsert({ key, url, path, updated_at: new Date().toISOString() }, { onConflict: "key" });
+
+      if (dbError) {
+        console.error("DB error:", dbError);
+        return NextResponse.json({ error: "Database error", details: dbError.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, url, path });
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const key = (formData.get("key") as string | null)?.trim();
 
     if (!file || !key) {
       return NextResponse.json({ error: "File and key are required" }, { status: 400 });
-    }
-
-    if (!supabaseAdmin) {
-      return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
     if (!file.type.startsWith("image/")) {

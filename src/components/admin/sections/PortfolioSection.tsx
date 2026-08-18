@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getPortfolioImages } from "@/lib/db";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { uploadToSupabaseStorage, deleteFromSupabaseStorage } from "@/lib/supabase-storage";
 import { useSave } from "../SaveProvider";
 import { useToast } from "../Toast";
 import { Card, CardHeader } from "../Card";
@@ -65,13 +66,24 @@ export function PortfolioSection() {
   }, [register, savePortfolio]);
 
   async function uploadOne(file: File): Promise<{ id: string; url: string; path: string } | null> {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("folder", "portfolio");
-    const res = await fetch("/api/portfolio/upload", { method: "POST", body: formData });
-    const result = await res.json();
-    if (res.ok && result.id) return { id: result.id, url: result.url, path: result.path };
-    throw new Error(result.error || "Upload failed");
+    const storagePath = `portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${file.name.split(".").pop() || "bin"}`;
+    try {
+      const { url, path } = await uploadToSupabaseStorage("portfolio-images", storagePath, file);
+
+      const res = await fetch("/api/portfolio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, path }),
+      });
+      if (!res.ok) {
+        const r = await res.json().catch(() => ({}));
+        throw new Error(r.error || "Failed to save portfolio image");
+      }
+      const data = await res.json();
+      return { id: data.id, url, path };
+    } catch (e: any) {
+      throw new Error(e.message || "Upload failed");
+    }
   }
 
   async function handleFiles(files: FileList | null) {
@@ -116,6 +128,9 @@ export function PortfolioSection() {
     setImages((prev) => prev.filter((_, i) => i !== index));
     if (image.id) {
       try {
+        if (image.path) {
+          await deleteFromSupabaseStorage("portfolio-images", image.path);
+        }
         await fetch("/api/portfolio", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
@@ -140,6 +155,9 @@ export function PortfolioSection() {
     const old = images[index];
     try {
       const uploaded = await uploadOne(file);
+      if (uploaded && old?.id && old.path) {
+        await deleteFromSupabaseStorage("portfolio-images", old.path);
+      }
       setImages((prev) => prev.map((img, i) => (i === index ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path } : img)));
       if (old?.id) {
         await fetch("/api/portfolio", {
