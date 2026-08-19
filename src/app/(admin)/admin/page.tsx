@@ -63,6 +63,7 @@ export default function AdminPage() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [links, setLinks] = useState<any[]>([]);
   const [tos, setTos] = useState<any[]>([]);
+  const [storageError, setStorageError] = useState<string | null>(null);
 
   const { markDirty, register } = useSave();
   const toast = useToast();
@@ -88,6 +89,7 @@ export default function AdminPage() {
 
   async function loadAllData() {
     setLoading(true);
+    setStorageError(null);
     try {
       if (!isSupabaseConfigured || !supabase) {
         const stored = localStorage.getItem("adminData");
@@ -105,6 +107,14 @@ export default function AdminPage() {
         setLoading(false);
         return;
       }
+
+      const { checkStorageBuckets, getMissingBucketMessage } = await import("@/lib/storage-check");
+      const bucketStatuses = await checkStorageBuckets();
+      const missingMessage = getMissingBucketMessage(bucketStatuses);
+      if (missingMessage) {
+        setStorageError(missingMessage);
+      }
+
       const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }, { data: tosData }] = await Promise.all([
         supabase.from("site_config").select("*"),
         supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }),
@@ -327,6 +337,17 @@ export default function AdminPage() {
       onLogout={doLogout}
       onReset={() => setResetOpen(true)}
     >
+      {storageError && (
+        <div className="mx-auto mb-6 max-w-3xl rounded-xl border border-[var(--warning-border)] bg-[var(--warning-soft)] p-4 text-sm text-[var(--warning)]">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <p className="font-semibold">Storage buckets missing</p>
+              <p className="mt-1 whitespace-pre-line text-xs opacity-90">{storageError}</p>
+            </div>
+          </div>
+        </div>
+      )}
       {tab === "portfolio" && <PortfolioSection />}
       {tab === "pricing" && <PricingSection value={pricing} onChange={(n) => { setPricing(n); markDirty(); }} />}
       {tab === "faq" && <FaqSection value={faq} onChange={(n) => { setFaq(n); markDirty(); }} />}
