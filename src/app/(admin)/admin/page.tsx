@@ -64,6 +64,8 @@ export default function AdminPage() {
   const [links, setLinks] = useState<any[]>([]);
   const [tos, setTos] = useState<any[]>([]);
   const [storageError, setStorageError] = useState<string | null>(null);
+  const [corsTestResult, setCorsTestResult] = useState<{ bucket: string; success: boolean; error?: string } | null>(null);
+  const [testingCors, setTestingCors] = useState(false);
 
   const { markDirty, register } = useSave();
   const toast = useToast();
@@ -90,6 +92,7 @@ export default function AdminPage() {
   async function loadAllData() {
     setLoading(true);
     setStorageError(null);
+    setCorsTestResult(null);
     try {
       if (!isSupabaseConfigured || !supabase) {
         const stored = localStorage.getItem("adminData");
@@ -108,11 +111,19 @@ export default function AdminPage() {
         return;
       }
 
-      const { checkStorageBuckets, getMissingBucketMessage } = await import("@/lib/storage-check");
+      const { checkStorageBuckets, getMissingBucketMessage, testBucketUpload } = await import("@/lib/storage-check");
       const bucketStatuses = await checkStorageBuckets();
       const missingMessage = getMissingBucketMessage(bucketStatuses);
       if (missingMessage) {
         setStorageError(missingMessage);
+      }
+
+      if (bucketStatuses.some((s) => s.exists)) {
+        setTestingCors(true);
+        const mainBucket = bucketStatuses.find((s) => s.exists)?.name || "portfolio-images";
+        const result = await testBucketUpload(mainBucket);
+        setCorsTestResult({ bucket: mainBucket, ...result });
+        setTestingCors(false);
       }
 
       const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }, { data: tosData }] = await Promise.all([
@@ -139,6 +150,7 @@ export default function AdminPage() {
       console.error("Failed to load data:", e);
     } finally {
       setLoading(false);
+      setTestingCors(false);
     }
   }
 
@@ -344,6 +356,23 @@ export default function AdminPage() {
             <div>
               <p className="font-semibold">Storage buckets missing</p>
               <p className="mt-1 whitespace-pre-line text-xs opacity-90">{storageError}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      {corsTestResult && (
+        <div className={`mx-auto mb-6 max-w-3xl rounded-xl border p-4 text-sm ${corsTestResult.success ? "border-[var(--success-border)] bg-[var(--success-soft)] text-[var(--success)]" : "border-[var(--danger-border)] bg-[var(--danger-soft)] text-[var(--danger)]"}`}>
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <p className="font-semibold">{corsTestResult.success ? `Upload test passed for "${corsTestResult.bucket}"` : `Upload test failed for "${corsTestResult.bucket}"`}</p>
+              {corsTestResult.error && <p className="mt-1 whitespace-pre-line text-xs opacity-90">{corsTestResult.error}</p>}
+              {!corsTestResult.success && (
+                <p className="mt-2 text-xs opacity-90">
+                  Check CORS settings in Supabase Dashboard → Storage → {corsTestResult.bucket} → Configuration → CORS.
+                  Make sure your domain is allowed and methods include GET, POST, PUT, DELETE, OPTIONS.
+                </p>
+              )}
             </div>
           </div>
         </div>

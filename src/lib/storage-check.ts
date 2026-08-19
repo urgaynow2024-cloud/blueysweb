@@ -66,3 +66,31 @@ export function getMissingBucketMessage(bucketStatuses: BucketStatus[]): string 
 
   return `Missing Supabase Storage bucket(s): ${bucketList}\n\n${details}\n\nCreate them in Supabase Dashboard → Storage → New bucket. Set them to Public for read access.`;
 }
+
+export async function testBucketUpload(bucket: string): Promise<{ success: boolean; error?: string }> {
+  if (!supabaseAdmin) {
+    return { success: false, error: "Supabase admin not configured" };
+  }
+
+  try {
+    const testPath = `_cors-test-${Date.now()}.txt`;
+    const testContent = new Blob(["test"], { type: "text/plain" });
+
+    const { error } = await supabaseAdmin.storage
+      .from(bucket)
+      .upload(testPath, testContent, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: "text/plain",
+      });
+
+    if (error) {
+      return { success: false, error: error.message || "Upload test failed" };
+    }
+
+    await supabaseAdmin.storage.from(bucket).remove([testPath]);
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Upload test failed" };
+  }
+}
