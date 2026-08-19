@@ -68,14 +68,14 @@ export async function POST(
     const isNsfw = formData.get("isNsfw") === "true";
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from("adoptables")
+      .from("portfolio-images")
       .upload(storagePath, uploadBuffer, { cacheControl: "3600", upsert: true, contentType: isImageType(file.type) ? "image/webp" : file.type });
 
     if (uploadError || !uploadData) {
       return NextResponse.json({ error: "Upload failed" }, { status: 500 });
     }
 
-    const { data: urlData } = supabaseAdmin.storage.from("adoptables").getPublicUrl(storagePath);
+    const { data: urlData } = supabaseAdmin.storage.from("portfolio-images").getPublicUrl(storagePath);
     const url = urlData.publicUrl;
 
     const { data: dbData, error: dbError } = await supabaseAdmin
@@ -84,7 +84,7 @@ export async function POST(
       .select();
 
     if (dbError || !dbData || dbData.length === 0) {
-      await supabaseAdmin.storage.from("adoptables").remove([storagePath]);
+      await supabaseAdmin.storage.from("portfolio-images").remove([storagePath]);
       return NextResponse.json({ error: "Database error" }, { status: 500 });
     }
 
@@ -110,7 +110,7 @@ export async function DELETE(
     }
 
     if (path) {
-      await supabaseAdmin.storage.from("adoptables").remove([path]);
+      await supabaseAdmin.storage.from("portfolio-images").remove([path]);
     }
 
     if (imageId) {

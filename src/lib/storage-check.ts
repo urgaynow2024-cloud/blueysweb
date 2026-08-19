@@ -2,7 +2,6 @@ import { supabaseAdmin } from "./supabase";
 
 export const REQUIRED_BUCKETS = [
   "portfolio-images",
-  "adoptables",
 ] as const;
 
 export type BucketStatus = {

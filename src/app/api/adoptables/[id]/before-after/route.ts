@@ -71,14 +71,14 @@ export async function POST(
     const storagePath = `adoptables/${id}/${type}-${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExtension}`;
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from("adoptables")
+      .from("portfolio-images")
       .upload(storagePath, uploadBuffer, { cacheControl: "3600", upsert: true, contentType: isImageType(file.type) ? "image/webp" : file.type });
 
     if (uploadError || !uploadData) {
       return NextResponse.json({ error: "Upload failed" }, { status: 500 });
     }
 
-    const { data: urlData } = supabaseAdmin.storage.from("adoptables").getPublicUrl(storagePath);
+    const { data: urlData } = supabaseAdmin.storage.from("portfolio-images").getPublicUrl(storagePath);
     const url = urlData.publicUrl;
 
     const field = type === "before" ? "before_url" : "after_url";
@@ -90,7 +90,7 @@ export async function POST(
       .select();
 
     if (dbError || !dbData || dbData.length === 0) {
-      await supabaseAdmin.storage.from("adoptables").remove([storagePath]);
+      await supabaseAdmin.storage.from("portfolio-images").remove([storagePath]);
       return NextResponse.json({ error: "Database error" }, { status: 500 });
     }
 
@@ -116,8 +116,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    if (beforePath) await supabaseAdmin.storage.from("adoptables").remove([beforePath]);
-    if (afterPath) await supabaseAdmin.storage.from("adoptables").remove([afterPath]);
+    if (beforePath) await supabaseAdmin.storage.from("portfolio-images").remove([beforePath]);
+    if (afterPath) await supabaseAdmin.storage.from("portfolio-images").remove([afterPath]);
 
     if (baId) {
       const { error } = await supabaseAdmin.from("adoptable_before_after").delete().eq("id", baId);

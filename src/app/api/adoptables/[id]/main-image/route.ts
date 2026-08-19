@@ -36,7 +36,7 @@ export async function POST(
     const storagePath = `adoptables/${id}/main-${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExtension}`;
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from("adoptables")
+      .from("portfolio-images")
       .upload(storagePath, uploadBuffer, {
         cacheControl: "3600",
         upsert: true,
@@ -48,7 +48,7 @@ export async function POST(
       return NextResponse.json({ error: "Upload failed", details: uploadError?.message || "Unknown storage error" }, { status: 500 });
     }
 
-    const { data: urlData } = supabaseAdmin.storage.from("adoptables").getPublicUrl(storagePath);
+    const { data: urlData } = supabaseAdmin.storage.from("portfolio-images").getPublicUrl(storagePath);
     const url = urlData.publicUrl;
 
     const { error: dbError } = await supabaseAdmin
@@ -57,7 +57,7 @@ export async function POST(
       .eq("id", id);
 
     if (dbError) {
-      await supabaseAdmin.storage.from("adoptables").remove([storagePath]);
+      await supabaseAdmin.storage.from("portfolio-images").remove([storagePath]);
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
 
@@ -82,7 +82,7 @@ export async function DELETE(
     }
 
     if (path) {
-      await supabaseAdmin.storage.from("adoptables").remove([path]);
+      await supabaseAdmin.storage.from("portfolio-images").remove([path]);
     }
 
     const { error } = await supabaseAdmin

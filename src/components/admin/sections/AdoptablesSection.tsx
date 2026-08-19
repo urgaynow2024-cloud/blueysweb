@@ -404,7 +404,7 @@ export function AdoptablesSection() {
     const path = (project as any).main_image_path;
     try {
       if (path) {
-        await deleteFromSupabaseStorage("adoptables", path);
+        await deleteFromSupabaseStorage("portfolio-images", path);
       }
 
       const res = await fetch(`/api/adoptables/${project.id}`, {
@@ -499,7 +499,7 @@ export function AdoptablesSection() {
       setGalleryImages((prev) => ({ ...prev, [adoptableId]: [...(prev[adoptableId] || []), temp] }));
       try {
         const storagePath = `adoptables/${adoptableId}/gallery-${Date.now()}-${Math.random().toString(36).slice(2)}-${i}.${file.name.split(".").pop() || "bin"}`;
-        const { url, path: uploadedPath } = await uploadToSupabaseStorage("adoptables", storagePath, file);
+      const { url, path: uploadedPath } = await uploadToSupabaseStorage("portfolio-images", storagePath, file);
 
         const res = await fetch(`/api/adoptables/${adoptableId}/gallery`, {
           method: "POST",
@@ -552,7 +552,7 @@ export function AdoptablesSection() {
 
     try {
       const storagePath = `adoptables/${adoptableId}/${type}-${Date.now()}-${Math.random().toString(36).slice(2)}.${file.name.split(".").pop() || "bin"}`;
-      const { url, path: uploadedPath } = await uploadToSupabaseStorage("adoptables", storagePath, file);
+      const { url, path: uploadedPath } = await uploadToSupabaseStorage("portfolio-images", storagePath, file);
 
       const res = await fetch(`/api/adoptables/${adoptableId}/before-after`, {
         method: "POST",
@@ -579,7 +579,7 @@ export function AdoptablesSection() {
   async function deleteGalleryImage(adoptableId: string, imageId: string, path?: string) {
     try {
       if (path) {
-        await deleteFromSupabaseStorage("adoptables", path);
+        await deleteFromSupabaseStorage("portfolio-images", path);
       }
 
       const params = new URLSearchParams();
@@ -603,8 +603,8 @@ export function AdoptablesSection() {
 
   async function deleteBeforeAfter(adoptableId: string, baId: string, beforePath?: string, afterPath?: string) {
     try {
-      if (beforePath) await deleteFromSupabaseStorage("adoptables", beforePath);
-      if (afterPath) await deleteFromSupabaseStorage("adoptables", afterPath);
+      if (beforePath) await deleteFromSupabaseStorage("portfolio-images", beforePath);
+      if (afterPath) await deleteFromSupabaseStorage("portfolio-images", afterPath);
 
       const params = new URLSearchParams();
       if (baId) params.set("id", baId);

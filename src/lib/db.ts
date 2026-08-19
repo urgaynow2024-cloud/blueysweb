@@ -360,7 +360,7 @@ export async function uploadAdoptableGalleryImage(adoptableId: string, file: Fil
   if (!isSupabaseConfigured || !supabase) return null;
   const ext = file.name.split(".").pop() || "bin";
   const storagePath = `adoptables/${adoptableId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const { data: uploadData, error: uploadError } = await supabase.storage.from("adoptables").upload(storagePath, file, {
+  const { data: uploadData, error: uploadError } = await supabase.storage.from("portfolio-images").upload(storagePath, file, {
     cacheControl: "3600",
     upsert: true,
     contentType: file.type,
@@ -369,11 +369,11 @@ export async function uploadAdoptableGalleryImage(adoptableId: string, file: Fil
     console.error("Adoptable gallery upload error:", uploadError);
     return null;
   }
-  const { data: urlData } = supabase.storage.from("adoptables").getPublicUrl(storagePath);
+  const { data: urlData } = supabase.storage.from("portfolio-images").getPublicUrl(storagePath);
   const url = urlData.publicUrl;
   const { data: dbData, error: dbError } = await supabase.from("adoptable_gallery").insert([{ adoptable_id: adoptableId, url, path: storagePath, is_nsfw: isNsfw }]).select();
   if (dbError || !dbData || dbData.length === 0) {
-    await supabase.storage.from("adoptables").remove([storagePath]);
+    await supabase.storage.from("portfolio-images").remove([storagePath]);
     return null;
   }
   return { id: dbData[0].id, url, path: storagePath, is_nsfw: isNsfw };
@@ -381,7 +381,7 @@ export async function uploadAdoptableGalleryImage(adoptableId: string, file: Fil
 
 export async function deleteAdoptableGalleryImage(id: string, path?: string) {
   if (!isSupabaseConfigured || !supabase) return false;
-  if (path) await supabase.storage.from("adoptables").remove([path]);
+  if (path) await supabase.storage.from("portfolio-images").remove([path]);
   const { error } = await supabase.from("adoptable_gallery").delete().eq("id", id);
   return !error;
 }
