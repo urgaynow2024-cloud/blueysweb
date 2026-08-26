@@ -499,7 +499,7 @@ export function AdoptablesSection() {
       setGalleryImages((prev) => ({ ...prev, [adoptableId]: [...(prev[adoptableId] || []), temp] }));
       try {
         const storagePath = `adoptables/${adoptableId}/gallery-${Date.now()}-${Math.random().toString(36).slice(2)}-${i}.${file.name.split(".").pop() || "bin"}`;
-      const { url, path: uploadedPath } = await uploadToSupabaseStorage("portfolio-images", storagePath, file);
+        const { url, path: uploadedPath } = await uploadToSupabaseStorage("portfolio-images", storagePath, file);
 
         const res = await fetch(`/api/adoptables/${adoptableId}/gallery`, {
           method: "POST",
@@ -516,12 +516,13 @@ export function AdoptablesSection() {
           return { ...prev, [adoptableId]: current.map((img) => (img === temp ? { id: uploaded.id, url: uploaded.url, path: uploaded.path, sort_order: temp.sort_order } : img)) };
         });
         toast.success("Image uploaded");
-      } catch {
+      } catch (e: any) {
+        console.error("Gallery upload error:", e);
         setGalleryImages((prev) => {
           const current = prev[adoptableId] || [];
-          return { ...prev, [adoptableId]: current.map((img) => (img === temp ? { ...img, error: "Upload failed" } : img)) };
+          return { ...prev, [adoptableId]: current.map((img) => (img === temp ? { ...img, error: e?.message || "Upload failed" } : img)) };
         });
-        toast.error("Failed to upload image");
+        toast.error(e?.message || "Failed to upload image");
       }
     }
   }
@@ -571,8 +572,9 @@ export function AdoptablesSection() {
         return { ...prev, [adoptableId]: current.map((img) => (img === temp ? { ...img, id: uploaded.id || img.id, [urlField]: uploaded.url, [pathField]: uploaded.path } : img)) };
       });
       toast.success(`${type === "before" ? "Before" : "After"} image uploaded`);
-    } catch {
-      toast.error("Failed to upload image");
+    } catch (e: any) {
+      console.error("Before-after upload error:", e);
+      toast.error(e?.message || "Failed to upload image");
     }
   }
 

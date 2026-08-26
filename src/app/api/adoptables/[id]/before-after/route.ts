@@ -75,7 +75,8 @@ export async function POST(
       .upload(storagePath, uploadBuffer, { cacheControl: "3600", upsert: true, contentType: isImageType(file.type) ? "image/webp" : file.type });
 
     if (uploadError || !uploadData) {
-      return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+      console.error("Storage upload error:", uploadError);
+      return NextResponse.json({ error: "Upload failed", details: uploadError?.message || "Unknown storage error" }, { status: 500 });
     }
 
     const { data: urlData } = supabaseAdmin.storage.from("portfolio-images").getPublicUrl(storagePath);
@@ -90,8 +91,9 @@ export async function POST(
       .select();
 
     if (dbError || !dbData || dbData.length === 0) {
+      console.error("DB insert error:", dbError);
       await supabaseAdmin.storage.from("portfolio-images").remove([storagePath]);
-      return NextResponse.json({ error: "Database error" }, { status: 500 });
+      return NextResponse.json({ error: "Database error", details: dbError?.message || "Unknown database error" }, { status: 500 });
     }
 
     return NextResponse.json({ id: dbData[0].id, url, path: storagePath, type }, { status: 201 });

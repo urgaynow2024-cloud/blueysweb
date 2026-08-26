@@ -57,6 +57,7 @@ export async function POST(
       .eq("id", id);
 
     if (dbError) {
+      console.error("DB update error:", dbError);
       await supabaseAdmin.storage.from("portfolio-images").remove([storagePath]);
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
