@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { compressImageBuffer, getCompressedExtension, validateUploadSize, validateUploadType, isImageType } from "@/lib/compression";
 
+function parseMissingColumn(errorMessage: string): string | null {
+  const match = errorMessage.match(/'(\w+)'? column|Could not find the '(\w+)' column/);
+  return match ? (match[1] || match[2]) : null;
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -25,16 +30,28 @@ export async function POST(
       const field = type === "before" ? "before_url" : "after_url";
       const pathField = type === "before" ? "before_path" : "after_path";
 
-      const { data: dbData, error: dbError } = await supabaseAdmin
-        .from("adoptable_before_after")
-        .insert([{ adoptable_id: id, [field]: url, [pathField]: path, label: "" }])
-        .select();
+      let insertPayload: Record<string, any> = { adoptable_id: id, [field]: url, [pathField]: path, label: "" };
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const { data: dbData, error: dbError } = await supabaseAdmin
+          .from("adoptable_before_after")
+          .insert([insertPayload])
+          .select();
 
-      if (dbError || !dbData || dbData.length === 0) {
-        return NextResponse.json({ error: "Database error", details: dbError?.message }, { status: 500 });
+        if (!dbError && dbData && dbData.length > 0) {
+          return NextResponse.json({ id: dbData[0].id, url, path, type }, { status: 201 });
+        }
+
+        const col = parseMissingColumn(dbError?.message || "");
+        if (col && insertPayload[col] !== undefined) {
+          delete insertPayload[col];
+          continue;
+        }
+
+        console.error("DB insert error:", dbError);
+        return NextResponse.json({ error: "Database error", details: dbError?.message || "Unknown database error" }, { status: 500 });
       }
 
-      return NextResponse.json({ id: dbData[0].id, url, path, type }, { status: 201 });
+      return NextResponse.json({ error: "Max retries exceeded" }, { status: 500 });
     }
 
     const formData = await request.formData();
@@ -85,18 +102,29 @@ export async function POST(
     const field = type === "before" ? "before_url" : "after_url";
     const pathField = type === "before" ? "before_path" : "after_path";
 
-    const { data: dbData, error: dbError } = await supabaseAdmin
-      .from("adoptable_before_after")
-      .insert([{ adoptable_id: id, [field]: url, [pathField]: storagePath, label: "" }])
-      .select();
+    let insertPayload: Record<string, any> = { adoptable_id: id, [field]: url, [pathField]: storagePath, label: "" };
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const { data: dbData, error: dbError } = await supabaseAdmin
+        .from("adoptable_before_after")
+        .insert([insertPayload])
+        .select();
 
-    if (dbError || !dbData || dbData.length === 0) {
+      if (!dbError && dbData && dbData.length > 0) {
+        return NextResponse.json({ id: dbData[0].id, url, path: storagePath, type }, { status: 201 });
+      }
+
+      const col = parseMissingColumn(dbError?.message || "");
+      if (col && insertPayload[col] !== undefined) {
+        delete insertPayload[col];
+        continue;
+      }
+
       console.error("DB insert error:", dbError);
       await supabaseAdmin.storage.from("portfolio-images").remove([storagePath]);
       return NextResponse.json({ error: "Database error", details: dbError?.message || "Unknown database error" }, { status: 500 });
     }
 
-    return NextResponse.json({ id: dbData[0].id, url, path: storagePath, type }, { status: 201 });
+    return NextResponse.json({ error: "Max retries exceeded" }, { status: 500 });
   } catch (error) {
     console.error("Adoptable before-after upload error:", error);
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });

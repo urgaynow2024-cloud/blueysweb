@@ -66,6 +66,7 @@ export default function AdminPage() {
   const [storageError, setStorageError] = useState<string | null>(null);
   const [corsTestResult, setCorsTestResult] = useState<{ bucket: string; success: boolean; error?: string } | null>(null);
   const [testingCors, setTestingCors] = useState(false);
+  const [dbHealth, setDbHealth] = useState<{ healthy: boolean; tables: Record<string, { exists: boolean; missingColumns: string[] }>; error?: string } | null>(null);
 
   const { markDirty, register } = useSave();
   const toast = useToast();
@@ -124,6 +125,16 @@ export default function AdminPage() {
         const result = await testBucketUpload(mainBucket);
         setCorsTestResult({ bucket: mainBucket, ...result });
         setTestingCors(false);
+      }
+
+      try {
+        const dbRes = await fetch("/api/database/health");
+        if (dbRes.ok) {
+          const dbData = await dbRes.json();
+          setDbHealth(dbData);
+        }
+      } catch (e) {
+        console.error("Database health check failed:", e);
       }
 
       const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }, { data: tosData }] = await Promise.all([
@@ -356,6 +367,25 @@ export default function AdminPage() {
             <div>
               <p className="font-semibold">Storage buckets missing</p>
               <p className="mt-1 whitespace-pre-line text-xs opacity-90">{storageError}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      {dbHealth && !dbHealth.healthy && (
+        <div className="mx-auto mb-6 max-w-3xl rounded-xl border border-[var(--warning-border)] bg-[var(--warning-soft)] p-4 text-sm text-[var(--warning)]">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <p className="font-semibold">Database schema incomplete</p>
+              <p className="mt-1 whitespace-pre-line text-xs opacity-90">
+                {dbHealth.error || "Some required tables or columns are missing. Run the database setup to fix this."}
+                {"\n\n"}
+                {Object.entries(dbHealth.tables).filter(([_, t]) => !t.exists || t.missingColumns.length > 0).map(([table, t]) => {
+                  if (!t.exists) return `- Table "${table}" is missing`;
+                  if (t.missingColumns.length > 0) return `- Table "${table}" is missing columns: ${t.missingColumns.join(", ")}`;
+                  return null;
+                }).filter(Boolean).join("\n")}
+              </p>
             </div>
           </div>
         </div>
