@@ -77,6 +77,7 @@ export function CreditsSection({ value, onChange }: Props) {
       visible: credit.visible ?? true,
       sort_order: credit.sort_order || 0,
     });
+    setSocialLinks(credit.social_links || {});
     setEditingId(credit.id || "new");
   }
 
@@ -95,16 +96,19 @@ export function CreditsSection({ value, onChange }: Props) {
       visible: true,
       sort_order: 0,
     });
+    setSocialLinks({});
   }
 
   async function saveEdit() {
     if (!editData.name.trim()) return;
 
+    const payload = { ...editData, social_links: socialLinks };
+
     if (editingId === "new") {
       const res = await fetch("/api/credits", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editData),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         const saved = await res.json();
@@ -115,7 +119,7 @@ export function CreditsSection({ value, onChange }: Props) {
       const res = await fetch(`/api/credits/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editData),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         const saved = await res.json();
@@ -155,6 +159,29 @@ export function CreditsSection({ value, onChange }: Props) {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
+  }
+
+  const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
+
+  function updateSocialLink(key: string, value: string) {
+    setSocialLinks((prev) => {
+      const next = { ...prev };
+      if (value.trim()) next[key] = value.trim();
+      else delete next[key];
+      return next;
+    });
+  }
+
+  function addSocialLink() {
+    setSocialLinks((prev) => ({ ...prev, [""]: "" }));
+  }
+
+  function removeSocialLink(key: string) {
+    setSocialLinks((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   }
 
   function toggleCategory(cat: string) {
@@ -242,6 +269,30 @@ export function CreditsSection({ value, onChange }: Props) {
             <Field label="Discord URL">
               <Input value={editData.discord_url} onChange={(e) => setEditData({ ...editData, discord_url: e.target.value })} placeholder="https://discord.gg/…" />
             </Field>
+          </div>
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <Field label="Social Links">
+                <span className="text-xs text-[var(--text-dim)]">Add any extra social/profile links (Twitter, YouTube, etc.)</span>
+              </Field>
+              <Button size="sm" variant="secondary" onClick={addSocialLink} leftIcon={<Plus className="h-3.5 w-3.5" />}>
+                Add Link
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {Object.entries(socialLinks).map(([key, value]) => (
+                <div key={key} className="flex items-center gap-2">
+                  <Input value={key} onChange={(e) => { updateSocialLink(key, e.target.value); }} placeholder="Platform (e.g. Twitter)" className="!w-32" />
+                  <Input value={value} onChange={(e) => updateSocialLink(key, e.target.value)} placeholder="https://…" className="!flex-1" />
+                  <Button size="sm" variant="ghost" onClick={() => removeSocialLink(key)} className="!text-[var(--danger)]">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              {Object.keys(socialLinks).length === 0 && (
+                <p className="text-xs text-[var(--text-dim)]">No social links added yet.</p>
+              )}
+            </div>
           </div>
           <div className="mt-4">
             <Field label="Note (optional)">

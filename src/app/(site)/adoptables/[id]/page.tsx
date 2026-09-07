@@ -59,6 +59,8 @@ export default function AdoptablePage() {
   const [showAgeGate, setShowAgeGate] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [beforeAfters, setBeforeAfters] = useState<{ before_url?: string; after_url?: string; label?: string }[]>([]);
+  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setAgeVerified(isAgeVerified());
@@ -68,9 +70,10 @@ export default function AdoptablePage() {
     async function load() {
       setLoading(true);
       try {
-        const [adoptableData, galleryData] = await Promise.all([
+        const [adoptableData, galleryData, beforeAfterData] = await Promise.all([
           getAdoptableById(id),
           getAdoptableGalleryImages(id),
+          fetch(`/api/adoptables/${id}/before-after`).then((r) => (r.ok ? r.json() : [])).catch(() => []),
         ]);
         if (!adoptableData) {
           setAdoptable(null);
@@ -79,6 +82,7 @@ export default function AdoptablePage() {
         }
         setAdoptable(adoptableData);
         setGalleryImages(galleryData || []);
+        setBeforeAfters(Array.isArray(beforeAfterData) ? beforeAfterData : []);
 
         if (
           adoptableData.availability !== "available" &&
@@ -172,6 +176,28 @@ export default function AdoptablePage() {
     setShowAgeGate(false);
   };
 
+  const handleImageError = (url: string) => {
+    setImgErrors((prev) => ({ ...prev, [url]: true }));
+  };
+
+  const renderImage = (src: string | undefined, alt: string, className: string) => {
+    if (!src || imgErrors[src]) {
+      return (
+        <div className={`flex items-center justify-center bg-[var(--bg)] ${className}`}>
+          <Package className="h-10 w-10 text-[var(--text-dim)]" />
+        </div>
+      );
+    }
+    return (
+      <img
+        src={src}
+        alt={alt}
+        className={className}
+        onError={() => handleImageError(src)}
+      />
+    );
+  };
+
   const openLightbox = (idx: number) => {
     if (!ageVerified && hasNsfwContent) {
       setShowAgeGate(true);
@@ -190,6 +216,8 @@ export default function AdoptablePage() {
   const buyOnDiscord = () => {
     window.open("https://discord.gg/zt48MZm5kD", "_blank", "noopener,noreferrer");
   };
+
+  const hasBeforeAfter = beforeAfters.some((ba) => ba.before_url || ba.after_url);
 
   const InfoSection = ({
     label,
@@ -231,13 +259,11 @@ export default function AdoptablePage() {
             {/* Main image */}
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated]">
               {visibleImages.length > 0 ? (
-                <img
-                  src={visibleImages[lightboxIndex < visibleImages.length ? lightboxIndex : 0]?.url}
-                  alt={adoptable.title}
-                  className={`h-full w-full object-cover ${
-                    hasNsfwContent && !ageVerified ? "blur-[4px] grayscale" : ""
-                  }`}
-                />
+                renderImage(
+                  visibleImages[lightboxIndex < visibleImages.length ? lightboxIndex : 0]?.url,
+                  adoptable.title,
+                  `h-full w-full object-cover ${hasNsfwContent && !ageVerified ? "blur-[4px] grayscale" : ""}`
+                )
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <Package className="h-16 w-16 text-[var(--text-dim)]" />
@@ -291,13 +317,9 @@ export default function AdoptablePage() {
                       idx === lightboxIndex
                         ? "border-[var(--accent)]"
                         : "border-[var(--border)] hover:border-[var(--border-hover)]"
-                    }} ${img.isNsfw && !ageVerified ? "blur-[3px]" : ""}`}
+                    } ${img.isNsfw && !ageVerified ? "blur-[3px]" : ""}`}
                   >
-                    <img
-                      src={img.url}
-                      alt={img.label}
-                      className="h-full w-full object-cover"
-                    />
+                    {renderImage(img.url, img.label, "h-full w-full object-cover")}
                     {img.isNsfw && !ageVerified && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                         <Lock className="h-4 w-4 text-white" />
@@ -382,11 +404,42 @@ export default function AdoptablePage() {
                       <span className="text-lg font-bold text-white">{adoptable.price}</span>
                     </div>
                   )}
-              </div>
-            )}
+               </div>
+             )}
 
-            {/* Purchase actions */}
-            <div className="border-t border-[var(--border)] pt-6">
+             {hasBeforeAfter && (
+               <div className="border-t border-[var(--border)] pt-6">
+                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-4">
+                   Before & After
+                 </h3>
+                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                   {beforeAfters.map((ba, idx) => (
+                     <div key={idx} className="space-y-2">
+                       {ba.before_url && (
+                         <div>
+                           <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-1">Before</p>
+                           <div className="aspect-video overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]">
+                             {renderImage(ba.before_url, `Before ${idx + 1}`, "h-full w-full object-cover")}
+                           </div>
+                         </div>
+                       )}
+                       {ba.after_url && (
+                         <div>
+                           <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-1">After</p>
+                           <div className="aspect-video overflow-hidden rounded-xl border border-[var(--accent)]/30 bg-[var(--bg-elevated)]">
+                             {renderImage(ba.after_url, `After ${idx + 1}`, "h-full w-full object-cover")}
+                           </div>
+                         </div>
+                       )}
+                       {ba.label && <p className="text-xs text-[var(--text-secondary)]">{ba.label}</p>}
+                     </div>
+                   ))}
+                 </div>
+               </div>
+             )}
+
+             {/* Purchase actions */}
+             <div className="border-t border-[var(--border)] pt-6">
               {isAvailable && (
                 <button
                   onClick={buyOnDiscord}
