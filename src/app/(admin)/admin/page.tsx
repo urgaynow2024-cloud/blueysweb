@@ -22,6 +22,7 @@ import { SiteInfoSection } from "@/components/admin/sections/SiteInfoSection";
 import { ModeratorsSection } from "@/components/admin/sections/ModeratorsSection";
 import { AdoptablesSection } from "@/components/admin/sections/AdoptablesSection";
 import { TosSection } from "@/components/admin/sections/TosSection";
+import { CreditsSection } from "@/components/admin/sections/CreditsSection";
 
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -41,7 +42,7 @@ const defaultFaq: any[] = [
 ];
 const defaultWorkflow: any[] = [];
 
-type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "adoptables" | "tos";
+type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "adoptables" | "credits" | "tos";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -62,6 +63,7 @@ export default function AdminPage() {
   const [workflow, setWorkflow] = useState<any[]>(defaultWorkflow);
   const [reviews, setReviews] = useState<any[]>([]);
   const [links, setLinks] = useState<any[]>([]);
+  const [credits, setCredits] = useState<any[]>([]);
   const [tos, setTos] = useState<any[]>([]);
   const [storageError, setStorageError] = useState<string | null>(null);
   const [corsTestResult, setCorsTestResult] = useState<{ bucket: string; success: boolean; error?: string } | null>(null);
@@ -71,10 +73,10 @@ export default function AdminPage() {
   const { markDirty, register } = useSave();
   const toast = useToast();
 
-  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links, tos });
+  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links, credits, tos });
   useEffect(() => {
-    dataRef.current = { site, pricing, faq, workflow, reviews, links, tos };
-  }, [site, pricing, faq, workflow, reviews, links, tos]);
+    dataRef.current = { site, pricing, faq, workflow, reviews, links, credits, tos };
+  }, [site, pricing, faq, workflow, reviews, links, credits, tos]);
 
   useEffect(() => {
     if (authed) loadAllData();
@@ -137,13 +139,14 @@ export default function AdminPage() {
         console.error("Database health check failed:", e);
       }
 
-      const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }, { data: tosData }] = await Promise.all([
+      const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }, { data: creditsData }, { data: tosData }] = await Promise.all([
         supabase.from("site_config").select("*"),
         supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }),
         supabase.from("faq_items").select("*").order("sort_order", { ascending: true }),
         supabase.from("workflow_steps").select("*").order("sort_order", { ascending: true }),
         supabase.from("reviews").select("*").order("created_at", { ascending: false }),
         supabase.from("social_links").select("*").order("sort_order", { ascending: true }),
+        supabase.from("credits").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: true }),
         supabase.from("tos_sections").select("*").order("sort_order", { ascending: true }),
       ]);
       if (siteData && siteData.length > 0) {
@@ -156,6 +159,7 @@ export default function AdminPage() {
       if (workflowData && workflowData.length > 0) setWorkflow(workflowData);
       if (reviewsData && reviewsData.length > 0) setReviews(reviewsData);
       if (linksData && linksData.length > 0) setLinks(linksData);
+      if (creditsData && creditsData.length > 0) setCredits(creditsData);
       if (tosData && tosData.length > 0) setTos(tosData);
     } catch (e) {
       console.error("Failed to load data:", e);
@@ -166,7 +170,7 @@ export default function AdminPage() {
   }
 
   const contentSaver = useCallback(async () => {
-    const { site, pricing, faq, workflow, reviews, links, tos } = dataRef.current;
+    const { site, pricing, faq, workflow, reviews, links, credits, tos } = dataRef.current;
     const res = await fetch("/api/admin/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -418,6 +422,7 @@ export default function AdminPage() {
       {tab === "queue" && <QueueSection />}
       {tab === "moderators" && <ModeratorsSection />}
       {tab === "adoptables" && <AdoptablesSection />}
+      {tab === "credits" && <CreditsSection value={credits} onChange={(n) => { setCredits(n); markDirty(); }} />}
       {tab === "tos" && <TosSection value={tos} onChange={(n) => { setTos(n); markDirty(); }} />}
       {tab === "site" && <SiteInfoSection value={site} onChange={(n) => { setSite(n); markDirty(); }} />}
 

@@ -527,6 +527,7 @@ export const navLinks = [
   { href: "/portfolio", label: "Portfolio" },
   { href: "/services", label: "Services" },
   { href: "/adoptables", label: "Adoptables" },
+  { href: "/credits", label: "Credits" },
   { href: "/pricing", label: "Pricing" },
   { href: "/links", label: "Links" },
   { href: "/nsfw", label: "NSFW" },

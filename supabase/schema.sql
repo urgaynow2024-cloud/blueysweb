@@ -146,6 +146,32 @@ CREATE TABLE IF NOT EXISTS social_links (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS credits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  description TEXT,
+  categories TEXT[] DEFAULT '{}',
+  avatar_url TEXT,
+  avatar_path TEXT,
+  website_url TEXT,
+  discord_url TEXT,
+  social_links JSONB DEFAULT '{}',
+  note TEXT,
+  featured BOOLEAN DEFAULT FALSE,
+  visible BOOLEAN DEFAULT TRUE,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE credits ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public read credits" ON credits;
+DROP POLICY IF EXISTS "Authenticated write credits" ON credits;
+
+CREATE POLICY "Public read credits" ON credits FOR SELECT USING (visible = true);
+CREATE POLICY "Authenticated write credits" ON credits FOR ALL USING (auth.role() = 'authenticated');
+
 -- =============================================================================
 -- ADOPTABLES
 -- =============================================================================
