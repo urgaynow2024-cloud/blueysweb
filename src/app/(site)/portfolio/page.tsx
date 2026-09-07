@@ -50,27 +50,31 @@ export default function PortfolioPage() {
         <div className="pointer-events-none absolute -bottom-32 right-0 h-60 w-[500px] rounded-full bg-[var(--accent-2)] opacity-[0.03] blur-[100px] orb-med" />
         <div className="pointer-events-none absolute top-1/3 left-0 h-48 w-[400px] rounded-full bg-[var(--accent-cosmic)] opacity-[0.03] blur-[110px] orb-fast" />
 
-        <div className="container">
+        <div className="container-wide">
           <SectionHeading
             align="center"
             eyebrow="Portfolio"
             icon={<Images className="h-4 w-4 text-[var(--accent)]" />}
-            title="My Work"
+            title={
+              <>
+                ✦ My <span className="text-gradient-animated">Work</span>
+              </>
+            }
             subtitle="Browse avatar commissions and edits — click any piece to view it full size."
           />
 
           {loading ? (
-            <div className="columns-1 space-y-4 sm:columns-2 lg:columns-3">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
-                  <div className="h-[220px] w-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
+            <div className="columns-1 space-y-5 sm:columns-2 lg:columns-3 xl:columns-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <div key={i} className="mb-5 break-inside-avoid">
+                  <div className="ad-shimmer aspect-[4/3] w-full rounded-[var(--r-md)]" />
                 </div>
               ))}
             </div>
           ) : images.length > 0 ? (
-            <div className="columns-1 space-y-4 sm:columns-2 lg:columns-3">
+            <div className="columns-1 space-y-5 sm:columns-2 lg:columns-3 xl:columns-4">
               {images.map((url, i) => (
-                <Reveal key={i} delay={(i % 3) * 60}>
+                <Reveal key={i} delay={(i % 4) * 50}>
                   <div
                     onClick={() => setLightboxIndex(i)}
                     onKeyDown={(e) => {
@@ -82,17 +86,17 @@ export default function PortfolioPage() {
                     role="button"
                     tabIndex={0}
                     aria-label={`View portfolio image ${i + 1} full size`}
-                    className="sheen group relative mb-4 block aspect-[4/3] cursor-pointer overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/40"
+                    className="sheen group relative mb-5 block aspect-[4/3] cursor-pointer overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[rgba(255,255,255,0.02)] transition-all duration-500 hover:border-[var(--border-strong)] break-inside-avoid"
                   >
                     <img
                       src={url}
                       alt={`Portfolio ${i + 1}`}
                       loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+                      className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
                     />
-                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/70 via-black/0 to-black/0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-                      <span className="grid h-12 w-12 place-items-center rounded-full border border-white/20 bg-white/15 text-white backdrop-blur transition-transform duration-300 group-hover:scale-110">
-                        <Maximize2 className="h-5 w-5" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+                      <span className="grid h-11 w-11 place-items-center rounded-full border border-white/20 bg-white/15 text-white backdrop-blur transition-transform duration-300 group-hover:scale-110">
+                        <Maximize2 className="h-4 w-4" />
                       </span>
                     </div>
                   </div>
@@ -100,12 +104,12 @@ export default function PortfolioPage() {
               ))}
             </div>
           ) : (
-            <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-20 text-center">
-              <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                <Images className="h-6 w-6" />
+            <div className="py-20 text-center">
+              <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                <Images className="h-5 w-5" />
               </div>
-              <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
-                Portfolio images will appear here after upload.
+              <p className="mx-auto max-w-md text-sm text-[var(--text-dim)]">
+                ✦ Portfolio images will appear here once pieces are uploaded.
               </p>
             </div>
           )}

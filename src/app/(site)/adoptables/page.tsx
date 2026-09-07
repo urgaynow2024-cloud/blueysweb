@@ -43,12 +43,11 @@ function StatusBadge({ status }: { status: "available" | "sold" | "reserved" }) 
 
 function SkeletonCard() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
-      <div className="h-[260px] w-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
-      <div className="p-4">
-        <div className="mb-2 h-5 w-3/4 rounded bg-[var(--border)] animate-[shimmer_1.5s_infinite]" />
-        <div className="mb-2 h-3 w-1/2 rounded bg-[var(--border)] animate-[shimmer_1.5s_infinite]" />
-        <div className="h-3 w-full rounded bg-[var(--border)] animate-[shimmer_1.5s_infinite]" />
+    <div className="overflow-hidden rounded-[var(--r-md)]">
+      <div className="ad-shimmer aspect-[4/5] w-full" />
+      <div className="mt-3 space-y-2">
+        <div className="ad-shimmer h-4 w-3/4 rounded" />
+        <div className="ad-shimmer h-3 w-1/3 rounded" />
       </div>
     </div>
   );
@@ -86,7 +85,7 @@ function AdoptableCard({
   return (
     <div className="group relative">
       <Link href={`/adoptables/${adoptable.id}`} className="block">
-        <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all duration-500 group-hover:border-[var(--border-hover)] group-hover:shadow-2xl group-hover:shadow-black/40">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[rgba(255,255,255,0.02)] transition-all duration-500 group-hover:border-[var(--border-strong)]">
           {preview ? (
             <img
               src={preview}
@@ -136,20 +135,20 @@ function AdoptableCard({
             </div>
           )}
 
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/80 via-black/40 to-black/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            <span className="rounded-full border border-white/20 bg-white/10 p-3 text-white backdrop-blur">
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+            <span className="rounded-full border border-white/20 bg-white/10 p-2.5 text-white backdrop-blur">
               <Eye className="h-5 w-5" />
             </span>
           </div>
         </div>
       </Link>
 
-      <div className="mt-4">
-        <h3 className="text-lg font-bold text-white group-hover:text-[var(--accent)] transition-colors">
+      <div className="mt-3.5">
+        <h3 className="text-base font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
           {adoptable.title || "Unnamed"}
         </h3>
         {adoptable.species && (
-          <p className="text-xs text-[var(--text-secondary)] mt-0.5">{adoptable.species}</p>
+          <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 uppercase tracking-wider">{adoptable.species}</p>
         )}
         {adoptable.description && (
           <p className="mt-1.5 text-xs text-[var(--text-secondary)] line-clamp-2">
@@ -396,7 +395,7 @@ export default function AdoptablesPage() {
               Adoptables
             </span>
             <h1 className="display-xl mt-5 text-white">
-              Adoptable <span className="text-gradient-strong">Characters</span>
+              ✦ Adoptable <span className="text-gradient-strong">Characters</span>
             </h1>
             <p className="lead mx-auto mt-4">
               Handcrafted avatar designs available for instant adoption.

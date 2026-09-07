@@ -49,14 +49,18 @@ export default function ServicesPage() {
           <SectionHeading
             align="center"
             eyebrow="Services"
-            title="What I provide"
+            title={
+              <>
+                ✦ What I <span className="text-gradient-animated">provide</span>
+              </>
+            }
             subtitle="I work on VRChat avatars in a few different ways. Here's what I can help with."
           />
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
             {SERVICES.map((svc, i) => (
               <Reveal key={svc.title} delay={i * 80}>
-            <PremiumCard variant="elevated" className="group h-full p-7" hoverGlow>
+                <PremiumCard variant="default" className="group h-full">
                   <div className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] transition-transform duration-300 group-hover:scale-110">
                     {svc.icon}
                   </div>
@@ -77,27 +81,28 @@ export default function ServicesPage() {
             ))}
           </div>
 
-          <div className="my-16">
-            <div className="section-fade" />
-          </div>
+          <div className="my-14 divider-glow" />
 
           <SectionHeading eyebrow="Process" title="How it Works" subtitle="From enquiry to delivery in five simple steps." />
 
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+          <div className="relative grid grid-cols-2 gap-6 md:grid-cols-5">
             {WORKFLOW.map((step, i) => (
               <Reveal key={step.title} delay={(i % 5) * 60}>
-                <PremiumCard variant="interactive" className="h-full p-5 text-center">
-                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                <div className="text-center">
+                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] transition-transform duration-300 group-hover:scale-110">
                     <step.icon className="h-5 w-5" />
+                  </div>
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]/80">
+                    Step {i + 1}
                   </div>
                   <h3 className="mb-1.5 text-sm font-bold text-white">{step.title}</h3>
                   <p className="text-xs leading-relaxed text-[var(--text-dim)]">{step.desc}</p>
-                </PremiumCard>
+                </div>
               </Reveal>
             ))}
           </div>
 
-          <div className="mt-12 text-center">
+          <div className="mt-14 text-center">
             <ButtonLink href="/pricing" variant="secondary">
               View Pricing
               <ArrowRight className="h-4 w-4" />

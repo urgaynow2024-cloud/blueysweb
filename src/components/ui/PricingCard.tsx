@@ -25,27 +25,19 @@ export default function PricingCard({
     <div
       className={`group relative flex h-full flex-col rounded-[var(--r-lg)] p-7 transition-all duration-500 md:p-8 ${
         popular
-          ? "glow-border border border-[var(--accent)]/60 bg-[var(--accent-soft)] shadow-[var(--shadow-glow)] md:-translate-y-2 md:hover:-translate-y-3"
-          : "premium-card border border-[var(--border)] hover:shadow-[0_0_50px_rgba(90,176,240,0.1)]"
+          ? "border border-[var(--accent)]/40 bg-[rgba(124,58,237,0.04)] shadow-[0_18px_40px_-20px_rgba(124,58,237,0.35)] md:-translate-y-2 md:hover:-translate-y-3"
+          : "border border-[var(--border)] bg-[rgba(255,255,255,0.02)] hover:border-[var(--border-strong)]"
       }`}
     >
-      {/* Ambient glow for popular tier (clipped to the card so it doesn't affect the badge) */}
-      {popular && (
-        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[var(--r-lg)]">
-          <div className="absolute -right-10 -top-16 h-40 w-40 rounded-full bg-[var(--accent)] opacity-[0.15] blur-3xl transition-opacity duration-500 group-hover:opacity-[0.22]" />
-          <div className="absolute -left-10 -bottom-16 h-32 w-32 rounded-full bg-[var(--accent-2)] opacity-[0.08] blur-3xl transition-opacity duration-500 group-hover:opacity-[0.14]" />
-        </div>
-      )}
-
       {tier.badge && (
-        <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#04060a] shadow-lg shadow-[var(--accent)]/25">
+        <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-[#04060a] shadow-lg shadow-[var(--accent)]/25">
           {tier.badge}
         </span>
       )}
 
       <div className="relative flex items-center gap-3">
         {tier.emoji && (
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-xl transition-transform duration-300 group-hover:scale-110">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-xl transition-transform duration-300 group-hover:scale-110">
             {tier.emoji}
           </span>
         )}
@@ -57,13 +49,13 @@ export default function PricingCard({
       </div>
       <p className="relative mt-1.5 text-xs uppercase tracking-wider text-[var(--text-dim)]">Per avatar</p>
 
-      <div className="relative my-6 h-px w-full bg-gradient-to-r from-[var(--border-strong)] to-transparent" />
+      <div className="relative my-6 h-px w-full bg-gradient-to-r from-[var(--border)] to-transparent" />
 
-      <ul className="relative mb-8 flex-1 space-y-3.5">
+      <ul className="relative mb-8 flex-1 space-y-3">
         {tier.features?.map((feat) => (
-          <li key={feat} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
-            <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
-              <Check className="h-3 w-3" />
+          <li key={feat} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
+            <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+              <Check className="h-2.5 w-2.5" />
             </span>
             <span>{feat}</span>
           </li>
@@ -72,10 +64,8 @@ export default function PricingCard({
 
       <a
         href={href}
-        className={`relative flex items-center justify-center gap-2 rounded-xl py-3 text-center text-sm font-bold transition-all duration-300 ${
-          popular
-            ? "bg-gradient-to-r from-[var(--accent)] to-[var(--accent-4)] text-[#04060a] shadow-lg shadow-[var(--accent)]/20 hover:brightness-105"
-            : "border border-[var(--border-strong)] text-white hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
+        className={`btn-base btn-md w-full ${
+          popular ? "btn-primary" : "btn-secondary"
         }`}
       >
         {ctaLabel}

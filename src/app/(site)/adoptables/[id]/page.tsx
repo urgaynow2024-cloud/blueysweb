@@ -257,7 +257,7 @@ export default function AdoptablePage() {
           {/* Image Gallery */}
           <div className="space-y-4">
             {/* Main image */}
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated]">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[rgba(255,255,255,0.02)]">
               {visibleImages.length > 0 ? (
                 renderImage(
                   visibleImages[lightboxIndex < visibleImages.length ? lightboxIndex : 0]?.url,
@@ -360,22 +360,22 @@ export default function AdoptablePage() {
               adoptable.nsfw_available ||
               adoptable.bundle_available ||
               adoptable.price) && (
-              <div className="border-t border-[var(--border)] pt-6 space-y-4">
+              <div className="border-t border-[var(--border)] pt-6 space-y-3">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)]">
                   Pricing
                 </h3>
 
                 {adoptable.sfw_available && adoptable.sfw_price && (
-                  <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3">
+                  <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
                     <span className="text-sm font-semibold text-white">SFW Version</span>
                     <span className="text-lg font-bold text-[var(--accent)]">
-                      {ageVerified || !hasNsfwContent ? adoptable.sfw_price : adoptable.sfw_price}
+                      {adoptable.sfw_price}
                     </span>
                   </div>
                 )}
 
                 {adoptable.nsfw_available && adoptable.nsfw_price && (
-                  <div className="flex items-center justify-between rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3">
+                  <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
                     <span className="text-sm font-semibold text-white flex items-center gap-2">
                       <Lock className="h-4 w-4 text-red-400" />
                       NSFW Version
@@ -387,7 +387,7 @@ export default function AdoptablePage() {
                 )}
 
                 {adoptable.bundle_available && adoptable.bundle_price && (
-                  <div className="flex items-center justify-between rounded-xl border border-[var(--accent)]/20 bg-[var(--accent-soft)] px-4 py-3">
+                  <div className="flex items-center justify-between pb-2">
                     <span className="text-sm font-semibold text-white">SFW + NSFW Bundle</span>
                     <span className="text-lg font-bold text-[var(--accent)]">
                       {ageVerified ? adoptable.bundle_price : "• • •"}

@@ -74,13 +74,7 @@ export default function Home() {
           <div className="container py-20">
             <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-8">
-                  <div className="space-y-3">
-                    <div className="h-4 w-1/2 rounded bg-[var(--bg)]" />
-                    <div className="h-3 w-full rounded bg-[var(--bg)]" />
-                    <div className="h-3 w-2/3 rounded bg-[var(--bg)]" />
-                  </div>
-                </div>
+                <div key={i} className="ad-shimmer h-40 rounded-[var(--r-md)]" />
               ))}
             </div>
           </div>
@@ -182,24 +176,23 @@ export default function Home() {
             {reviews.length > 0 && <ReviewSummary reviews={reviews} />}
             {reviews.length > 0 ? (
               <>
-                <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+                <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:gap-6">
                   {reviews.slice(0, 6).map((review, i) => (
                     <Reveal key={review.id || i} delay={i * 60}>
-                      <PremiumCard variant="elevated" className="group h-full p-6 md:p-7" hoverGlow>
-                        <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[var(--accent)] opacity-[0.04] blur-3xl transition-opacity duration-500 group-hover:opacity-[0.08]" />
-                        <Quote className="relative mb-4 h-7 w-7 text-[var(--accent)]/30" />
-                        <div className="relative flex items-center gap-4">
-                          <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)]/20 to-[var(--accent-2)]/20 text-lg font-bold text-white">
+                      <PremiumCard variant="review" className="group h-full">
+                        <Quote className="relative mb-3 h-5 w-5 text-[var(--accent)]/40" />
+                        <div className="relative flex items-center gap-3">
+                          <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-[var(--accent)]/20 to-[var(--accent-2)]/20 text-sm font-bold text-white">
                             {review.display_name?.[0]?.toUpperCase() || "★"}
                           </div>
                           <div>
-                            <p className="font-bold text-white">{review.display_name}</p>
-                            <Stars rating={review.rating} size="h-3.5 w-3.5" />
+                            <p className="text-sm font-semibold text-white">{review.display_name}</p>
+                            <Stars rating={review.rating} size="h-3 w-3" />
                           </div>
                         </div>
                         <p className="relative mt-4 text-sm text-[var(--text-secondary)] leading-relaxed">"{review.review_text}"</p>
                         {review.image_url && (
-                          <div className="relative mt-4 overflow-hidden rounded-xl border border-[var(--border)]">
+                          <div className="relative mt-4 overflow-hidden rounded-lg border border-[var(--border)]">
                             <img src={review.image_url} alt="Commission preview" loading="lazy" className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
                           </div>
                         )}
@@ -217,9 +210,9 @@ export default function Home() {
                 )}
               </>
             ) : (
-              <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-16 text-center">
-                <div className="mb-4 text-5xl opacity-20">💬</div>
-                <p className="mx-auto mb-6 max-w-md text-lg text-[var(--text-dim)]">
+              <div className="py-16 text-center">
+                <div className="mb-3 text-4xl opacity-30">💬</div>
+                <p className="mx-auto mb-6 max-w-md text-sm text-[var(--text-dim)]">
                   Client reviews will appear here after commissions are completed.
                 </p>
                 <ButtonLink href="/reviews">Leave a Review</ButtonLink>
@@ -239,7 +232,7 @@ export default function Home() {
               title="FAQ"
               subtitle="Quick answers to the things people ask most."
             />
-            <div className="space-y-3">
+            <div className="space-y-2">
               {faq.map((item, i) => {
                 const open = openFaq === i;
                 const faqIcon = item.key?.toLowerCase().includes("price") || item.key?.toLowerCase().includes("cost") || item.key?.toLowerCase().includes("payment")
@@ -255,27 +248,31 @@ export default function Home() {
                 return (
                   <div
                     key={i}
-                    className="overflow-hidden rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--bg-card)] transition-colors duration-300 hover:border-[var(--border-hover)]"
+                    className={`overflow-hidden rounded-[var(--r-sm)] border transition-all duration-300 ${
+                      open
+                        ? "border-[var(--border-strong)] bg-[rgba(255,255,255,0.02)]"
+                        : "border-[var(--border)] bg-transparent hover:border-[var(--border-strong)]"
+                    }`}
                   >
                     <button
                       onClick={() => setOpenFaq(open ? null : i)}
                       aria-expanded={open}
-                      className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left"
+                      className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
                     >
                       <span className="flex items-center gap-3">
-                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
-                          <Icon className="h-4 w-4" />
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-[var(--accent-soft)] text-[var(--accent)]">
+                          <Icon className="h-3.5 w-3.5" />
                         </span>
                         <span className={`font-semibold transition-colors ${open ? "text-white" : "text-[var(--text)]"}`}>
                           {item.question}
                         </span>
                       </span>
                       <span
-                        className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--accent)] transition-all duration-300 ${
+                        className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[var(--accent)] transition-all duration-300 ${
                           open ? "rotate-180 bg-[var(--accent-soft)]" : ""
                         }`}
                       >
-                        {open ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                        {open ? <Minus className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
                       </span>
                     </button>
                     <div
@@ -283,7 +280,7 @@ export default function Home() {
                       style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
                     >
                       <div className="overflow-hidden">
-                        <p className="px-5 pb-5 text-sm leading-relaxed text-[var(--text-secondary)]">{item.answer}</p>
+                        <p className="px-5 pb-5 pt-1 text-sm leading-relaxed text-[var(--text-secondary)]">{item.answer}</p>
                       </div>
                     </div>
                   </div>
@@ -373,24 +370,24 @@ function StatsBand({ site, reviews, returningClients }: { site: any; reviews: an
     ? (approved.reduce((sum: number, r: any) => sum + (Number(r.rating) || 5), 0) / totalReviews).toFixed(1)
     : "—";
   const stats = [
-    { label: "Average rating", value: avgRating, icon: <Star className="h-4 w-4" /> },
-    { label: "Total reviews", value: totalReviews, icon: <MessageSquarePlus className="h-4 w-4" /> },
-    { label: "Turnaround", value: site.stat_delivery || "5-10 days", icon: <Zap className="h-4 w-4" /> },
-    { label: "Returning clients", value: String(returningClients), icon: <Users className="h-4 w-4" /> },
+    { label: "Rating", value: `${avgRating} ★` },
+    { label: "Reviews", value: String(totalReviews) },
+    { label: "Turnaround", value: site.stat_delivery || "5–10 days" },
+    { label: "Returning clients", value: String(returningClients) },
   ];
   return (
     <section className="section !pb-0">
       <div className="container">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-3 text-center md:gap-x-6">
           {stats.map((s, i) => (
-            <Reveal key={s.label} delay={i * 60}>
-              <PremiumCard variant="elevated" className="h-full p-5 text-center" hoverGlow>
-                <div className="mx-auto mb-3 grid h-9 w-9 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                  {s.icon}
-                </div>
-                <p className="font-display text-2xl font-bold text-white">{s.value}</p>
-                <p className="mt-1 text-xs text-[var(--text-dim)]">{s.label}</p>
-              </PremiumCard>
+            <Reveal key={s.label} delay={i * 60} as="span">
+              <span className="inline-flex items-baseline gap-2">
+                <span className="font-display text-base font-semibold text-white md:text-lg">{s.value}</span>
+                <span className="text-xs text-[var(--text-dim)] uppercase tracking-wider">{s.label}</span>
+              </span>
+              {i < stats.length - 1 && (
+                <span aria-hidden="true" className="ml-3 inline-block h-3 w-px bg-[var(--border-strong)] align-middle md:ml-6" />
+              )}
             </Reveal>
           ))}
         </div>
@@ -404,7 +401,7 @@ function ReviewSummary({ reviews }: { reviews: any[] }) {
     ? (reviews.reduce((sum, r) => sum + (Number(r.rating) || 5), 0) / reviews.length).toFixed(1)
     : "5.0";
   return (
-    <div className="mb-8 flex flex-wrap items-center gap-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] px-4 py-3">
+    <div className="mb-8 flex flex-wrap items-center gap-2.5">
       <div className="flex gap-0.5">
         {[1, 2, 3, 4, 5].map((i) => (
           <Star key={i} className={`h-4 w-4 ${i <= Math.round(Number(avg)) ? "fill-[var(--accent)] text-[var(--accent)]" : "text-[var(--text-dim)]"}`} />
@@ -412,7 +409,7 @@ function ReviewSummary({ reviews }: { reviews: any[] }) {
       </div>
       <span className="font-semibold text-white">{avg}</span>
       <span className="text-sm text-[var(--text-secondary)]">
-        from {reviews.length} verified client {reviews.length === 1 ? "review" : "reviews"}
+        · from {reviews.length} verified client {reviews.length === 1 ? "review" : "reviews"}
       </span>
     </div>
   );
@@ -458,15 +455,15 @@ function ServiceRow({
           </ul>
         </div>
         <div className={`lg:col-span-7 ${reverse ? "lg:order-1" : "order-1 lg:order-2"}`}>
-          <div className="group relative aspect-[16/10] overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] shadow-lg shadow-black/30">
+          <div className="group relative aspect-[16/10] overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[rgba(255,255,255,0.02)]">
             {image ? (
-              <img src={image} alt={title} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]" />
+              <img src={image} alt={title} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]" />
             ) : (
               <div className="grid h-full place-items-center text-5xl opacity-30">{emoji}</div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)]/80 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)]/60 via-transparent to-transparent" />
             {emoji && (
-              <div className="absolute bottom-4 left-4 grid h-12 w-12 place-items-center rounded-xl border border-white/10 bg-[var(--bg-float)]/80 text-2xl backdrop-blur-md">
+              <div className="absolute bottom-4 left-4 grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-[rgba(8,11,18,0.7)] text-xl backdrop-blur-md">
                 {emoji}
               </div>
             )}
@@ -482,11 +479,11 @@ function ProcessTimeline({ steps }: { steps: any[] }) {
   return (
     <div className="relative">
       {/* connecting line (desktop) */}
-      <div className="absolute left-0 right-0 top-7 hidden h-px bg-gradient-to-r from-transparent via-[var(--border-strong)] to-transparent lg:block" />
-      <ol className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="absolute left-0 right-0 top-7 hidden h-px bg-gradient-to-r from-transparent via-[var(--border)] to-transparent lg:block" />
+      <ol className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
         {steps.map((step, i) => (
           <li key={step.title || i} className="group relative text-center">
-            <div className="relative z-10 mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] text-2xl shadow-md transition-all duration-500 group-hover:-translate-y-1.5 group-hover:border-[var(--accent)]/50 group-hover:shadow-[var(--shadow-glow)]">
+            <div className="relative z-10 mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-[var(--border)] bg-[rgba(255,255,255,0.02)] text-2xl transition-all duration-500 group-hover:-translate-y-1.5 group-hover:border-[var(--accent)]/50 group-hover:bg-[var(--accent-soft)]">
               {step.emoji}
               <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-4)] text-[10px] font-bold text-[#04060a]">
                 {i + 1}

@@ -1,24 +1,27 @@
 import { ReactNode, HTMLAttributes } from "react";
 
-type CardVariant = "default" | "elevated" | "interactive" | "glass" | "marketplace" | "minimal" | "portfolio" | "pricing" | "review" | "faq";
-type CardPadding = "sm" | "md" | "lg";
+type CardVariant = "default" | "elevated" | "interactive" | "glass" | "marketplace" | "minimal" | "portfolio" | "pricing" | "review" | "faq" | "flat" | "subtle";
+type CardPadding = "none" | "sm" | "md" | "lg";
 
 const variantClasses: Record<CardVariant, string> = {
-  default: "premium-card border border-[var(--border)] hover:shadow-[0_0_40px_rgba(90,176,240,0.08)]",
-  elevated: "border border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:border-[var(--border-hover)] hover:shadow-[0_0_50px_rgba(90,176,240,0.1)]",
-  interactive: "premium-card group border border-[var(--border)] hover:border-[var(--border-hover)] hover:shadow-[0_0_40px_rgba(90,176,240,0.08)]",
+  default: "surface",
+  elevated: "surface-strong shadow-[var(--shadow-sm)]",
+  interactive: "surface hover:border-[var(--border-strong)] cursor-pointer",
   glass: "glass",
-  marketplace: "marketplace-card group border border-[var(--border)] hover:border-[var(--border-hover)] hover:shadow-[0_0_40px_rgba(90,176,240,0.08)]",
-  minimal: "border border-[var(--border)] bg-transparent hover:border-[var(--border-hover)]",
-  portfolio: "portfolio-card border border-[var(--border)] hover:shadow-[0_0_40px_rgba(90,176,240,0.1)]",
-  pricing: "pricing-card border border-[var(--border)] hover:shadow-[0_0_50px_rgba(90,176,240,0.12)]",
-  review: "review-card border border-[var(--border)] hover:shadow-[0_0_40px_rgba(90,176,240,0.08)]",
-  faq: "faq-card border border-[var(--border)] hover:shadow-[0_0_30px_rgba(90,176,240,0.06)]",
+  marketplace: "marketplace-card",
+  minimal: "surface-minimal",
+  portfolio: "portfolio-card",
+  pricing: "pricing-card",
+  review: "review-card",
+  faq: "faq-card",
+  flat: "bg-transparent border border-[var(--border)] rounded-[var(--r-md)]",
+  subtle: "bg-[rgba(255,255,255,0.015)] border border-[var(--border)] rounded-[var(--r-md)] hover:bg-[rgba(255,255,255,0.03)] hover:border-[var(--border-strong)] transition-all",
 };
 
 const paddingClasses: Record<CardPadding, string> = {
+  none: "",
   sm: "p-4",
-  md: "p-6 md:p-8",
+  md: "p-6 md:p-7",
   lg: "p-8 md:p-10",
 };
 
@@ -39,8 +42,8 @@ export function PremiumCard({
 }: PremiumCardProps) {
   return (
     <div
-      className={`relative isolate overflow-hidden rounded-[var(--r-lg)] transition-all duration-500 ${variantClasses[variant]} ${paddingClasses[padding]} ${
-        hoverGlow ? "hover:shadow-[0_0_50px_rgba(90,176,240,0.15)]" : ""
+      className={`relative overflow-hidden rounded-[var(--r-lg)] transition-all duration-500 ${variantClasses[variant]} ${paddingClasses[padding]} ${
+        hoverGlow ? "hover:shadow-[0_0_40px_rgba(90,176,240,0.1)]" : ""
       } ${className}`}
       {...props}
     >
@@ -61,7 +64,7 @@ export function CardHeader({
   icon?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+    <div className="mb-5 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex items-center gap-3">
         {icon && (
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
@@ -84,7 +87,7 @@ export function CardBody({ className = "", children }: { className?: string; chi
 
 export function CardFooter({ className = "", children }: { className?: string; children: ReactNode }) {
   return (
-    <div className={`mt-6 flex items-center justify-end gap-3 border-t border-[var(--border)] pt-4 text-sm ${className}`}>
+    <div className={`mt-5 flex items-center justify-end gap-3 border-t border-[var(--border)] pt-4 text-sm ${className}`}>
       {children}
     </div>
   );
@@ -93,7 +96,7 @@ export function CardFooter({ className = "", children }: { className?: string; c
 export function CardGrid({
   children,
   cols = "sm",
-  gap = "4",
+  gap = "6",
   className = "",
 }: {
   children: ReactNode;
