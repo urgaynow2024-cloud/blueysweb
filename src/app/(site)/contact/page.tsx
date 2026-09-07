@@ -31,15 +31,14 @@ export default function ContactPage() {
 
         <div className="container">
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-8">
-            {/* Info */}
             <div className="space-y-5">
-              <SectionHeading eyebrow="Contact" title="Get in touch" subtitle="Ready to commission something? Reach out and let's talk through your idea." />
+              <SectionHeading eyebrow="Contact" title="Get in touch" subtitle="Ready to commission something? Reach out and let&apos;s talk through your idea." />
 
               <div className="space-y-3">
                 {CHANNELS.map((c, i) => (
                   <Reveal key={c.label} delay={i * 60}>
-                    <div className="group flex items-center gap-4 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-5 transition-all duration-500 hover:-translate-y-0.5 hover:border-[var(--border-hover)]">
-                      <div className="grid h-12 w-12 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                    <div className="flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-white/[0.02] p-5 transition-all duration-500 hover:border-[var(--border-hover)] hover:bg-white/[0.04]">
+                      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
                         {c.icon}
                       </div>
                       <div>
@@ -53,7 +52,7 @@ export default function ContactPage() {
               </div>
 
               <Reveal delay={120}>
-                <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-6">
+                <div className="rounded-2xl border border-[var(--border)] bg-white/[0.02] p-6">
                   <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-white">
                     <CheckCircle2 className="h-4 w-4 text-[var(--accent)]" />
                     Quick checklist
@@ -70,10 +69,9 @@ export default function ContactPage() {
               </Reveal>
             </div>
 
-            {/* Form */}
             <div className="lg:col-span-2">
               <Reveal>
-                <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)]/60 p-1 backdrop-blur-sm">
+                <div className="rounded-2xl border border-[var(--border)] bg-white/[0.02] p-1">
                   <ContactCommissionForm />
                 </div>
               </Reveal>

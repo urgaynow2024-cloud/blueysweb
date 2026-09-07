@@ -22,9 +22,9 @@ export default function FAQPage() {
       <div className="bg-nebula" />
       <div className="bg-cosmic-fog" />
       <section className="page relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
-        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.06] blur-[130px] orb-slow" />
-        <div className="pointer-events-none absolute bottom-0 right-1/4 h-56 w-[400px] rounded-full bg-[var(--accent-nebula)] opacity-[0.04] blur-[100px] orb-med" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-30" />
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.05] blur-[130px] orb-slow" />
+
         <div className="container max-w-3xl">
           <SectionHeading
             align="center"
@@ -34,16 +34,16 @@ export default function FAQPage() {
             subtitle="Quick answers to the things people ask most."
           />
 
-          <div className="space-y-3">
+          <div className="mt-12 grid gap-2">
             {FAQS.map((item, i) => {
               const isOpen = open === i;
               return (
                 <div
                   key={item.q}
-                  className={`overflow-hidden rounded-[var(--r-md)] border transition-all duration-300 ${
+                  className={`rounded-2xl border transition-all duration-300 ${
                     isOpen
-                      ? "border-[var(--accent)] bg-[var(--accent-soft)] shadow-[var(--shadow-glow)]"
-                      : "border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--border-hover)]"
+                      ? "border-[var(--accent)]/50 bg-[var(--accent-soft)]"
+                      : "border-[var(--border)] bg-white/[0.02] hover:border-[var(--border-hover)] hover:bg-white/[0.04]"
                   }`}
                 >
                   <button
@@ -51,7 +51,7 @@ export default function FAQPage() {
                     aria-expanded={isOpen}
                     className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
                   >
-                    <span className={`font-semibold transition-colors ${isOpen ? "text-white" : "text-[var(--text)]"}`}>
+                    <span className={`text-sm font-semibold transition-colors ${isOpen ? "text-white" : "text-[var(--text)]"}`}>
                       {item.q}
                     </span>
                     <span

@@ -78,27 +78,21 @@ export default function LinksPage() {
               ))}
             </div>
           ) : links.length === 0 ? (
-            <PremiumCard variant="elevated" className="py-16 text-center">
+            <div className="mx-auto max-w-3xl rounded-2xl border border-dashed border-[var(--border)] bg-white/[0.01] py-20 text-center">
               <p className="text-[var(--text-dim)]">No links have been added yet.</p>
-            </PremiumCard>
+            </div>
           ) : (
-            <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="mx-auto max-w-3xl grid grid-cols-1 gap-4 sm:grid-cols-2">
               {links.map((link, i) => (
                 <Reveal key={link.id || i} delay={(i % 4) * 60}>
                   <a
                     href={link.url}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="group relative flex h-full items-center gap-5 overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-5 shadow-[var(--shadow-md)] transition-all duration-500 hover:-translate-y-1 hover:border-[var(--accent)]/40 hover:shadow-[0_0_40px_rgba(90,176,240,0.12)]"
+                    className="group relative flex h-full items-center gap-5 overflow-hidden rounded-2xl border border-[var(--border)] bg-white/[0.02] p-5 transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)] hover:bg-white/[0.04]"
                   >
-                    {/* Gradient wash */}
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[var(--accent)]/0 via-transparent to-[var(--accent-2)]/0 opacity-0 transition-opacity duration-500 group-hover:from-[var(--accent)]/[0.06] group-hover:to-[var(--accent-2)]/[0.04] group-hover:opacity-100" />
-
-                    {/* Top shimmer */}
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/0 to-transparent transition-all duration-500 group-hover:via-[var(--accent)]/60" />
-
                     {/* Favicon */}
-                    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-2.5 shadow-inner transition-all duration-500 group-hover:border-[var(--accent)]/30 group-hover:shadow-[0_0_16px_rgba(90,176,240,0.1)]">
+                    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-2.5 transition-all duration-500 group-hover:border-[var(--accent)]/30">
                       {!faviconErrors.has(link.url) ? (
                         <img
                           src={getFaviconUrl(link.url)}
@@ -129,7 +123,7 @@ export default function LinksPage() {
                     </div>
 
                     {/* Arrow */}
-                    <span className="relative flex shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2.5 text-[var(--text-dim)] transition-all duration-500 group-hover:border-[var(--accent)]/40 group-hover:text-[var(--accent)] group-hover:shadow-[0_0_16px_var(--accent-glow)] group-hover:translate-x-0.5">
+                    <span className="relative flex shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2.5 text-[var(--text-dim)] transition-all duration-500 group-hover:border-[var(--accent)]/40 group-hover:text-[var(--accent)] group-hover:translate-x-0.5">
                       <ExternalLink className="h-4 w-4 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                     </span>
                   </a>

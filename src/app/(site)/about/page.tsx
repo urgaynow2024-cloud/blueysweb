@@ -31,36 +31,36 @@ export default function AboutPage() {
         <div className="pointer-events-none absolute -top-24 -right-24 h-80 w-80 rounded-full bg-[var(--accent-cosmic)] opacity-[0.04] blur-[110px] orb-med" />
 
         <div className="container">
-          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
-            <div>
+          <div className="grid grid-cols-1 gap-16 lg:grid-cols-12 lg:gap-12">
+            <div className="lg:col-span-5">
               <SectionHeading eyebrow="About" title="The person behind the work" subtitle="A little about me, and how I approach every commission." />
 
-              <div className="space-y-5 leading-relaxed text-[var(--text-secondary)]">
-                <p>
+              <div className="mt-8 space-y-6 leading-relaxed text-[var(--text-secondary)]">
+                <p className="text-base">
                   I&rsquo;m Bluey, a VRChat avatar creator with around 2 years of experience working with Unity and Blender.
                 </p>
-                <p>
+                <p className="text-base">
                   I specialise in avatar edits, customisation, optimisation, accessories, clothing fitting, and making avatars feel unique while staying comfortable for everyday VRChat use.
                 </p>
               </div>
 
-              <div className="mt-8 space-y-4">
-              {SERVICES.map((svc, i) => (
-                <Reveal key={svc.title} delay={i * 70}>
-                  <PremiumCard variant="elevated" className="group flex gap-4 p-5" hoverGlow>
-                    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-xl transition-transform duration-300 group-hover:scale-110">
-                      {svc.emoji}
+              <div className="mt-10 flex flex-col gap-3">
+                {SERVICES.map((svc, i) => (
+                  <Reveal key={svc.title} delay={i * 80}>
+                    <div className="group flex items-start gap-4 rounded-2xl border border-[var(--border)] bg-white/[0.02] p-5 transition-all duration-500 hover:border-[var(--border-hover)] hover:bg-white/[0.04]">
+                      <div className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-xl transition-transform duration-300 group-hover:scale-110">
+                        {svc.emoji}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-white">{svc.title}</h4>
+                        <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">{svc.desc}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-white">{svc.title}</h4>
-                      <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{svc.desc}</p>
-                    </div>
-                  </PremiumCard>
-                </Reveal>
-              ))}
+                  </Reveal>
+                ))}
               </div>
 
-              <div className="mt-8 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+              <div className="mt-8 flex items-center gap-2.5 text-sm text-[var(--text-secondary)]">
                 <Heart className="h-4 w-4 text-[var(--accent)]" />
                 Discord: <span className="font-medium text-white">BlueyBarks</span>
               </div>
@@ -73,19 +73,23 @@ export default function AboutPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              {STATS.map((stat, i) => (
-                <Reveal key={stat.label} delay={i * 70}>
-                  <PremiumCard variant="elevated" className="group h-full p-6 text-center" hoverGlow>
-                    <div className="mb-2 text-2xl transition-transform duration-300 group-hover:scale-110">{stat.emoji}</div>
-                    <div className="text-xl font-bold text-white">{stat.stat}</div>
-                    <div className="text-xs uppercase tracking-wider text-[var(--text-dim)]">{stat.label}</div>
-                  </PremiumCard>
-                </Reveal>
-              ))}
+            <div className="lg:col-span-7">
+              <div className="grid grid-cols-2 gap-3">
+                {STATS.map((stat, i) => (
+                  <Reveal key={stat.label} delay={i * 70}>
+                    <div className="group flex h-full flex-col justify-between rounded-2xl border border-[var(--border)] bg-white/[0.02] p-6 transition-all duration-500 hover:border-[var(--border-hover)] hover:bg-white/[0.04]">
+                      <div className="text-2xl transition-transform duration-300 group-hover:scale-110">{stat.emoji}</div>
+                      <div>
+                        <div className="text-xl font-bold text-white">{stat.stat}</div>
+                        <div className="text-xs uppercase tracking-wider text-[var(--text-dim)]">{stat.label}</div>
+                      </div>
+                    </div>
+                  </Reveal>
+                ))}
+              </div>
 
-              <Reveal delay={120} className="col-span-2">
-                <div className="flex items-center gap-3 rounded-[var(--r-md)] border border-[var(--border)] bg-gradient-to-br from-[var(--accent-soft)] to-transparent p-5">
+              <Reveal delay={120} className="mt-3">
+                <div className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--accent-soft)] to-transparent p-5">
                   <Sparkles className="h-5 w-5 text-[var(--accent)]" />
                   <p className="text-sm text-[var(--text-secondary)]">
                     Every avatar is built with care, performance, and your vision in mind.

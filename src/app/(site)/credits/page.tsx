@@ -78,14 +78,14 @@ export default function CreditsPage() {
       <div className="bg-nebula" />
       <div className="bg-cosmic-fog" />
       <section className="page relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-grid opacity-30" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-grid opacity-20" />
         <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px] orb-slow" />
 
         <div className="container">
           <SectionHeading
             align="center"
             eyebrow="Credits"
-            title="The people behind the project"
+            title="People Behind the Stars"
             subtitle="A huge thank you to everyone who has helped, supported, tested, created, or contributed to this project. I genuinely appreciate every bit of support. 💜"
           />
 
@@ -130,14 +130,14 @@ export default function CreditsPage() {
               )}
             </>
           ) : (
-            <PremiumCard variant="elevated" className="mx-auto mb-16 max-w-2xl py-20 text-center">
+            <div className="mx-auto mb-16 max-w-2xl rounded-2xl border border-dashed border-[var(--border)] bg-white/[0.01] py-20 text-center">
               <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
                 <Heart className="h-6 w-6" />
               </div>
               <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
                 Credits will appear here as contributors are added.
               </p>
-            </PremiumCard>
+            </div>
           )}
         </div>
       </section>
@@ -149,7 +149,7 @@ function CreditCard({ credit }: { credit: Credit }) {
   const categoryEmojis = credit.categories.map((c) => CATEGORY_EMOJI[c] || "✨").join(" ");
 
   return (
-    <PremiumCard variant="elevated" className="group h-full p-7 md:p-8" hoverGlow>
+    <div className="group flex h-full flex-col gap-5 rounded-2xl border border-[var(--border)] bg-white/[0.02] p-7 transition-all duration-500 hover:border-[var(--border-hover)] hover:bg-white/[0.04]">
       <div className="flex items-start gap-4">
         {credit.avatar_url ? (
           <img src={credit.avatar_url} alt={credit.name} className="h-12 w-12 rounded-xl object-cover" />
@@ -165,14 +165,14 @@ function CreditCard({ credit }: { credit: Credit }) {
       </div>
 
       {credit.description && (
-        <p className="relative mt-4 leading-relaxed text-[var(--text-secondary)]">{credit.description}</p>
+        <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{credit.description}</p>
       )}
 
       {credit.note && (
-        <p className="relative mt-2 text-xs italic text-[var(--text-dim)]">"{credit.note}"</p>
+        <p className="text-xs italic text-[var(--text-dim)]">&ldquo;{credit.note}&rdquo;</p>
       )}
 
-      <div className="relative mt-5 flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {credit.website_url && (
           <a
             href={credit.website_url}
@@ -207,6 +207,6 @@ function CreditCard({ credit }: { credit: Credit }) {
           </a>
         ))}
       </div>
-    </PremiumCard>
+    </div>
   );
 }

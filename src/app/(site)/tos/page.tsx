@@ -117,8 +117,8 @@ export default function ToSPage() {
         <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px] orb-slow" />
         <div className="pointer-events-none absolute bottom-0 right-1/4 h-56 w-[400px] rounded-full bg-[var(--accent-cosmic)] opacity-[0.03] blur-[100px] orb-med" />
 
-        <div className="container">
-          <div className="mx-auto max-w-3xl text-center">
+        <div className="container max-w-3xl">
+          <div className="mx-auto max-w-2xl text-center">
             <span className="eyebrow">
               <FileText className="h-3.5 w-3.5 text-[var(--accent)]" />
               Terms of Service
@@ -141,7 +141,7 @@ export default function ToSPage() {
         </div>
       </section>
 
-      <section className="!pt-0">
+      <section className="!pt-12">
         <div className="container max-w-3xl">
           {loading ? (
             <div className="space-y-6">
@@ -197,7 +197,7 @@ export default function ToSPage() {
 
       <section className="section !pt-4 md:!pt-6">
         <div className="container max-w-3xl text-center">
-          <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-6 md:p-10">
+          <div className="rounded-2xl border border-[var(--border)] bg-white/[0.02] p-6 md:p-10">
             <div className="mb-4 flex items-center justify-center gap-2 text-sm text-[var(--text-dim)]">
               <Clock className="h-4 w-4" />
               Last Updated: {lastUpdated || "—"}
