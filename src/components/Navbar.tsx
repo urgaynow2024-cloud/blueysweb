@@ -43,31 +43,37 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
-      <div className="mx-auto max-w-6xl px-4 pt-4 md:pt-5">
+      <div
+        className={`mx-auto max-w-6xl px-4 pt-4 md:pt-5 transition-all duration-500 will-change-transform ${
+          scrolled
+            ? "translate-y-0 opacity-100"
+            : "translate-y-0 opacity-100"
+        }`}
+      >
         <div
-          className={`relative flex items-center justify-between gap-4 transition-all duration-500 ${
+          className={`relative flex items-center justify-between gap-4 ${
             scrolled
-              ? "rounded-2xl border border-white/[0.06] bg-[rgba(8,11,18,0.55)] backdrop-blur-xl backdrop-saturate-150 px-4 py-2 shadow-[0_8px_28px_-12px_rgba(0,0,0,0.55)]"
+              ? "rounded-2xl border border-white/[0.05] bg-[rgba(8,11,18,0.55)] px-4 py-2.5 shadow-[0_8px_28px_-12px_rgba(0,0,0,0.55)]"
               : "rounded-2xl border border-transparent bg-transparent px-2 py-2"
           }`}
         >
           {/* Logo */}
           <a
             href="/"
-            className="group flex items-center gap-2.5 shrink-0"
-            aria-label="Bluey's Commissions — home"
+            className="group flex items-center gap-3 shrink-0"
+            aria-label="Comisioner — home"
           >
-            <span className="relative grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] text-xs font-extrabold shadow-lg shadow-[var(--accent)]/25 transition-transform duration-500 group-hover:scale-105">
-              <span className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <span className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] text-sm font-extrabold shadow-lg shadow-[var(--accent)]/25 transition-transform duration-500 group-hover:scale-105">
+              <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               B
             </span>
-            <span className="hidden text-base font-bold tracking-tight text-white sm:inline font-display">
+            <span className="hidden text-lg font-bold tracking-tight text-white sm:inline font-display">
               Comisioner<span className="text-[var(--accent)]"> ✦</span>
             </span>
           </a>
 
           {/* Desktop links */}
-          <div ref={navRef} className="hidden lg:flex items-center gap-0.5">
+          <div ref={navRef} className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => {
               const active = isActive(pathname, link.href);
               return (
@@ -75,7 +81,7 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   aria-current={active ? "page" : undefined}
-                  className={`relative px-3.5 py-2 text-sm font-medium transition-all duration-300 rounded-lg ${
+                  className={`relative px-4 py-2 text-sm font-medium transition-all duration-300 rounded-xl ${
                     active
                       ? "text-white"
                       : "text-[var(--text-secondary)] hover:text-white hover:bg-white/[0.04]"
@@ -83,7 +89,7 @@ export default function Navbar() {
                 >
                   {link.label}
                   {active && (
-                    <span className="absolute inset-0 rounded-lg bg-[var(--accent-soft)] border border-[var(--border-accent)] -z-10" />
+                    <span className="absolute inset-0 rounded-xl bg-[var(--accent-soft)] border border-[var(--border-accent)] -z-10" />
                   )}
                 </a>
               );
@@ -105,7 +111,7 @@ export default function Navbar() {
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
-            className="lg:hidden grid h-10 w-10 place-items-center rounded-xl border border-[var(--border)] bg-white/[0.03] text-white transition-all hover:bg-white/[0.06] hover:border-[var(--border-hover)]"
+            className="lg:hidden grid h-11 w-11 place-items-center rounded-xl border border-[var(--border)] bg-white/[0.03] text-white transition-all hover:bg-white/[0.06] hover:border-[var(--border-hover)]"
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -127,7 +133,7 @@ export default function Navbar() {
             open ? "translate-y-0 opacity-100" : "-translate-y-6 opacity-0"
           }`}
         >
-          <div className="glass-strong overflow-hidden rounded-3xl p-2">
+          <div className="glass-strong overflow-hidden rounded-3xl p-3">
             {navLinks.map((link, i) => {
               const active = isActive(pathname, link.href);
               return (
@@ -136,10 +142,10 @@ export default function Navbar() {
                   href={link.href}
                   onClick={() => setOpen(false)}
                   aria-current={active ? "page" : undefined}
-                  className={`flex items-center justify-between rounded-2xl px-5 py-3 text-base font-medium transition-all duration-300 ${
+                  className={`mobile-nav-link ${
                     active
-                      ? "bg-[var(--accent-soft)] text-white border border-[var(--border-accent)]"
-                      : "text-[var(--text-secondary)] hover:bg-white/[0.04] hover:text-white border border-transparent"
+                      ? "active"
+                      : "border border-transparent"
                   }`}
                   style={
                     open
@@ -160,7 +166,7 @@ export default function Navbar() {
             <a
               href="/contact"
               onClick={() => setOpen(false)}
-              className="mt-2 flex w-full items-center justify-center gap-2 btn-base btn-primary btn-md"
+              className="mt-3 flex w-full items-center justify-center gap-2 btn-base btn-primary btn-md"
               style={
                 open
                   ? {

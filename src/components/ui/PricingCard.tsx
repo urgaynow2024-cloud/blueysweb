@@ -23,10 +23,10 @@ export default function PricingCard({
 
   return (
     <div
-      className={`group relative flex h-full flex-col rounded-[var(--r-lg)] p-7 transition-all duration-500 md:p-8 ${
+      className={`group relative flex h-full flex-col rounded-[var(--r-md)] p-6 transition-all duration-500 md:p-7 ${
         popular
-          ? "border border-[var(--accent)]/40 bg-[rgba(124,58,237,0.04)] shadow-[0_18px_40px_-20px_rgba(124,58,237,0.35)] md:-translate-y-2 md:hover:-translate-y-3"
-          : "border border-[var(--border)] bg-[rgba(255,255,255,0.02)] hover:border-[var(--border-strong)]"
+          ? "border border-[var(--accent)]/30 bg-[rgba(124,58,237,0.03)] shadow-[0_14px_32px_-18px_rgba(124,58,237,0.3)] md:-translate-y-1 md:hover:-translate-y-2"
+          : "border border-[var(--border)] bg-[rgba(255,255,255,0.015)] hover:border-[var(--border-strong)]"
       }`}
     >
       {tier.badge && (

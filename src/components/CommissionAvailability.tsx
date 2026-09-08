@@ -103,7 +103,8 @@ export default function CommissionAvailability() {
       </div>
 
       {note && (
-        <div className="relative mt-4 border-t border-[var(--border)] pt-4">
+        <div className="relative mt-6 pt-4">
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--border-strong)] to-transparent" />
           <p className="flex items-start gap-2 text-xs text-[var(--text-secondary)]">
             <CircleCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--accent)]" />
             {note}

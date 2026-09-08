@@ -6,11 +6,8 @@ import AgeVerifier from "@/components/AgeVerifier";
 import { nsfwPricingTiers, nsfwRules } from "@/data/site";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
-import SectionHeading from "@/components/ui/SectionHeading";
-import PricingCard from "@/components/ui/PricingCard";
-import { PremiumCard } from "@/components/ui/Card";
 import Reveal from "@/components/ui/Reveal";
-import { ShieldAlert, ArrowRight } from "lucide-react";
+import { ShieldAlert, ArrowRight, Lock, Sparkles, Check, ImageIcon } from "lucide-react";
 
 function SkeletonCard() {
   return (
@@ -74,29 +71,35 @@ export default function NsfwPage() {
       <div className="bg-nebula" />
       <div className="bg-cosmic-fog" />
       <section className="page relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
-        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.06] blur-[130px] orb-slow" />
-        <div className="pointer-events-none absolute bottom-1/4 left-1/4 h-60 w-[500px] rounded-full bg-[var(--accent-nebula)] opacity-[0.04] blur-[110px] orb-med" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-30" />
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.05] blur-[130px] orb-slow" />
+
         <div className="container">
-          <SectionHeading
-            align="center"
-            eyebrow="18+ Only"
-            title="NSFW Commissions"
-            subtitle="Mature avatar customisation for verified adults. All work is delivered privately and discreetly."
-          />
+          <div className="text-center">
+            <span className="eyebrow justify-center">
+              <Lock className="h-3.5 w-3.5 text-[var(--accent)]" />
+              18+ Only
+            </span>
+            <h1 className="display-xl mt-5 text-white">
+              ✦ <span className="text-gradient-animated">NSFW Commissions</span>
+            </h1>
+            <p className="lead mx-auto mt-4 max-w-xl">
+              Mature avatar customisation for verified adults. All work is delivered privately and discreetly.
+            </p>
+          </div>
 
           <Reveal>
-            <div className="mb-14 rounded-[var(--r-lg)] border border-red-500/30 bg-red-500/10 p-6 md:p-8">
+            <div className="mx-auto my-12 max-w-2xl rounded-2xl border border-red-500/30 bg-red-500/10 p-6 md:p-8">
               <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-white">
                 <ShieldAlert className="h-5 w-5 text-red-400" />
                 Age Verification &amp; Rules
               </h3>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <h4 className="mb-2 text-sm font-semibold text-red-400">Requirements</h4>
-                  <ul className="space-y-1.5">
+                  <h4 className="mb-3 text-sm font-semibold text-red-400">Requirements</h4>
+                  <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
                     {nsfwRules.requirements.map((req, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
+                      <li key={i} className="flex items-start gap-2">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
                         {req}
                       </li>
@@ -104,10 +107,10 @@ export default function NsfwPage() {
                   </ul>
                 </div>
                 <div>
-                  <h4 className="mb-2 text-sm font-semibold text-red-400">What&rsquo;s Not Allowed</h4>
-                  <ul className="space-y-1.5">
+                  <h4 className="mb-3 text-sm font-semibold text-red-400">What&rsquo;s Not Allowed</h4>
+                  <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
                     {nsfwRules.notAllowed.map((rule, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
+                      <li key={i} className="flex items-start gap-2">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
                         {rule}
                       </li>
@@ -121,14 +124,21 @@ export default function NsfwPage() {
 
           {/* NSFW Portfolio Gallery */}
           <div className="mb-16">
-            <SectionHeading align="center" eyebrow="NSFW Portfolio" title="Previous Work" subtitle="Examples of mature avatar customisation. Click any image to view full size." />
+            <div className="text-center">
+              <span className="section-eyebrow justify-center">
+                <Sparkles className="h-4 w-4 text-[var(--accent)]" />
+                NSFW Portfolio
+              </span>
+              <h2 className="display-lg mt-3 text-white">Previous Work</h2>
+              <p className="lead mx-auto mt-2 max-w-xl">Examples of mature avatar customisation. Click any image to view full size.</p>
+            </div>
 
             {loading ? (
-              <div className="columns-1 space-y-4 sm:columns-2 lg:columns-3">
+              <div className="mt-12 columns-1 space-y-4 sm:columns-2 lg:columns-3">
                 {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)}
               </div>
             ) : images.length > 0 ? (
-              <div className="columns-1 space-y-4 sm:columns-2 lg:columns-3">
+              <div className="mt-12 columns-1 space-y-4 sm:columns-2 lg:columns-3">
                 {images.map((url, i) => (
                   <div
                     key={i}
@@ -142,28 +152,78 @@ export default function NsfwPage() {
                     role="button"
                     tabIndex={0}
                     aria-label={`View NSFW image ${i + 1} full size`}
-                    className="sheen break-inside-avoid cursor-pointer overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/30 group"
+                    className="break-inside-avoid cursor-pointer overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/30 group"
                   >
                     <img src={url} alt={`NSFW Work ${i + 1}`} loading="lazy" className="block w-full object-contain p-2 transition-transform duration-700 group-hover:scale-[1.02]" />
                   </div>
                 ))}
               </div>
             ) : (
-              <PremiumCard variant="elevated" className="py-16 text-center">
+              <div className="py-16 text-center">
+                <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                  <ImageIcon className="h-6 w-6" />
+                </div>
                 <p className="text-[var(--text-dim)]">No NSFW portfolio images available yet.</p>
-              </PremiumCard>
+              </div>
             )}
           </div>
 
           {/* NSFW Pricing */}
-          <SectionHeading align="center" eyebrow="NSFW Rates" title="Pricing" subtitle="Adult content commissions are priced separately from SFW work." />
+          <div className="mb-16">
+            <div className="text-center">
+              <span className="section-eyebrow justify-center">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                NSFW Rates
+              </span>
+              <h2 className="display-lg mt-3 text-white">Pricing</h2>
+              <p className="lead mx-auto mt-2 max-w-xl">Adult content commissions are priced separately from SFW work.</p>
+            </div>
 
-          <div className="mb-16 grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
-            {nsfwPricingTiers.map((tier, i) => (
-              <Reveal key={tier.id} delay={i * 80}>
-                <PricingCard tier={tier} />
-              </Reveal>
-            ))}
+            <div className="mx-auto max-w-3xl mt-12">
+              {nsfwPricingTiers.map((tier, i) => (
+                <Reveal key={tier.id} delay={i * 80}>
+                  <div className={`group py-6 md:py-8 ${i < nsfwPricingTiers.length - 1 ? "border-b border-[var(--border)]" : ""}`}>
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3">
+                          {tier.emoji && (
+                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-xl transition-transform duration-300 group-hover:scale-110">
+                              {tier.emoji}
+                            </span>
+                          )}
+                          <div>
+                            <h3 className="text-base font-semibold text-white md:text-lg">{tier.name}</h3>
+                            {tier.badge && (
+                              <span className="text-xs font-medium text-[var(--accent-muted)]">{tier.badge}</span>
+                            )}
+                          </div>
+                        </div>
+                        <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-[var(--text-secondary)]">
+                          {tier.features?.map((feat) => (
+                            <li key={feat} className="flex items-center gap-2">
+                              <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+                                <Check className="h-2.5 w-2.5" />
+                              </span>
+                              {feat}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="flex items-center gap-4 md:text-right">
+                        <div>
+                          <p className="font-display text-2xl font-bold tracking-tight text-white md:text-3xl">{tier.price}</p>
+                          <p className="text-xs text-[var(--text-dim)]">Per avatar</p>
+                        </div>
+                        <Link href="/contact" className="btn-primary btn-sm">
+                          Request
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
           </div>
 
           <div className="text-center">

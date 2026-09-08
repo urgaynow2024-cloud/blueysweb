@@ -72,12 +72,12 @@ export default function FeaturedWork() {
             ))}
           </div>
         ) : images.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+          <div className="gallery-masonry">
             {images.map((url, i) => (
               <Reveal key={i} delay={(i % 4) * 60}>
                 <Link
                   href="/portfolio"
-                  className="sheen group relative block aspect-[4/3] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/40"
+                  className="sheen group relative mb-5 block aspect-[4/3] cursor-pointer overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[rgba(255,255,255,0.02)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/40 gallery-masonry-item"
                 >
                   <img
                     src={url}

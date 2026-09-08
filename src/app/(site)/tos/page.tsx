@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getSiteConfig } from "@/lib/db";
 import { tosSections } from "@/data/site";
-import { FileText, ShieldCheck, Clock } from "lucide-react";
+import { FileText, ShieldCheck, Clock, Sparkles } from "lucide-react";
 
 interface TosSection {
   id?: string;
@@ -30,7 +30,7 @@ function renderMarkdown(text: string): string {
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/(?:\r\n|\r|\n){3,}/g, "\n\n")
     .replace(/^### (.*$)/gm, "<h3 class='text-base font-semibold text-white mb-3 mt-6 first:mt-0'>$1</h3>")
-    .replace(/^## (.*$)/gm, "<h2 class='text-lg font-semibold text-white mb-3 mt-6 first:mt-0'>$1</h2>")
+    .replace(/^## (.*$)/gm, "<h2 class='text-lg font-semibold text-white mb-3 mt-6 first:mt-0'>$2</h2>")
     .replace(/^# (.*$)/gm, "<h1 class='text-2xl font-bold text-white mb-4'>$1</h1>")
     .split("\n\n")
     .map((para) => {
@@ -67,6 +67,16 @@ function SectionContent({ section }: { section: TosSection }) {
   return null;
 }
 
+function TosSkeleton() {
+  return (
+    <div className="animate-pulse space-y-3 py-4">
+      <div className="h-4 w-32 rounded bg-[var(--border)]" />
+      <div className="h-3 w-full rounded bg-[var(--border)]" />
+      <div className="h-3 w-5/6 rounded bg-[var(--border)]" />
+    </div>
+  );
+}
+
 export default function ToSPage() {
   const [sections, setSections] = useState<TosSection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,9 +100,8 @@ export default function ToSPage() {
           setSections(tosSections as TosSection[]);
         }
         if (!isSupabaseConfigured) {
-          const fallbackConfig: any = { tos_last_updated: "August 2025", tos_version: "2.0" };
-          setLastUpdated(fallbackConfig.tos_last_updated || "August 2025");
-          setVersion(fallbackConfig.tos_version || "2.0");
+          setLastUpdated("August 2025");
+          setVersion("2.0");
         } else {
           const config = await getSiteConfig();
           setLastUpdated((config as any).tos_last_updated || "August 2025");
@@ -113,13 +122,12 @@ export default function ToSPage() {
       <div className="bg-nebula" />
       <div className="bg-cosmic-fog" />
       <section className="relative overflow-hidden pt-20 sm:pt-24 md:pt-28">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-30" />
         <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px] orb-slow" />
-        <div className="pointer-events-none absolute bottom-0 right-1/4 h-56 w-[400px] rounded-full bg-[var(--accent-cosmic)] opacity-[0.03] blur-[100px] orb-med" />
 
         <div className="container max-w-3xl">
           <div className="mx-auto max-w-2xl text-center">
-            <span className="eyebrow">
+            <span className="eyebrow justify-center">
               <FileText className="h-3.5 w-3.5 text-[var(--accent)]" />
               Terms of Service
             </span>
@@ -146,17 +154,13 @@ export default function ToSPage() {
           {loading ? (
             <div className="space-y-6">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-32 animate-pulse rounded-2xl bg-[var(--bg-elevated)]" />
+                <TosSkeleton key={i} />
               ))}
             </div>
           ) : sections.length > 0 ? (
-            <div>
+            <div className="space-y-10">
               {sections.map((section, i) => (
-                <div
-                  key={section.id || i}
-                  id={section.id || ""}
-                  className={i > 0 ? "mt-10 md:mt-12 pt-10 md:pt-12 border-t border-[var(--border)]" : ""}
-                >
+                <div key={section.id || i} id={section.id || ""}>
                   <div className="flex items-baseline gap-4 mb-4">
                     <span className="text-sm font-bold text-[var(--accent)] tabular-nums">
                       {section.number || String(i + 1).padStart(2, "0")}
@@ -164,12 +168,15 @@ export default function ToSPage() {
                     <h2 className="text-xl md:text-2xl font-bold text-white">{section.title}</h2>
                   </div>
                   {section.description && (
-                    <p className="text-sm text-[var(--text-dim)] mb-5 max-w-2xl">{section.description}</p>
+                    <p className="mb-5 text-sm text-[var(--text-dim)] max-w-2xl">{section.description}</p>
                   )}
                   <div>
                     {section.highlight_box && (
                       <div className="mb-5 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
-                        <p className="text-sm text-[var(--text-secondary)]">{section.highlight_box}</p>
+                        <div className="flex items-start gap-2.5">
+                          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
+                          <p className="text-sm text-[var(--text-secondary)]">{section.highlight_box}</p>
+                        </div>
                       </div>
                     )}
 
@@ -197,7 +204,7 @@ export default function ToSPage() {
 
       <section className="section !pt-4 md:!pt-6">
         <div className="container max-w-3xl text-center">
-          <div className="rounded-2xl border border-[var(--border)] bg-white/[0.02] p-6 md:p-10">
+          <div className="border-b border-[var(--border)] pb-8 mb-8">
             <div className="mb-4 flex items-center justify-center gap-2 text-sm text-[var(--text-dim)]">
               <Clock className="h-4 w-4" />
               Last Updated: {lastUpdated || "—"}

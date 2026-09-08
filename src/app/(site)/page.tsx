@@ -6,11 +6,9 @@ import FeaturedWork from "@/components/FeaturedWork";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { ButtonLink } from "@/components/ui/Button";
-import PricingCard from "@/components/ui/PricingCard";
 import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages } from "@/lib/db";
-import { PremiumCard } from "@/components/ui/Card";
 import Link from "next/link";
-import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles, MessageSquarePlus, Users, Quote, HelpCircle, Clock, DollarSign, ShieldCheck, Rocket } from "lucide-react";
+import { Star, Zap, ArrowRight, Check, Plus, Minus, Sparkles, MessageSquarePlus, HelpCircle, Clock, DollarSign, ShieldCheck, Rocket } from "lucide-react";
 import CommissionAvailability from "@/components/CommissionAvailability";
 
 function Stars({ rating, size = "h-4 w-4" }: { rating?: number; size?: string }) {
@@ -31,7 +29,6 @@ export default function Home() {
   const [faq, setFaq] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
   const [siteImages, setSiteImages] = useState<Record<string, { url: string }>>({});
-  const [returningClients, setReturningClients] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
@@ -54,9 +51,6 @@ export default function Home() {
         setFaq(f);
         setReviews(r);
         setSiteImages(images);
-
-        const statsRes = await fetch("/api/stats").then((res) => res.json()).catch(() => ({ returningClients: 0 }));
-        setReturningClients(Number(statsRes.returningClients) || 0);
       } catch (e) {
         console.error("Failed to load home data:", e);
       } finally {
@@ -99,10 +93,6 @@ export default function Home() {
       <div className="relative z-10">
         <FeaturedWork />
 
-        <StatsBand site={site} reviews={reviews} returningClients={returningClients} />
-
-        <div className="section-fade" />
-
         {/* Services */}
         <section className="section section-alt">
           <div className="container">
@@ -142,8 +132,6 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="section-fade" />
-
         {/* Process timeline */}
         <section className="section">
           <div className="container">
@@ -163,8 +151,6 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="section-fade" />
-
         {/* Reviews */}
         <section className="section section-alt">
           <div className="container">
@@ -176,27 +162,28 @@ export default function Home() {
             {reviews.length > 0 && <ReviewSummary reviews={reviews} />}
             {reviews.length > 0 ? (
               <>
-                <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:gap-6">
+                <div className="mx-auto max-w-3xl">
                   {reviews.slice(0, 6).map((review, i) => (
                     <Reveal key={review.id || i} delay={i * 60}>
-                      <PremiumCard variant="review" className="group h-full">
-                        <Quote className="relative mb-3 h-5 w-5 text-[var(--accent)]/40" />
-                        <div className="relative flex items-center gap-3">
-                          <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-[var(--accent)]/20 to-[var(--accent-2)]/20 text-sm font-bold text-white">
+                      <div className="review-divider">
+                        <div className="flex items-start gap-4">
+                          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)]/20 to-[var(--accent-2)]/20 text-sm font-bold text-white">
                             {review.display_name?.[0]?.toUpperCase() || "★"}
                           </div>
-                          <div>
-                            <p className="text-sm font-semibold text-white">{review.display_name}</p>
-                            <Stars rating={review.rating} size="h-3 w-3" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3">
+                              <p className="text-sm font-semibold text-white">{review.display_name}</p>
+                              <Stars rating={review.rating} size="h-3 w-3" />
+                            </div>
+                            <p className="mt-2 text-sm text-[var(--text-secondary)] leading-relaxed">"{review.review_text}"</p>
+                            {review.image_url && (
+                              <div className="mt-3 overflow-hidden rounded-lg border border-[var(--border)]">
+                                <img src={review.image_url} alt="Commission preview" loading="lazy" className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <p className="relative mt-4 text-sm text-[var(--text-secondary)] leading-relaxed">"{review.review_text}"</p>
-                        {review.image_url && (
-                          <div className="relative mt-4 overflow-hidden rounded-lg border border-[var(--border)]">
-                            <img src={review.image_url} alt="Commission preview" loading="lazy" className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
-                          </div>
-                        )}
-                      </PremiumCard>
+                      </div>
                     </Reveal>
                   ))}
                 </div>
@@ -221,8 +208,6 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="section-fade" />
-
         {/* FAQ */}
         <section className="section">
           <div className="container max-w-3xl">
@@ -232,7 +217,7 @@ export default function Home() {
               title="FAQ"
               subtitle="Quick answers to the things people ask most."
             />
-            <div className="space-y-2">
+            <div className="space-y-0">
               {faq.map((item, i) => {
                 const open = openFaq === i;
                 const faqIcon = item.key?.toLowerCase().includes("price") || item.key?.toLowerCase().includes("cost") || item.key?.toLowerCase().includes("payment")
@@ -248,16 +233,12 @@ export default function Home() {
                 return (
                   <div
                     key={i}
-                    className={`overflow-hidden rounded-[var(--r-sm)] border transition-all duration-300 ${
-                      open
-                        ? "border-[var(--border-strong)] bg-[rgba(255,255,255,0.02)]"
-                        : "border-[var(--border)] bg-transparent hover:border-[var(--border-strong)]"
-                    }`}
+                    className={`border-b border-[var(--border)] transition-all duration-300 ${open ? "bg-[rgba(255,255,255,0.015)]" : ""}`}
                   >
                     <button
                       onClick={() => setOpenFaq(open ? null : i)}
                       aria-expanded={open}
-                      className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+                      className="flex w-full items-center justify-between gap-4 px-0 py-5 text-left"
                     >
                       <span className="flex items-center gap-3">
                         <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-[var(--accent-soft)] text-[var(--accent)]">
@@ -280,7 +261,7 @@ export default function Home() {
                       style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
                     >
                       <div className="overflow-hidden">
-                        <p className="px-5 pb-5 pt-1 text-sm leading-relaxed text-[var(--text-secondary)]">{item.answer}</p>
+                        <p className="pb-5 text-sm leading-relaxed text-[var(--text-secondary)]">{item.answer}</p>
                       </div>
                     </div>
                   </div>
@@ -295,8 +276,6 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="section-fade" />
-
         {/* Pricing */}
         <section className="section section-alt">
           <div className="container">
@@ -306,10 +285,48 @@ export default function Home() {
               title="Pricing"
               subtitle="Clear, per-avatar pricing that scales with complexity. A 50% deposit starts the work; the balance is due on delivery."
             />
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+            <div className="mx-auto max-w-3xl">
               {pricing.map((tier, i) => (
                 <Reveal key={tier.id || i} delay={i * 80}>
-                  <PricingCard tier={tier} />
+                  <div className={`group py-6 md:py-8 ${i < pricing.length - 1 ? "border-b border-[var(--border)]" : ""}`}>
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3">
+                          {tier.emoji && (
+                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-xl transition-transform duration-300 group-hover:scale-110">
+                              {tier.emoji}
+                            </span>
+                          )}
+                          <div>
+                            <h3 className="text-base font-semibold text-white md:text-lg">{tier.name}</h3>
+                            {tier.badge && (
+                              <span className="text-xs font-medium text-[var(--accent-muted)]">{tier.badge}</span>
+                            )}
+                          </div>
+                        </div>
+                        <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-[var(--text-secondary)]">
+                          {tier.features?.map((feat: string) => (
+                            <li key={feat} className="flex items-center gap-2">
+                              <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+                                <Check className="h-2.5 w-2.5" />
+                              </span>
+                              {feat}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="flex items-center gap-4 md:text-right">
+                        <div>
+                          <p className="font-display text-2xl font-bold tracking-tight text-white md:text-3xl">{tier.price}</p>
+                          <p className="text-xs text-[var(--text-dim)]">Per avatar</p>
+                        </div>
+                        <Link href="/contact" className="btn-primary btn-sm">
+                          Request
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
                 </Reveal>
               ))}
             </div>
@@ -327,13 +344,11 @@ export default function Home() {
 
         <CommissionAvailability />
 
-        <div className="section-fade" />
-
         {/* CTA */}
         <section className="section relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute left-1/2 top-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.08] blur-[120px]" />
-        </div>
+          <div className="pointer-events-none absolute inset-0 -z-10">
+            <div className="absolute left-1/2 top-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.08] blur-[120px]" />
+          </div>
           <div className="container">
             <div className="mx-auto max-w-3xl text-center">
               <span className="eyebrow justify-center">
@@ -360,39 +375,6 @@ export default function Home() {
         </section>
       </div>
     </div>
-  );
-}
-
-function StatsBand({ site, reviews, returningClients }: { site: any; reviews: any[]; returningClients: number }) {
-  const approved = reviews || [];
-  const totalReviews = approved.length;
-  const avgRating = totalReviews
-    ? (approved.reduce((sum: number, r: any) => sum + (Number(r.rating) || 5), 0) / totalReviews).toFixed(1)
-    : "—";
-  const stats = [
-    { label: "Rating", value: `${avgRating} ★` },
-    { label: "Reviews", value: String(totalReviews) },
-    { label: "Turnaround", value: site.stat_delivery || "5–10 days" },
-    { label: "Returning clients", value: String(returningClients) },
-  ];
-  return (
-    <section className="section !pb-0">
-      <div className="container">
-        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-3 text-center md:gap-x-6">
-          {stats.map((s, i) => (
-            <Reveal key={s.label} delay={i * 60} as="span">
-              <span className="inline-flex items-baseline gap-2">
-                <span className="font-display text-base font-semibold text-white md:text-lg">{s.value}</span>
-                <span className="text-xs text-[var(--text-dim)] uppercase tracking-wider">{s.label}</span>
-              </span>
-              {i < stats.length - 1 && (
-                <span aria-hidden="true" className="ml-3 inline-block h-3 w-px bg-[var(--border-strong)] align-middle md:ml-6" />
-              )}
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -478,7 +460,6 @@ function ProcessTimeline({ steps }: { steps: any[] }) {
   if (!steps.length) return null;
   return (
     <div className="relative">
-      {/* connecting line (desktop) */}
       <div className="absolute left-0 right-0 top-7 hidden h-px bg-gradient-to-r from-transparent via-[var(--border)] to-transparent lg:block" />
       <ol className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
         {steps.map((step, i) => (

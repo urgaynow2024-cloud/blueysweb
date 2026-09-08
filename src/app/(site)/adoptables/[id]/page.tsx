@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { notFound, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   ShoppingCart,
   Package,
@@ -16,6 +16,7 @@ import {
   ChevronRight,
   X,
   Sparkles,
+  ImageIcon,
 } from "lucide-react";
 
 import { getAdoptableById, getAdoptableGalleryImages } from "@/lib/db";
@@ -47,6 +48,17 @@ const STATUS_CONFIG = {
     border: "border-red-500/30",
   },
 } as const;
+
+function InfoSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="mt-8">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-3">{title}</h3>
+      <div className="text-sm leading-relaxed text-[var(--text-secondary)] whitespace-pre-wrap">
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export default function AdoptablePage() {
   const params = useParams<{ id: string }>();
@@ -83,13 +95,6 @@ export default function AdoptablePage() {
         setAdoptable(adoptableData);
         setGalleryImages(galleryData || []);
         setBeforeAfters(Array.isArray(beforeAfterData) ? beforeAfterData : []);
-
-        if (
-          adoptableData.availability !== "available" &&
-          (!adoptableData.nsfw_available || ageVerified)
-        ) {
-          // no-op
-        }
       } catch (e) {
         console.error("Failed to load adoptable:", e);
       } finally {
@@ -97,7 +102,7 @@ export default function AdoptablePage() {
       }
     }
     load();
-  }, [id, ageVerified]);
+  }, [id]);
 
   if (loading) {
     return (
@@ -129,7 +134,7 @@ export default function AdoptablePage() {
             <Package className="h-6 w-6" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-3">Adoptable not found</h2>
-          <p className="text-[var(--text-secondary)]">This adoptable doesn't exist or is no longer available.</p>
+          <p className="text-[var(--text-secondary)]">This adoptable doesn&rsquot;t exist or is no longer available.</p>
           <Link
             href="/adoptables"
             className="mt-4 btn-secondary inline-flex items-center gap-2"
@@ -184,7 +189,7 @@ export default function AdoptablePage() {
     if (!src || imgErrors[src]) {
       return (
         <div className={`flex items-center justify-center bg-[var(--bg)] ${className}`}>
-          <Package className="h-10 w-10 text-[var(--text-dim)]" />
+          <ImageIcon className="h-10 w-10 text-[var(--text-dim)]" />
         </div>
       );
     }
@@ -219,32 +224,11 @@ export default function AdoptablePage() {
 
   const hasBeforeAfter = beforeAfters.some((ba) => ba.before_url || ba.after_url);
 
-  const InfoSection = ({
-    label,
-    children,
-  }: {
-    label: string;
-    children: React.ReactNode;
-  }) => {
-    if (!children) return null;
-    return (
-      <div>
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-2">
-          {label}
-        </h3>
-        <div className="text-sm leading-relaxed text-[var(--text-secondary)] whitespace-pre-wrap">
-          {children}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="relative">
       <div className="bg-nebula" />
       <div className="bg-cosmic-fog" />
       <div className="container page">
-        {/* Back link */}
         <Link
           href="/adoptables"
           className="mb-6 inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-white transition-colors"
@@ -254,9 +238,7 @@ export default function AdoptablePage() {
         </Link>
 
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
-          {/* Image Gallery */}
           <div className="space-y-4">
-            {/* Main image */}
             <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[rgba(255,255,255,0.02)]">
               {visibleImages.length > 0 ? (
                 renderImage(
@@ -266,11 +248,10 @@ export default function AdoptablePage() {
                 )
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
-                  <Package className="h-16 w-16 text-[var(--text-dim)]" />
+                  <ImageIcon className="h-16 w-16 text-[var(--text-dim)]" />
                 </div>
               )}
 
-              {/* Status badge */}
               <div className="absolute top-4 right-4 z-10">
                 <span
                   className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${cfg.color} ${cfg.bg} ${cfg.border}`}
@@ -280,7 +261,6 @@ export default function AdoptablePage() {
                 </span>
               </div>
 
-              {/* NSFW badge when not verified */}
               {hasNsfwContent && !ageVerified && (
                 <div className="absolute top-4 left-4 z-10">
                   <span className="inline-flex items-center gap-1 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-400">
@@ -290,7 +270,6 @@ export default function AdoptablePage() {
                 </div>
               )}
 
-              {/* SOLD overlay */}
               {isSold && (
                 <div className="adoptable-sold-overlay">
                   <span className="adoptable-sold-text">SOLD</span>
@@ -298,7 +277,6 @@ export default function AdoptablePage() {
                 </div>
               )}
 
-              {/* Reserved overlay */}
               {isReserved && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center bg-amber-500/15 backdrop-blur-[2px]">
                   <span className="text-3xl font-black text-amber-400">RESERVED</span>
@@ -306,7 +284,6 @@ export default function AdoptablePage() {
               )}
             </div>
 
-            {/* Thumbnail gallery */}
             {visibleImages.length > 1 && (
               <div className="grid grid-cols-5 gap-2">
                 {visibleImages.map((img, idx) => (
@@ -331,42 +308,37 @@ export default function AdoptablePage() {
             )}
           </div>
 
-          {/* Character Info */}
-          <div className="space-y-6">
-            {/* Title and species */}
+          <div>
             <div>
               <h1 className="display-sm text-white">{adoptable.title}</h1>
               {adoptable.species && (
-                <p className="text-sm text-[var(--text-secondary)] mt-1">{adoptable.species}</p>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">{adoptable.species}</p>
               )}
             </div>
 
-            {/* Description */}
-            {adoptable.description && (
-              <InfoSection label="Description">{adoptable.description}</InfoSection>
+            <InfoSection title="Description">{adoptable.description}</InfoSection>
+
+            {adoptable.included_items && (
+              <InfoSection title="Included Items">{adoptable.included_items}</InfoSection>
             )}
 
-            {/* Included items */}
-            <InfoSection label="Included Items">{adoptable.included_items}</InfoSection>
+            {adoptable.vrchat_info && (
+              <InfoSection title="VRChat Information">{adoptable.vrchat_info}</InfoSection>
+            )}
 
-            {/* VRChat info */}
-            <InfoSection label="VRChat Information">{adoptable.vrchat_info}</InfoSection>
+            {adoptable.rules_license && (
+              <InfoSection title="Rules & License">{adoptable.rules_license}</InfoSection>
+            )}
 
-            {/* Rules / License */}
-            <InfoSection label="Rules &amp; License">{adoptable.rules_license}</InfoSection>
-
-            {/* Pricing */}
             {(adoptable.sfw_available ||
               adoptable.nsfw_available ||
               adoptable.bundle_available ||
               adoptable.price) && (
-              <div className="border-t border-[var(--border)] pt-6 space-y-3">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)]">
-                  Pricing
-                </h3>
+              <div className="mt-8">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-3">Pricing</h3>
 
                 {adoptable.sfw_available && adoptable.sfw_price && (
-                  <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+                  <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-2">
                     <span className="text-sm font-semibold text-white">SFW Version</span>
                     <span className="text-lg font-bold text-[var(--accent)]">
                       {adoptable.sfw_price}
@@ -375,7 +347,7 @@ export default function AdoptablePage() {
                 )}
 
                 {adoptable.nsfw_available && adoptable.nsfw_price && (
-                  <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+                  <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-2">
                     <span className="text-sm font-semibold text-white flex items-center gap-2">
                       <Lock className="h-4 w-4 text-red-400" />
                       NSFW Version
@@ -404,42 +376,41 @@ export default function AdoptablePage() {
                       <span className="text-lg font-bold text-white">{adoptable.price}</span>
                     </div>
                   )}
-               </div>
-             )}
+              </div>
+            )}
 
-             {hasBeforeAfter && (
-               <div className="border-t border-[var(--border)] pt-6">
-                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-4">
-                   Before & After
-                 </h3>
-                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                   {beforeAfters.map((ba, idx) => (
-                     <div key={idx} className="space-y-2">
-                       {ba.before_url && (
-                         <div>
-                           <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-1">Before</p>
-                           <div className="aspect-video overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]">
-                             {renderImage(ba.before_url, `Before ${idx + 1}`, "h-full w-full object-cover")}
-                           </div>
-                         </div>
-                       )}
-                       {ba.after_url && (
-                         <div>
-                           <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-1">After</p>
-                           <div className="aspect-video overflow-hidden rounded-xl border border-[var(--accent)]/30 bg-[var(--bg-elevated)]">
-                             {renderImage(ba.after_url, `After ${idx + 1}`, "h-full w-full object-cover")}
-                           </div>
-                         </div>
-                       )}
-                       {ba.label && <p className="text-xs text-[var(--text-secondary)]">{ba.label}</p>}
-                     </div>
-                   ))}
-                 </div>
-               </div>
-             )}
+            {hasBeforeAfter && (
+              <div className="mt-8">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-4">
+                  Before & After
+                </h3>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {beforeAfters.map((ba, idx) => (
+                    <div key={idx} className="space-y-2">
+                      {ba.before_url && (
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-1">Before</p>
+                          <div className="aspect-video overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]">
+                            {renderImage(ba.before_url, `Before ${idx + 1}`, "h-full w-full object-cover")}
+                          </div>
+                        </div>
+                      )}
+                      {ba.after_url && (
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-1">After</p>
+                          <div className="aspect-video overflow-hidden rounded-xl border border-[var(--accent)]/30 bg-[var(--bg-elevated)]">
+                            {renderImage(ba.after_url, `After ${idx + 1}`, "h-full w-full object-cover")}
+                          </div>
+                        </div>
+                      )}
+                      {ba.label && <p className="text-xs text-[var(--text-secondary)]">{ba.label}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-             {/* Purchase actions */}
-             <div className="border-t border-[var(--border)] pt-6">
+            <div className="mt-8">
               {isAvailable && (
                 <button
                   onClick={buyOnDiscord}
@@ -483,10 +454,8 @@ export default function AdoptablePage() {
         </div>
       </div>
 
-      {/* Age Gate */}
       {showAgeGate && <AgeVerifier onVerified={handleAgeVerified} />}
 
-      {/* Image Lightbox */}
       {lightboxOpen && visibleImages.length > 0 && (
         <div
           role="dialog"
@@ -497,7 +466,11 @@ export default function AdoptablePage() {
             if (e.target === e.currentTarget) closeLightbox();
           }}
         >
-          <div className="relative flex max-h-[95vh] max-w-[95vw] items-center justify-center">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -top-24 left-1/4 h-[300px] w-[300px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.06] blur-[100px]" />
+            <div className="absolute -bottom-20 right-1/4 h-[250px] w-[250px] translate-x-1/2 rounded-full bg-[var(--accent-nebula)] opacity-[0.05] blur-[100px]" />
+          </div>
+          <div className="relative flex max-h-[95vh] max-w-[95vw] scale-in items-center justify-center">
             <img
               src={visibleImages[lightboxIndex]?.url}
               alt={adoptable.title}

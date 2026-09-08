@@ -3,10 +3,8 @@
 import { useState, useEffect } from "react";
 import ClientReviewForm from "@/components/ClientReviewForm";
 import Reveal from "@/components/ui/Reveal";
-import SectionHeading from "@/components/ui/SectionHeading";
-import { PremiumCard } from "@/components/ui/Card";
 import { getApprovedReviews } from "@/lib/db";
-import { Star, Quote, MessageSquarePlus } from "lucide-react";
+import { Star, Quote, MessageSquarePlus, Sparkles } from "lucide-react";
 
 function SkeletonCard() {
   return (
@@ -55,62 +53,78 @@ export default function ReviewsPage() {
         <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px] orb-slow" />
 
         <div className="container">
-          <SectionHeading
-            align="center"
-            eyebrow="Reviews"
-            title="Client Reviews"
-            subtitle="Real feedback from people I&apos;ve had the pleasure of working with."
-          />
+          <div className="mx-auto max-w-3xl text-center">
+            <span className="eyebrow justify-center">
+              <Quote className="h-3.5 w-3.5 text-[var(--accent)]" />
+              Reviews
+            </span>
+            <h1 className="display-xl mt-5 text-white">
+              ✦ Client <span className="text-gradient-animated">Reviews</span>
+            </h1>
+            <p className="lead mx-auto mt-4 max-w-xl">
+              Real feedback from people I&rsquo;ve had the pleasure of working with.
+            </p>
+          </div>
 
           {loading ? (
             <div className="mx-auto mb-16 max-w-5xl grid grid-cols-1 gap-5 md:grid-cols-2">
               {[1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)}
             </div>
           ) : approvedReviews.length > 0 ? (
-            <div className="mx-auto mb-16 max-w-5xl grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="mx-auto max-w-3xl">
               {approvedReviews.map((review, i) => (
                 <Reveal key={review.id || i} delay={(i % 4) * 70}>
-                  <div className="group relative flex h-full flex-col gap-5 rounded-2xl border border-[var(--border)] bg-white/[0.02] p-7 transition-all duration-500 hover:border-[var(--border-hover)] hover:bg-white/[0.04]">
-                    <div className="flex items-center gap-4">
-                      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)]/20 to-[var(--accent-2)]/20 text-lg font-bold text-white">
+                  <div className="review-divider">
+                    <div className="flex items-start gap-4">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)]/20 to-[var(--accent-2)]/20 text-lg font-bold text-white">
                         {review.display_name?.[0]?.toUpperCase() || "★"}
                       </div>
-                      <div>
-                        <p className="font-bold text-white">{review.display_name}</p>
-                        <div className="mt-1 flex gap-0.5">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star key={star} className={`h-4 w-4 ${star <= (review.rating || 5) ? "text-[var(--accent)]" : "text-[var(--text-dim)]"}`} style={{ fill: star <= (review.rating || 5) ? "currentColor" : "none" }} />
-                          ))}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3">
+                          <p className="font-bold text-white">{review.display_name}</p>
+                          <div className="flex gap-0.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`h-3.5 w-3.5 ${star <= (review.rating || 5) ? "text-[var(--accent)]" : "text-[var(--text-dim)]"}`}
+                                style={{ fill: star <= (review.rating || 5) ? "currentColor" : "none" }}
+                              />
+                            ))}
+                          </div>
                         </div>
+                        <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
+                          &ldquo;{review.review_text}&rdquo;
+                        </p>
+                        {review.image_url && (
+                          <div className="mt-3 overflow-hidden rounded-xl border border-[var(--border)]">
+                            <img src={review.image_url} alt="Commission preview" loading="lazy" className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <p className="text-sm leading-relaxed text-[var(--text-secondary)]">"{review.review_text}"</p>
-                    {review.image_url && (
-                      <div className="overflow-hidden rounded-xl border border-[var(--border)]">
-                        <img src={review.image_url} alt="Commission preview" loading="lazy" className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
-                      </div>
-                    )}
                   </div>
                 </Reveal>
               ))}
             </div>
           ) : (
-            <div className="mx-auto mb-16 max-w-2xl rounded-2xl border border-dashed border-[var(--border)] bg-white/[0.01] py-20 text-center">
-              <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                <MessageSquarePlus className="h-6 w-6" />
+            <div className="mx-auto mb-16 max-w-2xl">
+              <div className="py-20 text-center">
+                <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                  <MessageSquarePlus className="h-6 w-6" />
+                </div>
+                <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
+                  Client reviews will appear here after commissions are completed.
+                </p>
               </div>
-              <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
-                Client reviews will appear here after commissions are completed.
-              </p>
             </div>
           )}
 
           <div className="mx-auto max-w-2xl">
-            <div className="mb-8 flex items-center gap-3 text-[var(--text-secondary)]">
+            <div className="mb-6 flex items-center gap-3 text-[var(--text-secondary)]">
               <MessageSquarePlus className="h-5 w-5 text-[var(--accent)]" />
               <h2 className="heading-md text-white">Leave your own review</h2>
             </div>
-            <div className="rounded-2xl border border-[var(--border)] bg-white/[0.02] p-1">
+            <div className="py-8">
               <ClientReviewForm />
             </div>
           </div>

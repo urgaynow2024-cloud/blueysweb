@@ -1,7 +1,7 @@
 export const siteConfig = {
-  name: "Bluey's Avatar Commissions",
-  tagline: "VRChat Avatar Edits • Blender Work • Unity Setup",
-  description: "Clean, stylish, performance-friendly avatars built for VRChat.",
+  name: "Comisioner",
+  tagline: "VRChat Avatar Commissions • Blender Work • Unity Setup",
+  description: "Premium VRChat avatar commissions — handcrafted with care in Blender & Unity.",
   discord: "BlueyBarks",
   discordUrl: "https://discord.gg/zt48MZm5kD",
   nav: [
@@ -9,8 +9,12 @@ export const siteConfig = {
     { href: "/portfolio", label: "Portfolio" },
     { href: "/services", label: "Services" },
     { href: "/adoptables", label: "Adoptables" },
+    { href: "/credits", label: "Credits" },
     { href: "/pricing", label: "Pricing" },
+    { href: "/links", label: "Links" },
+    { href: "/nsfw", label: "NSFW" },
     { href: "/faq", label: "FAQ" },
+    { href: "/reviews", label: "Reviews" },
     { href: "/contact", label: "Contact" },
   ],
 };
@@ -520,6 +524,14 @@ export const mockReviews = [
     image_url: "https://images.unsplash.com/photo-1526318472392-4a4d0a3b0e0e?auto=format&fit=crop&w=800&q=60",
     created_at: "2025-05-03T00:00:00Z",
   },
+];
+
+export const mockCredits = [
+  { id: "mock-credit-1", name: "Nova", description: "Early tester and feedback machine. Helped shape the first public builds.", categories: ["Testers", "Helpers"], avatar_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=60", sort_order: 1 },
+  { id: "mock-credit-2", name: "Rift", description: "Provided the base model for several featured commissions.", categories: ["Assets / Resources"], avatar_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=60", sort_order: 2 },
+  { id: "mock-credit-3", name: "Luna", description: "Designed the original Comisioner logo and brand identity.", categories: ["Artists", "Collaborators"], avatar_url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=60", sort_order: 3 },
+  { id: "mock-credit-4", name: "Orion", description: "Bug fixes, performance improvements, and general code wizardry.", categories: ["Developers"], avatar_url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60", sort_order: 4 },
+  { id: "mock-credit-5", name: "Starfall", description: "Continuous support, testing, and morale boosts throughout the whole journey.", categories: ["Supporters", "Special Thanks"], avatar_url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=60", sort_order: 5 },
 ];
 
 export const navLinks = [

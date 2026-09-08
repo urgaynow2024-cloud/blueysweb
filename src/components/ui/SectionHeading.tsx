@@ -7,6 +7,7 @@ export default function SectionHeading({
   align = "left",
   icon,
   className = "",
+  divider = true,
 }: {
   eyebrow?: string;
   title: ReactNode;
@@ -14,6 +15,7 @@ export default function SectionHeading({
   align?: "left" | "center";
   icon?: ReactNode;
   className?: string;
+  divider?: boolean;
 }) {
   const centered = align === "center";
   return (
@@ -23,7 +25,7 @@ export default function SectionHeading({
       } ${className}`}
     >
       {eyebrow && (
-        <span className={`section-label ${centered ? "justify-center" : ""}`}>
+        <span className={`section-eyebrow ${centered ? "justify-center" : ""}`}>
           {icon}
           {eyebrow}
         </span>
@@ -32,11 +34,10 @@ export default function SectionHeading({
       {subtitle && (
         <p className={`lead mt-3 ${centered ? "mx-auto max-w-2xl" : "max-w-xl"}`}>{subtitle}</p>
       )}
-      {centered && (
-        <div className="mx-auto mt-5 h-px w-16 bg-gradient-to-r from-transparent via-[var(--accent)] to-transparent opacity-60" />
-      )}
-      {!centered && (
-        <div className="mt-3 h-px w-10 bg-gradient-to-r from-[var(--accent)] to-transparent opacity-60" />
+      {divider && centered && (
+        <div className="mt-5 flex justify-center">
+          <span className="block h-px w-10 bg-gradient-to-r from-transparent via-[var(--accent)] to-transparent opacity-50" />
+        </div>
       )}
     </div>
   );

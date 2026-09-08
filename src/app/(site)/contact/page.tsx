@@ -1,9 +1,8 @@
 "use client";
 
-import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import ContactCommissionForm from "@/components/ContactCommissionForm";
-import { MessageSquare, Clock, CheckCircle2, Mail } from "lucide-react";
+import { MessageSquare, Clock, CheckCircle2, Mail, ArrowRight } from "lucide-react";
 
 const CHANNELS = [
   { icon: <MessageSquare className="h-5 w-5" />, label: "Discord", value: "BlueyBarks", note: "Fastest way to reach me" },
@@ -26,19 +25,24 @@ export default function ContactPage() {
       <section className="page relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-30" />
         <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[var(--accent)] opacity-[0.05] blur-[120px] orb-slow" />
-        <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-[var(--accent-2)] opacity-[0.03] blur-[100px] orb-med" />
-        <div className="pointer-events-none absolute top-1/2 left-1/2 h-48 w-[350px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.03] blur-[100px] orb-fast" />
 
         <div className="container">
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-8">
-            <div className="space-y-5">
-              <SectionHeading eyebrow="Contact" title="Get in touch" subtitle="Ready to commission something? Reach out and let&apos;s talk through your idea." />
+            <div className="space-y-8">
+              <div>
+                <span className="eyebrow">
+                  <MessageSquare className="h-3.5 w-3.5 text-[var(--accent)]" />
+                  Contact
+                </span>
+                <h1 className="display-xl mt-4 text-white">Get in touch</h1>
+                <p className="lead mt-3">Ready to commission something? Reach out and let&rsquo;s talk through your idea.</p>
+              </div>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {CHANNELS.map((c, i) => (
                   <Reveal key={c.label} delay={i * 60}>
-                    <div className="flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-white/[0.02] p-5 transition-all duration-500 hover:border-[var(--border-hover)] hover:bg-white/[0.04]">
-                      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                    <div className="flex items-center gap-4 py-2">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
                         {c.icon}
                       </div>
                       <div>
@@ -52,7 +56,7 @@ export default function ContactPage() {
               </div>
 
               <Reveal delay={120}>
-                <div className="rounded-2xl border border-[var(--border)] bg-white/[0.02] p-6">
+                <div className="border-b border-[var(--border)] pb-8">
                   <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-white">
                     <CheckCircle2 className="h-4 w-4 text-[var(--accent)]" />
                     Quick checklist
@@ -71,9 +75,7 @@ export default function ContactPage() {
 
             <div className="lg:col-span-2">
               <Reveal>
-                <div className="rounded-2xl border border-[var(--border)] bg-white/[0.02] p-1">
-                  <ContactCommissionForm />
-                </div>
+                <ContactCommissionForm />
               </Reveal>
             </div>
           </div>

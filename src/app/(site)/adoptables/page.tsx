@@ -2,25 +2,13 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
-import {
-  Sparkles,
-  ShoppingCart,
-  Package,
-  Eye,
-  CheckCircle,
-  Clock,
-  XCircle,
-  Filter,
-  Layers,
-  Image as ImageIcon,
-  Lock,
-} from "lucide-react";
-
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getAdoptables, getAllAdoptableGalleryImages } from "@/lib/db";
 import { isAgeVerified } from "@/components/AgeVerifier";
 import AgeVerifier from "@/components/AgeVerifier";
 import type { Adoptable, AdoptableGalleryImage } from "@/types/adoptables";
 import Reveal from "@/components/ui/Reveal";
+import { Sparkles, ShoppingCart, Package, Eye, CheckCircle, Clock, XCircle, Filter, Layers, Image as ImageIcon, Lock } from "lucide-react";
 
 const STATUS_CONFIG = {
   available: { label: "Available", icon: CheckCircle, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
@@ -43,11 +31,11 @@ function StatusBadge({ status }: { status: "available" | "sold" | "reserved" }) 
 
 function SkeletonCard() {
   return (
-    <div className="overflow-hidden rounded-[var(--r-md)]">
-      <div className="ad-shimmer aspect-[4/5] w-full" />
-      <div className="mt-3 space-y-2">
-        <div className="ad-shimmer h-4 w-3/4 rounded" />
-        <div className="ad-shimmer h-3 w-1/3 rounded" />
+    <div className="overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[rgba(255,255,255,0.02)]">
+      <div className="aspect-[4/5] w-full ad-shimmer" />
+      <div className="mt-3 space-y-2 p-3">
+        <div className="h-4 w-3/4 rounded bg-[var(--border)]" />
+        <div className="h-3 w-1/3 rounded bg-[var(--border)]" />
       </div>
     </div>
   );
@@ -131,7 +119,7 @@ function AdoptableCard({
 
           {isReserved && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-amber-500/20 backdrop-blur-[2px]">
-              <span className="text-4xl font-black text-amber-400">RESERVED</span>
+              <span className="text-3xl font-black text-amber-400">RESERVED</span>
             </div>
           )}
 
@@ -143,53 +131,38 @@ function AdoptableCard({
         </div>
       </Link>
 
-      <div className="mt-3.5">
+      <div className="mt-3">
         <h3 className="text-base font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
           {adoptable.title || "Unnamed"}
         </h3>
         {adoptable.species && (
-          <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 uppercase tracking-wider">{adoptable.species}</p>
-        )}
-        {adoptable.description && (
-          <p className="mt-1.5 text-xs text-[var(--text-secondary)] line-clamp-2">
-            {adoptable.description}
-          </p>
+          <p className="mt-0.5 text-xs text-[var(--text-secondary)] uppercase tracking-wider">{adoptable.species}</p>
         )}
 
-        <div className="mt-3 space-y-1">
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1">
           {adoptable.sfw_available && adoptable.sfw_price && (
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[var(--text-secondary)]">SFW</span>
-              <span className="text-sm font-bold text-white">{adoptable.sfw_price}</span>
-            </div>
+            <span className="text-xs text-[var(--text-secondary)]">
+              SFW <strong className="text-white font-semibold">{adoptable.sfw_price}</strong>
+            </span>
           )}
           {adoptable.nsfw_available && adoptable.nsfw_price && (
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[var(--text-secondary)] flex items-center gap-1">
-                <Lock className="h-3 w-3" /> NSFW
-              </span>
-              <span className="text-sm font-bold text-white">
-                {showNsfw ? adoptable.nsfw_price : "Age-restricted"}
-              </span>
-            </div>
+            <span className="text-xs text-[var(--text-secondary)]">
+              NSFW <strong className="text-white font-semibold">{showNsfw ? adoptable.nsfw_price : "Age-restricted"}</strong>
+            </span>
           )}
           {adoptable.bundle_available && adoptable.bundle_price && (
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[var(--text-secondary)]">SFW + NSFW</span>
-              <span className="text-sm font-bold text-white">
-                {showNsfw ? adoptable.bundle_price : "Age-restricted"}
-              </span>
-            </div>
+            <span className="text-xs text-[var(--text-secondary)]">
+              Bundle <strong className="text-white font-semibold">{showNsfw ? adoptable.bundle_price : "Age-restricted"}</strong>
+            </span>
           )}
           {!adoptable.sfw_available && !adoptable.nsfw_available && !adoptable.bundle_available && adoptable.price && (
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[var(--text-secondary)]">Price</span>
-              <span className="text-sm font-bold text-white">{adoptable.price}</span>
-            </div>
+            <span className="text-xs text-[var(--text-secondary)]">
+              <strong className="text-white font-semibold">{adoptable.price}</strong>
+            </span>
           )}
         </div>
 
-        <div className="mt-3">
+        <div className="mt-4">
           {!isSold && !isReserved && (
             <button
               onClick={(e) => {
@@ -235,7 +208,6 @@ export default function AdoptablesPage() {
   const [ageVerified, setAgeVerified] = useState(false);
   const [showAgeGate, setShowAgeGate] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const setupAttemptedRef = useRef(false);
 
@@ -245,7 +217,6 @@ export default function AdoptablesPage() {
 
   useEffect(() => {
     let cancelled = false;
-    const setupAttempted = setupAttemptedRef.current;
 
     async function ensureDatabaseReady() {
       if (setupAttemptedRef.current) return;
@@ -281,14 +252,14 @@ export default function AdoptablesPage() {
         const [adoptablesData, galleryData] = await Promise.all([
           getAdoptables().catch((err) => {
             console.error("getAdoptables failed:", err);
-            if (err && typeof err === "object" && "message" in err && typeof (err as any).message === "string" && (err as any).message.includes("TABLE_MISSING")) {
+            if (err && typeof err === "object" && "message" in err && typeof (err as any).message === "string" && (err as any).message.includes("ADOPTABLES_TABLE_MISSING")) {
               throw err;
             }
             return [] as Adoptable[];
           }),
           getAllAdoptableGalleryImages().catch((err) => {
             console.error("getAllAdoptableGalleryImages failed:", err);
-            if (err && typeof err === "object" && "message" in err && typeof (err as any).message === "string" && (err as any).message.includes("TABLE_MISSING")) {
+            if (err && typeof err === "object" && "message" in err && typeof (err as any).message === "string" && (err as any).message.includes("ADOPTABLE_GALLERY_TABLE_MISSING")) {
               throw err;
             }
             return [] as AdoptableGalleryImage[];
@@ -316,7 +287,7 @@ export default function AdoptablesPage() {
         if (!cancelled) {
           console.error("Failed to load adoptables:", e);
           const msg = e?.message || "Unable to load adoptables.";
-          if (msg.includes("TABLE_MISSING")) {
+          if (msg.includes("ADOPTABLES_TABLE_MISSING")) {
             setError("DATABASE_NOT_SETUP");
           } else {
             setError("ERROR");
@@ -377,6 +348,59 @@ export default function AdoptablesPage() {
     setShowAgeGate(false);
   };
 
+  function ErrorState({ error }: { error: string }) {
+    return (
+      <section className="section-sm">
+        <div className="container">
+          <div className="mx-auto max-w-lg text-center">
+            <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+              <Package className="h-7 w-7" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-3">Adoptables database not set up</h2>
+            <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
+              The adoptables feature needs its Supabase tables created before it can load anything.
+            </p>
+            <p className="text-sm text-[var(--text-dim)] mb-6">
+              Go to your Supabase project → <span className="font-mono text-[var(--accent)]">SQL Editor</span> → New query, paste the contents of <span className="font-mono text-[var(--accent)]">supabase/schema.sql</span>, and run it.
+            </p>
+            <button
+              onClick={() => {
+                setError(null);
+                setLoading(true);
+                setupAttemptedRef.current = false;
+                const load = async () => {
+                  try {
+                    const [adoptablesData, galleryData] = await Promise.all([
+                      getAdoptables().catch((err) => { console.error("getAdoptables failed:", err); return [] as Adoptable[]; }),
+                      getAllAdoptableGalleryImages().catch((err) => { console.error("getAllAdoptableGalleryImages failed:", err); return [] as AdoptableGalleryImage[]; }),
+                    ]);
+                    const gMap: Record<string, AdoptableGalleryImage[]> = {};
+                    galleryData.forEach((img) => {
+                      const aid = img.adoptable_id;
+                      if (aid) { if (!gMap[aid]) gMap[aid] = []; gMap[aid].push(img); }
+                    });
+                    setAdoptables(adoptablesData);
+                    setGalleryMap(gMap);
+                  } catch (e) {
+                    console.error("Retry failed:", e);
+                    setError("DATABASE_NOT_SETUP");
+                  } finally {
+                    setLoading(false);
+                  }
+                };
+                load();
+              }}
+              className="btn-primary inline-flex items-center gap-2"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+              Retry after setup
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <div className="relative">
       <div className="bg-nebula" />
@@ -384,9 +408,6 @@ export default function AdoptablesPage() {
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
         <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.12] blur-[130px] orb-slow" />
-        <div className="pointer-events-none absolute top-20 left-1/4 h-60 w-[500px] -translate-x-1/2 rounded-full bg-[var(--accent-nebula)] opacity-[0.08] blur-[120px] orb-med" />
-        <div className="pointer-events-none absolute bottom-10 right-1/4 h-48 w-[400px] rounded-full bg-[var(--accent-star)] opacity-[0.06] blur-[100px] orb-fast" />
-        <div className="pointer-events-none absolute top-1/2 left-[80%] h-40 w-[350px] rounded-full bg-[var(--accent-3)] opacity-[0.03] blur-[100px] orb-slow" />
 
         <div className="container">
           <div className="mx-auto max-w-3xl text-center">
@@ -397,7 +418,7 @@ export default function AdoptablesPage() {
             <h1 className="display-xl mt-5 text-white">
               ✦ Adoptable <span className="text-gradient-strong">Characters</span>
             </h1>
-            <p className="lead mx-auto mt-4">
+            <p className="lead mx-auto mt-4 max-w-2xl">
               Handcrafted avatar designs available for instant adoption.
               Browse the gallery, pick a character you love, and message me on Discord to claim it.
               Each adoptable is a premade, one-of-a-kind design — not a custom commission.
@@ -416,103 +437,8 @@ export default function AdoptablesPage() {
             ))}
           </div>
         </div>
-      ) : error === "MANUAL_SETUP_REQUIRED" ? (
-        <section className="section-sm">
-          <div className="container">
-            <div className="mx-auto max-w-lg text-center">
-              <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                <Package className="h-7 w-7" />
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-3">Adoptables database not set up</h2>
-              <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
-                The adoptables feature needs its Supabase tables created before it can load anything.
-              </p>
-              <p className="text-sm text-[var(--text-dim)] mb-6">
-                Go to your Supabase project → <span className="font-mono text-[var(--accent)]">SQL Editor</span> → New query, paste the contents of <span className="font-mono text-[var(--accent)]">supabase/schema.sql</span>, and run it.
-              </p>
-              <button
-                onClick={() => {
-                  setError(null);
-                  setLoading(true);
-                  setupAttemptedRef.current = false;
-                  const load = async () => {
-                    try {
-                      const [adoptablesData, galleryData] = await Promise.all([
-                        getAdoptables().catch((err) => { console.error("getAdoptables failed:", err); return [] as Adoptable[]; }),
-                        getAllAdoptableGalleryImages().catch((err) => { console.error("getAllAdoptableGalleryImages failed:", err); return [] as AdoptableGalleryImage[]; }),
-                      ]);
-                      const gMap: Record<string, AdoptableGalleryImage[]> = {};
-                      galleryData.forEach((img) => {
-                        const aid = img.adoptable_id;
-                        if (aid) { if (!gMap[aid]) gMap[aid] = []; gMap[aid].push(img); }
-                      });
-                      setAdoptables(adoptablesData);
-                      setGalleryMap(gMap);
-                    } catch (e) {
-                      console.error("Retry failed:", e);
-                      setError("DATABASE_NOT_SETUP");
-                    } finally {
-                      setLoading(false);
-                    }
-                  };
-                  load();
-                }}
-                className="btn-primary inline-flex items-center gap-2"
-              >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
-                Retry after setup
-              </button>
-            </div>
-          </div>
-        </section>
-      ) : error === "DATABASE_NOT_SETUP" ? (
-        <section className="section-sm">
-          <div className="container">
-            <div className="mx-auto max-w-lg text-center">
-              <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                <Package className="h-7 w-7" />
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-3">Adoptables database not set up</h2>
-              <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
-                The adoptables feature needs its Supabase tables created before it can load anything.
-              </p>
-              <p className="text-sm text-[var(--text-dim)] mb-6">
-                Go to your Supabase project → <span className="font-mono text-[var(--accent)]">SQL Editor</span> → New query, paste the contents of <span className="font-mono text-[var(--accent)]">supabase/schema.sql</span>, and run it.
-              </p>
-              <button
-                onClick={() => {
-                  setError(null);
-                  setLoading(true);
-                  const load = async () => {
-                    try {
-                      const [adoptablesData, galleryData] = await Promise.all([
-                        getAdoptables().catch((err) => { console.error("getAdoptables failed:", err); return [] as Adoptable[]; }),
-                        getAllAdoptableGalleryImages().catch((err) => { console.error("getAllAdoptableGalleryImages failed:", err); return [] as AdoptableGalleryImage[]; }),
-                      ]);
-                      const gMap: Record<string, AdoptableGalleryImage[]> = {};
-                      galleryData.forEach((img) => {
-                        const aid = img.adoptable_id;
-                        if (aid) { if (!gMap[aid]) gMap[aid] = []; gMap[aid].push(img); }
-                      });
-                      setAdoptables(adoptablesData);
-                      setGalleryMap(gMap);
-                    } catch (e) {
-                      console.error("Retry failed:", e);
-                      setError("DATABASE_NOT_SETUP");
-                    } finally {
-                      setLoading(false);
-                    }
-                  };
-                  load();
-                }}
-                className="btn-primary inline-flex items-center gap-2"
-              >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
-                Retry after setup
-              </button>
-            </div>
-          </div>
-        </section>
+      ) : error === "MANUAL_SETUP_REQUIRED" || error === "DATABASE_NOT_SETUP" ? (
+        <ErrorState error={error || "DATABASE_NOT_SETUP"} />
       ) : error === "EMPTY" ? (
         <section className="section-sm">
           <div className="container">
@@ -530,8 +456,8 @@ export default function AdoptablesPage() {
         </section>
       ) : (
         <div className="container section-sm">
-          <div className="mb-10 flex flex-wrap items-center gap-4 text-sm">
-            <span className="inline-flex items-center gap-1.5 text-[var(--text-secondary)]">
+          <div className="mb-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[var(--text-secondary)]">
+            <span className="inline-flex items-center gap-1.5">
               <Package className="h-4 w-4" />
               {totalAdoptables} total
             </span>

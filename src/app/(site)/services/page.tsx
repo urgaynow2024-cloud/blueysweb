@@ -1,10 +1,8 @@
 "use client";
 
-import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
-import { PremiumCard } from "@/components/ui/Card";
-import { Check, ArrowRight, Pencil, Wrench, Settings2, MessageCircle, FileText, DollarSign, Rocket } from "lucide-react";
+import { Check, ArrowRight, MessageCircle, FileText, DollarSign, Pencil, Rocket, Clock, Sparkles, Settings2 } from "lucide-react";
 
 const SERVICES = [
   {
@@ -14,7 +12,7 @@ const SERVICES = [
     features: ["Texture recolours", "Accessory additions", "Clothing fitting", "Hair combinations", "Minor fixes"],
   },
   {
-    icon: <Wrench className="h-5 w-5" />,
+    icon: <Rocket className="h-5 w-5" />,
     title: "Blender Work",
     desc: "Asset creation, retopology, UV work, material setup, and mesh adjustments for clean avatar bases.",
     features: ["Asset creation", "Retopology", "UV & material work", "Mesh adjustments", "Clean topology"],
@@ -41,68 +39,81 @@ export default function ServicesPage() {
       <div className="bg-nebula" />
       <div className="bg-cosmic-fog" />
       <section className="page relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-30" />
         <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.05] blur-[130px] orb-slow" />
-        <div className="pointer-events-none absolute bottom-1/4 right-1/4 h-60 w-[500px] rounded-full bg-[var(--accent-nebula)] opacity-[0.04] blur-[110px] orb-med" />
 
         <div className="container">
-          <SectionHeading
-            align="center"
-            eyebrow="Services"
-            title={
-              <>
-                ✦ What I <span className="text-gradient-animated">provide</span>
-              </>
-            }
-            subtitle="I work on VRChat avatars in a few different ways. Here's what I can help with."
-          />
+          <div className="mx-auto max-w-3xl text-center">
+            <span className="eyebrow justify-center">
+              <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
+              Services
+            </span>
+            <h1 className="display-xl mt-5 text-white">
+              ✦ What I <span className="text-gradient-animated">provide</span>
+            </h1>
+            <p className="lead mx-auto mt-4 max-w-xl">
+              I work on VRChat avatars in a few different ways. Here&rsquo;s what I can help with.
+            </p>
+          </div>
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+          <div className="mx-auto mt-16 max-w-3xl">
             {SERVICES.map((svc, i) => (
               <Reveal key={svc.title} delay={i * 80}>
-                <PremiumCard variant="default" className="group h-full">
-                  <div className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] transition-transform duration-300 group-hover:scale-110">
-                    {svc.icon}
+                <div className="group py-8 md:py-10">
+                  <div className="flex items-start gap-5">
+                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] transition-transform duration-300 group-hover:scale-110">
+                      {svc.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-bold text-white">{svc.title}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">{svc.desc}</p>
+                      <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+                        {svc.features.map((f) => (
+                          <li key={f} className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                            <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+                              <Check className="h-2.5 w-2.5" />
+                            </span>
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                  <h3 className="mb-2 text-lg font-bold text-white">{svc.title}</h3>
-                  <p className="mb-6 text-sm leading-relaxed text-[var(--text-secondary)]">{svc.desc}</p>
-                  <ul className="space-y-2.5">
-                    {svc.features.map((f) => (
-                      <li key={f} className="flex items-center gap-2.5 text-sm text-[var(--text-secondary)]">
-                        <span className="grid h-5 w-5 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
-                          <Check className="h-3 w-3" />
-                        </span>
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                </PremiumCard>
+                  {i < SERVICES.length - 1 && (
+                    <div className="mt-8 h-px w-full bg-gradient-to-r from-transparent via-[var(--border)] to-transparent" />
+                  )}
+                </div>
               </Reveal>
             ))}
           </div>
 
-          <div className="my-14 divider-glow" />
+          <div className="mx-auto mt-20 max-w-3xl text-center">
+            <span className="section-eyebrow justify-center">
+              <Clock className="h-4 w-4 text-[var(--accent)]" />
+              Process
+            </span>
+            <h2 className="display-lg mt-4 text-white">How it Works</h2>
+            <p className="lead mx-auto mt-3 max-w-xl">From enquiry to delivery in five simple steps.</p>
+          </div>
 
-          <SectionHeading eyebrow="Process" title="How it Works" subtitle="From enquiry to delivery in five simple steps." />
-
-          <div className="relative grid grid-cols-2 gap-6 md:grid-cols-5">
+          <div className="relative mt-12 grid grid-cols-2 gap-6 md:grid-cols-5">
             {WORKFLOW.map((step, i) => (
               <Reveal key={step.title} delay={(i % 5) * 60}>
                 <div className="text-center">
                   <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] transition-transform duration-300 group-hover:scale-110">
                     <step.icon className="h-5 w-5" />
                   </div>
-                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]/80">
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--accent-muted)]">
                     Step {i + 1}
                   </div>
                   <h3 className="mb-1.5 text-sm font-bold text-white">{step.title}</h3>
-                  <p className="text-xs leading-relaxed text-[var(--text-dim)]">{step.desc}</p>
+                  <p className="px-2 text-xs leading-relaxed text-[var(--text-secondary)]">{step.desc}</p>
                 </div>
               </Reveal>
             ))}
           </div>
 
-          <div className="mt-14 text-center">
+          <div className="mt-16 text-center">
             <ButtonLink href="/pricing" variant="secondary">
               View Pricing
               <ArrowRight className="h-4 w-4" />

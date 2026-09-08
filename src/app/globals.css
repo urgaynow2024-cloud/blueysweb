@@ -375,34 +375,7 @@ select:focus {
   100% { opacity: 1; transform: scale(1.1); }
 }
 
-/* Gradient fade between sections — replaces hard dividers */
-.section-fade {
-  position: relative;
-}
-
-.section-fade::after {
-  content: "";
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 120px;
-  background: linear-gradient(to bottom, transparent, var(--bg));
-  pointer-events: none;
-  z-index: 2;
-}
-
-.section-fade-top::before {
-  content: "";
-  position: absolute;
-  top: -1px;
-  left: 0;
-  right: 0;
-  height: 120px;
-  background: linear-gradient(to top, transparent, var(--bg));
-  pointer-events: none;
-  z-index: 2;
-}
+/* Gradient transition between sections — replaces hard dividers */
 
 /* ----------------------------------------------------------------------------
     Layout rhythm
@@ -434,23 +407,6 @@ select:focus {
   inset: 0;
   background: radial-gradient(60% 50% at 50% 0%, rgba(90, 176, 240, 0.06), transparent 70%);
   pointer-events: none;
-}
-
-/* Gradient fade transition between sections */
-.section-transition {
-  position: relative;
-}
-
-.section-transition::after {
-  content: "";
-  position: absolute;
-  bottom: -60px;
-  left: 0;
-  right: 0;
-  height: 120px;
-  background: linear-gradient(to bottom, transparent, var(--bg));
-  pointer-events: none;
-  z-index: 1;
 }
 
 .page {
@@ -528,6 +484,242 @@ select:focus {
 .surface-minimal:hover {
   border-color: var(--border-strong);
   background: rgba(255, 255, 255, 0.03);
+}
+
+/* Open — no background, just a divider or spacing. Use for sections that breathe. */
+.surface-open {
+  position: relative;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+/* Cosmic divider — subtle gradient line for separating content without boxing */
+.cosmic-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(90, 176, 240, 0.18), transparent);
+  margin: 0;
+  border: none;
+}
+
+/* Compact stat row — replaces giant stat cards */
+.stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1.5rem 0;
+}
+
+.stat-row-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.stat-row-value {
+  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.stat-row-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+.stat-row-separator {
+  width: 1px;
+  height: 1.25rem;
+  background: linear-gradient(180deg, transparent, var(--border-strong), transparent);
+  flex-shrink: 0;
+}
+
+@media (max-width: 639px) {
+  .stat-row-separator {
+    display: none;
+  }
+}
+
+/* Lightweight card — minimal border, transparent bg, no heavy shadow */
+.card-light {
+  position: relative;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 1.25rem;
+  transition: border-color 0.4s var(--ease-out), background 0.4s var(--ease-out);
+}
+
+.card-light:hover {
+  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+/* Gallery masonry — for portfolio/adoptables */
+.gallery-masonry {
+  columns: 1;
+  column-gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .gallery-masonry { columns: 2; }
+}
+
+@media (min-width: 1024px) {
+  .gallery-masonry { columns: 3; }
+}
+
+@media (min-width: 1280px) {
+  .gallery-masonry { columns: 4; }
+}
+
+.gallery-masonry-item {
+  break-inside: avoid;
+  margin-bottom: 1rem;
+}
+
+/* Cosmic empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.empty-state-icon {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--r-lg);
+  background: var(--accent-soft);
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-title {
+  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.empty-state-desc {
+  max-width: 28rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* Cosmic shimmer skeleton */
+@keyframes cosmicShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--r-sm);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.08), transparent);
+  animation: cosmicShimmer 1.6s infinite;
+}
+
+/* Review divider style — replaces review cards */
+.review-divider {
+  padding: 1.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.review-divider:last-child {
+  border-bottom: none;
+}
+
+/* Info row — compact key/value pairs */
+.info-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  align-items: center;
+}
+
+.info-row-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.info-row-item strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Section heading refinement */
+.section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent-muted);
+  margin-bottom: 1.25rem;
+}
+
+.section-eyebrow::before {
+  content: "";
+  width: 1.5rem;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+
+/* Mobile nav refinement */
+@media (max-width: 1023px) {
+  .mobile-nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-radius: var(--r-md);
+    transition: all 0.3s var(--ease-out);
+  }
+
+  .mobile-nav-link:hover,
+  .mobile-nav-link:focus {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .mobile-nav-link.active {
+    color: #fff;
+    background: var(--accent-soft);
+    border: 1px solid var(--border-accent);
+  }
 }
 
 /* Card system — cosmic glass panels with nebula glow */
@@ -737,26 +929,6 @@ select:focus {
   opacity: 0.5;
 }
 
-/* Sheen hover effect for image cards */
-.sheen {
-  position: relative;
-}
-
-.sheen::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.1) 48%, transparent 66%);
-  transform: translateX(-120%);
-  transition: transform 0.9s var(--ease-out);
-  pointer-events: none;
-  z-index: 2;
-}
-
-.sheen:hover::after {
-  transform: translateX(120%);
-}
-
 /* ----------------------------------------------------------------------------
     Glass
     ---------------------------------------------------------------------------- */
@@ -862,15 +1034,11 @@ select:focus {
    filter: brightness(1.06);
  }
 
- .btn-primary:hover::before {
-   opacity: 1;
- }
+  .btn-primary:hover::before {
+    opacity: 1;
+  }
 
- .btn-primary:active {
-   transform: translateY(0) scale(0.98);
- }
-
- .btn-secondary {
+  .btn-secondary {
    border: 1px solid var(--border-strong);
    background: rgba(255, 255, 255, 0.025);
    color: var(--text);
@@ -1023,21 +1191,9 @@ select:focus {
   color: transparent;
 }
 
-.text-gradient-animated {
-  background: linear-gradient(120deg, var(--accent), var(--accent-2) 40%, var(--accent-3) 70%, var(--accent) 100%);
-  background-size: 220% 220%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  animation: gradientPan 10s ease-in-out infinite;
-}
-
-@keyframes gradientPan {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+/* ----------------------------------------------------------------------------
+    Pills & badges
+ ---------------------------------------------------------------------------- */
 
 .eyebrow {
   display: inline-flex;
@@ -2648,13 +2804,6 @@ select.field option {
 /* Smooth transition for all interactive elements */
 .transition-smooth {
   transition: all 0.3s var(--ease-out);
-}
-
-/* Enhanced focus ring for keyboard navigation */
-*:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 4px;
 }
 
 /* Icon hover lift animation */

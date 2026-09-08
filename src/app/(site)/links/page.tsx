@@ -1,11 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
-import { PremiumCard } from "@/components/ui/Card";
-import { ButtonLink } from "@/components/ui/Button";
-import { ExternalLink, Link2, Globe } from "lucide-react";
+import { ExternalLink, Link2, Globe, Sparkles } from "lucide-react";
 import { getSocialLinks } from "@/lib/db";
 
 const MOCK_LINKS = [
@@ -57,41 +54,49 @@ export default function LinksPage() {
       <div className="bg-nebula" />
       <div className="bg-cosmic-fog" />
       <section className="page relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-30" />
         <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.05] blur-[130px] orb-slow" />
-        <div className="pointer-events-none absolute bottom-0 right-0 h-56 w-[400px] rounded-full bg-[var(--accent-3)] opacity-[0.03] blur-[100px] orb-med" />
+
         <div className="container">
-          <SectionHeading
-            align="center"
-            eyebrow="Links"
-            title="Find me elsewhere"
-            subtitle="Socials, commission platforms, stores, and more — all in one place."
-          />
+          <div className="text-center">
+            <span className="eyebrow justify-center">
+              <Link2 className="h-3.5 w-3.5 text-[var(--accent)]" />
+              Links
+            </span>
+            <h1 className="display-xl mt-5 text-white">
+              ✦ Find Me <span className="text-gradient-animated">Elsewhere</span>
+            </h1>
+            <p className="lead mx-auto mt-4 max-w-2xl">
+              Socials, commission platforms, stores, and more — all in one place.
+            </p>
+          </div>
 
           {loading ? (
-            <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="mx-auto mt-16 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="animate-pulse rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-6">
+                <div key={i} className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-6">
                   <div className="mb-3 h-5 w-1/3 rounded bg-[var(--bg)]" />
                   <div className="h-4 w-1/2 rounded bg-[var(--bg)]" />
                 </div>
               ))}
             </div>
           ) : links.length === 0 ? (
-            <div className="mx-auto max-w-3xl rounded-2xl border border-dashed border-[var(--border)] bg-white/[0.01] py-20 text-center">
+            <div className="py-20 text-center">
+              <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                <Globe className="h-6 w-6" />
+              </div>
               <p className="text-[var(--text-dim)]">No links have been added yet.</p>
             </div>
           ) : (
-            <div className="mx-auto max-w-3xl grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="mx-auto mt-12 max-w-3xl space-y-4">
               {links.map((link, i) => (
                 <Reveal key={link.id || i} delay={(i % 4) * 60}>
                   <a
                     href={link.url}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="group relative flex h-full items-center gap-5 overflow-hidden rounded-2xl border border-[var(--border)] bg-white/[0.02] p-5 transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)] hover:bg-white/[0.04]"
+                    className="group flex items-center gap-5 overflow-hidden rounded-2xl border border-[var(--border)] bg-white/[0.02] p-5 transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)] hover:bg-white/[0.04]"
                   >
-                    {/* Favicon */}
                     <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-2.5 transition-all duration-500 group-hover:border-[var(--accent)]/30">
                       {!faviconErrors.has(link.url) ? (
                         <img
@@ -107,7 +112,6 @@ export default function LinksPage() {
                       )}
                     </div>
 
-                    {/* Content */}
                     <div className="relative min-w-0 flex-1">
                       <h3 className="truncate font-semibold text-white transition-colors duration-300 group-hover:text-[var(--accent)]">
                         {link.name}
@@ -122,9 +126,8 @@ export default function LinksPage() {
                       </p>
                     </div>
 
-                    {/* Arrow */}
                     <span className="relative flex shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2.5 text-[var(--text-dim)] transition-all duration-500 group-hover:border-[var(--accent)]/40 group-hover:text-[var(--accent)] group-hover:translate-x-0.5">
-                      <ExternalLink className="h-4 w-4 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                      <ExternalLink className="h-4 w-4" />
                     </span>
                   </a>
                 </Reveal>
@@ -136,6 +139,7 @@ export default function LinksPage() {
             <a href="/contact" className="btn-secondary inline-flex items-center gap-2">
               <Link2 className="h-4 w-4" />
               Or just message me
+              <ExternalLink className="h-4 w-4" />
             </a>
           </div>
         </div>

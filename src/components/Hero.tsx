@@ -123,24 +123,20 @@ export default function Hero() {
                 <div className="hero-aurora" />
               </div>
 
-              {/* Decorative stacked card for depth */}
-              <div className="absolute -right-4 -top-4 hidden h-full w-full rounded-[var(--r-xl)] border border-[var(--border)] bg-[var(--bg-elevated)]/40 sm:block" />
-              <div className="absolute -right-8 -top-8 hidden h-full w-full rounded-[var(--r-xl)] border border-[var(--border)] bg-[var(--bg-elevated)]/20 sm:block" />
-
               <div className="fade-in float-soft">
-                <div className="glow-border sheen relative aspect-[4/3] overflow-hidden rounded-[var(--r-xl)] border border-[var(--border)] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg)] shadow-2xl shadow-black/50">
+                <div className="relative overflow-hidden rounded-[var(--r-xl)] border border-[var(--border)] bg-[rgba(255,255,255,0.02)] shadow-2xl shadow-black/40">
                   {heroImage ? (
                     <img
                       src={heroImage}
                       alt="Featured VRChat avatar commission"
-                      className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out hover:scale-[1.04]"
+                      className="h-full min-h-[320px] w-full object-cover transition-transform duration-[1.2s] ease-out hover:scale-[1.03]"
                     />
                   ) : (
-                    <div className="grid h-full place-items-center text-[var(--text-dim)]">
+                    <div className="grid h-full min-h-[320px] place-items-center text-[var(--text-dim)]">
                       <Sparkles className="h-10 w-10 animate-pulse opacity-40" />
                     </div>
                   )}
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-70" />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent opacity-60" />
 
                   <div className="absolute right-4 top-4 flex gap-2">
                     <span className="badge badge-blender">Blender</span>

@@ -111,3 +111,5 @@ export function CardGrid({
   };
   return <div className={`grid ${colClasses[cols]} gap-${gap} ${className}`}>{children}</div>;
 }
+
+export const Surface = PremiumCard;

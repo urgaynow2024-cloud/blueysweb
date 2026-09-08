@@ -435,3 +435,17 @@ export async function updateAdoptableMainImage(adoptableId: string, url: string 
   if (error) return null;
   return data?.[0];
 }
+
+export async function getCredits() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase
+    .from("credits")
+    .select("*")
+    .eq("visible", true)
+    .order("sort_order", { ascending: true });
+  if (error) {
+    console.error("Failed to load credits:", error);
+    return [];
+  }
+  return data || [];
+}
