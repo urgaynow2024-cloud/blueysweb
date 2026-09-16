@@ -523,23 +523,23 @@ export const reviews: any[] = [];
    ============================================================================ */
 
 export const mockPortfolioImages: { id: string; url: string; sort_order: number }[] = [
-  { id: "mock-port-1", url: "https://images.unsplash.com/photo-1505379918443-6f7e9f9c0e00?auto=format&fit=crop&w=800&q=60", sort_order: 0 },
-  { id: "mock-port-2", url: "https://images.unsplash.com/photo-1519389950414-1a9bcb3f3f2e?auto=format&fit=crop&w=800&q=60", sort_order: 1 },
-  { id: "mock-port-3", url: "https://images.unsplash.com/photo-1526318472392-4a4d0a3b0e0e?auto=format&fit=crop&w=800&q=60", sort_order: 2 },
-  { id: "mock-port-4", url: "https://images.unsplash.com/photo-1518705083311-89d0b0c54657?auto=format&fit=crop&w=800&q=60", sort_order: 3 },
-  { id: "mock-port-5", url: "https://images.unsplash.com/photo-1452860604562-f3dc9c558129?auto=format&fit=crop&w=800&q=60", sort_order: 4 },
-  { id: "mock-port-6", url: "https://images.unsplash.com/photo-1502082950510-8d33a9f2f4d0?auto=format&fit=crop&w=800&q=60", sort_order: 5 },
-  { id: "mock-port-7", url: "https://images.unsplash.com/photo-1484788148861-2616e1b7c510?auto=format&fit=crop&w=800&q=60", sort_order: 6 },
-  { id: "mock-port-8", url: "https://images.unsplash.com/photo-1493663284836-1298a9c0b72b?auto=format&fit=crop&w=800&q=60", sort_order: 7 },
-  { id: "mock-port-9", url: "https://images.unsplash.com/photo-1519183071298-a2962feb937a?auto=format&fit=crop&w=800&q=60", sort_order: 8 },
-  { id: "mock-port-10", url: "https://images.unsplash.com/photo-1483407683979-f1c7a4d6c3e0?auto=format&fit=crop&w=800&q=60", sort_order: 9 },
+  { id: "mock-port-1", url: "https://picsum.photos/id/10/800/600", sort_order: 0 },
+  { id: "mock-port-2", url: "https://picsum.photos/id/20/800/600", sort_order: 1 },
+  { id: "mock-port-3", url: "https://picsum.photos/id/30/800/600", sort_order: 2 },
+  { id: "mock-port-4", url: "https://picsum.photos/id/40/800/600", sort_order: 3 },
+  { id: "mock-port-5", url: "https://picsum.photos/id/50/800/600", sort_order: 4 },
+  { id: "mock-port-6", url: "https://picsum.photos/id/60/800/600", sort_order: 5 },
+  { id: "mock-port-7", url: "https://picsum.photos/id/70/800/600", sort_order: 6 },
+  { id: "mock-port-8", url: "https://picsum.photos/id/80/800/600", sort_order: 7 },
+  { id: "mock-port-9", url: "https://picsum.photos/id/90/800/600", sort_order: 8 },
+  { id: "mock-port-10", url: "https://picsum.photos/id/100/800/600", sort_order: 9 },
 ];
 
 export const mockNsfwPortfolioImages: { id: string; url: string; sort_order: number }[] = [
-  { id: "mock-nsfw-1", url: "https://images.unsplash.com/photo-1578496541671-4d7f6d6e7c5e?auto=format&fit=crop&w=800&q=60", sort_order: 0 },
-  { id: "mock-nsfw-2", url: "https://images.unsplash.com/photo-1578496541671-4d7f6d6e7c5f?auto=format&fit=crop&w=800&q=60", sort_order: 1 },
-  { id: "mock-nsfw-3", url: "https://images.unsplash.com/photo-1578496541671-4d7f6d6e7c60?auto=format&fit=crop&w=800&q=60", sort_order: 2 },
-  { id: "mock-nsfw-4", url: "https://images.unsplash.com/photo-1578496541671-4d7f6d6e7c61?auto=format&fit=crop&w=800&q=60", sort_order: 3 },
+  { id: "mock-nsfw-1", url: "https://picsum.photos/id/110/800/600", sort_order: 0 },
+  { id: "mock-nsfw-2", url: "https://picsum.photos/id/120/800/600", sort_order: 1 },
+  { id: "mock-nsfw-3", url: "https://picsum.photos/id/130/800/600", sort_order: 2 },
+  { id: "mock-nsfw-4", url: "https://picsum.photos/id/140/800/600", sort_order: 3 },
 ];
 
 export const mockAdoptables: any[] = [];
@@ -554,7 +554,7 @@ export const mockReviews = [
     review_text: "Bluey transformed my avatar into something I absolutely love. The attention to detail and communication was stellar throughout. Highly recommend!",
     status: "approved",
     hidden: false,
-    image_url: "https://images.unsplash.com/photo-1519389950414-1a9bcb3f3f2e?auto=format&fit=crop&w=800&q=60",
+    image_url: "https://picsum.photos/id/20/800/600",
     created_at: "2025-08-15T00:00:00Z",
   },
   {
@@ -584,17 +584,17 @@ export const mockReviews = [
     review_text: "Commissioned an adoptable and the result exceeded my expectations. Clean topology, proper weights, and it looks amazing in-game.",
     status: "approved",
     hidden: false,
-    image_url: "https://images.unsplash.com/photo-1526318472392-4a4d0a3b0e0e?auto=format&fit=crop&w=800&q=60",
+    image_url: "https://picsum.photos/id/30/800/600",
     created_at: "2025-05-03T00:00:00Z",
   },
 ];
 
 export const mockCredits = [
-  { id: "mock-credit-1", name: "Nova", description: "Early tester and feedback machine. Helped shape the first public builds.", categories: ["Testers", "Helpers"], avatar_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=60", sort_order: 1 },
-  { id: "mock-credit-2", name: "Rift", description: "Provided the base model for several featured commissions.", categories: ["Assets / Resources"], avatar_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=60", sort_order: 2 },
-  { id: "mock-credit-3", name: "Luna", description: "Designed the original Bluey's Creation logo and brand identity.", categories: ["Artists", "Collaborators"], avatar_url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=60", sort_order: 3 },
-  { id: "mock-credit-4", name: "Orion", description: "Bug fixes, performance improvements, and general code wizardry.", categories: ["Developers"], avatar_url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60", sort_order: 4 },
-  { id: "mock-credit-5", name: "Starfall", description: "Continuous support, testing, and morale boosts throughout the whole journey.", categories: ["Supporters", "Special Thanks"], avatar_url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=60", sort_order: 5 },
+  { id: "mock-credit-1", name: "Nova", description: "Early tester and feedback machine. Helped shape the first public builds.", categories: ["Testers", "Helpers"], avatar_url: "https://picsum.photos/id/35/200/200", sort_order: 1 },
+  { id: "mock-credit-2", name: "Rift", description: "Provided the base model for several featured commissions.", categories: ["Assets / Resources"], avatar_url: "https://picsum.photos/id/45/200/200", sort_order: 2 },
+  { id: "mock-credit-3", name: "Luna", description: "Designed the original Bluey's Creation logo and brand identity.", categories: ["Artists", "Collaborators"], avatar_url: "https://picsum.photos/id/55/200/200", sort_order: 3 },
+  { id: "mock-credit-4", name: "Orion", description: "Bug fixes, performance improvements, and general code wizardry.", categories: ["Developers"], avatar_url: "https://picsum.photos/id/65/200/200", sort_order: 4 },
+  { id: "mock-credit-5", name: "Starfall", description: "Continuous support, testing, and morale boosts throughout the whole journey.", categories: ["Supporters", "Special Thanks"], avatar_url: "https://picsum.photos/id/75/200/200", sort_order: 5 },
 ];
 
 export const navLinks = [
