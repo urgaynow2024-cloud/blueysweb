@@ -25,7 +25,8 @@ function uniqueFilename(originalName: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const assetType = (await request.formData()).get("assetType") as string;
+    const formData = await request.formData();
+    const assetType = formData.get("assetType") as string;
     const validTypes: AssetType[] = ["portfolio", "nsfw", "adoptable-main", "adoptable-gallery", "adoptable-before", "adoptable-after", "site", "review", "credit-avatar", "commission-reference"];
     if (!validTypes.includes(assetType as AssetType)) {
       return NextResponse.json({ error: "Invalid asset type", code: "INVALID_TYPE" }, { status: 400 });
@@ -49,7 +50,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured", code: "CONFIG_ERROR" }, { status: 500 });
     }
 
-    const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const metadataRaw = formData.get("metadata") as string | null;
     const metadata: Record<string, string | number | boolean | null> = metadataRaw ? JSON.parse(metadataRaw) : {};
