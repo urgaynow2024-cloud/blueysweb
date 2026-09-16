@@ -1,13 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { ButtonLink } from "@/components/ui/Button";
 import ContactCommissionForm from "@/components/ContactCommissionForm";
 import { siteConfig } from "@/config/site";
-import { pricingTiers, additionalServices, workflowSteps, faqItems } from "@/config/site";
-import Link from "next/link";
-import { Zap, ArrowRight, ShieldCheck, Layers, PenTool, Send, Sparkles, Check, Clock, HelpCircle, DollarSign } from "lucide-react";
+import { pricingTiers, additionalServices, faqItems } from "@/config/site";
+import { Zap, ArrowRight, ShieldCheck, Check, Sparkles, MessageCircle, DollarSign, Clock, Send, HelpCircle } from "lucide-react";
 
 function ServiceCard({ service }: { service: typeof pricingTiers[0] }) {
   return (
@@ -26,7 +25,7 @@ function ServiceCard({ service }: { service: typeof pricingTiers[0] }) {
         </div>
         <p className="text-sm text-[var(--text-secondary)] mb-4">{service.price}</p>
         <ul className="space-y-2 mb-6">
-          {service.features?.map((feat) => (
+          {service.features?.slice(0, 4).map((feat) => (
             <li key={feat} className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
               <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
                 <Check className="h-2.5 w-2.5" />
@@ -35,34 +34,156 @@ function ServiceCard({ service }: { service: typeof pricingTiers[0] }) {
             </li>
           ))}
         </ul>
-        <Link href="/commission" className="btn-secondary w-full inline-flex items-center justify-center gap-2">
+        <button type="button" onClick={() => document.getElementById("commission-form")?.scrollIntoView({ behavior: "smooth" })} className="btn-secondary w-full inline-flex items-center justify-center gap-2 cursor-pointer">
           Request Quote
           <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
+        </button>
       </div>
     </Reveal>
   );
 }
 
-function ProcessStep({ step, index }: { step: typeof workflowSteps[0]; index: number }) {
+export default function CommissionPage() {
   return (
-    <Reveal delay={index * 80}>
-      <div className="group relative text-center">
-        <div className="relative z-10 mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] text-2xl transition-all duration-500 group-hover:-translate-y-1.5 group-hover:border-[var(--accent)]/50 group-hover:bg-[var(--accent-soft)]">
-          {step.emoji}
-          <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[10px] font-bold text-[#04060a]">
-            {index + 1}
-          </span>
+    <div className="relative">
+      {/* Hero — form-first */}
+      <section className="section section-alt">
+        <div className="container">
+          <div className="mx-auto max-w-3xl text-center">
+            <span className="eyebrow justify-center">
+              <Zap className="h-3.5 w-3.5 text-[var(--accent)]" />
+              Commissions
+            </span>
+            <h1 className="display-xl mt-5 text-white">Commission Your Avatar</h1>
+            <p className="lead mx-auto mt-4 max-w-xl">
+              From subtle edits to complete overhauls — tell me what you need and I&rsquo;ll give you a clear quote.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-sm text-[var(--text-secondary)]">
+              <span className="inline-flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Discord: <strong className="font-semibold text-white">{siteConfig.discord}</strong>
+              </span>
+              <span className="mx-1 text-[var(--border)]">|</span>
+              <span className="inline-flex items-center gap-2">
+                <MessageCircle className="h-3.5 w-3.5 text-[var(--accent)]" />
+                24–48h response time
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-12 mx-auto max-w-3xl" id="commission-form">
+            <Reveal>
+              <ContactCommissionForm />
+            </Reveal>
+          </div>
         </div>
-        <h3 className="text-sm font-bold text-white">{step.title}</h3>
-        <p className="mt-1.5 px-1 text-xs leading-relaxed text-[var(--text-dim)]">{step.desc}</p>
-      </div>
-    </Reveal>
+      </section>
+
+      {/* Service Types */}
+      <section className="section">
+        <div className="container">
+          <SectionHeading
+            eyebrow="Services"
+            title="What I Offer"
+            subtitle="Three tiers covering everything from quick tweaks to full avatar overhauls."
+            align="center"
+          />
+          <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+            {pricingTiers.map((tier) => (
+              <ServiceCard key={tier.id} service={tier} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Additional Services */}
+      <section className="section section-alt">
+        <div className="container">
+          <SectionHeading
+            eyebrow="Extras"
+            title="Additional Services"
+            subtitle="Specialised work that can be added to any commission or requested separately."
+            align="center"
+          />
+          <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+            {additionalServices.map((svc, i) => (
+              <Reveal key={svc.title} delay={i * 80}>
+                <div className="p-6 border border-[var(--border)] bg-[var(--bg-card)] rounded-[var(--r-lg)]">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--accent-soft)] text-xl">{svc.emoji}</span>
+                    <h3 className="font-semibold text-white">{svc.title}</h3>
+                  </div>
+                  <p className="text-sm text-[var(--text-secondary)] mb-4">{svc.description}</p>
+                  <ul className="space-y-1.5 mb-4">
+                    {svc.examples?.map((ex) => (
+                      <li key={ex} className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                        <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+                          <Check className="h-2 w-2" />
+                        </span>
+                        {ex}
+                      </li>
+                    ))}
+                  </ul>
+                  {svc.note && (
+                    <p className="text-xs italic text-[var(--text-dim)]">{svc.note}</p>
+                  )}
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="section">
+        <div className="container">
+          <SectionHeading
+            align="center"
+            eyebrow="FAQ"
+            title="Common Questions"
+            subtitle="Quick answers to the things people ask most."
+          />
+          <div className="mt-8 mx-auto max-w-3xl space-y-0">
+            {faqItems.map((item, i) => (
+              <FAQItem key={item.question} item={item} index={i} />
+            ))}
+          </div>
+          <div className="mt-10 text-center">
+            <a href="/contact" className="btn-secondary inline-flex items-center gap-2">
+              Still have questions? Get in touch
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="section section-alt">
+        <div className="container">
+          <div className="mx-auto max-w-3xl text-center">
+            <span className="eyebrow justify-center">
+              <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
+              Ready when you are
+            </span>
+            <h2 className="display-lg mt-5 text-white">Ready to commission?</h2>
+            <p className="lead mx-auto mt-4">
+              Send me a message on Discord at <strong className="font-semibold text-white">{siteConfig.discord}</strong>, or use the form above and I&rsquo;ll get back to you.
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-4">
+              <a href={`https://discord.gg/${siteConfig.discordUrl.replace('https://discord.gg/', '')}`} className="btn-primary btn-md" target="_blank" rel="noopener noreferrer">
+                <Zap className="h-4 w-4" />
+                Open Discord
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
 
 function FAQItem({ item, index }: { item: typeof faqItems[0]; index: number }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(index === 0);
   const faqIcon = item.question?.toLowerCase().includes("price") || item.question?.toLowerCase().includes("cost") || item.question?.toLowerCase().includes("payment")
     ? DollarSign
     : item.question?.toLowerCase().includes("time") || item.question?.toLowerCase().includes("long") || item.question?.toLowerCase().includes("fast")
@@ -98,166 +219,6 @@ function FAQItem({ item, index }: { item: typeof faqItems[0]; index: number }) {
           <p className="pb-5 text-sm leading-relaxed text-[var(--text-secondary)]">{item.answer}</p>
         </div>
       </div>
-    </div>
-  );
-}
-
-import { useState } from "react";
-
-export default function CommissionPage() {
-  return (
-    <div className="relative">
-      <section className="section">
-        <div className="container">
-          <SectionHeading
-            align="center"
-            eyebrow="Commissions"
-            title="Commission Your Avatar"
-            subtitle="From subtle edits to complete overhauls — tell me what you need and I'll give you a clear quote."
-          />
-
-          {/* Service Types */}
-          <div className="mt-12">
-            <SectionHeading
-              eyebrow="Services"
-              title="What I Offer"
-              subtitle="Three tiers covering everything from quick tweaks to full avatar overhauls."
-            />
-            <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-              {pricingTiers.map((tier) => (
-                <ServiceCard key={tier.id} service={tier} />
-              ))}
-            </div>
-          </div>
-
-          {/* Additional Services */}
-          <div className="mt-16">
-            <SectionHeading
-              eyebrow="Extras"
-              title="Additional Services"
-              subtitle="Specialised work that can be added to any commission or requested separately."
-            />
-            <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
-              {additionalServices.map((svc, i) => (
-                <Reveal key={svc.title} delay={i * 80}>
-                  <div className="p-6 border border-[var(--border)] bg-[var(--bg-card)] rounded-[var(--r-lg)]">
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--accent-soft)] text-xl">{svc.emoji}</span>
-                      <h3 className="font-semibold text-white">{svc.title}</h3>
-                    </div>
-                    <p className="text-sm text-[var(--text-secondary)] mb-4">{svc.description}</p>
-                    <ul className="space-y-1.5 mb-4">
-                      {svc.examples?.map((ex) => (
-                        <li key={ex} className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                          <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
-                            <Check className="h-2 w-2" />
-                          </span>
-                          {ex}
-                        </li>
-                      ))}
-                    </ul>
-                    {svc.note && (
-                      <p className="text-xs italic text-[var(--text-dim)]">{svc.note}</p>
-                    )}
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-
-          {/* Process */}
-
-          {/* Requirements */}
-          <div className="mt-16 section-alt rounded-[var(--r-xl)] p-8">
-            <SectionHeading
-              align="center"
-              eyebrow="Requirements"
-              title="What You'll Need"
-              subtitle="Have these ready for the smoothest commission experience."
-            />
-            <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Reveal delay={0}>
-                <div className="p-5 border border-[var(--border)] bg-[var(--bg-card)] rounded-[var(--r-lg)] text-center">
-                  <div className="grid h-12 w-12 mx-auto mb-3 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                    <Send className="h-5 w-5" />
-                  </div>
-                  <h4 className="font-semibold text-white">Clear Brief</h4>
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">What you want done, reference images, specific ideas</p>
-                </div>
-              </Reveal>
-              <Reveal delay={60}>
-                <div className="p-5 border border-[var(--border)] bg-[var(--bg-card)] rounded-[var(--r-lg)] text-center">
-                  <div className="grid h-12 w-12 mx-auto mb-3 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                    <Layers className="h-5 w-5" />
-                  </div>
-                  <h4 className="font-semibold text-white">Avatar Base</h4>
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">Base name, version, and proof of ownership</p>
-                </div>
-              </Reveal>
-              <Reveal delay={120}>
-                <div className="p-5 border border-[var(--border)] bg-[var(--bg-card)] rounded-[var(--r-lg)] text-center">
-                  <div className="grid h-12 w-12 mx-auto mb-3 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                    <PenTool className="h-5 w-5" />
-                  </div>
-                  <h4 className="font-semibold text-white">Assets Ready</h4>
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">Clothing, accessories, textures you want included</p>
-                </div>
-              </Reveal>
-              <Reveal delay={180}>
-                <div className="p-5 border border-[var(--border)] bg-[var(--bg-card)] rounded-[var(--r-lg)] text-center">
-                  <div className="grid h-12 w-12 mx-auto mb-3 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                    <ShieldCheck className="h-5 w-5" />
-                  </div>
-                  <h4 className="font-semibold text-white">Quest/PC Target</h4>
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">Let me know your platform for proper optimisation</p>
-                </div>
-              </Reveal>
-            </div>
-          </div>
-
-          {/* FAQ */}
-          <div className="mt-16">
-            <SectionHeading
-              align="center"
-              eyebrow="FAQ"
-              title="Common Questions"
-              subtitle="Quick answers to the things people ask most."
-            />
-            <div className="mt-8 mx-auto max-w-3xl space-y-0">
-              {faqItems.map((item, i) => (
-                <FAQItem key={item.question} item={item} index={i} />
-              ))}
-            </div>
-            <div className="mt-10 text-center">
-              <Link href="/faq" className="btn-secondary inline-flex items-center gap-2">
-                View All FAQs
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-
-          {/* CTA */}
-          <div className="mt-16 text-center">
-            <span className="eyebrow justify-center">
-              <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
-              Ready to start?
-            </span>
-            <h2 className="display-lg mt-5 text-white">Let&rsquo;s build something great together</h2>
-            <p className="lead mx-auto mt-4 max-w-xl">
-              Fill out the form below or message me directly on Discord at <strong className="text-white">{siteConfig.discord}</strong>.
-            </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <Link href="/commission" className="btn-primary btn-md">
-                <Zap className="h-4 w-4" />
-                Start a Commission
-              </Link>
-              <Link href="https://discord.gg/zt48MZm5kD" className="btn-secondary btn-md" target="_blank" rel="noopener noreferrer">
-                Open Discord
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
