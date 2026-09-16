@@ -3,7 +3,8 @@
 import { useState, useRef } from "react";
 import { CheckCircle2, Trash2, Edit2, X, ImageIcon, Loader2 } from "lucide-react";
 import StarRating from "@/components/StarRating";
-import { uploadImage } from "@/lib/db";
+import { uploadMedia } from "@/lib/upload/client";
+import { UploadError } from "@/lib/upload/errors";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { Card, CardHeader } from "../Card";
 import { Field, Input, Textarea } from "../Field";
@@ -31,9 +32,11 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
     if (!file.type.startsWith("image/")) return;
     setUploading(true);
     try {
-      const url = await uploadImage(file, "reviews");
-      if (url) setEditData((d) => ({ ...d, image_url: url }));
-    } catch {
+      const result = await uploadMedia(file, "review");
+      if (result?.url) setEditData((d) => ({ ...d, image_url: result.url }));
+    } catch (e) {
+      const msg = e instanceof UploadError ? e.message : "Upload failed";
+      console.error("Review image upload error:", msg);
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";

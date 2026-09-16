@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { compressImageBuffer, getCompressedExtension, validateUploadSize, validateUploadType, isImageType } from "@/lib/compression";
+import { compressImageBuffer, getCompressedExtension, validateUploadSize, validateUploadType, isImageType } from "@/lib/compression/server";
 
 function parseMissingColumn(errorMessage: string): string | null {
   const match = errorMessage.match(/'(\w+)'? column|Could not find the '(\w+)' column/);
@@ -48,7 +48,7 @@ export async function POST(
         }
 
         console.error("DB insert error:", dbError);
-        return NextResponse.json({ error: "Database error", details: dbError?.message || "Unknown database error" }, { status: 500 });
+        return NextResponse.json({ error: "Database error" }, { status: 500 });
       }
 
       return NextResponse.json({ error: "Max retries exceeded" }, { status: 500 });
@@ -68,12 +68,12 @@ export async function POST(
 
     const typeValidation = validateUploadType(file.type);
     if (!typeValidation.valid) {
-      return NextResponse.json({ error: typeValidation.error }, { status: 400 });
+      return NextResponse.json({ error: typeValidation.error!.message, category: typeValidation.error!.category }, { status: 400 });
     }
 
     const sizeValidation = validateUploadSize(file.size, file.type);
     if (!sizeValidation.valid) {
-      return NextResponse.json({ error: sizeValidation.error }, { status: 400 });
+      return NextResponse.json({ error: sizeValidation.error!.message, category: sizeValidation.error!.category }, { status: 400 });
     }
 
     let uploadBuffer: Buffer = Buffer.from(await file.arrayBuffer());
@@ -89,11 +89,11 @@ export async function POST(
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from("portfolio-images")
-      .upload(storagePath, uploadBuffer, { cacheControl: "3600", upsert: true, contentType: isImageType(file.type) ? "image/webp" : file.type });
+      .upload(storagePath, uploadBuffer, { cacheControl: "3600", upsert: true, contentType: isImageType(file.type) && file.type !== "image/gif" ? "image/webp" : file.type });
 
     if (uploadError || !uploadData) {
       console.error("Storage upload error:", uploadError);
-      return NextResponse.json({ error: "Upload failed", details: uploadError?.message || "Unknown storage error" }, { status: 500 });
+      return NextResponse.json({ error: "Upload failed" }, { status: 500 });
     }
 
     const { data: urlData } = supabaseAdmin.storage.from("portfolio-images").getPublicUrl(storagePath);
@@ -121,7 +121,7 @@ export async function POST(
 
       console.error("DB insert error:", dbError);
       await supabaseAdmin.storage.from("portfolio-images").remove([storagePath]);
-      return NextResponse.json({ error: "Database error", details: dbError?.message || "Unknown database error" }, { status: 500 });
+        return NextResponse.json({ error: "Database error" }, { status: 500 });
     }
 
     return NextResponse.json({ error: "Max retries exceeded" }, { status: 500 });
@@ -146,13 +146,17 @@ export async function DELETE(
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    if (beforePath) await supabaseAdmin.storage.from("portfolio-images").remove([beforePath]);
-    if (afterPath) await supabaseAdmin.storage.from("portfolio-images").remove([afterPath]);
-
     if (baId) {
+      const { data: record, error: fetchError } = await supabaseAdmin.from("adoptable_before_after").select("before_path, after_path").eq("id", baId).single();
+      if (fetchError || !record) {
+        return NextResponse.json({ error: "Before-after record not found" }, { status: 404 });
+      }
+      if (record.before_path) await supabaseAdmin.storage.from("portfolio-images").remove([record.before_path]);
+      if (record.after_path) await supabaseAdmin.storage.from("portfolio-images").remove([record.after_path]);
+
       const { error } = await supabaseAdmin.from("adoptable_before_after").delete().eq("id", baId);
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: "Failed to delete comparison" }, { status: 500 });
       }
     }
 

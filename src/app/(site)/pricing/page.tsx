@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { pricingTiers, additionalServices, tosSections } from "@/data/site";
+import { pricingTiers, additionalServices, tosSections } from "@/config/site";
 import { getPricingTiers } from "@/lib/db";
 import Reveal from "@/components/ui/Reveal";
 import { Check, ArrowRight, Info, Sparkles, DollarSign } from "lucide-react";

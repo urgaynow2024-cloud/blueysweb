@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getPortfolioImages } from "@/lib/db";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import { uploadToSupabaseStorage, deleteFromSupabaseStorage } from "@/lib/supabase-storage";
+import { deleteFromSupabaseStorage } from "@/lib/supabase/storage";
 import { useSave } from "../SaveProvider";
 import { useToast } from "../Toast";
 import { Card, CardHeader } from "../Card";
@@ -11,6 +11,8 @@ import { UploadArea } from "../UploadArea";
 import { PortfolioGrid, type PortfolioImage } from "../PortfolioGrid";
 import { Modal } from "../Modal";
 import { Button } from "../Button";
+import { uploadMedia } from "@/lib/upload/client";
+import { UploadError } from "@/lib/upload/errors";
 
 export function PortfolioSection() {
   const [images, setImages] = useState<PortfolioImage[]>([]);
@@ -66,24 +68,7 @@ export function PortfolioSection() {
   }, [register, savePortfolio]);
 
   async function uploadOne(file: File): Promise<{ id: string; url: string; path: string } | null> {
-    const storagePath = `portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${file.name.split(".").pop() || "bin"}`;
-    try {
-      const { url, path } = await uploadToSupabaseStorage("portfolio-images", storagePath, file);
-
-      const res = await fetch("/api/portfolio/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, path }),
-      });
-      if (!res.ok) {
-        const r = await res.json().catch(() => ({}));
-        throw new Error(r.error || "Failed to save portfolio image");
-      }
-      const data = await res.json();
-      return { id: data.id, url, path };
-    } catch (e: any) {
-      throw new Error(e.message || "Upload failed");
-    }
+    return uploadMedia(file, "portfolio");
   }
 
   async function handleFiles(files: FileList | null) {
@@ -96,9 +81,10 @@ export function PortfolioSection() {
         const uploaded = await uploadOne(file);
         setImages((prev) => prev.map((img) => (img === temp ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path } : img)));
         toast.success("Image uploaded");
-      } catch (e: any) {
-        setImages((prev) => prev.map((img) => (img === temp ? { ...img, uploading: false, error: e.message || "Upload failed" } : img)));
-        toast.error("Failed to upload image");
+      } catch (e) {
+        const msg = e instanceof UploadError ? e.message : e instanceof Error ? e.message : "Upload failed";
+        setImages((prev) => prev.map((img) => (img === temp ? { ...img, uploading: false, error: msg } : img)));
+        toast.error(msg);
       }
     }
   }
@@ -106,7 +92,7 @@ export function PortfolioSection() {
   async function retryUpload(index: number) {
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = "image/*";
+    input.accept = "image/*,video/mp4,video/webm";
     input.onchange = async (e: any) => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -115,9 +101,10 @@ export function PortfolioSection() {
         const uploaded = await uploadOne(file);
         setImages((prev) => prev.map((img, i) => (i === index ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path, uploading: false, retrying: false, error: undefined } : img)));
         toast.success("Image uploaded");
-      } catch {
-        setImages((prev) => prev.map((img, i) => (i === index ? { ...img, uploading: false, retrying: false, error: "Upload failed" } : img)));
-        toast.error("Failed to upload image");
+      } catch (e) {
+        const msg = e instanceof UploadError ? e.message : e instanceof Error ? e.message : "Upload failed";
+        setImages((prev) => prev.map((img, i) => (i === index ? { ...img, uploading: false, retrying: false, error: msg } : img)));
+        toast.error(msg);
       }
     };
     input.click();
@@ -167,8 +154,9 @@ export function PortfolioSection() {
         });
       }
       toast.success("Image replaced");
-    } catch {
-      toast.error("Failed to replace image");
+    } catch (e) {
+      const msg = e instanceof UploadError ? e.message : e instanceof Error ? e.message : "Replace failed";
+      toast.error(msg);
     }
   }
 

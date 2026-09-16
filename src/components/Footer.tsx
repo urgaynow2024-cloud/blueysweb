@@ -1,16 +1,6 @@
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
 
-const EXPLORE_LINKS = [
-  { href: "/portfolio", label: "Portfolio" },
-  { href: "/commission", label: "Commissions" },
-  { href: "/adoptables", label: "Adoptables" },
-  { href: "/services", label: "Services" },
-  { href: "/faq", label: "FAQ" },
-  { href: "/reviews", label: "Reviews" },
-  { href: "/contact", label: "Contact" },
-];
-
 const LEGAL_LINKS = [
   { href: "/tos", label: "Terms" },
   { href: "/privacy", label: "Privacy" },
@@ -34,7 +24,7 @@ export default function Footer() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
-            {EXPLORE_LINKS.map((l) => (
+            {siteConfig.footerNav.map((l) => (
               <Link key={l.href} href={l.href} className="text-[var(--text-secondary)] hover:text-white transition-colors">
                 {l.label}
               </Link>

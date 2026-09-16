@@ -1,17 +1,9 @@
 import { supabase, isSupabaseConfigured } from "./supabase/client";
-import { pricingTiers, additionalServices, faqItems, workflowSteps, mockReviews, mockPortfolioImages, mockNsfwPortfolioImages } from "../config/site";
+import { pricingTiers, additionalServices, faqItems, workflowSteps, mockReviews, mockPortfolioImages, mockNsfwPortfolioImages, siteConfig } from "../config/site";
 import type { Adoptable, AdoptableGalleryImage } from "../types/database";
 
 const FALLBACKS = {
-  siteConfig: {
-    name: "Bluey's Avatar Commissions",
-    tagline: "VRChat Avatar Edits • Blender Work • Unity Setup",
-    description: "Clean, stylish, performance-friendly avatars built for VRChat.",
-    discord: "BlueyBarks",
-    websiteUrl: "https://www.blueycomissions.website/",
-    tos_last_updated: "August 2025",
-    tos_version: "2.0",
-  },
+  siteConfig,
   workflowSteps,
   pricingTiers,
   additionalServices,

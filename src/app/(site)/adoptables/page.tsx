@@ -6,23 +6,22 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getAdoptables, getAllAdoptableGalleryImages } from "@/lib/db";
 import { isAgeVerified } from "@/components/AgeVerifier";
 import AgeVerifier from "@/components/AgeVerifier";
-import type { Adoptable, AdoptableGalleryImage } from "@/types/adoptables";
+import type { Adoptable, AdoptableGalleryImage } from "@/types/database";
 import Reveal from "@/components/ui/Reveal";
-import { Sparkles, ShoppingCart, Package, Eye, CheckCircle, Clock, XCircle, Filter, Layers, Image as ImageIcon, Lock } from "lucide-react";
+import SectionHeading from "@/components/ui/SectionHeading";
+import { Sparkles, ShoppingCart, Package, CheckCircle, Clock, XCircle, Filter, Eye, Lock, Layers } from "lucide-react";
 
 const STATUS_CONFIG = {
-  available: { label: "Available", icon: CheckCircle, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
-  reserved: { label: "Reserved", icon: Clock, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
-  sold: { label: "Sold", icon: XCircle, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/30" },
+  available: { label: "AVAILABLE", icon: CheckCircle, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
+  reserved: { label: "RESERVED", icon: Clock, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
+  sold: { label: "SOLD", icon: XCircle, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/30" },
 } as const;
 
 function StatusBadge({ status }: { status: "available" | "sold" | "reserved" }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.available;
   const Icon = cfg.icon;
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${cfg.color} ${cfg.bg} ${cfg.border}`}
-    >
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold tracking-wider ${cfg.color} ${cfg.bg} ${cfg.border}`}>
       <Icon className="h-3 w-3" />
       {cfg.label}
     </span>
@@ -31,8 +30,8 @@ function StatusBadge({ status }: { status: "available" | "sold" | "reserved" }) 
 
 function SkeletonCard() {
   return (
-    <div className="overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[rgba(255,255,255,0.02)]">
-      <div className="aspect-[4/5] w-full ad-shimmer" />
+    <div className="product-card animate-pulse">
+      <div className="product-image aspect-[3/4] w-full skeleton" />
       <div className="mt-3 space-y-2 p-3">
         <div className="h-4 w-3/4 rounded bg-[var(--border)]" />
         <div className="h-3 w-1/3 rounded bg-[var(--border)]" />
@@ -70,132 +69,141 @@ function AdoptableCard({
   const isSold = adoptable.availability === "sold";
   const isReserved = adoptable.availability === "reserved";
 
+  const cfg = STATUS_CONFIG[adoptable.availability] || STATUS_CONFIG.available;
+
   return (
     <div className="group relative">
       <Link href={`/adoptables/${adoptable.id}`} className="block">
-        <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[rgba(255,255,255,0.02)] transition-all duration-500 group-hover:border-[var(--border-strong)]">
-          {preview ? (
-            <img
-              src={preview}
-              alt={adoptable.title}
-              loading="lazy"
-              className={`h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04] ${
-                hasNsfw && !showNsfw ? "blur-[6px] grayscale" : ""
-              }`}
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <ImageIcon className="h-12 w-12 text-[var(--text-dim)]" />
-            </div>
-          )}
+        <div className="product-card">
+          <div className="product-image relative aspect-[3/4] overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] transition-all duration-300 group-hover:border-[var(--accent)]/40 group-hover:shadow-[var(--shadow-lg)]">
+            {preview ? (
+              <img
+                src={preview}
+                alt={adoptable.title}
+                loading="lazy"
+                className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04] ${
+                  hasNsfw && !showNsfw ? "blur-[6px] grayscale" : ""
+                }`}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <Package className="h-12 w-12 text-[var(--text-dim)]" />
+              </div>
+            )}
 
-          <div className="absolute top-3 right-3 z-10">
-            <StatusBadge status={adoptable.availability} />
+            <div className="absolute top-3 right-3 z-10">
+              <StatusBadge status={adoptable.availability} />
+            </div>
+
+            {hasNsfw && !showNsfw && (
+              <div className="absolute top-3 left-3 z-10">
+                <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-rose-400">
+                  <Lock className="h-3 w-3" />
+                  NSFW
+                </span>
+              </div>
+            )}
+
+            {adoptable.featured && (
+              <div className="absolute top-3 left-3 z-10">
+                <span className="inline-flex items-center gap-1 rounded-full border border-[var(--accent)]/40 bg-[var(--accent-soft)] px-2.5 py-0.5 text-[10px] font-semibold text-[var(--accent)]">
+                  <Sparkles className="h-3 w-3 fill-current" />
+                  Featured
+                </span>
+              </div>
+            )}
+
+            {isSold && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-rose-500/20 backdrop-blur-sm">
+                <span className="text-3xl font-black text-rose-400">SOLD</span>
+              </div>
+            )}
+
+            {isReserved && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-amber-500/20 backdrop-blur-sm">
+                <span className="text-3xl font-black text-amber-400">RESERVED</span>
+              </div>
+            )}
+
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+              <span className="grid h-10 w-10 place-items-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition-transform duration-300 group-hover:scale-110">
+                <Eye className="h-5 w-5" />
+              </span>
+            </div>
           </div>
 
-          {hasNsfw && !showNsfw && (
-            <div className="absolute top-3 left-3 z-10">
-              <span className="inline-flex items-center gap-1 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-red-400">
-                <Lock className="h-3 w-3" />
-                NSFW
-              </span>
-            </div>
-          )}
+          <div className="mt-3 px-1">
+            <h3 className="text-base font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
+              {adoptable.title || "Unnamed"}
+            </h3>
+            {adoptable.species && (
+              <p className="mt-0.5 text-xs text-[var(--text-secondary)] uppercase tracking-wider">{adoptable.species}</p>
+            )}
+            {adoptable.description && (
+              <p className="mt-1 line-clamp-2 text-xs text-[var(--text-dim)] leading-relaxed">
+                {adoptable.description}
+              </p>
+            )}
 
-          {adoptable.featured && (
-            <div className="absolute top-14 right-3 z-10">
-              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--accent-cosmic)]/40 bg-[var(--accent-cosmic)]/10 px-2.5 py-0.5 text-[10px] font-semibold text-[var(--accent-nebula)]">
-                <Sparkles className="h-3 w-3 fill-current" />
-                Featured
-              </span>
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1">
+              {adoptable.sfw_available && adoptable.sfw_price && (
+                <span className="text-xs text-[var(--text-secondary)]">
+                  SFW <strong className="text-white font-semibold">{adoptable.sfw_price}</strong>
+                </span>
+              )}
+              {adoptable.nsfw_available && adoptable.nsfw_price && (
+                <span className="text-xs text-[var(--text-secondary)]">
+                  NSFW <strong className="text-white font-semibold">{showNsfw ? adoptable.nsfw_price : "Age-restricted"}</strong>
+                </span>
+              )}
+              {adoptable.bundle_available && adoptable.bundle_price && (
+                <span className="text-xs text-[var(--text-secondary)]">
+                  Bundle <strong className="text-white font-semibold">{showNsfw ? adoptable.bundle_price : "Age-restricted"}</strong>
+                </span>
+              )}
+              {!adoptable.sfw_available && !adoptable.nsfw_available && !adoptable.bundle_available && adoptable.price && (
+                <span className="text-xs text-[var(--text-secondary)]">
+                  <strong className="text-white font-semibold">{adoptable.price}</strong>
+                </span>
+              )}
             </div>
-          )}
 
-          {isSold && (
-            <div className="adoptable-card-sold-overlay">
-              <span className="adoptable-card-sold-text">SOLD</span>
+            <div className="mt-4">
+              {!isSold && !isReserved && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.open("https://discord.gg/zt48MZm5kD", "_blank", "noopener,noreferrer");
+                  }}
+                  className="btn-primary w-full !py-2.5 !px-4 !text-sm inline-flex items-center justify-center gap-2"
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  Adopt Now
+                </button>
+              )}
+              {isReserved && (
+                <button
+                  disabled
+                  className="btn-secondary w-full !py-2.5 !px-4 !text-sm inline-flex items-center justify-center gap-2 opacity-50 cursor-not-allowed"
+                >
+                  <Clock className="h-4 w-4" />
+                  Reserved
+                </button>
+              )}
+              {isSold && (
+                <button
+                  disabled
+                  className="w-full !py-2.5 !px-4 !text-sm inline-flex items-center justify-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 cursor-not-allowed"
+                >
+                  <XCircle className="h-4 w-4" />
+                  Sold Out
+                </button>
+              )}
             </div>
-          )}
-
-          {isReserved && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-amber-500/20 backdrop-blur-[2px]">
-              <span className="text-3xl font-black text-amber-400">RESERVED</span>
-            </div>
-          )}
-
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            <span className="rounded-full border border-white/20 bg-white/10 p-2.5 text-white backdrop-blur">
-              <Eye className="h-5 w-5" />
-            </span>
           </div>
         </div>
       </Link>
-
-      <div className="mt-3">
-        <h3 className="text-base font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
-          {adoptable.title || "Unnamed"}
-        </h3>
-        {adoptable.species && (
-          <p className="mt-0.5 text-xs text-[var(--text-secondary)] uppercase tracking-wider">{adoptable.species}</p>
-        )}
-
-        <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1">
-          {adoptable.sfw_available && adoptable.sfw_price && (
-            <span className="text-xs text-[var(--text-secondary)]">
-              SFW <strong className="text-white font-semibold">{adoptable.sfw_price}</strong>
-            </span>
-          )}
-          {adoptable.nsfw_available && adoptable.nsfw_price && (
-            <span className="text-xs text-[var(--text-secondary)]">
-              NSFW <strong className="text-white font-semibold">{showNsfw ? adoptable.nsfw_price : "Age-restricted"}</strong>
-            </span>
-          )}
-          {adoptable.bundle_available && adoptable.bundle_price && (
-            <span className="text-xs text-[var(--text-secondary)]">
-              Bundle <strong className="text-white font-semibold">{showNsfw ? adoptable.bundle_price : "Age-restricted"}</strong>
-            </span>
-          )}
-          {!adoptable.sfw_available && !adoptable.nsfw_available && !adoptable.bundle_available && adoptable.price && (
-            <span className="text-xs text-[var(--text-secondary)]">
-              <strong className="text-white font-semibold">{adoptable.price}</strong>
-            </span>
-          )}
-        </div>
-
-        <div className="mt-4">
-          {!isSold && !isReserved && (
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                window.open("https://discord.gg/zt48MZm5kD", "_blank", "noopener,noreferrer");
-              }}
-              className="btn-primary w-full !py-2 !px-4 !text-sm inline-flex items-center justify-center gap-2"
-            >
-              <ShoppingCart className="h-4 w-4" />
-              Adopt Now
-            </button>
-          )}
-          {isReserved && (
-            <button
-              disabled
-              className="btn-secondary w-full !py-2 !px-4 !text-sm inline-flex items-center justify-center gap-2 opacity-50 cursor-not-allowed"
-            >
-              <Clock className="h-4 w-4" />
-              Reserved
-            </button>
-          )}
-          {isSold && (
-            <button
-              disabled
-              className="w-full !py-2 !px-4 !text-sm inline-flex items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 cursor-not-allowed"
-            >
-              <XCircle className="h-4 w-4" />
-              Sold Out
-            </button>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
@@ -207,7 +215,6 @@ export default function AdoptablesPage() {
   const [error, setError] = useState<string | null>(null);
   const [ageVerified, setAgeVerified] = useState(false);
   const [showAgeGate, setShowAgeGate] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const setupAttemptedRef = useRef(false);
 
@@ -307,7 +314,7 @@ export default function AdoptablesPage() {
     };
   }, []);
 
-  const filters = [
+  const filters = useMemo(() => [
     { id: "all", label: "All", icon: Layers },
     { id: "available", label: "Available", icon: CheckCircle },
     { id: "reserved", label: "Reserved", icon: Clock },
@@ -315,7 +322,7 @@ export default function AdoptablesPage() {
     { id: "sfw", label: "SFW", icon: Eye },
     { id: "nsfw", label: "NSFW", icon: Lock },
     { id: "both", label: "SFW+NSFW", icon: Package },
-  ];
+  ], []);
 
   const filtered = useMemo(() => {
     return adoptables.filter((a) => {
@@ -361,7 +368,7 @@ export default function AdoptablesPage() {
               The adoptables feature needs its Supabase tables created before it can load anything.
             </p>
             <p className="text-sm text-[var(--text-dim)] mb-6">
-              Go to your Supabase project → <span className="font-mono text-[var(--accent)]">SQL Editor</span> → New query, paste the contents of <span className="font-mono text-[var(--accent)]">supabase/schema.sql</span>, and run it.
+              Go to your Supabase project &rarr; <span className="font-mono text-[var(--accent)]">SQL Editor</span> &rarr; New query, paste the contents of <span className="font-mono text-[var(--accent)]">supabase/schema.sql</span>, and run it.
             </p>
             <button
               onClick={() => {
@@ -403,33 +410,19 @@ export default function AdoptablesPage() {
 
   return (
     <div className="relative">
-      <div className="bg-nebula" />
-      <div className="bg-cosmic-fog" />
-      <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
-        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.12] blur-[130px] orb-slow" />
-
+      <section className="section">
         <div className="container">
-          <div className="mx-auto max-w-3xl text-center">
-            <span className="eyebrow">
-              <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
-              Adoptables
-            </span>
-            <h1 className="display-xl mt-5 text-white">
-              ✦ Adoptable <span className="text-gradient-strong">Characters</span>
-            </h1>
-            <p className="lead mx-auto mt-4 max-w-2xl">
-              Handcrafted avatar designs available for instant adoption.
-              Browse the gallery, pick a character you love, and message me on Discord to claim it.
-              Each adoptable is a premade, one-of-a-kind design — not a custom commission.
-            </p>
-          </div>
+          <SectionHeading
+            eyebrow="Adoptables"
+            title="Adoptable Characters"
+            subtitle="Handcrafted avatar designs available for instant adoption. Browse the gallery, pick a character you love, and message me on Discord to claim it."
+          />
         </div>
       </section>
 
       {loading ? (
         <div className="container section-sm">
-          <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <Reveal key={i} delay={(i % 4) * 60}>
                 <SkeletonCard />
@@ -442,14 +435,13 @@ export default function AdoptablesPage() {
       ) : error === "EMPTY" ? (
         <section className="section-sm">
           <div className="container">
-            <div className="mx-auto max-w-md text-center">
-              <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+            <div className="mx-auto max-w-md text-center empty-state">
+              <div className="empty-state-icon">
                 <Package className="h-7 w-7" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-3">No adoptables yet</h2>
-              <p className="text-[var(--text-secondary)] leading-relaxed">
-                There are currently no adoptables available. Check back later — new characters
-                are added regularly.
+              <h3 className="empty-state-title">No adoptables yet</h3>
+              <p className="empty-state-desc">
+                There are currently no adoptables available. Check back later &mdash; new characters are added regularly.
               </p>
             </div>
           </div>
@@ -469,7 +461,7 @@ export default function AdoptablesPage() {
               <Clock className="h-4 w-4" />
               {reservedCount} reserved
             </span>
-            <span className="inline-flex items-center gap-1.5 text-red-400">
+            <span className="inline-flex items-center gap-1.5 text-rose-400">
               <XCircle className="h-4 w-4" />
               {soldCount} sold
             </span>
@@ -496,13 +488,12 @@ export default function AdoptablesPage() {
           </div>
 
           {filtered.length === 0 ? (
-            <div className="py-16 text-center">
-              <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                <Filter className="h-5 w-5" />
+            <div className="py-16 text-center empty-state">
+              <div className="empty-state-icon">
+                <Filter className="h-6 w-6" />
               </div>
-              <p className="text-[var(--text-secondary)]">
-                No adoptables match the selected filter.
-              </p>
+              <h3 className="empty-state-title">No matches</h3>
+              <p className="empty-state-desc">No adoptables match the selected filter.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -526,7 +517,7 @@ export default function AdoptablesPage() {
           (a) =>
             a.nsfw_available || (galleryMap[a.id] || []).some((img) => img.is_nsfw),
         ) && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[45] max-w-md rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-center backdrop-blur-md">
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[45] max-w-md rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-center backdrop-blur-md">
             <p className="mb-2 text-sm text-white">
               Some adoptables contain NSFW content. Verify your age to view
               NSFW prices and images.

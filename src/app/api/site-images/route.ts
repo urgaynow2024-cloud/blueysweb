@@ -25,7 +25,7 @@ export async function GET() {
     const result: Record<string, any> = {};
     if (data) {
       data.forEach((item: any) => {
-        result[item.key] = { url: item.url, path: item.path };
+        result[item.key] = { url: item.url, storage_path: item.storage_path };
       });
     }
 
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
       if (dbError) {
         console.error("DB error:", dbError);
-        return NextResponse.json({ error: "Database error", details: dbError.message }, { status: 500 });
+        return NextResponse.json({ error: "Database error" }, { status: 500 });
       }
 
       return NextResponse.json({ success: true, url, path });
@@ -102,8 +102,7 @@ export async function POST(request: NextRequest) {
       console.error("Bucket check error:", bucketCheck.error);
       return NextResponse.json(
         {
-          error: "Storage bucket 'portfolio-images' not found. Create it in Supabase Dashboard → Storage → New bucket.",
-          details: bucketCheck.error.message,
+          error: "Storage bucket not found",
         },
         { status: 500 }
       );
@@ -115,13 +114,7 @@ export async function POST(request: NextRequest) {
 
     if (uploadError || !uploadData) {
       console.error("Storage upload error:", uploadError);
-      return NextResponse.json(
-        {
-          error: "Upload failed",
-          details: uploadError?.message || "Unknown storage error",
-        },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Upload failed" }, { status: 500 });
     }
 
     const { data: urlData } = supabaseAdmin.storage.from("portfolio-images").getPublicUrl(storagePath);
@@ -129,14 +122,14 @@ export async function POST(request: NextRequest) {
 
     const { error: dbError } = await supabaseAdmin
       .from("site_images")
-      .upsert({ key, url, path: storagePath, updated_at: new Date().toISOString() }, { onConflict: "key" });
+      .upsert({ key, url, storage_path: storagePath, updated_at: new Date().toISOString() }, { onConflict: "key" });
 
-    if (dbError) {
-      console.error("DB error:", dbError);
-      return NextResponse.json({ error: "Database error", details: dbError.message }, { status: 500 });
-    }
+      if (dbError) {
+        console.error("DB error:", dbError);
+        return NextResponse.json({ error: "Database error" }, { status: 500 });
+      }
 
-    return NextResponse.json({ success: true, url, path: storagePath });
+    return NextResponse.json({ success: true, url, storage_path: storagePath });
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
@@ -154,8 +147,14 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Key is required" }, { status: 400 });
     }
 
-    if (path) {
-      await supabaseAdmin.storage.from("portfolio-images").remove([path]);
+    if (key) {
+      const { data: record, error: fetchError } = await supabaseAdmin.from("site_images").select("storage_path").eq("key", key).single();
+      if (fetchError || !record) {
+        return NextResponse.json({ error: "Site image not found" }, { status: 404 });
+      }
+      if (record.storage_path) {
+        await supabaseAdmin.storage.from("portfolio-images").remove([record.storage_path]);
+      }
     }
 
     const { error } = await supabaseAdmin.from("site_images").delete().eq("key", key);

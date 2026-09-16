@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { compressImageBuffer, getCompressedExtension, validateUploadSize, validateUploadType, isImageType } from "@/lib/compression";
+import { compressImageBuffer, getCompressedExtension, validateUploadSize, validateUploadType, isImageType } from "@/lib/compression/server";
 
 function parseMissingColumn(errorMessage: string): string | null {
   const match = errorMessage.match(/'(\w+)'? column|Could not find the '(\w+)' column/);
@@ -45,7 +45,7 @@ export async function POST(
         }
 
         console.error("DB insert error:", dbError);
-        return NextResponse.json({ error: "Database error", details: dbError?.message || "Unknown database error" }, { status: 500 });
+        return NextResponse.json({ error: "Database error" }, { status: 500 });
       }
 
       return NextResponse.json({ error: "Max retries exceeded" }, { status: 500 });
@@ -64,12 +64,12 @@ export async function POST(
 
     const typeValidation = validateUploadType(file.type);
     if (!typeValidation.valid) {
-      return NextResponse.json({ error: typeValidation.error }, { status: 400 });
+      return NextResponse.json({ error: typeValidation.error!.message, category: typeValidation.error!.category }, { status: 400 });
     }
 
     const sizeValidation = validateUploadSize(file.size, file.type);
     if (!sizeValidation.valid) {
-      return NextResponse.json({ error: sizeValidation.error }, { status: 400 });
+      return NextResponse.json({ error: sizeValidation.error!.message, category: sizeValidation.error!.category }, { status: 400 });
     }
 
     let uploadBuffer: Buffer = Buffer.from(await file.arrayBuffer());
@@ -86,26 +86,26 @@ export async function POST(
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from("portfolio-images")
-      .upload(storagePath, uploadBuffer, { cacheControl: "3600", upsert: true, contentType: isImageType(file.type) ? "image/webp" : file.type });
+      .upload(storagePath, uploadBuffer, { cacheControl: "3600", upsert: true, contentType: isImageType(file.type) && file.type !== "image/gif" ? "image/webp" : file.type });
 
     if (uploadError || !uploadData) {
       console.error("Storage upload error:", uploadError);
-      return NextResponse.json({ error: "Upload failed", details: uploadError?.message || "Unknown storage error" }, { status: 500 });
+      return NextResponse.json({ error: "Upload failed" }, { status: 500 });
     }
 
     const { data: urlData } = supabaseAdmin.storage.from("portfolio-images").getPublicUrl(storagePath);
     const url = urlData.publicUrl;
 
-    let insertPayload: Record<string, any> = { adoptable_id: id, url, path: storagePath, is_nsfw: isNsfw };
-    for (let attempt = 0; attempt < 5; attempt++) {
-      const { data: dbData, error: dbError } = await supabaseAdmin
-        .from("adoptable_gallery")
-        .insert([insertPayload])
-        .select();
+      let insertPayload: Record<string, any> = { adoptable_id: id, url, storage_path: storagePath, is_nsfw: isNsfw };
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const { data: dbData, error: dbError } = await supabaseAdmin
+          .from("adoptable_gallery")
+          .insert([insertPayload])
+          .select();
 
-      if (!dbError && dbData && dbData.length > 0) {
-        return NextResponse.json({ id: dbData[0].id, url, path: storagePath }, { status: 201 });
-      }
+        if (!dbError && dbData && dbData.length > 0) {
+          return NextResponse.json({ id: dbData[0].id, url, storage_path: storagePath }, { status: 201 });
+        }
 
       const col = parseMissingColumn(dbError?.message || "");
       if (col && insertPayload[col] !== undefined) {
@@ -115,7 +115,7 @@ export async function POST(
 
       console.error("DB insert error:", dbError);
       await supabaseAdmin.storage.from("portfolio-images").remove([storagePath]);
-      return NextResponse.json({ error: "Database error", details: dbError?.message || "Unknown database error" }, { status: 500 });
+        return NextResponse.json({ error: "Database error" }, { status: 500 });
     }
 
     return NextResponse.json({ error: "Max retries exceeded" }, { status: 500 });
@@ -139,14 +139,17 @@ export async function DELETE(
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    if (path) {
-      await supabaseAdmin.storage.from("portfolio-images").remove([path]);
-    }
-
     if (imageId) {
+      const { data: galleryRecord, error: fetchError } = await supabaseAdmin.from("adoptable_gallery").select("storage_path").eq("id", imageId).single();
+      if (fetchError || !galleryRecord) {
+        return NextResponse.json({ error: "Gallery image not found" }, { status: 404 });
+      }
+      if (path && galleryRecord.storage_path) {
+        await supabaseAdmin.storage.from("portfolio-images").remove([galleryRecord.storage_path]);
+      }
       const { error } = await supabaseAdmin.from("adoptable_gallery").delete().eq("id", imageId);
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: "Failed to delete gallery image" }, { status: 500 });
       }
     }
 

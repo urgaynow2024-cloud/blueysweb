@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { compressImageBuffer, getCompressedExtension, isImageType } from "@/lib/compression";
+import { compressImageBuffer, getCompressedExtension, isImageType } from "@/lib/compression/server";
 
 export async function POST(
   request: Request,
@@ -40,12 +40,12 @@ export async function POST(
       .upload(storagePath, uploadBuffer, {
         cacheControl: "3600",
         upsert: true,
-        contentType: isImageType(file.type) ? "image/webp" : file.type,
+        contentType: isImageType(file.type) && file.type !== "image/gif" ? "image/webp" : file.type,
       });
 
     if (uploadError || !uploadData) {
       console.error("Storage upload error:", uploadError);
-      return NextResponse.json({ error: "Upload failed", details: uploadError?.message || "Unknown storage error" }, { status: 500 });
+      return NextResponse.json({ error: "Upload failed" }, { status: 500 });
     }
 
     const { data: urlData } = supabaseAdmin.storage.from("portfolio-images").getPublicUrl(storagePath);
@@ -59,13 +59,13 @@ export async function POST(
     if (dbError) {
       console.error("DB update error:", dbError);
       await supabaseAdmin.storage.from("portfolio-images").remove([storagePath]);
-      return NextResponse.json({ error: dbError.message }, { status: 500 });
+      return NextResponse.json({ error: "Database error" }, { status: 500 });
     }
 
     return NextResponse.json({ id, url, path: storagePath }, { status: 201 });
   } catch (error: any) {
     console.error("Adoptable main image upload error:", error);
-    return NextResponse.json({ error: error?.message || "Invalid request" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
 
@@ -82,8 +82,14 @@ export async function DELETE(
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    if (path) {
-      await supabaseAdmin.storage.from("portfolio-images").remove([path]);
+    if (id) {
+      const { data: adoptable, error: fetchError } = await supabaseAdmin.from("adoptables").select("main_image_path").eq("id", id).single();
+      if (fetchError || !adoptable) {
+        return NextResponse.json({ error: "Adoptable not found" }, { status: 404 });
+      }
+      if (adoptable.main_image_path) {
+        await supabaseAdmin.storage.from("portfolio-images").remove([adoptable.main_image_path]);
+      }
     }
 
     const { error } = await supabaseAdmin
@@ -92,7 +98,7 @@ export async function DELETE(
       .eq("id", id);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: "Failed to remove main image" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

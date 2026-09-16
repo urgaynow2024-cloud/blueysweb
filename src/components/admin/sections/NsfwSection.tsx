@@ -3,12 +3,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getNsfwPortfolioImages } from "@/lib/db";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import { uploadToSupabaseStorage, deleteFromSupabaseStorage } from "@/lib/supabase-storage";
+import { deleteFromSupabaseStorage } from "@/lib/supabase/storage";
 import { useSave } from "../SaveProvider";
 import { useToast } from "../Toast";
 import { Card, CardHeader } from "../Card";
 import { UploadArea } from "../UploadArea";
 import { PortfolioGrid, type PortfolioImage } from "../PortfolioGrid";
+import { uploadMedia } from "@/lib/upload/client";
+import { UploadError } from "@/lib/upload/errors";
 
 export function NsfwSection() {
   const [images, setImages] = useState<PortfolioImage[]>([]);
@@ -63,25 +65,12 @@ export function NsfwSection() {
   }, [register, saveNsfw]);
 
   async function uploadOne(file: File) {
-    const storagePath = `nsfw/${Date.now()}-${Math.random().toString(36).slice(2)}.${file.name.split(".").pop() || "bin"}`;
     try {
-      const { url, path } = await uploadToSupabaseStorage("portfolio-images", storagePath, file);
-
-      const res = await fetch("/api/nsfw", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, path }),
-      });
-      let result: any;
-      try {
-        result = await res.json();
-      } catch {
-        result = {};
-      }
-      if (res.ok && result.id) return { id: result.id, url, path };
-      throw new Error(result.error || result.details || `Upload failed (${res.status})`);
+      return await uploadMedia(file, "nsfw");
     } catch (err) {
-      console.error("NSFW upload error:", err);
+      if (err instanceof UploadError) {
+        throw new Error(err.message);
+      }
       const message = err instanceof Error ? err.message : "Upload failed";
       throw new Error(message);
     }
@@ -99,7 +88,7 @@ export function NsfwSection() {
         toast.success("NSFW image uploaded");
       } catch (err) {
         console.error("NSFW upload error:", err);
-        const message = err instanceof Error ? err.message : "Upload failed";
+        const message = err instanceof UploadError ? err.message : err instanceof Error ? err.message : "Upload failed";
         setImages((prev) => prev.map((img) => (img === temp ? { ...img, uploading: false, error: message } : img)));
         toast.error(message);
       }
@@ -153,7 +142,7 @@ export function NsfwSection() {
       toast.success("NSFW image replaced");
     } catch (err) {
       console.error("NSFW replace error:", err);
-      const message = err instanceof Error ? err.message : "Replace failed";
+      const message = err instanceof UploadError ? err.message : err instanceof Error ? err.message : "Replace failed";
       toast.error(message);
     }
   }

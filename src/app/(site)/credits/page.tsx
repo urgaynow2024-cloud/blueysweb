@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Reveal from "@/components/ui/Reveal";
+import SectionHeading from "@/components/ui/SectionHeading";
 import { ExternalLink, Heart, Sparkles } from "lucide-react";
+import { mockCredits } from "@/config/site";
 
 interface Credit {
   id: string;
@@ -49,10 +51,20 @@ export default function CreditsPage() {
         const res = await fetch("/api/credits");
         if (res.ok) {
           const data = await res.json();
-          setCredits(data || []);
+          // Deduplicate by id to prevent the same person appearing multiple times
+          const seen = new Set<string>();
+          const unique = (data || []).filter((c: Credit) => {
+            if (!c.id || seen.has(c.id)) return false;
+            seen.add(c.id);
+            return true;
+          });
+          setCredits(unique);
+        } else {
+          setCredits(mockCredits as unknown as Credit[]);
         }
       } catch (e) {
         console.error("Failed to load credits:", e);
+        setCredits(mockCredits as unknown as Credit[]);
       } finally {
         setLoading(false);
       }
@@ -61,7 +73,8 @@ export default function CreditsPage() {
   }, []);
 
   const grouped = credits.reduce<Record<string, Credit[]>>((acc, c) => {
-    const cats = c.categories && c.categories.length > 0 ? c.categories : ["supporters"];
+    // Each person appears under only their first category to avoid duplicates
+    const cats = c.categories && c.categories.length > 0 ? [c.categories[0]] : ["supporters"];
     cats.forEach((cat) => {
       if (!acc[cat]) acc[cat] = [];
       acc[cat].push(c);
@@ -74,32 +87,21 @@ export default function CreditsPage() {
 
   return (
     <div className="relative">
-      <div className="bg-nebula" />
-      <div className="bg-cosmic-fog" />
-      <section className="page relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-30" />
-        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px] orb-slow" />
-
+      <section className="section">
         <div className="container">
-          <div className="mx-auto max-w-3xl text-center">
-            <span className="eyebrow justify-center">
-              <Heart className="h-3.5 w-3.5 text-[var(--accent)]" />
-              Credits
-            </span>
-            <h1 className="display-xl mt-5 text-white">
-              ✦ People Behind the <span className="text-gradient-animated">Stars</span>
-            </h1>
-            <p className="lead mx-auto mt-4 max-w-2xl">
-              A huge thank you to everyone who has helped, supported, tested, created, or contributed to this project. I genuinely appreciate every bit of support. 💜
-            </p>
-          </div>
+          <SectionHeading
+            align="center"
+            eyebrow="Credits"
+            title="People Behind the Stars"
+            subtitle="A huge thank you to everyone who has helped, supported, tested, created, or contributed. I genuinely appreciate every bit of support."
+          />
 
           {loading ? (
-            <div className="mx-auto max-w-3xl space-y-6">
+            <div className="mx-auto mt-10 max-w-3xl space-y-6">
               {[1, 2, 3].map((i) => <SkeletonRow key={i} />)}
             </div>
           ) : credits.length > 0 ? (
-            <div className="mx-auto max-w-3xl">
+            <div className="mt-10 mx-auto max-w-3xl">
               {sortedCategories.map((cat, catIdx) => {
                 const meta = CATEGORY_META[cat] || { emoji: "✨", label: cat };
                 const items = grouped[cat];
@@ -182,13 +184,12 @@ export default function CreditsPage() {
               })}
             </div>
           ) : (
-            <div className="py-20 text-center">
-              <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                <Heart className="h-6 w-6" />
+            <div className="mt-12 empty-state">
+              <div className="empty-state-icon">
+                <Heart className="h-7 w-7" />
               </div>
-              <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
-                Credits will appear here as contributors are added.
-              </p>
+              <h3 className="empty-state-title">No credits yet</h3>
+              <p className="empty-state-desc">Credits will appear here as contributors are added.</p>
             </div>
           )}
         </div>

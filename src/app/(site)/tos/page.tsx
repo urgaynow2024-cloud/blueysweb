@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getSiteConfig } from "@/lib/db";
-import { tosSections } from "@/data/site";
+import { tosSections } from "@/config/site";
 import { FileText, ShieldCheck, Clock, Sparkles } from "lucide-react";
 
 interface TosSection {
@@ -133,7 +133,7 @@ export default function ToSPage() {
             </span>
             <h1 className="display-xl mt-5 text-white">Terms of Service</h1>
             <p className="lead mx-auto mt-4">
-              These Terms govern commissions, services, and interactions with Bluey Commissions. Please read them carefully before engaging our services.
+              These Terms govern commissions, services, and interactions with Bluey's Creation. Please read them carefully before engaging our services.
             </p>
             <div className="mt-6 flex items-center justify-center gap-4 text-sm text-[var(--text-dim)]">
               <div className="flex items-center gap-1.5">
@@ -213,7 +213,7 @@ export default function ToSPage() {
               Version: {version || "—"}
             </div>
             <p className="text-sm text-[var(--text-secondary)]">
-              These Terms of Service constitute the entire agreement between you and Bluey Commissions regarding the use of our services. By commissioning work, you acknowledge that you have read, understood, and agreed to these Terms.
+              These Terms of Service constitute the entire agreement between you and Bluey's Creation regarding the use of our services. By commissioning work, you acknowledge that you have read, understood, and agreed to these Terms.
             </p>
           </div>
         </div>

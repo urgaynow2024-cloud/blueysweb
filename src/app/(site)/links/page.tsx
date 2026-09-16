@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Reveal from "@/components/ui/Reveal";
+import SectionHeading from "@/components/ui/SectionHeading";
 import { ExternalLink, Link2, Globe, Sparkles } from "lucide-react";
 import { getSocialLinks } from "@/lib/db";
 
@@ -51,64 +52,53 @@ export default function LinksPage() {
 
   return (
     <div className="relative">
-      <div className="bg-nebula" />
-      <div className="bg-cosmic-fog" />
-      <section className="page relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-30" />
-        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.05] blur-[130px] orb-slow" />
-
+      <section className="section">
         <div className="container">
-          <div className="text-center">
-            <span className="eyebrow justify-center">
-              <Link2 className="h-3.5 w-3.5 text-[var(--accent)]" />
-              Links
-            </span>
-            <h1 className="display-xl mt-5 text-white">
-              ✦ Find Me <span className="text-gradient-animated">Elsewhere</span>
-            </h1>
-            <p className="lead mx-auto mt-4 max-w-2xl">
-              Socials, commission platforms, stores, and more — all in one place.
-            </p>
-          </div>
+          <SectionHeading
+            align="center"
+            eyebrow="Links"
+            title="Find Me Elsewhere"
+            subtitle="Socials, commission platforms, stores, and more — all in one place."
+          />
 
           {loading ? (
-            <div className="mx-auto mt-16 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="mx-auto mt-12 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-6">
-                  <div className="mb-3 h-5 w-1/3 rounded bg-[var(--bg)]" />
-                  <div className="h-4 w-1/2 rounded bg-[var(--bg)]" />
-                </div>
+                <Reveal key={i} delay={i * 60}>
+                  <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] p-6 skeleton" />
+                </Reveal>
               ))}
             </div>
           ) : links.length === 0 ? (
-            <div className="py-20 text-center">
-              <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                <Globe className="h-6 w-6" />
+            <div className="mt-12 empty-state">
+              <div className="empty-state-icon">
+                <Globe className="h-7 w-7" />
               </div>
-              <p className="text-[var(--text-dim)]">No links have been added yet.</p>
+              <h3 className="empty-state-title">No links yet</h3>
+              <p className="empty-state-desc">Links will appear here when added.</p>
             </div>
           ) : (
-            <div className="mx-auto mt-12 max-w-3xl space-y-4">
+            <div className="mt-10 mx-auto max-w-3xl space-y-4">
               {links.map((link, i) => (
                 <Reveal key={link.id || i} delay={(i % 4) * 60}>
                   <a
                     href={link.url}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="group flex items-center gap-5 overflow-hidden rounded-2xl border border-[var(--border)] bg-white/[0.02] p-5 transition-all duration-500 hover:-translate-y-1 hover:border-[var(--border-hover)] hover:bg-white/[0.04]"
+                    className="group flex items-center gap-5 overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-4 transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[var(--shadow-md)]"
                   >
-                    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-2.5 transition-all duration-500 group-hover:border-[var(--accent)]/30">
+                    <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-2 transition-all duration-300 group-hover:border-[var(--accent)]/30">
                       {!faviconErrors.has(link.url) ? (
                         <img
                           src={getFaviconUrl(link.url)}
                           alt=""
-                          className="h-8 w-8 object-contain transition-transform duration-500 group-hover:scale-110"
+                          className="h-7 w-7 object-contain transition-transform duration-300 group-hover:scale-110"
                           onError={() => {
                             setFaviconErrors((prev) => new Set(prev).add(link.url));
                           }}
                         />
                       ) : (
-                        <Globe className="h-7 w-7 text-[var(--text-dim)] transition-colors duration-500 group-hover:text-[var(--accent)]" />
+                        <Globe className="h-6 w-6 text-[var(--text-dim)] transition-colors duration-300 group-hover:text-[var(--accent)]" />
                       )}
                     </div>
 
@@ -126,7 +116,7 @@ export default function LinksPage() {
                       </p>
                     </div>
 
-                    <span className="relative flex shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2.5 text-[var(--text-dim)] transition-all duration-500 group-hover:border-[var(--accent)]/40 group-hover:text-[var(--accent)] group-hover:translate-x-0.5">
+                    <span className="relative flex shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-2 text-[var(--text-dim)] transition-all duration-300 group-hover:border-[var(--accent)]/40 group-hover:text-[var(--accent)] group-hover:translate-x-0.5">
                       <ExternalLink className="h-4 w-4" />
                     </span>
                   </a>
@@ -135,8 +125,8 @@ export default function LinksPage() {
             </div>
           )}
 
-          <div className="mt-12 text-center">
-            <a href="/contact" className="btn-secondary inline-flex items-center gap-2">
+          <div className="mt-10 text-center">
+            <a href="/commission" className="btn-secondary inline-flex items-center gap-2">
               <Link2 className="h-4 w-4" />
               Or just message me
               <ExternalLink className="h-4 w-4" />

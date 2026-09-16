@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
           result = { success: false, message: `Management API ${mgmtResponse.status}: ${errText.slice(0, 200)}` };
         }
       } catch (mgmtError: any) {
-        result = { success: false, message: `Management API error: ${mgmtError?.message || String(mgmtError)}` };
+        result = { success: false, message: "Management API error" };
       }
     } else {
       result = { success: false, message: "SUPABASE_ACCESS_TOKEN not configured. Run schema.sql manually in Supabase SQL Editor." };
@@ -94,6 +94,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("Database setup error:", error);
-    return NextResponse.json({ error: error?.message || "Setup failed" }, { status: 500 });
+    return NextResponse.json({ error: "Setup failed" }, { status: 500 });
   }
 }

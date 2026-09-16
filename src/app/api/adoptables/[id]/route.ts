@@ -33,7 +33,7 @@ export async function GET(
     .eq("id", id)
     .single();
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 404 });
+    return NextResponse.json({ error: "Adoptable not found" }, { status: 404 });
   }
   return NextResponse.json(data);
 }
@@ -69,7 +69,7 @@ export async function PUT(
         continue;
       }
 
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: "Failed to update adoptable" }, { status: 500 });
     }
 
     return NextResponse.json({ error: "Max retries exceeded" }, { status: 500 });
@@ -91,8 +91,8 @@ export async function DELETE(
     .from("adoptables")
     .delete()
     .eq("id", id);
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+    if (error) {
+      return NextResponse.json({ error: "Failed to delete adoptable" }, { status: 500 });
+    }
   return NextResponse.json({ success: true });
 }

@@ -28,7 +28,7 @@ export async function GET() {
     .select("*")
     .order("sort_order", { ascending: true });
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load adoptables" }, { status: 500 });
   }
   return NextResponse.json(data || []);
 }
@@ -41,7 +41,7 @@ export async function DELETE() {
   await supabaseAdmin.from("adoptable_gallery").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   const { error } = await supabaseAdmin.from("adoptables").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to clear adoptables" }, { status: 500 });
   }
   return NextResponse.json({ success: true });
 }
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
         continue;
       }
 
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: "Failed to create adoptable" }, { status: 500 });
     }
 
     return NextResponse.json({ error: "Max retries exceeded" }, { status: 500 });

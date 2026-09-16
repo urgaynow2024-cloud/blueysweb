@@ -9,16 +9,20 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    if (path) {
-      await supabaseAdmin.storage.from("portfolio-images").remove([path]);
+    if (id) {
+      const { data: record, error: fetchError } = await supabaseAdmin.from("portfolio_images").select("storage_path").eq("id", id).single();
+      if (fetchError || !record) {
+        return NextResponse.json({ error: "Portfolio image not found" }, { status: 404 });
+      }
+      if (record.storage_path) {
+        await supabaseAdmin.storage.from("portfolio-images").remove([record.storage_path]);
+      }
     }
 
-    if (id) {
-      const { error } = await supabaseAdmin.from("portfolio_images").delete().eq("id", id);
-      if (error) {
-        console.error("Delete error:", error);
-        return NextResponse.json({ error: "Delete failed" }, { status: 500 });
-      }
+    const { error } = await supabaseAdmin.from("portfolio_images").delete().eq("id", id);
+    if (error) {
+      console.error("Delete error:", error);
+      return NextResponse.json({ error: "Delete failed" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

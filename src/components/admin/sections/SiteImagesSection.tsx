@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import { Upload, Trash2, Loader2, Image as ImageIcon } from "lucide-react";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import { uploadToSupabaseStorage, deleteFromSupabaseStorage } from "@/lib/supabase-storage";
+import { deleteFromSupabaseStorage } from "@/lib/supabase/storage";
 import { useToast } from "../Toast";
 import { Card, CardHeader } from "../Card";
 import { Button } from "../Button";
+import { uploadMedia } from "@/lib/upload/client";
+import { UploadError } from "@/lib/upload/errors";
 
 const SLOTS = [
   { key: "hero", label: "Homepage — Main Hero", desc: "Large featured image on the left of the hero section. ~1200x800px (16:10).", aspect: "aspect-[16/10]" },
@@ -41,23 +43,12 @@ export function SiteImagesSection() {
   async function handleUpload(key: string, file: File) {
     setSaving(key);
     try {
-      const storagePath = `site/${key}-${Date.now()}-${Math.random().toString(36).slice(2)}.${file.name.split(".").pop() || "bin"}`;
-      const { url, path } = await uploadToSupabaseStorage("portfolio-images", storagePath, file);
-
-      const res = await fetch("/api/site-images", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key, url, path }),
-      });
-      const result = await res.json();
-      if (res.ok && result.url) {
-        setImages((prev) => ({ ...prev, [key]: { url: result.url, path: result.path } }));
-        toast.success("Image updated");
-      } else {
-        toast.error(result.error || "Upload failed");
-      }
-    } catch {
-      toast.error("Network error during upload");
+      const result = await uploadMedia(file, "site", { key });
+      setImages((prev) => ({ ...prev, [key]: { url: result.url, path: result.path } }));
+      toast.success("Image updated");
+    } catch (err) {
+      const message = err instanceof UploadError ? err.message : err instanceof Error ? err.message : "Upload failed";
+      toast.error(message);
     } finally {
       setSaving(null);
     }

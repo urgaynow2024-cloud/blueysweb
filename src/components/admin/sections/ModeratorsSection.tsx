@@ -5,7 +5,7 @@ import { UserCog, Plus, Trash2, ShieldAlert, Loader2, Check, X } from "lucide-re
 import { Card, CardHeader } from "../Card";
 import { Button } from "../Button";
 import { Field, Input } from "../Field";
-import { PERMISSION_LIST, emptyPermissions, type Permission } from "@/lib/permissions";
+import { PERMISSION_LIST, emptyPermissions, type Permission } from "@/lib/auth/permissions";
 
 type Moderator = {
   id: string;

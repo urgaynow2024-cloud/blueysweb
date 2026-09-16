@@ -17,42 +17,43 @@ import {
   X,
   Sparkles,
   ImageIcon,
+  Heart,
 } from "lucide-react";
 
 import { getAdoptableById, getAdoptableGalleryImages } from "@/lib/db";
 import { isAgeVerified } from "@/components/AgeVerifier";
 import AgeVerifier from "@/components/AgeVerifier";
-import type { Adoptable, AdoptableGalleryImage } from "@/types/adoptables";
+import type { Adoptable, AdoptableGalleryImage } from "@/types/database";
 import Reveal from "@/components/ui/Reveal";
 
 const STATUS_CONFIG = {
   available: {
-    label: "Available",
+    label: "AVAILABLE",
     icon: CheckCircle,
     color: "text-emerald-400",
     bg: "bg-emerald-500/10",
     border: "border-emerald-500/30",
   },
   reserved: {
-    label: "Reserved",
+    label: "RESERVED",
     icon: Clock,
     color: "text-amber-400",
     bg: "bg-amber-500/10",
     border: "border-amber-500/30",
   },
   sold: {
-    label: "Sold",
+    label: "SOLD",
     icon: XCircle,
-    color: "text-red-400",
-    bg: "bg-red-500/10",
-    border: "border-red-500/30",
+    color: "text-rose-400",
+    bg: "bg-rose-500/10",
+    border: "border-rose-500/30",
   },
 } as const;
 
 function InfoSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="mt-8">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-3">{title}</h3>
+    <div className="mt-6">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-2">{title}</h3>
       <div className="text-sm leading-relaxed text-[var(--text-secondary)] whitespace-pre-wrap">
         {children}
       </div>
@@ -134,7 +135,7 @@ export default function AdoptablePage() {
             <Package className="h-6 w-6" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-3">Adoptable not found</h2>
-          <p className="text-[var(--text-secondary)]">This adoptable doesn&rsquot;t exist or is no longer available.</p>
+          <p className="text-[var(--text-secondary)]">This adoptable doesn&rsquo;t exist or is no longer available.</p>
           <Link
             href="/adoptables"
             className="mt-4 btn-secondary inline-flex items-center gap-2"
@@ -173,8 +174,7 @@ export default function AdoptablePage() {
     ? allImages.slice(0, 1)
     : [];
 
-  const hasNsfwContent =
-    adoptable.nsfw_available || nsfwImages.length > 0;
+  const hasNsfwContent = adoptable.nsfw_available || nsfwImages.length > 0;
 
   const handleAgeVerified = () => {
     setAgeVerified(true);
@@ -239,7 +239,7 @@ export default function AdoptablePage() {
 
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
           <div className="space-y-4">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[rgba(255,255,255,0.02)]">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[rgba(255,255,255,0.02)]">
               {visibleImages.length > 0 ? (
                 renderImage(
                   visibleImages[lightboxIndex < visibleImages.length ? lightboxIndex : 0]?.url,
@@ -254,7 +254,7 @@ export default function AdoptablePage() {
 
               <div className="absolute top-4 right-4 z-10">
                 <span
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${cfg.color} ${cfg.bg} ${cfg.border}`}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold tracking-wider ${cfg.color} ${cfg.bg} ${cfg.border}`}
                 >
                   <Icon className="h-3 w-3" />
                   {cfg.label}
@@ -309,11 +309,16 @@ export default function AdoptablePage() {
           </div>
 
           <div>
-            <div>
-              <h1 className="display-sm text-white">{adoptable.title}</h1>
-              {adoptable.species && (
-                <p className="mt-1 text-sm text-[var(--text-secondary)]">{adoptable.species}</p>
-              )}
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h1 className="display-lg text-white">{adoptable.title}</h1>
+                {adoptable.species && (
+                  <p className="mt-1 text-sm text-[var(--text-secondary)] uppercase tracking-wider">{adoptable.species}</p>
+                )}
+              </div>
+              <button className="mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--text-dim)] transition-colors hover:border-[var(--accent)]/40 hover:text-[var(--accent)]">
+                <Heart className="h-4 w-4" />
+              </button>
             </div>
 
             <InfoSection title="Description">{adoptable.description}</InfoSection>
@@ -334,13 +339,13 @@ export default function AdoptablePage() {
               adoptable.nsfw_available ||
               adoptable.bundle_available ||
               adoptable.price) && (
-              <div className="mt-8">
+              <div className="mt-6">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-3">Pricing</h3>
 
                 {adoptable.sfw_available && adoptable.sfw_price && (
                   <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-2">
                     <span className="text-sm font-semibold text-white">SFW Version</span>
-                    <span className="text-lg font-bold text-[var(--accent)]">
+                    <span className="text-xl font-bold text-[var(--accent)]">
                       {adoptable.sfw_price}
                     </span>
                   </div>
@@ -352,7 +357,7 @@ export default function AdoptablePage() {
                       <Lock className="h-4 w-4 text-red-400" />
                       NSFW Version
                     </span>
-                    <span className="text-lg font-bold text-red-400">
+                    <span className="text-xl font-bold text-red-400">
                       {ageVerified ? adoptable.nsfw_price : "• • •"}
                     </span>
                   </div>
@@ -361,7 +366,7 @@ export default function AdoptablePage() {
                 {adoptable.bundle_available && adoptable.bundle_price && (
                   <div className="flex items-center justify-between pb-2">
                     <span className="text-sm font-semibold text-white">SFW + NSFW Bundle</span>
-                    <span className="text-lg font-bold text-[var(--accent)]">
+                    <span className="text-xl font-bold text-[var(--accent)]">
                       {ageVerified ? adoptable.bundle_price : "• • •"}
                     </span>
                   </div>
@@ -373,14 +378,14 @@ export default function AdoptablePage() {
                   adoptable.price && (
                     <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3">
                       <span className="text-sm font-semibold text-white">Price</span>
-                      <span className="text-lg font-bold text-white">{adoptable.price}</span>
+                      <span className="text-xl font-bold text-white">{adoptable.price}</span>
                     </div>
                   )}
               </div>
             )}
 
             {hasBeforeAfter && (
-              <div className="mt-8">
+              <div className="mt-6">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-4">
                   Before & After
                 </h3>
@@ -414,7 +419,7 @@ export default function AdoptablePage() {
               {isAvailable && (
                 <button
                   onClick={buyOnDiscord}
-                  className="btn-primary w-full !py-3 !text-sm inline-flex items-center justify-center gap-2"
+                  className="btn-primary w-full !py-4 !text-sm inline-flex items-center justify-center gap-2"
                 >
                   <ShoppingCart className="h-5 w-5" />
                   Adopt via Discord

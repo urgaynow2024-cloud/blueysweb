@@ -29,7 +29,7 @@ export async function GET() {
     .eq("visible", true)
     .order("sort_order", { ascending: true });
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: "Failed to save TOS section" }, { status: 500 });
   }
   return NextResponse.json(data || []);
 }
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
         continue;
       }
 
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load TOS sections" }, { status: 500 });
     }
 
     return NextResponse.json({ error: "Max retries exceeded" }, { status: 500 });

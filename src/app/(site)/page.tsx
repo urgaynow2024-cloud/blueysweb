@@ -8,8 +8,7 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import { ButtonLink } from "@/components/ui/Button";
 import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages, getAdoptables } from "@/lib/db";
 import Link from "next/link";
-import { Star, Zap, ArrowRight, Check, Sparkles, Clock, ShieldCheck, Rocket, HelpCircle, DollarSign } from "lucide-react";
-import CommissionAvailability from "@/components/CommissionAvailability";
+import { Star, Zap, ArrowRight, Check, Sparkles, Clock, ShieldCheck, Rocket, HelpCircle, DollarSign, Palette, Box, Layers, Brush, Wrench } from "lucide-react";
 
 function Stars({ rating, size = "h-4 w-4" }: { rating?: number; size?: string }) {
   const value = rating || 5;
@@ -22,51 +21,25 @@ function Stars({ rating, size = "h-4 w-4" }: { rating?: number; size?: string })
   );
 }
 
-function ServiceRow({
-  image,
-  eyebrow,
-  title,
-  desc,
-  features,
-  reverse = false,
-}: {
-  image?: string;
-  eyebrow: string;
-  title: string;
-  desc: string;
-  features: string[];
-  reverse?: boolean;
-}) {
+function ServiceCard({ icon: Icon, title, desc, features }: { icon: React.ElementType; title: string; desc: string; features: string[] }) {
   return (
     <Reveal>
-      <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12">
-        <div className={`lg:col-span-6 ${reverse ? "lg:order-2" : "order-2 lg:order-1"}`}>
-          <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[var(--border-strong)] bg-white/[0.03] px-3 py-1 text-xs font-bold uppercase tracking-wider text-[var(--accent)]">
-            {eyebrow}
-          </span>
-          <h3 className="heading-md text-white">{title}</h3>
-          <p className="mt-4 leading-relaxed text-[var(--text-secondary)]">{desc}</p>
-          <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {features.map((f) => (
-              <li key={f} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
-                <span className="grid h-5 w-5 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
-                  <Check className="h-2.5 w-2.5" />
-                </span>
-                {f}
-              </li>
-            ))}
-          </ul>
+      <div className="card p-6 md:p-8 h-full flex flex-col">
+        <div className="mb-4 grid h-12 w-12 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+          <Icon className="h-6 w-6" />
         </div>
-        <div className={`lg:col-span-6 ${reverse ? "lg:order-1" : "order-1 lg:order-2"}`}>
-          <div className="group relative aspect-[16/10] overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)]">
-            {image ? (
-              <img src={image} alt={title} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]" />
-            ) : (
-              <div className="grid h-full place-items-center text-5xl opacity-30">★</div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)]/50 via-transparent to-transparent" />
-          </div>
-        </div>
+        <h3 className="heading-sm text-white mb-2">{title}</h3>
+        <p className="text-sm leading-relaxed text-[var(--text-secondary)] flex-1 mb-4">{desc}</p>
+        <ul className="space-y-2">
+          {features.map((f) => (
+            <li key={f} className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+                <Check className="h-2.5 w-2.5" />
+              </span>
+              {f}
+            </li>
+          ))}
+        </ul>
       </div>
     </Reveal>
   );
@@ -76,7 +49,8 @@ function ProcessTimeline({ steps }: { steps: any[] }) {
   if (!steps.length) return null;
   return (
     <div className="relative">
-      <ol className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-[var(--accent)]/30 to-transparent hidden lg:block" />
+      <ol className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
         {steps.map((step, i) => (
           <li key={step.title || i} className="group relative text-center">
             <div className="relative z-10 mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] text-2xl transition-all duration-500 group-hover:-translate-y-1.5 group-hover:border-[var(--accent)]/50 group-hover:bg-[var(--accent-soft)]">
@@ -118,10 +92,10 @@ function AdoptableCard({ adoptable }: { adoptable: any }) {
     <Reveal>
       <Link
         href={`/adoptables/${adoptable.id}`}
-        className="group relative overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[var(--shadow-md)]"
+        className="product-card group block overflow-hidden"
       >
         {adoptable.main_image && (
-          <div className="relative aspect-[4/3] overflow-hidden">
+          <div className="product-image relative aspect-[4/3] overflow-hidden">
             <img
               src={adoptable.main_image}
               alt={adoptable.title}
@@ -160,7 +134,7 @@ export default function Home() {
   const [siteImages, setSiteImages] = useState<Record<string, { url: string }>>({});
   const [adoptables, setAdoptables] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -211,71 +185,97 @@ export default function Home() {
 
   return (
     <div className="relative">
+      {/* 1. Hero */}
       <Hero />
 
       <div className="relative z-10">
-        {/* Featured Artwork / Portfolio */}
-        <section id="portfolio" className="section">
+        {/* 2. Featured Artwork */}
+        <FeaturedWork />
+
+        {/* 3. What Bluey Makes — editorial feature block */}
+        <section id="what-i-make" className="section section-alt section-transition" aria-labelledby="what-i-make-heading">
           <div className="container">
             <SectionHeading
-              eyebrow="Portfolio"
-              title="Featured Artwork"
-              subtitle="Recent commissions and avatar customisations."
+              eyebrow="What Bluey Makes"
+              title="Custom avatars, edits & accessories"
+              subtitle="From texture recolours and accessory additions to full avatar overhauls — every commission is built around your vision."
+              align="left"
+              divider={false}
             />
-            <FeaturedWork />
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <ServiceCard
+                icon={Palette}
+                title="Texture & Colour Work"
+                desc="Recolours, pattern edits, material variants, and custom texture painting for existing avatar bases."
+                features={["Full recolours", "Pattern design", "Material variants", "Custom painting", "Shader tweaks"]}
+              />
+              <ServiceCard
+                icon={Box}
+                title="Accessory & Prop Addition"
+                desc="Adding jewellery, wings, tails, horns, weapons, glasses, and other props with proper weighting and toggles."
+                features={["Jewellery & wearables", "Wings & tails", "Horns & ears", "Weapons & props", "Toggle systems"]}
+              />
+              <ServiceCard
+                icon={Layers}
+                title="Clothing & Hair Fitting"
+                desc="Fitting clothing items and hair to your avatar base with clean weight painting and physics setup."
+                features={["Clothing fitting", "Hair swaps & styling", "Weight painting", "PhysBone setup", "Quest optimisation"]}
+              />
+              <ServiceCard
+                icon={Brush}
+                title="Blender Asset Work"
+                desc="Custom modelling, retopology, UV unwrapping, and asset creation for unique avatar components."
+                features={["Custom modelling", "Retopology", "UV unwrapping", "Asset creation", "Clean topology"]}
+              />
+              <ServiceCard
+                icon={Wrench}
+                title="Unity Setup & Optimisation"
+                desc="Complete Unity configuration: materials, shaders, toggles, visemes, performance tuning, and VRChat packaging."
+                features={["Material & shader setup", "Toggle systems", "Viseme configuration", "Performance tuning", "VRChat packaging"]}
+              />
+              <ServiceCard
+                icon={Sparkles}
+                title="Full Avatar Overhauls"
+                desc="Complete transformations combining Blender modelling, texture work, and Unity setup into a cohesive new avatar."
+                features={["Full redesign", "Multi-piece outfits", "Complex toggles", "Cross-platform ready", "Source files optional"]}
+              />
+            </div>
             <div className="mt-10 text-center">
-              <Link href="/portfolio" className="btn-secondary inline-flex items-center gap-2">
-                View All Portfolio
+              <Link href="/services" className="btn-secondary inline-flex items-center gap-2">
+                View All Services
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
         </section>
 
-        {/* Services */}
-        <section className="section section-alt">
+        {/* 4. Commission Process */}
+        <section id="process" className="section section-transition" aria-labelledby="process-heading">
           <div className="container">
             <SectionHeading
-              eyebrow="Services"
-              title="What I provide"
-              subtitle="I work on VRChat avatars in a few different ways — from subtle edits to complete overhauls."
+              align="center"
+              eyebrow="Process"
+              title="How it works"
+              subtitle="A simple, transparent workflow from first message to final delivery."
             />
-
-            <div className="space-y-8 md:space-y-12">
-              <ServiceRow
-                image={siteImages.avatar_editing?.url}
-                eyebrow="Avatar Editing"
-                title="Avatar Editing"
-                desc="Texture recolours, accessory additions, clothing fitting, hair combinations, and minor geometry tweaks to existing bases."
-                features={["Texture recolours", "Accessory additions", "Clothing fitting", "Hair combinations", "Minor fixes"]}
-              />
-              <ServiceRow
-                image={siteImages.blender_work?.url}
-                eyebrow="Blender"
-                title="Blender Work"
-                desc="Asset creation, retopology, UV work, material setup, and mesh adjustments for clean avatar bases."
-                features={["Asset creation", "Retopology", "UV & material work", "Mesh adjustments", "Clean topology"]}
-                reverse
-              />
-              <ServiceRow
-                image={siteImages.unity_work?.url}
-                eyebrow="Unity"
-                title="Unity Setup"
-                desc="Material configuration, toggles, optimisation, viseme setup, and VRChat-ready packaging."
-                features={["Material config", "Toggle systems", "Performance tuning", "Viseme setup", "VRChat packaging"]}
-              />
+            <ProcessTimeline steps={workflow} />
+            <div className="mt-12 text-center">
+              <Link href="/commission" className="btn-secondary inline-flex items-center gap-2">
+                Start Your Commission
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
           </div>
         </section>
 
-        {/* Featured Adoptables */}
-        <section className="section">
+        {/* 5. Adoptables */}
+        <section id="adoptables" className="section section-alt section-transition" aria-labelledby="adoptables-heading">
           <div className="container">
             <div className="mb-8 md:mb-10 flex flex-wrap items-end justify-between gap-4">
               <div>
-                <span className="eyebrow">Adoptables</span>
-                <h2 className="display-lg text-white mt-2">Featured Adoptables</h2>
-                <p className="mt-3 max-w-xl text-[var(--text-secondary)]">Pre-made avatar designs ready to claim.</p>
+                <span className="section-label">Adoptables</span>
+                <h2 id="adoptables-heading" className="display-lg text-white mt-2">Featured Adoptables</h2>
+                <p className="mt-3 max-w-xl text-[var(--text-secondary)]">Pre-made avatar designs ready to claim — unique characters with full Unity setup.</p>
               </div>
               <Link href="/adoptables" className="btn-secondary inline-flex items-center gap-2">
                 Browse All
@@ -301,27 +301,61 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Commission Process */}
-        <section className="section section-alt">
+        {/* 6. Services — condensed overview with visual cards */}
+        <section id="services" className="section section-transition" aria-labelledby="services-heading">
           <div className="container">
             <SectionHeading
+              eyebrow="Services at a Glance"
+              title="Tiered commission options"
+              subtitle="Choose the tier that fits your project scope — from quick edits to complete overhauls."
               align="center"
-              eyebrow="Process"
-              title="How it works"
-              subtitle="A simple, transparent workflow from first message to final delivery."
             />
-            <ProcessTimeline steps={workflow} />
-            <div className="mt-12 text-center">
-              <Link href="/commission" className="btn-secondary inline-flex items-center gap-2">
-                Start Your Commission
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+              {pricing.map((tier: any, i: number) => (
+                <Reveal key={tier.id || i} delay={i * 60}>
+                  <div className={`card relative p-6 md:p-8 flex flex-col ${tier.popular ? "border-[var(--accent)]/40 shadow-[0_0_30px_-10px_var(--accent-glow)]" : ""}`}>
+                    {tier.badge && (
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 badge bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] border-none">
+                        {tier.badge}
+                      </span>
+                    )}
+                    <div className="flex items-baseline gap-1 mb-2">
+                      <span className="text-2xl">{tier.emoji}</span>
+                      <h3 className="heading-sm text-white">{tier.name}</h3>
+                    </div>
+                    <div className="mb-4">
+                      <span className="text-3xl font-bold text-white">{tier.price}</span>
+                    </div>
+                    <ul className="space-y-2 flex-1">
+                      {tier.features.slice(0, 6).map((f: string) => (
+                        <li key={f} className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                          <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+                            <Check className="h-2.5 w-2.5" />
+                          </span>
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-6 pt-4 border-t border-[var(--border)]">
+                      <Link href="/commission" className={`btn-base w-full ${tier.popular ? "btn-primary" : "btn-secondary"} justify-center`}>
+                        {tier.popular ? "Most Popular — Select" : "Select Tier"}
+                      </Link>
+                    </div>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+            <div className="mt-10 text-center">
+              <Link href="/pricing" className="btn-secondary inline-flex items-center gap-2">
+                View Full Pricing
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
         </section>
 
-        {/* Reviews */}
-        <section className="section">
+        {/* 7. Reviews */}
+        <section id="reviews" className="section section-alt section-transition" aria-labelledby="reviews-heading">
           <div className="container">
             <SectionHeading
               eyebrow="Client Feedback"
@@ -331,11 +365,11 @@ export default function Home() {
             {reviews.length > 0 && <ReviewSummary reviews={reviews} />}
             {reviews.length > 0 ? (
               <>
-                <div className="mx-auto max-w-3xl">
+                <div className="mx-auto max-w-3xl space-y-0">
                   {reviews.slice(0, 6).map((review, i) => (
                     <Reveal key={review.id || i} delay={i * 60}>
-                      <div className="review-divider">
-                        <div className="flex items-start gap-4">
+                      <div className="review-divider border-b border-[var(--border)] last:border-0">
+                        <div className="py-6 flex items-start gap-4">
                           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-sm font-bold text-white">
                             {review.display_name?.[0]?.toUpperCase() || "★"}
                           </div>
@@ -379,79 +413,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* FAQ */}
-        <section className="section section-alt">
-          <div className="container max-w-3xl">
-            <SectionHeading
-              align="center"
-              eyebrow="Common questions"
-              title="FAQ"
-              subtitle="Quick answers to the things people ask most."
-            />
-            <div className="space-y-0">
-              {faq.map((item, i) => {
-                const open = openFaq === i;
-                const faqIcon = item.key?.toLowerCase().includes("price") || item.key?.toLowerCase().includes("cost") || item.key?.toLowerCase().includes("payment")
-                  ? DollarSign
-                  : item.key?.toLowerCase().includes("time") || item.key?.toLowerCase().includes("long") || item.key?.toLowerCase().includes("fast")
-                  ? Clock
-                  : item.key?.toLowerCase().includes("quest") || item.key?.toLowerCase().includes("pc") || item.key?.toLowerCase().includes("performance")
-                  ? ShieldCheck
-                  : item.key?.toLowerCase().includes("file") || item.key?.toLowerCase().includes("get")
-                  ? Rocket
-                  : HelpCircle;
-                const Icon = faqIcon;
-                return (
-                  <div
-                    key={i}
-                    className={`border-b border-[var(--border)] transition-all duration-300 ${open ? "bg-[rgba(255,255,255,0.015)]" : ""}`}
-                  >
-                    <button
-                      onClick={() => setOpenFaq(open ? null : i)}
-                      aria-expanded={open}
-                      className="flex w-full items-center justify-between gap-4 px-0 py-5 text-left"
-                    >
-                      <span className="flex items-center gap-3">
-                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-[var(--accent-soft)] text-[var(--accent)]">
-                          <Icon className="h-3.5 w-3.5" />
-                        </span>
-                        <span className={`font-semibold transition-colors ${open ? "text-white" : "text-[var(--text)]"}`}>
-                          {item.question}
-                        </span>
-                      </span>
-                      <span
-                        className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[var(--accent)] transition-all duration-300 ${
-                          open ? "rotate-180 bg-[var(--accent-soft)]" : ""
-                        }`}
-                      >
-                        {open ? <span className="h-3 w-3">−</span> : <span className="h-3 w-3">+</span>}
-                      </span>
-                    </button>
-                    <div
-                      className="grid transition-all duration-500 ease-out"
-                      style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
-                    >
-                      <div className="overflow-hidden">
-                        <p className="pb-5 text-sm leading-relaxed text-[var(--text-secondary)]">{item.answer}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="mt-10 text-center">
-              <Link href="/commission" className="btn-secondary">
-                Have more questions?
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* Commission Availability */}
-        <CommissionAvailability />
-
-        {/* Final CTA */}
-        <section className="section">
+        {/* 8. Final Commission CTA */}
+        <section id="cta" className="section section-transition" aria-labelledby="cta-heading">
           <div className="container">
             <div className="mx-auto max-w-3xl text-center">
               <span className="eyebrow justify-center">

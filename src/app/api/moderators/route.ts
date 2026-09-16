@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     .select("*")
     .order("created_at", { ascending: true });
 
-  if (error) return json({ error: error.message }, 500);
+  if (error) return json({ error: "Failed to load moderators" }, 500);
 
   return NextResponse.json({ moderators: (data || []).map(sanitize) });
 }
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     .select()
     .single();
 
-  if (error) return json({ error: error.message }, 500);
+  if (error) return json({ error: "Failed to create moderator" }, 500);
 
   return NextResponse.json({ moderator: sanitize(data) }, { status: 201 });
 }

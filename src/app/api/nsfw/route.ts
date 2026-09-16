@@ -13,15 +13,13 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    if (path) {
-      await supabaseAdmin.storage.from("portfolio-images").remove([path]);
-    }
-
     if (id) {
-      const { error } = await supabaseAdmin.from("nsfw_portfolio_images").delete().eq("id", id);
-      if (error) {
-        console.error("NSFW delete error:", error);
-        return NextResponse.json({ error: "Delete failed" }, { status: 500 });
+      const { data: record, error: fetchError } = await supabaseAdmin.from("nsfw_portfolio_images").select("storage_path").eq("id", id).single();
+      if (fetchError || !record) {
+        return NextResponse.json({ error: "NSFW image not found" }, { status: 404 });
+      }
+      if (record.storage_path) {
+        await supabaseAdmin.storage.from("portfolio-images").remove([record.storage_path]);
       }
     }
 

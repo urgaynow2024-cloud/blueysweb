@@ -14,6 +14,7 @@ const REQUIRED_AUTH_ROLES: Record<AssetType, Role[]> = {
   site: ["owner", "moderator"],
   review: ["owner", "moderator"],
   "credit-avatar": ["owner", "moderator"],
+  "commission-reference": ["owner", "moderator"],
 };
 
 function uniqueFilename(originalName: string): string {
@@ -25,14 +26,14 @@ function uniqueFilename(originalName: string): string {
 export async function POST(request: NextRequest) {
   try {
     const assetType = (await request.formData()).get("assetType") as string;
-    const validTypes: AssetType[] = ["portfolio", "nsfw", "adoptable-main", "adoptable-gallery", "adoptable-before", "adoptable-after", "site", "review", "credit-avatar"];
+    const validTypes: AssetType[] = ["portfolio", "nsfw", "adoptable-main", "adoptable-gallery", "adoptable-before", "adoptable-after", "site", "review", "credit-avatar", "commission-reference"];
     if (!validTypes.includes(assetType as AssetType)) {
       return NextResponse.json({ error: "Invalid asset type", code: "INVALID_TYPE" }, { status: 400 });
     }
 
     const type = assetType as AssetType;
     const config = ASSET_CONFIG[type];
-    const isPublic = type === "review";
+    const isPublic = type === "review" || type === "commission-reference";
 
     if (!isPublic) {
       const requiredRoles = REQUIRED_AUTH_ROLES[type];
@@ -173,6 +174,10 @@ export async function POST(request: NextRequest) {
           const { error } = await supabaseAdmin.from("credits").update({ avatar_url: url, avatar_path: storagePath }).eq("id", creditId);
           if (error) throw error;
           dbResult = { id: creditId, url, storage_path: storagePath };
+          break;
+        }
+        case "commission-reference": {
+          dbResult = { id: storageFilename, url, storage_path: storagePath };
           break;
         }
       }

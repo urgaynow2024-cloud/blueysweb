@@ -7,7 +7,8 @@ export type AssetType =
   | "adoptable-after"
   | "site"
   | "review"
-  | "credit-avatar";
+  | "credit-avatar"
+  | "commission-reference";
 
 export interface UploadProgress {
   loaded: number;
@@ -53,4 +54,5 @@ export const ASSET_CONFIG: Record<AssetType, UploadConfig> = {
   site: { maxFileSizeMB: 10, allowedTypes: ["image/jpeg", "image/png", "image/webp"], bucket: "portfolio-images", storagePrefix: "site" },
   review: { maxFileSizeMB: 20, allowedTypes: ["image/jpeg", "image/png", "image/webp"], bucket: "portfolio-images", storagePrefix: "reviews" },
   "credit-avatar": { maxFileSizeMB: 20, allowedTypes: ["image/jpeg", "image/png", "image/webp"], bucket: "portfolio-images", storagePrefix: "credits" },
+  "commission-reference": { maxFileSizeMB: 50, allowedTypes: ["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4", "video/webm"], bucket: "portfolio-images", storagePrefix: "commission-references" },
 };

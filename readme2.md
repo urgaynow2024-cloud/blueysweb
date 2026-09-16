@@ -21,7 +21,7 @@ Project restored to commit `641b2c1`. Investigating why FBX mashup photos cannot
 
 ### Data Layer
 - `src/lib/db.ts` - Client-side data fetching with Supabase fallback to mock data
-- `src/data/site.ts` - Mock FBX mashup data (`mockFbxMashups`, `mockFbxGallery`)
+- `src/config/site.ts` - Mock FBX mashup data (`mockFbxMashups`, `mockFbxGallery`)
 
 ### Schema
 - `supabase/schema.sql` - Defines `fbx_mashups`, `fbx_gallery`, `fbx_before_after` tables + RLS + storage policies

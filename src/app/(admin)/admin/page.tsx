@@ -114,7 +114,7 @@ export default function AdminPage() {
         return;
       }
 
-      const { checkStorageBuckets, getMissingBucketMessage, testBucketUpload } = await import("@/lib/storage-check");
+      const { checkStorageBuckets, getMissingBucketMessage, testBucketUpload } = await import("@/lib/supabase/check");
       const bucketStatuses = await checkStorageBuckets();
       const missingMessage = getMissingBucketMessage(bucketStatuses);
       if (missingMessage) {

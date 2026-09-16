@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { uploadToSupabaseStorage, deleteFromSupabaseStorage } from "@/lib/supabase-storage";
+import { deleteFromSupabaseStorage } from "@/lib/supabase/storage";
 import { useSave } from "../SaveProvider";
 import { useToast } from "../Toast";
 import { Card, CardHeader } from "../Card";
@@ -10,6 +10,8 @@ import { UploadArea } from "../UploadArea";
 import { Button } from "../Button";
 import { Field, Input, Textarea, Select } from "../Field";
 import { Plus, Trash2, GripVertical, Eye, EyeOff, ChevronUp, ChevronDown, Image as ImageIcon, GitCompare, Layers, Package } from "lucide-react";
+import { uploadMedia } from "@/lib/upload/client";
+import { UploadError } from "@/lib/upload/errors";
 
 interface Adoptable {
   id?: string;
@@ -378,23 +380,11 @@ export function AdoptablesSection() {
     }
     const file = files[0];
     try {
-      const storagePath = `adoptables/${adoptableId}/main-${Date.now()}-${Math.random().toString(36).slice(2)}.${file.name.split(".").pop() || "bin"}`;
-      const { url, path: uploadedPath } = await uploadToSupabaseStorage("adoptables", storagePath, file);
-
-      const res = await fetch(`/api/adoptables/${adoptableId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ main_image: url, main_image_path: uploadedPath }),
-      });
-      if (!res.ok) {
-        const r = await res.json().catch(() => ({}));
-        throw new Error(r.error || "Failed to update adoptable");
-      }
-
-      setMainImages((prev) => ({ ...prev, [adoptableId!]: url }));
+      const uploaded = await uploadMedia(file, "adoptable-main", { adoptableId });
+      setMainImages((prev) => ({ ...prev, [adoptableId!]: uploaded.url }));
       toast.success("Main image uploaded");
-    } catch {
-      toast.error("Failed to upload main image");
+    } catch (e: any) {
+      toast.error(e instanceof UploadError ? e.message : "Failed to upload main image");
     }
   }
 
@@ -498,19 +488,8 @@ export function AdoptablesSection() {
       const temp: AdoptableGalleryImage = { url: "", sort_order: (galleryImages[adoptableId] || []).length + i };
       setGalleryImages((prev) => ({ ...prev, [adoptableId]: [...(prev[adoptableId] || []), temp] }));
       try {
-        const storagePath = `adoptables/${adoptableId}/gallery-${Date.now()}-${Math.random().toString(36).slice(2)}-${i}.${file.name.split(".").pop() || "bin"}`;
-        const { url, path: uploadedPath } = await uploadToSupabaseStorage("portfolio-images", storagePath, file);
-
-        const res = await fetch(`/api/adoptables/${adoptableId}/gallery`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url, path: uploadedPath }),
-        });
-        if (!res.ok) {
-          const r = await res.json().catch(() => ({}));
-          throw new Error(r.error || "Upload failed");
-        }
-        const uploaded = await res.json();
+        const isNsfw = file.type.includes("nsfw") || file.name.toLowerCase().includes("nsfw");
+        const uploaded = await uploadMedia(file, "adoptable-gallery", { adoptableId, isNsfw });
         setGalleryImages((prev) => {
           const current = prev[adoptableId] || [];
           return { ...prev, [adoptableId]: current.map((img) => (img === temp ? { id: uploaded.id, url: uploaded.url, path: uploaded.path, sort_order: temp.sort_order } : img)) };
@@ -552,19 +531,7 @@ export function AdoptablesSection() {
     setBeforeAfters((prev) => ({ ...prev, [adoptableId]: [...(prev[adoptableId] || []), temp] }));
 
     try {
-      const storagePath = `adoptables/${adoptableId}/${type}-${Date.now()}-${Math.random().toString(36).slice(2)}.${file.name.split(".").pop() || "bin"}`;
-      const { url, path: uploadedPath } = await uploadToSupabaseStorage("portfolio-images", storagePath, file);
-
-      const res = await fetch(`/api/adoptables/${adoptableId}/before-after`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, url, path: uploadedPath }),
-      });
-      if (!res.ok) {
-        const r = await res.json().catch(() => ({}));
-        throw new Error(r.error || "Upload failed");
-      }
-      const uploaded = await res.json();
+      const uploaded = await uploadMedia(file, type === "before" ? "adoptable-before" : "adoptable-after", { adoptableId, label: "" });
       setBeforeAfters((prev) => {
         const current = prev[adoptableId] || [];
         const urlField = type === "before" ? "before_url" : "after_url";

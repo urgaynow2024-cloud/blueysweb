@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 const REQUIRED_TABLES: Record<string, string[]> = {
   adoptables: ["id", "title", "description", "category", "price", "availability", "featured", "visible", "sort_order", "species", "included_items", "rules_license", "vrchat_info", "sfw_price", "nsfw_price", "bundle_price", "sfw_available", "nsfw_available", "bundle_available", "main_image", "main_image_path"],
-  adoptable_gallery: ["id", "adoptable_id", "url", "path", "sort_order", "is_nsfw"],
+  adoptable_gallery: ["id", "adoptable_id", "url", "storage_path", "sort_order", "is_nsfw"],
   adoptable_before_after: ["id", "adoptable_id", "before_url", "after_url", "before_path", "after_path", "label", "sort_order"],
   credits: ["id", "name", "description", "categories", "avatar_url", "avatar_path", "website_url", "discord_url", "social_links", "note", "featured", "visible", "sort_order"],
 };

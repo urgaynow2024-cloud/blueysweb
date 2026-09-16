@@ -5,8 +5,10 @@ import { Plus, Trash2, GripVertical, Eye, EyeOff, Star, Upload, X, ChevronUp, Ch
 import { Card, CardHeader } from "../Card";
 import { Field, Input, Textarea } from "../Field";
 import { Button } from "../Button";
-import { uploadToSupabaseStorage, deleteFromSupabaseStorage } from "@/lib/supabase-storage";
+import { deleteFromSupabaseStorage } from "@/lib/supabase/storage";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { uploadMedia } from "@/lib/upload/client";
+import { UploadError } from "@/lib/upload/errors";
 
 interface Props {
   value: any[];
@@ -147,13 +149,12 @@ export function CreditsSection({ value, onChange }: Props) {
     if (!file || !editingId) return;
     setUploading(true);
     try {
-      const path = `credits/${editingId === "new" ? Date.now() : editingId}/avatar-${Date.now()}.${file.name.split(".").pop() || "bin"}`;
-      const { url } = await uploadToSupabaseStorage("portfolio-images", path, file);
+      const result = await uploadMedia(file, "credit-avatar", { creditId: editingId === "new" ? null : editingId });
       if (editData.avatar_path) {
         await deleteFromSupabaseStorage("portfolio-images", editData.avatar_path);
       }
-      setEditData((d) => ({ ...d, avatar_url: url, avatar_path: path }));
-    } catch {
+      setEditData((d) => ({ ...d, avatar_url: result.url, avatar_path: result.path }));
+    } catch (e: any) {
       // handled
     } finally {
       setUploading(false);

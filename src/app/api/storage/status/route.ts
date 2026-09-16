@@ -24,7 +24,7 @@ export async function GET() {
         results.push({
           name: bucketName,
           exists: false,
-          error: error.message || `Bucket "${bucketName}" not found`,
+          error: "Bucket not found",
         });
       } else if (data) {
         results.push({ name: bucketName, exists: true });
@@ -39,7 +39,7 @@ export async function GET() {
       results.push({
         name: bucketName,
         exists: false,
-        error: err?.message || `Failed to check bucket "${bucketName}"`,
+        error: "Bucket check failed",
       });
     }
   }
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
         });
 
       if (error) {
-        return NextResponse.json({ success: false, error: error.message || "Upload test failed" });
+        return NextResponse.json({ success: false, error: "Upload test failed" });
       }
 
       await supabaseAdmin.storage.from(bucket).remove([testPath]);
@@ -78,6 +78,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: false, error: "Invalid action" }, { status: 400 });
   } catch (err: any) {
-    return NextResponse.json({ success: false, error: err?.message || "Upload test failed" });
+    return NextResponse.json({ success: false, error: "Upload test failed" });
   }
 }
