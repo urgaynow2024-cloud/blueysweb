@@ -28,7 +28,7 @@ export interface AdoptableGalleryImage {
   id: string;
   adoptable_id: string;
   url: string;
-  storage_path?: string | null;
+  path?: string | null;
   sort_order?: number;
   is_nsfw?: boolean;
   created_at?: string;

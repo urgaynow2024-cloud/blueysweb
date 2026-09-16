@@ -14,13 +14,13 @@ export async function DELETE(request: NextRequest) {
     }
 
     if (id) {
-      const { data: record, error: fetchError } = await supabaseAdmin.from("nsfw_portfolio_images").select("storage_path").eq("id", id).single();
-      if (fetchError || !record) {
-        return NextResponse.json({ error: "NSFW image not found" }, { status: 404 });
-      }
-      if (record.storage_path) {
-        await supabaseAdmin.storage.from("portfolio-images").remove([record.storage_path]);
-      }
+       const { data: record, error: fetchError } = await supabaseAdmin.from("nsfw_portfolio_images").select("path").eq("id", id).single();
+       if (fetchError || !record) {
+         return NextResponse.json({ error: "NSFW image not found" }, { status: 404 });
+       }
+       if (record.path) {
+         await supabaseAdmin.storage.from("portfolio-images").remove([record.path]);
+       }
     }
 
     return NextResponse.json({ success: true });

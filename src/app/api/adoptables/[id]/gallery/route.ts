@@ -96,7 +96,7 @@ export async function POST(
     const { data: urlData } = supabaseAdmin.storage.from("portfolio-images").getPublicUrl(storagePath);
     const url = urlData.publicUrl;
 
-      let insertPayload: Record<string, any> = { adoptable_id: id, url, storage_path: storagePath, is_nsfw: isNsfw };
+      let insertPayload: Record<string, any> = { adoptable_id: id, url, path: storagePath, is_nsfw: isNsfw };
       for (let attempt = 0; attempt < 5; attempt++) {
         const { data: dbData, error: dbError } = await supabaseAdmin
           .from("adoptable_gallery")
@@ -104,7 +104,7 @@ export async function POST(
           .select();
 
         if (!dbError && dbData && dbData.length > 0) {
-          return NextResponse.json({ id: dbData[0].id, url, storage_path: storagePath }, { status: 201 });
+          return NextResponse.json({ id: dbData[0].id, url, path: storagePath }, { status: 201 });
         }
 
       const col = parseMissingColumn(dbError?.message || "");
@@ -140,13 +140,13 @@ export async function DELETE(
     }
 
     if (imageId) {
-      const { data: galleryRecord, error: fetchError } = await supabaseAdmin.from("adoptable_gallery").select("storage_path").eq("id", imageId).single();
-      if (fetchError || !galleryRecord) {
-        return NextResponse.json({ error: "Gallery image not found" }, { status: 404 });
-      }
-      if (path && galleryRecord.storage_path) {
-        await supabaseAdmin.storage.from("portfolio-images").remove([galleryRecord.storage_path]);
-      }
+      const { data: galleryRecord, error: fetchError } = await supabaseAdmin.from("adoptable_gallery").select("path").eq("id", imageId).single();
+       if (fetchError || !galleryRecord) {
+         return NextResponse.json({ error: "Gallery image not found" }, { status: 404 });
+       }
+       if (path && galleryRecord.path) {
+         await supabaseAdmin.storage.from("portfolio-images").remove([galleryRecord.path]);
+       }
       const { error } = await supabaseAdmin.from("adoptable_gallery").delete().eq("id", imageId);
       if (error) {
         return NextResponse.json({ error: "Failed to delete gallery image" }, { status: 500 });

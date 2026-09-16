@@ -25,7 +25,7 @@ export async function GET() {
     const result: Record<string, any> = {};
     if (data) {
       data.forEach((item: any) => {
-        result[item.key] = { url: item.url, path: item.storage_path };
+        result[item.key] = { url: item.url, path: item.path };
       });
     }
 
@@ -122,14 +122,14 @@ export async function POST(request: NextRequest) {
 
     const { error: dbError } = await supabaseAdmin
       .from("site_images")
-      .upsert({ key, url, storage_path: storagePath, updated_at: new Date().toISOString() }, { onConflict: "key" });
+      .upsert({ key, url, path: storagePath, updated_at: new Date().toISOString() }, { onConflict: "key" });
 
       if (dbError) {
         console.error("DB error:", dbError);
         return NextResponse.json({ error: "Database error" }, { status: 500 });
       }
 
-    return NextResponse.json({ success: true, url, storage_path: storagePath });
+    return NextResponse.json({ success: true, url, path: storagePath });
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
@@ -148,13 +148,13 @@ export async function DELETE(request: NextRequest) {
     }
 
     if (key) {
-      const { data: record, error: fetchError } = await supabaseAdmin.from("site_images").select("storage_path").eq("key", key).single();
-      if (fetchError || !record) {
-        return NextResponse.json({ error: "Site image not found" }, { status: 404 });
-      }
-      if (record.storage_path) {
-        await supabaseAdmin.storage.from("portfolio-images").remove([record.storage_path]);
-      }
+       const { data: record, error: fetchError } = await supabaseAdmin.from("site_images").select("path").eq("key", key).single();
+       if (fetchError || !record) {
+         return NextResponse.json({ error: "Site image not found" }, { status: 404 });
+       }
+       if (record.path) {
+         await supabaseAdmin.storage.from("portfolio-images").remove([record.path]);
+       }
     }
 
     const { error } = await supabaseAdmin.from("site_images").delete().eq("key", key);

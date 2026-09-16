@@ -80,9 +80,9 @@ export async function getSiteImages() {
   if (!isSupabaseConfigured || !supabase) return {};
   const { data, error } = await supabase.from("site_images").select("*");
   if (error || !data) return {};
-  const result: Record<string, { url: string; storage_path?: string }> = {};
-  data.forEach((item: { key: string; url: string; storage_path?: string }) => {
-    result[item.key] = { url: item.url, storage_path: item.storage_path };
+  const result: Record<string, { url: string; path?: string }> = {};
+  data.forEach((item: { key: string; url: string; path?: string }) => {
+    result[item.key] = { url: item.url, path: item.path };
   });
   return result;
 }
@@ -121,7 +121,7 @@ export async function uploadNsfwPortfolioImage(file: File) {
 
   const { data: dbData, error: dbError } = await supabase
     .from("nsfw_portfolio_images")
-    .insert([{ url, storage_path: storagePath, original_filename: file.name, mime_type: file.type }])
+    .insert([{ url, path: storagePath, original_filename: file.name, mime_type: file.type }])
     .select();
 
   if (dbError || !dbData || dbData.length === 0) {
@@ -193,7 +193,7 @@ export async function uploadPortfolioImage(file: File) {
   const { data: urlData } = supabase.storage.from("portfolio-images").getPublicUrl(storagePath);
   const url = urlData.publicUrl;
 
-  const { data: dbData, error: dbError } = await supabase.from("portfolio_images").insert([{ url, storage_path: storagePath }]).select();
+  const { data: dbData, error: dbError } = await supabase.from("portfolio_images").insert([{ url, path: storagePath }]).select();
   if (dbError || !dbData || dbData.length === 0) {
     console.error("DB insert error:", dbError);
     await supabase.storage.from("portfolio-images").remove([storagePath]);
@@ -205,7 +205,7 @@ export async function uploadPortfolioImage(file: File) {
 
 export async function deleteImage(path: string): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) return false;
-  const { data, error } = await supabase.from("portfolio_images").select("id").eq("storage_path", path).single();
+  const { data, error } = await supabase.from("portfolio_images").select("id").eq("path", path).single();
   if (error || !data) {
     console.warn("deleteImage: no DB record found for storage path:", path);
     return false;
@@ -222,12 +222,12 @@ export async function addPortfolioImage(url: string) {
 
 export async function removePortfolioImage(id: string) {
   if (!isSupabaseConfigured || !supabase) return false;
-  const { data, error: fetchError } = await supabase.from("portfolio_images").select("storage_path").eq("id", id).single();
-  if (fetchError || !data) return false;
-  if (data.storage_path) {
-    const { error: storageError } = await supabase.storage.from("portfolio-images").remove([data.storage_path]);
-    if (storageError) console.error("Storage cleanup error:", storageError);
-  }
+   const { data, error: fetchError } = await supabase.from("portfolio_images").select("path").eq("id", id).single();
+   if (fetchError || !data) return false;
+   if (data.path) {
+     const { error: storageError } = await supabase.storage.from("portfolio-images").remove([data.path]);
+     if (storageError) console.error("Storage cleanup error:", storageError);
+   }
   const { error } = await supabase.from("portfolio_images").delete().eq("id", id);
   return !error;
 }
@@ -380,7 +380,7 @@ export async function uploadAdoptableGalleryImage(adoptableId: string, file: Fil
   }
   const { data: urlData } = supabase.storage.from("portfolio-images").getPublicUrl(storagePath);
   const url = urlData.publicUrl;
-  const { data: dbData, error: dbError } = await supabase.from("adoptable_gallery").insert([{ adoptable_id: adoptableId, url, storage_path: storagePath, is_nsfw: isNsfw, original_filename: file.name, mime_type: file.type }]).select();
+  const { data: dbData, error: dbError } = await supabase.from("adoptable_gallery").insert([{ adoptable_id: adoptableId, url, path: storagePath, is_nsfw: isNsfw, original_filename: file.name, mime_type: file.type }]).select();
   if (dbError || !dbData || dbData.length === 0) {
     await supabase.storage.from("portfolio-images").remove([storagePath]);
     return null;

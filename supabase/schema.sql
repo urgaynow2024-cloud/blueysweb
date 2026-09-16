@@ -24,7 +24,7 @@
 CREATE TABLE IF NOT EXISTS portfolio_images (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   url TEXT NOT NULL,
-  storage_path TEXT,
+  path TEXT,
   original_filename TEXT,
   mime_type TEXT,
   file_size BIGINT,
@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS site_config (
 CREATE TABLE IF NOT EXISTS site_images (
   key TEXT PRIMARY KEY,
   url TEXT NOT NULL,
-  storage_path TEXT,
+  path TEXT,
   original_filename TEXT,
   mime_type TEXT,
   file_size BIGINT,
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS site_images (
 CREATE TABLE IF NOT EXISTS nsfw_portfolio_images (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   url TEXT NOT NULL,
-  storage_path TEXT,
+  path TEXT,
   original_filename TEXT,
   mime_type TEXT,
   file_size BIGINT,
@@ -226,7 +226,7 @@ CREATE TABLE IF NOT EXISTS adoptable_gallery (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   adoptable_id UUID NOT NULL REFERENCES adoptables(id) ON DELETE CASCADE,
   url TEXT NOT NULL,
-  storage_path TEXT,
+  path TEXT,
   original_filename TEXT,
   mime_type TEXT,
   file_size BIGINT,
@@ -333,7 +333,9 @@ DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'adoptable_gallery') THEN
     BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS is_nsfw BOOLEAN DEFAULT FALSE; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS path TEXT; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS storage_path TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS path TEXT; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS original_filename TEXT; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS mime_type TEXT; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS file_size BIGINT; EXCEPTION WHEN others THEN NULL; END;
@@ -341,6 +343,47 @@ BEGIN
     BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS height INTEGER; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS media_role TEXT DEFAULT 'gallery'; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW(); EXCEPTION WHEN others THEN NULL; END;
+  END IF;
+END $$;
+
+-- Migrate portfolio_images, nsfw_portfolio_images, and site_images to ensure
+-- the 'path' column exists (some deployments created these with 'path',
+-- others with 'storage_path' — normalise to 'path').
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'portfolio_images') THEN
+    BEGIN ALTER TABLE portfolio_images ADD COLUMN IF NOT EXISTS path TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE portfolio_images ADD COLUMN IF NOT EXISTS original_filename TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE portfolio_images ADD COLUMN IF NOT EXISTS mime_type TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE portfolio_images ADD COLUMN IF NOT EXISTS file_size BIGINT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE portfolio_images ADD COLUMN IF NOT EXISTS width INTEGER; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE portfolio_images ADD COLUMN IF NOT EXISTS height INTEGER; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE portfolio_images ADD COLUMN IF NOT EXISTS media_role TEXT DEFAULT 'portfolio'; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE portfolio_images ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW(); EXCEPTION WHEN others THEN NULL; END;
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'nsfw_portfolio_images') THEN
+    BEGIN ALTER TABLE nsfw_portfolio_images ADD COLUMN IF NOT EXISTS path TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE nsfw_portfolio_images ADD COLUMN IF NOT EXISTS original_filename TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE nsfw_portfolio_images ADD COLUMN IF NOT EXISTS mime_type TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE nsfw_portfolio_images ADD COLUMN IF NOT EXISTS file_size BIGINT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE nsfw_portfolio_images ADD COLUMN IF NOT EXISTS width INTEGER; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE nsfw_portfolio_images ADD COLUMN IF NOT EXISTS height INTEGER; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE nsfw_portfolio_images ADD COLUMN IF NOT EXISTS media_role TEXT DEFAULT 'portfolio'; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE nsfw_portfolio_images ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW(); EXCEPTION WHEN others THEN NULL; END;
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'site_images') THEN
+    BEGIN ALTER TABLE site_images ADD COLUMN IF NOT EXISTS path TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE site_images ADD COLUMN IF NOT EXISTS original_filename TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE site_images ADD COLUMN IF NOT EXISTS mime_type TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE site_images ADD COLUMN IF NOT EXISTS file_size BIGINT; EXCEPTION WHEN others THEN NULL; END;
   END IF;
 END $$;
 
