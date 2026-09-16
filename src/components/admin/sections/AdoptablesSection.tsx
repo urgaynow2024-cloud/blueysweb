@@ -36,7 +36,10 @@ interface AdoptableGalleryImage {
   adoptable_id?: string;
   url: string;
   path?: string;
+  storage_path?: string;
   sort_order: number;
+  uploading?: boolean;
+  error?: string;
 }
 
 interface AdoptableBeforeAfter {
@@ -790,7 +793,7 @@ export function AdoptablesSection() {
                     {(galleryImages[project.id || ""] || []).map((img, gi) => (
                       <div key={img.id || gi} className="relative group">
                         <img src={img.url} alt={`Gallery ${gi + 1}`} className="h-20 w-20 rounded-lg border border-[var(--border)] object-cover" />
-                        <button type="button" onClick={() => project.id && deleteGalleryImage(project.id, img.id!, img.path)} className="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-[var(--danger)] text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Delete image">×</button>
+                        <button type="button" onClick={() => project.id && deleteGalleryImage(project.id, img.id!, img.storage_path || img.path)} className="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-[var(--danger)] text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Delete image">×</button>
                       </div>
                     ))}
                   </div>

@@ -37,7 +37,7 @@ export function PortfolioSection() {
     (async () => {
       try {
         const imgs = await getPortfolioImages();
-        setImages(imgs.map((i: any) => ({ id: i.id, url: i.url, path: i.path })).filter((x: any) => x.url));
+        setImages(imgs.map((i: any) => ({ id: i.id, url: i.url, path: i.storage_path })).filter((x: any) => x.url));
       } catch {
         toast.error("Failed to load portfolio images");
       } finally {

@@ -25,7 +25,7 @@ export async function GET() {
     const result: Record<string, any> = {};
     if (data) {
       data.forEach((item: any) => {
-        result[item.key] = { url: item.url, storage_path: item.storage_path };
+        result[item.key] = { url: item.url, path: item.storage_path };
       });
     }
 

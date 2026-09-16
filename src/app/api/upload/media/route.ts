@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Database error", code: "DB_ERROR" }, { status: 500 });
     }
 
-    return NextResponse.json({ id: dbResult?.id || storageFilename, url, storage_path: storagePath });
+    return NextResponse.json({ id: dbResult?.id || storageFilename, url, path: storagePath });
   } catch (error: any) {
     console.error("Unified upload error:", error);
     return NextResponse.json({ error: "Upload failed", code: "INVALID_REQUEST" }, { status: 400 });
