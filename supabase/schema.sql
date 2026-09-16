@@ -1,4 +1,4 @@
--- Supabase schema for Bluey's Avatar Commissions
+-- Supabase schema for Bluey's Creations
 -- Run this in: Supabase Dashboard → SQL Editor → New query → Paste → Run
 
 -- =============================================================================
@@ -569,7 +569,7 @@ CREATE POLICY "Public read reviews" ON reviews FOR SELECT USING (hidden IS NOT T
 -- Public/anon keys cannot read moderator accounts, submissions, or the log.
 
 INSERT INTO site_config (key, value) VALUES
-  ('name', 'Bluey''s Avatar Commissions'),
+   ('name', 'Bluey''s Creations'),
   ('tagline', 'VRChat Avatar Edits • Blender Work • Unity Setup'),
   ('description', 'Clean, stylish, performance-friendly avatars built for VRChat.'),
   ('discord', 'BlueyBarks'),

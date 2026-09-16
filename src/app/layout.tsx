@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
-import SpaceParticles from "@/components/SpaceParticles";
 import { siteConfig } from "@/config/site";
 
 const inter = Inter({
@@ -40,7 +39,7 @@ export const metadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: `${siteConfig.name} - Premium VRChat Avatar Commissions`,
+        alt: `${siteConfig.name} - Premium VRChat Avatar Work`,
       },
     ],
   },
@@ -58,8 +57,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`} style={{ colorScheme: "dark" }}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`} style={{ colorScheme: "dark" }}>
       <body className="min-h-full bg-[var(--bg)] text-[var(--text)]">
+        <div className="star-field" />
         <div className="bg-mesh" />
         <div className="bg-nebula" />
         <div className="bg-noise" />

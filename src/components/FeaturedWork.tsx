@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getSiteImages } from "@/lib/db";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { getSiteImages, getPortfolioImages } from "@/lib/db";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, ImageIcon, Sparkles } from "lucide-react";
 import Reveal from "@/components/ui/Reveal";
@@ -19,21 +18,8 @@ export default function FeaturedWork() {
         const siteImages = await getSiteImages();
         if (siteImages.hero?.url) setHeroImage(siteImages.hero.url);
 
-        if (!isSupabaseConfigured || !supabase) {
-          const stored = localStorage.getItem("adminData");
-          if (stored) {
-            try {
-              const data = JSON.parse(stored);
-              if (data.portfolioImages && data.portfolioImages.length > 0) {
-                setImages(data.portfolioImages.slice(0, 6).map((img: any) => img.url));
-              }
-            } catch (e) {}
-          }
-          setLoading(false);
-          return;
-        }
-        const { data } = await supabase.from("portfolio_images").select("url").order("sort_order", { ascending: true }).limit(6);
-        if (data && data.length > 0) setImages(data.map((img) => img.url));
+        const allImages = await getPortfolioImages();
+        setImages((allImages || []).slice(0, 6).map((img: { id: string; url: string }) => img.url));
       } catch (e) {
         console.error("Failed to load featured work:", e);
       } finally {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { getSiteImages } from "@/lib/db";
+import { siteConfig } from "@/config/site";
 import Link from "next/link";
 import { Zap, ArrowDown, Circle, Sparkles, Award, ShieldCheck } from "lucide-react";
 
@@ -142,7 +143,7 @@ export default function Hero() {
               style={{ animationDelay: "0s" }}
             >
               <span className="pill-dot" />
-              VRChat Avatar Commissions
+              {siteConfig.hero.eyebrow}
             </span>
 
             <h1
@@ -159,9 +160,7 @@ export default function Hero() {
               className={`lead mt-6 max-w-xl mx-auto lg:mx-0 ${mounted ? "fade-in-up" : "opacity-0"}`}
               style={{ animationDelay: "0.3s" }}
             >
-              Bluey&rsquo;s Avatar Commissions — handcrafted VRChat avatars built in
-              Blender and Unity. Clean, stylish, and performance-friendly, tailored
-              around your vision.
+              {siteConfig.hero.subtitle}
             </p>
 
             <div

@@ -168,7 +168,7 @@ export async function GET() {
             zIndex: 2,
           }}
         >
-          Bluey&rsquo;s Commissions
+          Bluey&rsquo;s Creations
         </div>
 
         {/* Subtitle */}
@@ -184,7 +184,7 @@ export async function GET() {
             zIndex: 2,
           }}
         >
-          VRChat Avatar Commissions
+          VRChat Avatar Work
         </div>
 
         {/* Tagline */}

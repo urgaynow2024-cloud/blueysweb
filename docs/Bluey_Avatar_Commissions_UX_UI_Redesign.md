@@ -1,702 +1,625 @@
-# Bluey's Avatar Commissions — UX/UI Redesign Plan
+# Bluey's Creations — Website Update Script
 
-## Goal
+## Overall Goal
 
-Redesign the website so it feels like a polished, personal artist/VRChat creator website rather than a generic template.
+Update the website so the entire experience feels **consistent, polished, space-themed, personal to Bluey, and intentionally designed** rather than looking like a generic AI-generated commission website.
 
-The redesign should improve:
+Do **not** redesign each page independently. All pages should share the same visual system, spacing, typography, components, backgrounds, animations, buttons, and navigation.
 
+---
+
+# 1. Global Space Theme
+
+The entire website needs a much stronger **cosmic / deep-space identity**.
+
+Use:
+
+- Deep navy / near-black backgrounds
+- Subtle blue and purple space gradients
+- Small stars scattered throughout the background
+- Very subtle nebula/glow effects
+- Soft blue/purple ambient lighting around important cards
+- Dark glass-style cards where appropriate
+- Small constellation/star details
+- Smooth hover animations
+- Subtle cosmic particles rather than excessive animations
+
+The space theme should be visible across:
+
+- Home
+- Services
+- Portfolio
+- Adoptables
+- FAQ
+- TOS
+- Credits
+- Contact/commission pages
+- Footer
 - Navigation
-- Visual hierarchy
-- Animations
-- Portfolio browsing
-- Adoptable browsing
-- Commission flow
-- Mobile UX
-- Accessibility
-- Content consistency
-- Overall personality
 
-The site should feel **creative, personal, playful, polished, and distinctly Bluey**.
+Do **not** make every section look like a giant glowing sci-fi panel. Keep it clean and professional.
 
 ---
 
-# 1. Overall Visual Direction
+# 2. Fix Services Consistency
 
-Move away from repetitive card grids and overly generic AI-looking layouts.
+The `/services` page currently does **not match the services shown on the Home page**.
 
-Use:
+There must be **one shared source of truth** for commission tiers.
 
-- Strong artwork-first presentation
-- More intentional spacing
-- Large visual moments
-- Subtle motion
-- Soft depth and layered backgrounds
-- Personal branding
-- Clear calls to action
-- Consistent typography
-- Consistent component styling
+Do not maintain separate hardcoded service lists for Home and Services.
 
-Animations should support the content rather than distract from it.
+Create/reuse a shared data structure containing:
 
----
+## Light Blender Work
 
-# 2. Page Transitions
+**£15–£25**
 
-Add smooth transitions between pages.
+- Accessory additions
+- Simple clothing fitting
+- Texture recolours
+- Material edits
+- Small Blender fixes
+- Minor Unity setup
 
-Recommended behaviour:
+## Standard Avatar Work
 
-- Fade the old page out
-- Slight upward movement for incoming content
-- Keep transitions short
-- Avoid long loading animations
-- Preserve scroll position where appropriate
-- Respect `prefers-reduced-motion`
+**£30–£55**
 
-Example:
+- Multiple asset additions
+- Clothing fitting
+- Hair swaps
+- Toggle setup
+- Material setup
+- Weight painting
 
-```text
-Page A
-   ↓
-fade + slight movement
-   ↓
-Page B
-```
+## Advanced Avatar Work
 
-Do not use excessive full-screen transition effects.
+**£60–£90**
 
----
+- Full avatar overhauls
+- Large Blender edits
+- Heavy customisation
+- Multiple clothing pieces
+- Complex weight painting
+- Extensive optimisation
 
-# 3. Homepage Redesign
+The Home page and `/services` must pull from the **same data**.
 
-The homepage should immediately communicate:
-
-> Who Bluey is  
-> What Bluey makes  
-> How someone can commission Bluey
-
-## Hero
-
-Create a large artwork-focused hero containing:
-
-- Featured avatar/artwork
-- Bluey's name/branding
-- Short introduction
-- Primary CTA: `Commission Me`
-- Secondary CTA: `View My Work`
-- Commission status indicator
-
-Example:
-
-```text
-BLUEY BARKS
-
-Avatar creator • VRChat artist • Digital creator
-
-[ Commission Me ]   [ View My Work ]
-
-● Commissions Open
-```
-
-The artwork should be the visual focus rather than the text.
+If a tier changes later, it should update everywhere automatically.
 
 ---
 
-# 4. Scroll-Based Homepage Structure
+# 3. Improve Services Page
 
-Recommended order:
-
-1. Hero
-2. Featured Work
-3. What I Make
-4. How Commissions Work
-5. Adoptables
-6. Services
-7. Reviews
-8. Final Commission CTA
-9. Footer
-
-Each section should feel visually different instead of being the same card component repeated.
-
----
-
-# 5. Micro-Interactions
-
-Add small interactions throughout the website.
-
-## Buttons
-
-On hover:
-
-- Slight upward movement
-- Subtle highlight
-- Small scale change
-- Smooth transition
-
-## Links
-
-Use:
-
-- Animated underline
-- Small movement
-- Clear hover/focus state
-
-## Cards
-
-On hover:
-
-- Slight lift
-- Artwork zoom
-- Subtle shadow/depth change
-
-Keep these effects subtle.
-
----
-
-# 6. Portfolio UX
-
-The portfolio should be artwork-first.
-
-## Gallery
-
-Improve the gallery with:
-
-- Large thumbnails
-- Consistent aspect-ratio handling
-- Category filters only where useful
-- Fast image loading
-- Lazy loading
-- Clear hover states
-
-## Portfolio Item
-
-Clicking artwork should open a proper lightbox/detail view.
+The Services page should feel like a proper commission catalogue rather than a basic pricing section.
 
 Include:
 
-- Large image
-- Image counter
-- Previous/next buttons
-- Keyboard navigation
-- Escape to close
-- Mobile swipe support
-- Caption/details when available
+- Page introduction
+- Commission tiers
+- Clear descriptions
+- What's included
+- Pricing
+- "Select Tier" / commission CTA
+- Additional services
+- Optional extras
+- FAQ preview
+- Clear final commission CTA
 
-Optional:
+Each tier should have:
 
-- Before/after slider
-- Multiple image gallery
-- Project information
-
----
-
-# 7. Adoptables UX
-
-Make Adoptables feel more like a small storefront.
-
-Each adoptable should show:
-
-- Large artwork
+- Icon
 - Name
-- Availability
 - Price
 - Short description
-- Included items
-- Model/base information
-- Gallery
-- Adoption CTA
+- Included work
+- Clear button
+- Hover state
+- Consistent card height
 
-Use clear status badges:
+Keep the **Standard Avatar Work** "Most Popular" indicator if it exists.
 
-```text
-AVAILABLE
-SOLD
-RESERVED
-```
+Do not use awkward button text such as:
 
-The detail page should feel like a product page rather than another generic content page.
+> Most Popular — Select
 
-Primary CTA:
+Instead use:
 
-```text
-Adopt This Character
-```
+> Select Standard
+
+with the "Most Popular" badge displayed separately above the card.
 
 ---
 
-# 8. Commission Form Redesign
+# 4. Add Missing Credit Page
 
-Avoid presenting a huge form all at once.
+Create:
 
-Use a multi-step process.
+`/credits`
 
-## Step 1 — About You
+This page should be a proper website page and not simply a paragraph at the bottom of Home.
+
+## Page title
+
+**Credits**
+
+Explain that the website uses various tools, libraries, assets, fonts, icons, and external resources and that proper credit is given to their creators.
+
+Organise credits into sections such as:
+
+### Website & Development
+
+Credit the technologies and libraries used to build the website.
+
+### Icons
+
+Clearly credit the icon library used by the website.
+
+### Fonts
+
+List any external fonts used.
+
+### Visual Assets
+
+List any external backgrounds, textures, illustrations, stock resources, or other visual assets.
+
+### Special Thanks
+
+Optional section for people/resources that helped with the website.
+
+Each credit should have:
 
 - Name
-- Discord
-- Email
+- What it was used for
+- Link where appropriate
 
-## Step 2 — Project
-
-- Commission type
-- Avatar / texture / editing / other
-- Budget if applicable
-
-## Step 3 — Details
-
-- Project description
-- References
-- Uploads
-
-## Step 4 — Review
-
-- Summary
-- Terms confirmation
-- Submit
-
-Progress indicator:
-
-```text
-① About → ② Project → ③ Details → ④ Review
-```
-
-The form should include:
-
-- Clear validation
-- Inline error messages
-- Upload progress
-- Success animation
-- Accessible labels
-- Keyboard navigation
-- Mobile-friendly controls
+Make the page visually match the rest of the website.
 
 ---
 
-# 9. Upload UX
+# 5. FAQ Page Needs a Complete Upgrade
 
-Improve image/file uploading substantially.
+The current `/faq` page feels too basic.
 
-Use a visible upload zone:
+Redesign it into a proper searchable/organised FAQ experience.
 
-```text
-┌───────────────────────────────┐
-│                               │
-│       Drop files here         │
-│                               │
-│       or Browse Files         │
-│                               │
-│ PNG • JPG • WEBP               │
-└───────────────────────────────┘
-```
+## Add categories
 
-After selecting files:
+For example:
 
-- Show previews
-- Show filenames
-- Show file sizes
-- Show upload progress
-- Allow removal
-- Display upload errors clearly
-- Prevent accidental duplicate uploads
+- General
+- Commissions
+- Pricing
+- Blender
+- Unity
+- Avatar Uploads
+- Delivery
+- Revisions
+- Payments
+- Refunds
 
-Do not make users guess whether an upload succeeded.
+Use expandable accordion questions.
 
----
+Questions should be easy to scan.
 
-# 10. Mobile Navigation
+Example:
 
-Create a dedicated mobile navigation experience.
+**How long do commissions take?**
 
-Menu:
-
-```text
-BLUEY
-
-Portfolio
-Commissions
-Adoptables
-Services
-About
-Reviews
-Contact
-```
-
-Use a smooth open/close animation.
-
-Requirements:
-
-- Large touch targets
-- Clear close button
-- Keyboard accessibility
-- Focus trapping where appropriate
-- No horizontal overflow
+Answer explaining that turnaround depends on the complexity and current commission queue.
 
 ---
 
-# 11. Floating Commission CTA
+## Add FAQ Search
 
-Consider a subtle persistent CTA:
+Add a small search box:
 
-```text
-♡ Commission Me
-```
+> Search questions...
 
-It can remain visible while browsing.
+Typing should filter FAQ questions immediately.
 
-It should:
+If there are no results:
 
-- Be unobtrusive
-- Work on mobile
-- Hide when already on the commission form
-- Have a clear hover/focus state
+> No questions found. Try another search or contact Bluey.
 
 ---
 
-# 12. Accessibility
+## Add Useful CTA
 
-Every animation and interaction must remain usable without animation.
+At the bottom:
 
-Implement:
+> Still have questions?
 
-```css
-@media (prefers-reduced-motion: reduce) {
-  /* Disable or simplify non-essential animations */
-}
-```
+**Can't find what you're looking for?**
 
-Also check:
-
-- Keyboard navigation
-- Focus states
-- Colour contrast
-- Image alt text
-- Form labels
-- Screen-reader announcements
-- Button semantics
-- Modal accessibility
+[Contact Bluey]
 
 ---
 
-# 13. Performance
+# 6. TOS Must Be Clearly Seeable
 
-Improve image and page performance.
+The Terms of Service currently aren't prominent enough.
+
+Create a dedicated:
+
+`/tos`
+
+page.
+
+The TOS should be fully readable directly on the website.
+
+**Do not hide the TOS behind a PDF download.**
 
 Use:
 
-- `next/image` where appropriate
-- Responsive image sizes
-- Lazy loading
-- Proper image dimensions
-- Optimised assets
-- Reduced unnecessary JavaScript
-- Avoid excessive particle effects
+- Proper headings
+- Sections
+- Numbered rules where appropriate
+- Readable typography
+- Good spacing
+- Sticky/compact table of contents if useful
 
-Do not sacrifice performance for visual effects.
+Suggested structure:
+
+## Terms of Service
+
+### 1. General
+
+### 2. Commission Requests
+
+### 3. Pricing & Payment
+
+### 4. What I Will / Won't Work On
+
+### 5. Revisions
+
+### 6. Delivery
+
+### 7. Cancellations
+
+### 8. Refunds
+
+### 9. Asset Ownership & Usage
+
+### 10. Commercial Usage
+
+### 11. Client Responsibilities
+
+### 12. Portfolio Rights
+
+### 13. Uploads & Files
+
+### 14. Termination
+
+### 15. Changes to These Terms
+
+### 16. Contact
+
+Use the **actual existing TOS wording/content** where available.
+
+Do not invent legal promises or rewrite important legal terms without preserving their meaning.
 
 ---
 
-# 14. Content Consistency
+# 7. Make TOS Accessible Everywhere
 
-There is outdated contact/domain information in the project.
-
-Incorrect/old content currently includes:
-
-```text
-Discord: @BlueyBarks
-Email: Available via the contact form at blueysweb.com
-Website: https://blueysweb.com
-```
-
-The website should use the current official site information:
-
-```text
-Discord: @BlueyBarks
-Website: https://www.blueycomissions.website/
-```
-
-Do not leave references to:
-
-```text
-blueysweb.com
-```
-
-anywhere in public content if that is no longer the correct domain.
-
----
-
-# 15. Canonical Site Configuration
-
-Do not hard-code contact information separately throughout the application.
-
-Create one canonical configuration object.
-
-Example:
-
-```ts
-export const siteConfig = {
-  name: "Bluey's Avatar Commissions",
-  discord: "BlueyBarks",
-  discordUrl: "...",
-  websiteUrl: "https://www.blueycomissions.website/",
-}
-```
-
-Pages/components should import this configuration.
-
-Use it for:
+Add a visible TOS link to:
 
 - Footer
-- Contact page
-- Commission page
+- Commission/application page
+- Checkout/payment flow if applicable
+- Services page
+- FAQ page
+
+Before submitting a commission, provide a clear acknowledgement such as:
+
+> I have read and agree to the Terms of Service.
+
+with a link to `/tos`.
+
+Do not make users hunt through the website to find the terms.
+
+---
+
+# 8. Navigation
+
+Update the navigation/footer so important pages are discoverable.
+
+Include:
+
+- Home
+- Services
+- Portfolio
+- Adopt
 - FAQ
-- Terms
-- About
-- Social links
-- Metadata
-- Structured data
+- TOS
+- Credits
+- Contact
 
-This prevents outdated information from appearing in different parts of the website.
+Do not overcrowd the main navigation.
 
----
-
-# 16. Database / Seed Cleanup
-
-The old text appears to exist in SQL/database seed content.
-
-Search the entire project for:
-
-```text
-blueysweb.com
-```
-
-Also search for:
-
-```text
-BlueyBarks
-Discord
-Website
-Email
-reasonable timeframe
-```
-
-Update the source of truth rather than only editing the rendered page.
-
-After changing seed data:
-
-- Update the appropriate migration/seed
-- Ensure existing records are updated where necessary
-- Verify the frontend reads the updated record
-- Check that future database resets do not reintroduce the old domain
+Less frequently visited pages such as Credits and TOS can live under a **More** menu if needed, but they must remain easy to find.
 
 ---
 
-# 17. Footer Redesign
+# 9. Footer Redesign
 
-Create a useful footer containing:
+The footer should feel like part of the website rather than an afterthought.
 
-```text
-BLUEY
+Include:
 
-Avatar creator • VRChat artist
+## Bluey's Creations
 
-Portfolio
-Commissions
-Adoptables
-Services
-FAQ
-Reviews
-Contact
+Short description.
 
-Discord
-```
+## Navigation
 
-Then:
+- Home
+- Services
+- Portfolio/Nsfw
+- Adopt
+- FAQ
 
-```text
-© Bluey
-Terms
-Privacy
-```
+## Information
 
-Avoid filling the footer with unnecessary links.
+- TOS
+- Credits
+- Privacy
 
----
+## Contact
 
-# 18. Reviews
+Relevant commission/contact links.
 
-Make reviews feel more personal.
+Add a subtle space background/star field.
 
-Instead of a simple repetitive grid:
-
-- Highlight one review
-- Show supporting smaller reviews
-- Add subtle motion
-- Include optional avatar/name information
-- Keep the layout readable
-
-Do not make reviews overly animated.
+Include copyright information.
 
 ---
 
-# 19. Services
+# 10. Fix Admin Page UI/UX
 
-Present services visually.
+The Admin page is currently **very broken and visually poor**.
 
-Possible layout:
+The `/admin` page needs a proper UI/UX overhaul while keeping its existing functionality and permissions intact.
 
-```text
-AVATARS
-Custom avatar work
-[ View Service ]
+Do not just change colours or add more cards.
 
-TEXTURES
-Custom textures and edits
-[ View Service ]
+The Admin page should feel like a proper administration dashboard.
 
-EDITS
-Avatar modifications
-[ View Service ]
-```
+Improve:
 
-Each service should explain:
+- Overall layout
+- Navigation
+- Sidebar/header
+- Dashboard structure
+- Spacing
+- Typography
+- Cards
+- Tables
+- Buttons
+- Forms
+- Status indicators
+- Tabs/sections
+- Empty states
+- Loading states
+- Error states
+- Mobile responsiveness
 
-- What it includes
-- What it does not include
-- Starting price if applicable
-- Typical process
-- CTA
+The Admin interface should use the same **Bluey's Creations space theme**, but it should still be practical and easy to use.
 
----
+Do not make the admin panel overly flashy.
 
-# 20. Loading / Empty / Error States
+## Admin Dashboard
 
-Every major interactive page needs proper states.
+Clearly organise important areas such as:
 
-## Loading
+- Overview
+- Commissions
+- Portfolio
+- Adoptables
+- Users
+- Reports
+- Settings
+- Other existing admin tools
 
-Use lightweight skeletons rather than a giant spinner.
+Only show sections that actually exist in the current application.
 
-## Empty
+Do not create fake admin functionality.
 
-Example:
+## Admin UX
 
-```text
-Nothing here yet :c
+Make sure:
 
-Check back soon!
-```
+- Navigation is obvious
+- Important actions are easy to find
+- Destructive actions are clearly distinguished
+- Tables are readable
+- Forms are properly labelled
+- Statuses are understandable
+- Loading states exist
+- Errors are clearly displayed
+- Empty states are useful
+- Admin pages do not feel cramped
+- The layout works on smaller screens
 
-## Error
+**Do not break existing authentication, permissions, or admin functionality while redesigning the UI.**
 
-Example:
-
-```text
-Oops! Something broke :c
-
-Please try again or contact Bluey.
-[ Try Again ]
-```
-
-Avoid exposing raw database errors to users.
-
----
-
-# 21. Error Handling
-
-Never display raw errors such as:
-
-```text
-PrismaClientKnownRequestError
-```
-
-or SQL/database output.
-
-Users should receive friendly messages while detailed errors are logged internally.
+First inspect the existing Admin implementation and preserve the underlying functionality.
 
 ---
 
-# 22. Motion Guidelines
-
-Use a consistent animation system.
-
-Recommended timing:
-
-- Micro interaction: 120–180ms
-- Button/card transition: 180–250ms
-- Section reveal: 350–500ms
-- Page transition: 250–400ms
-
-Use easing rather than linear movement.
+# 11. Remove Generic AI-Looking Design
 
 Avoid:
 
-- Constant bouncing
-- Excessive parallax
-- Huge zooms
-- Long loading sequences
-- Animations that block interaction
+- Excessive gradients
+- Huge glowing borders
+- Random rounded rectangles everywhere
+- Generic SaaS wording
+- Repeated identical cards
+- Excessive emojis
+- Giant hero text with no personality
+- Overuse of glassmorphism
+- Sections that all look identical
+
+The website should feel like **Bluey's actual commission site**, not an AI-generated startup landing page.
+
+Use personality in the wording while keeping it professional.
 
 ---
 
-# 23. Visual Personality
+# 12. Responsive Design
 
-The website should feel like **Bluey's website**, not a generic SaaS dashboard.
+Check everything at:
 
-Use personality through:
+- Desktop
+- Laptop
+- Tablet
+- Mobile
 
-- Artwork
-- Small playful copy
-- Custom decorative elements
-- Subtle themed effects
-- Personal branding
-- Carefully selected illustrations
-- Small surprises/interactions
+Specifically verify:
 
-The design should still remain professional enough for commissions.
-
----
-
-# 24. Recommended Component System
-
-Create reusable components for:
-
-```text
-AnimatedButton
-PageTransition
-Reveal
-ArtworkCard
-PortfolioGrid
-PortfolioLightbox
-AdoptableCard
-AdoptableDetail
-ServiceCard
-ReviewCard
-CommissionStepper
-FileUploader
-StatusBadge
-FloatingCommissionCTA
-MobileMenu
-SectionHeader
-EmptyState
-ErrorState
-LoadingSkeleton
-```
-
-This avoids every page developing its own slightly different UI.
+- Pricing cards don't overflow
+- Navigation works properly
+- FAQ accordions fit mobile screens
+- TOS text remains readable
+- Credits links don't overflow
+- Buttons don't become cramped
+- Admin dashboard works on mobile
+- Admin tables remain usable
+- Space effects don't cause performance issues
 
 ---
 
-# 25. Final UX Goal
+# 13. Accessibility
 
-The finished site should feel like:
+Make sure:
 
-> A polished personal artist portfolio combined with a premium commission experience and a small adoptable storefront.
+- Buttons have clear labels
+- Links are distinguishable
+- Keyboard navigation works
+- Accordions are keyboard accessible
+- Focus states are visible
+- Images have useful alt text
+- Text has sufficient contrast
+- Animations respect `prefers-reduced-motion`
 
-The priority is not simply adding more effects.
+---
 
-The priority is:
+# 14. Performance
 
-**Clarity → Personality → Interaction → Performance → Accessibility**
+Do not add huge animated backgrounds or expensive effects that hurt performance.
 
-Make the website easier to understand, nicer to browse, easier to commission through, and much more recognisably Bluey.
+Use:
+
+- Optimised images
+- Next.js image optimisation where appropriate
+- CSS effects where possible
+- Lightweight star/particle effects
+- Lazy loading for below-the-fold images
+
+Avoid unnecessary client-side JavaScript.
+
+---
+
+# 15. Important Implementation Rule
+
+**Do not create separate versions of the same information.**
+
+Services, pricing, FAQ categories, navigation links, and other repeated website content should use shared components/data wherever possible.
+
+For example:
+
+Shared commission data
+
+        ↓
+
+Home Services Section
+
+        ↓
+
+Services Page
+
+        ↓
+
+Commission Selection
+
+Changing a commission tier once should update every location where that tier appears.
+
+---
+
+# 16. Final Verification
+
+After implementing everything:
+
+## Home
+
+- Space theme present
+- Services match `/services`
+- Credit page linked
+- TOS accessible
+
+## Services
+
+- Same pricing/data as Home
+- Better presentation
+- Consistent styling
+- Commission CTA works
+
+## FAQ
+
+- Redesigned
+- Search works
+- Accordions work
+- Categories work
+- Contact CTA works
+
+## TOS
+
+- Dedicated `/tos` page
+- Fully readable
+- Proper sections
+- Linked from footer/navigation
+- Linked from commission flow
+
+## Credits
+
+- Dedicated `/credits` page
+- Properly organised
+- All relevant resources credited
+- Consistent space design
+
+## Admin
+
+- Admin page UI/UX properly redesigned
+- Existing admin functionality still works
+- Existing permissions/authentication still work
+- Dashboard is organised
+- Navigation is clear
+- Tables/forms are usable
+- Loading and error states work
+- Mobile layout works
+- No unnecessary fake admin features
+- Admin page matches the overall website theme
+
+## NSFW
+
+- NSFW profile/portfolio functionality has not been accidentally removed
+- Existing NSFW functionality remains compatible with the website
+- NSFW content remains appropriately separated from normal portfolio content
+- Existing NSFW visibility rules are preserved
+- NSFW-related pages/components do not produce errors
+
+## Global
+
+- Navigation consistent
+- Footer consistent
+- Space theme consistent
+- Mobile responsive
+- No broken links
+- No duplicate service data
+- No console errors
+- No unnecessary AI-looking UI
+
+**Do not stop after changing the Home page. Check the actual `/services`, `/faq`, `/tos`, `/credits`, and `/admin` pages and make sure they all feel like parts of the same website.**

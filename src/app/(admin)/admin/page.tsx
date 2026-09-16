@@ -23,6 +23,7 @@ import { ModeratorsSection } from "@/components/admin/sections/ModeratorsSection
 import { AdoptablesSection } from "@/components/admin/sections/AdoptablesSection";
 import { TosSection } from "@/components/admin/sections/TosSection";
 import { CreditsSection } from "@/components/admin/sections/CreditsSection";
+import { OverviewSection } from "@/components/admin/sections/OverviewSection";
 
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -30,7 +31,13 @@ const ADMIN_PASSWORD = "blueyadmin";
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 
-const defaultSite: Record<string, string> = {};
+const defaultSite: Record<string, string> = {
+  name: "Bluey's Creations",
+  queue_status: "open",
+  queue_slots_total: "8",
+  queue_slots_used: "3",
+  queue_wait_time: "2-3 weeks",
+};
 const defaultPricing: any[] = [];
 const defaultFaq: any[] = [
   { question: "What do I need to provide?", answer: "What you want done, avatar base name, reference images, and any required assets provided.", sort_order: 0 },
@@ -42,13 +49,13 @@ const defaultFaq: any[] = [
 ];
 const defaultWorkflow: any[] = [];
 
-type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "adoptables" | "credits" | "tos";
+  type Tab = "overview" | "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "adoptables" | "credits" | "tos";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [pw, setPw] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const [tab, setTab] = useState<Tab>("portfolio");
+  const [tab, setTab] = useState<Tab>("overview");
   const [loading, setLoading] = useState(true);
   const [resetOpen, setResetOpen] = useState(false);
   const [loginError, setLoginError] = useState("");
@@ -410,6 +417,21 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+      )}
+      {tab === "overview" && (
+        <OverviewSection
+          site={site}
+          pricing={pricing}
+          faq={faq}
+          workflow={workflow}
+          reviews={reviews}
+          links={links}
+          credits={credits}
+          tos={tos}
+          storageError={storageError}
+          dbHealth={dbHealth}
+          onSelect={(id) => setTab(id as Tab)}
+        />
       )}
       {tab === "portfolio" && <PortfolioSection />}
       {tab === "pricing" && <PricingSection value={pricing} onChange={(n) => { setPricing(n); markDirty(); }} />}

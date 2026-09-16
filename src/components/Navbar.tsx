@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X, ArrowUpRight } from "lucide-react";
+import { Menu, X, ArrowUpRight, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
 
 const PRIMARY_LINKS = siteConfig.nav;
+const MORE_LINKS = siteConfig.moreMenu;
 const MOBILE_LINKS = siteConfig.mobileNav;
 
 function isActive(pathname: string, href: string) {
@@ -17,9 +18,11 @@ function isActive(pathname: string, href: string) {
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const pathname = usePathname();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const navRef = useRef<HTMLElement>(null);
+  const moreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
@@ -30,7 +33,18 @@ export default function Navbar() {
 
   useEffect(() => {
     setOpen(false);
+    setMoreOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -67,14 +81,16 @@ export default function Navbar() {
     };
   }, [open]);
 
+  const allNavLinks = [...PRIMARY_LINKS, ...MORE_LINKS];
+
   return (
     <nav ref={navRef} className={`site-nav ${scrolled ? "is-scrolled" : ""}`} aria-label="Primary navigation">
       <div className="nav-shell">
-        <Link href="/" className="brand-lockup" aria-label="Bluey — home">
+        <Link href="/" className="brand-lockup" aria-label={`${siteConfig.name} — home`}>
           <span className="brand-mark" aria-hidden="true">B</span>
           <span className="brand-wordmark">
             <strong>Bluey</strong>
-            <small>avatar commissions</small>
+            <small>creations</small>
           </span>
         </Link>
 
@@ -92,6 +108,35 @@ export default function Navbar() {
               </Link>
             );
           })}
+          <div ref={moreRef} className="relative">
+            <button
+              type="button"
+              className={`nav-link inline-flex items-center gap-1 ${moreOpen ? "active text-white" : ""}`}
+              onClick={() => setMoreOpen((v) => !v)}
+              aria-expanded={moreOpen}
+              aria-haspopup="menu"
+            >
+              More
+              <ChevronDown className="h-3 w-3" />
+            </button>
+            {moreOpen && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setMoreOpen(false)} />
+                <div className="absolute right-0 top-full z-40 mt-1 min-w-[12rem] rounded-xl border border-[var(--border)] bg-[var(--bg-card)] py-1 shadow-lg">
+                  {MORE_LINKS.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="nav-link block px-4 py-2"
+                      onClick={() => setMoreOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         <Link href={siteConfig.commissionPath} className="nav-cta">
@@ -150,6 +195,19 @@ export default function Navbar() {
                 </Link>
               );
             })}
+            {MORE_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`mobile-nav-link ${isActive(pathname, link.href) ? "active" : ""}`}
+                style={{ "--link-delay": `${(MOBILE_LINKS.length + MORE_LINKS.indexOf(link)) * 35}ms` } as React.CSSProperties}
+                tabIndex={open ? 0 : -1}
+                onClick={() => setOpen(false)}
+              >
+                <span>{link.label}</span>
+                <ArrowUpRight className="mobile-nav-arrow" aria-hidden="true" />
+              </Link>
+            ))}
           </div>
           <Link
             href={siteConfig.commissionPath}

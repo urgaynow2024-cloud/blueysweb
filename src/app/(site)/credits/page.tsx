@@ -1,197 +1,172 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { ExternalLink, Heart, Sparkles } from "lucide-react";
-import { mockCredits } from "@/config/site";
+import { getCredits } from "@/lib/db";
+import { creditsData, mockCredits } from "@/config/site";
+import { ExternalLink, Globe, Heart, Code, Palette, Type, Package, Users, Sparkles } from "lucide-react";
 
-interface Credit {
-  id: string;
-  name: string;
-  description: string;
-  categories: string[];
-  avatar_url: string | null;
-  website_url: string | null;
-  discord_url: string | null;
-  social_links: Record<string, string>;
-  note: string;
-  featured: boolean;
-}
-
-const CATEGORY_META: Record<string, { emoji: string; label: string }> = {
-  supporters: { emoji: "💜", label: "Supporters" },
-  artists: { emoji: "🎨", label: "Artists" },
-  developers: { emoji: "💻", label: "Developers" },
-  testers: { emoji: "🧪", label: "Testers" },
-  helpers: { emoji: "🛠️", label: "Helpers" },
-  collaborators: { emoji: "🤝", label: "Collaborators" },
-  "assets-resources": { emoji: "📦", label: "Assets / Resources" },
-  "special-thanks": { emoji: "🌟", label: "Special Thanks" },
+const CREDIT_ICONS: Record<string, React.ElementType> = {
+  "Website & Development": Code,
+  Icons: Palette,
+  Fonts: Type,
+  "Visual Assets": Package,
+  "Special Thanks": Users,
 };
 
-function SkeletonRow() {
-  return (
-    <div className="animate-pulse space-y-3 py-4">
-      <div className="h-4 w-32 rounded bg-[var(--border)]" />
-      <div className="h-3 w-full rounded bg-[var(--border)]" />
-      <div className="h-3 w-5/6 rounded bg-[var(--border)]" />
-    </div>
-  );
-}
+const SECTION_ORDER = ["websiteDev", "icons", "fonts", "visualAssets", "specialThanks"] as const;
 
 export default function CreditsPage() {
-  const [credits, setCredits] = useState<Credit[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dbCredits, setDbCredits] = useState<any[]>([]);
 
   useEffect(() => {
-    async function loadCredits() {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/credits");
-        if (res.ok) {
-          const data = await res.json();
-          // Deduplicate by id to prevent the same person appearing multiple times
-          const seen = new Set<string>();
-          const unique = (data || []).filter((c: Credit) => {
-            if (!c.id || seen.has(c.id)) return false;
-            seen.add(c.id);
-            return true;
-          });
-          setCredits(unique);
-        } else {
-          setCredits(mockCredits as unknown as Credit[]);
-        }
-      } catch (e) {
-        console.error("Failed to load credits:", e);
-        setCredits(mockCredits as unknown as Credit[]);
-      } finally {
-        setLoading(false);
+    async function load() {
+      const credits = await getCredits();
+      if (credits && credits.length > 0) {
+        setDbCredits(credits);
       }
     }
-    loadCredits();
+    load();
   }, []);
 
-  const grouped = credits.reduce<Record<string, Credit[]>>((acc, c) => {
-    // Each person appears under only their first category to avoid duplicates
-    const cats = c.categories && c.categories.length > 0 ? [c.categories[0]] : ["supporters"];
-    cats.forEach((cat) => {
-      if (!acc[cat]) acc[cat] = [];
-      acc[cat].push(c);
-    });
-    return acc;
-  }, {});
-
-  const categoryOrder = Object.keys(CATEGORY_META);
-  const sortedCategories = categoryOrder.filter((c) => grouped[c] && grouped[c].length > 0);
+  const configCredits = dbCredits.length > 0 ? dbCredits : mockCredits;
 
   return (
     <div className="relative">
-      <section className="section">
-        <div className="container">
-          <SectionHeading
-            align="center"
-            eyebrow="Credits"
-            title="People Behind the Stars"
-            subtitle="A huge thank you to everyone who has helped, supported, tested, created, or contributed. I genuinely appreciate every bit of support."
-          />
+      <div className="bg-nebula" />
+      <div className="bg-cosmic-fog" />
+      <section className="relative overflow-hidden pt-20 sm:pt-24 md:pt-28">
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-30" />
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px] orb-slow" />
 
-          {loading ? (
-            <div className="mx-auto mt-10 max-w-3xl space-y-6">
-              {[1, 2, 3].map((i) => <SkeletonRow key={i} />)}
-            </div>
-          ) : credits.length > 0 ? (
-            <div className="mt-10 mx-auto max-w-3xl">
-              {sortedCategories.map((cat, catIdx) => {
-                const meta = CATEGORY_META[cat] || { emoji: "✨", label: cat };
-                const items = grouped[cat];
-                return (
-                  <Reveal key={cat} delay={catIdx * 100}>
-                    <div className="mt-16 first:mt-0">
-                      <div className="section-eyebrow">
-                        <span>{meta.emoji}</span>
-                        <span>{meta.label}</span>
-                      </div>
-                      <div className="mt-8 space-y-8">
-                        {items.map((credit) => (
-                          <div key={credit.id} className="flex gap-4">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-3">
-                                {credit.avatar_url ? (
-                                  <img
-                                    src={credit.avatar_url}
-                                    alt={credit.name}
-                                    className="h-10 w-10 rounded-xl object-cover border border-[var(--border)]"
-                                  />
-                                ) : (
-                                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)]/20 to-[var(--accent-2)]/20 text-sm font-bold text-white border border-[var(--border)]">
-                                    {credit.name?.[0]?.toUpperCase() || "?"}
-                                  </div>
-                                )}
-                                <div>
-                                  <h3 className="text-sm font-bold text-white">{credit.name}</h3>
-                                  {credit.note && (
-                                    <p className="text-xs text-[var(--text-dim)] italic">&ldquo;{credit.note}&rdquo;</p>
-                                  )}
-                                </div>
-                              </div>
-                              {credit.description && (
-                                <p className="mt-2 text-sm text-[var(--text-secondary)] leading-relaxed">
-                                  {credit.description}
-                                </p>
-                              )}
-                              <div className="mt-2 flex flex-wrap items-center gap-3">
-                                {credit.website_url && (
-                                  <a
-                                    href={credit.website_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 text-xs text-[var(--accent-muted)] hover:text-[var(--accent)] transition-colors"
-                                  >
-                                    <ExternalLink className="h-3 w-3" />
-                                    Website
-                                  </a>
-                                )}
-                                {credit.discord_url && (
-                                  <a
-                                    href={credit.discord_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 text-xs text-[var(--accent-muted)] hover:text-[var(--accent)] transition-colors"
-                                  >
-                                    Discord
-                                  </a>
-                                )}
-                                {Object.entries(credit.social_links || {}).map(([key, url]) => (
-                                  <a
-                                    key={key}
-                                    href={url as string}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 text-xs text-[var(--accent-muted)] hover:text-[var(--accent)] transition-colors"
-                                  >
-                                    {key}
-                                  </a>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+        <div className="container max-w-3xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="eyebrow justify-center">
+              <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
+              Acknowledgements
+            </span>
+            <h1 className="display-xl mt-5 text-white">
+              Credits &amp; Thanks
+            </h1>
+            <p className="lead mx-auto mt-4">
+              This website is built with the help of many wonderful tools, libraries, and
+              resources. Every contributor is listed below — thank you for making this
+              possible.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="!pt-12">
+        <div className="container max-w-3xl">
+          <div className="space-y-12">
+            {SECTION_ORDER.map((key) => {
+              const section = creditsData[key];
+              const Icon = CREDIT_ICONS[section.title] || Globe;
+              if (!section.items.length) return null;
+
+              return (
+                <Reveal key={key} delay={0}>
+                  <div className="space-y-5">
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <h2 className="heading-sm text-white">{section.title}</h2>
                     </div>
-                  </Reveal>
-                );
-              })}
+                    <ul className="space-y-3">
+                      {section.items.map((item: any) => (
+                        <li
+                          key={item.name}
+                          className="flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-white">{item.name}</p>
+                            <p className="mt-0.5 text-sm text-[var(--text-secondary)]">
+                              {item.description}
+                            </p>
+                          </div>
+                          {item.url && (
+                            <a
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 shrink-0 text-xs font-semibold text-[var(--accent)] hover:text-[var(--accent-2)] transition-colors"
+                              aria-label={`Visit ${item.name}`}
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              Visit
+                            </a>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </Reveal>
+              );
+            })}
+
+            {configCredits.length > 0 && (
+              <Reveal delay={0}>
+                <div className="space-y-5">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                      <Heart className="h-5 w-5" />
+                    </span>
+                    <h2 className="heading-sm text-white">Community Credits</h2>
+                  </div>
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    Folks who have contributed feedback, testing, or community support.
+                  </p>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {configCredits.map((credit) => (
+                      <div
+                        key={credit.id}
+                        className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4"
+                      >
+                        {credit.avatar_url ? (
+                          <img
+                            src={credit.avatar_url}
+                            alt={credit.name}
+                            className="h-10 w-10 shrink-0 rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)] text-sm font-bold">
+                            {credit.name?.[0]?.toUpperCase() || "★"}
+                          </span>
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-white">{credit.name}</p>
+                          <p className="text-xs text-[var(--text-secondary)]">
+                            {credit.description}
+                          </p>
+                          {credit.categories && (
+                            <p className="mt-1 text-[10px] text-[var(--text-dim)]">
+                              {credit.categories.join(", ")}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Reveal>
+            )}
+          </div>
+
+          <Reveal delay={120}>
+            <div className="mt-16 text-center">
+              <p className="text-sm text-[var(--text-secondary)]">
+                Want to be listed here? Get in touch through{" "}
+                <Link href="/contact" className="text-[var(--accent)] hover:underline underline-offset-4">
+                  the contact page
+                </Link>
+                .
+              </p>
             </div>
-          ) : (
-            <div className="mt-12 empty-state">
-              <div className="empty-state-icon">
-                <Heart className="h-7 w-7" />
-              </div>
-              <h3 className="empty-state-title">No credits yet</h3>
-              <p className="empty-state-desc">Credits will appear here as contributors are added.</p>
-            </div>
-          )}
+          </Reveal>
         </div>
       </section>
     </div>

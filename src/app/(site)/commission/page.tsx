@@ -1,49 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useState, useEffect } from "react";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
+import CommissionTierCard from "@/components/ui/CommissionTierCard";
 import ContactCommissionForm from "@/components/ContactCommissionForm";
-import { siteConfig } from "@/config/site";
-import { pricingTiers, additionalServices, faqItems } from "@/config/site";
-import { Zap, ArrowRight, ShieldCheck, Check, Sparkles, MessageCircle, DollarSign, Clock, Send, HelpCircle } from "lucide-react";
+import { siteConfig, pricingTiers, additionalServices, faqItems, tosSections } from "@/config/site";
+import { getPricingTiers } from "@/lib/db";
+import { Zap, ArrowRight, ShieldCheck, Check, Sparkles, MessageCircle, Clock, FileText, DollarSign, Send, HelpCircle } from "lucide-react";
 
-function ServiceCard({ service }: { service: typeof pricingTiers[0] }) {
-  return (
-    <Reveal>
-      <div className="group relative p-6 border border-[var(--border)] bg-[var(--bg-card)] rounded-[var(--r-lg)] transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[var(--shadow-md)]">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--accent-soft)] text-xl transition-transform duration-300 group-hover:scale-110">
-            {service.emoji}
-          </span>
-          <div>
-            <h3 className="text-base font-semibold text-white">{service.name}</h3>
-            {service.badge && (
-              <span className="text-xs font-medium text-[var(--accent)]">{service.badge}</span>
-            )}
-          </div>
-        </div>
-        <p className="text-sm text-[var(--text-secondary)] mb-4">{service.price}</p>
-        <ul className="space-y-2 mb-6">
-          {service.features?.slice(0, 4).map((feat) => (
-            <li key={feat} className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-              <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
-                <Check className="h-2.5 w-2.5" />
-              </span>
-              {feat}
-            </li>
-          ))}
-        </ul>
-        <button type="button" onClick={() => document.getElementById("commission-form")?.scrollIntoView({ behavior: "smooth" })} className="btn-secondary w-full inline-flex items-center justify-center gap-2 cursor-pointer">
-          Request Quote
-          <ArrowRight className="h-3.5 w-3.5" />
-        </button>
-      </div>
-    </Reveal>
-  );
-}
+const ALLOWED_TIERS = ["Light Blender Work", "Standard Avatar Work", "Advanced Avatar Work"];
 
 export default function CommissionPage() {
+  const [pricing, setPricing] = useState(pricingTiers);
+
+  useEffect(() => {
+    async function load() {
+      const dbPricing = await getPricingTiers();
+      if (dbPricing && dbPricing.length > 0) {
+        const filtered = dbPricing.filter((t: any) => ALLOWED_TIERS.includes(t.name));
+        setPricing(filtered.length > 0 ? filtered : pricingTiers);
+      }
+    }
+    load();
+  }, []);
+
   return (
     <div className="relative">
       {/* Hero — form-first */}
@@ -89,8 +71,8 @@ export default function CommissionPage() {
             align="center"
           />
           <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-            {pricingTiers.map((tier) => (
-              <ServiceCard key={tier.id} service={tier} />
+            {pricing.map((tier) => (
+              <CommissionTierCard key={tier.id} tier={tier} ctaLabel="Request Quote" />
             ))}
           </div>
         </div>
@@ -148,17 +130,56 @@ export default function CommissionPage() {
               <FAQItem key={item.question} item={item} index={i} />
             ))}
           </div>
-          <div className="mt-10 text-center">
-            <a href="/contact" className="btn-secondary inline-flex items-center gap-2">
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-sm text-[var(--text-secondary)]">
+            <Link href="/contact" className="btn-secondary inline-flex items-center gap-2">
               Still have questions? Get in touch
               <ArrowRight className="h-4 w-4" />
-            </a>
+            </Link>
+            <Link href="/tos" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+              <FileText className="h-3.5 w-3.5" />
+              Terms of Service
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* TOS Summary */}
+      <section className="section section-alt">
+        <div className="container">
+          <div className="mx-auto max-w-3xl">
+            <SectionHeading
+              align="center"
+              eyebrow="Legal"
+              title="Terms of Service"
+              subtitle="Key rules before commissioning."
+            />
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {tosSections.slice(0, 6).map((section, i) => (
+                <Reveal key={section.title} delay={i * 60}>
+                  <div className="group py-3 flex items-start gap-3">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[var(--accent-soft)] text-sm">{section.icon}</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-white">{section.title}</h4>
+                      {section.items?.[0] && (
+                        <p className="mt-1 text-xs text-[var(--text-secondary)]">{section.items[0]}</p>
+                      )}
+                    </div>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+            <div className="mt-6 text-center">
+              <Link href="/tos" className="btn-secondary inline-flex items-center gap-2">
+                Read Full Terms
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Final CTA */}
-      <section className="section section-alt">
+      <section className="section">
         <div className="container">
           <div className="mx-auto max-w-3xl text-center">
             <span className="eyebrow justify-center">
@@ -175,6 +196,10 @@ export default function CommissionPage() {
                 Open Discord
               </a>
             </div>
+            <p className="mt-4 text-xs text-[var(--text-dim)]">
+              By proceeding, you confirm you have read and agree to the{" "}
+              <Link href="/tos" className="text-[var(--accent)] hover:underline underline-offset-4">Terms of Service</Link>.
+            </p>
           </div>
         </div>
       </section>

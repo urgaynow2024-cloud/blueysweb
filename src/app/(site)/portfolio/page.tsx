@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { getPortfolioImages } from "@/lib/db";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -23,37 +23,19 @@ export default function PortfolioPage() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [activeCategory, setActiveCategory] = useState("All");
 
-  useEffect(() => {
+   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-        if (!isSupabaseConfigured || !supabase) {
-          const stored = localStorage.getItem("adminData");
-          if (stored) {
-            try {
-              const data = JSON.parse(stored);
-              if (data.portfolioImages && data.portfolioImages.length > 0) {
-                setImages(data.portfolioImages.map((img: { url: string; id: string; caption?: string }, i: number) => ({
-                  url: img.url,
-                  id: img.id,
-                  category: getCategory(img.url, i),
-                  caption: img.caption,
-                })));
-              }
-            } catch (e) {}
-          }
-          setLoading(false);
-          return;
-        }
-        const { data } = await supabase.from("portfolio_images").select("id, url, sort_order, caption").order("sort_order", { ascending: true });
-        if (data && data.length > 0) {
-          setImages(data.map((img, i) => ({
+        const data = await getPortfolioImages();
+        setImages(
+          data.map((img: { id: string; url: string; caption?: string }, i) => ({
             id: img.id,
             url: img.url,
             category: getCategory(img.url, i),
             caption: img.caption || undefined,
-          })));
-        }
+          }))
+        );
       } catch (e) {
         console.error("Failed to load portfolio:", e);
       } finally {

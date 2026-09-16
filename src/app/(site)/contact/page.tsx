@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import ContactCommissionForm from "@/components/ContactCommissionForm";
 import { siteConfig } from "@/config/site";
-import { MessageSquare, Clock, CheckCircle2, Mail, ArrowRight, Sparkles } from "lucide-react";
+import { MessageSquare, Clock, CheckCircle2, Mail, ArrowRight, Sparkles, FileText } from "lucide-react";
 
 const CHANNELS = [
   { icon: MessageSquare, label: "Discord", value: siteConfig.discord, note: "Fastest way to reach me" },
@@ -76,6 +77,15 @@ export default function ContactPage() {
                   </p>
                 </div>
               </Reveal>
+              <Reveal delay={240}>
+                <div className="flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
+                  <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Before submitting a commission, please review the{" "}
+                    <Link href="/tos" className="text-[var(--accent)] hover:underline underline-offset-4 font-semibold">Terms of Service</Link>.
+                  </p>
+                </div>
+              </Reveal>
             </div>
 
             <div className="lg:col-span-2">
@@ -84,6 +94,15 @@ export default function ContactPage() {
               </Reveal>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="section !pt-4">
+        <div className="container text-center">
+          <p className="text-xs text-[var(--text-dim)]">
+            By using this service, you acknowledge you have read and agree to the{" "}
+            <Link href="/tos" className="text-[var(--accent)] hover:underline">Terms of Service</Link>.
+          </p>
         </div>
       </section>
     </div>

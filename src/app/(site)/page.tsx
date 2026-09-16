@@ -5,6 +5,7 @@ import Hero from "@/components/Hero";
 import FeaturedWork from "@/components/FeaturedWork";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
+import CommissionTierCard from "@/components/ui/CommissionTierCard";
 import { ButtonLink } from "@/components/ui/Button";
 import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages, getAdoptables } from "@/lib/db";
 import Link from "next/link";
@@ -313,42 +314,18 @@ export default function Home() {
             <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
               {pricing.map((tier: any, i: number) => (
                 <Reveal key={tier.id || i} delay={i * 60}>
-                  <div className={`card relative p-6 md:p-8 flex flex-col ${tier.popular ? "border-[var(--accent)]/40 shadow-[0_0_30px_-10px_var(--accent-glow)]" : ""}`}>
-                    {tier.badge && (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 badge bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] border-none">
-                        {tier.badge}
-                      </span>
-                    )}
-                    <div className="flex items-baseline gap-1 mb-2">
-                      <span className="text-2xl">{tier.emoji}</span>
-                      <h3 className="heading-sm text-white">{tier.name}</h3>
-                    </div>
-                    <div className="mb-4">
-                      <span className="text-3xl font-bold text-white">{tier.price}</span>
-                    </div>
-                    <ul className="space-y-2 flex-1">
-                      {tier.features.slice(0, 6).map((f: string) => (
-                        <li key={f} className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                          <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
-                            <Check className="h-2.5 w-2.5" />
-                          </span>
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-6 pt-4 border-t border-[var(--border)]">
-                      <Link href="/commission" className={`btn-base w-full ${tier.popular ? "btn-primary" : "btn-secondary"} justify-center`}>
-                        {tier.popular ? "Most Popular — Select" : "Select Tier"}
-                      </Link>
-                    </div>
-                  </div>
+                  <CommissionTierCard tier={tier} />
                 </Reveal>
               ))}
             </div>
-            <div className="mt-10 text-center">
-              <Link href="/pricing" className="btn-secondary inline-flex items-center gap-2">
-                View Full Pricing
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-4 text-sm">
+              <Link href="/services" className="btn-secondary inline-flex items-center gap-2">
+                View All Services
                 <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link href="/services" className="inline-flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-white transition-colors">
+                <DollarSign className="h-3.5 w-3.5" />
+                Full Pricing
               </Link>
             </div>
           </div>
@@ -435,6 +412,17 @@ export default function Home() {
                 <a href="https://discord.gg/zt48MZm5kD" className="btn-secondary btn-md" target="_blank" rel="noopener noreferrer">
                   Open Discord
                 </a>
+              </div>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-[var(--text-dim)]">
+                <Link href="/tos" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                  Terms of Service
+                </Link>
+                <Link href="/credits" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                  Credits
+                </Link>
+                <Link href="/faq" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                  FAQ
+                </Link>
               </div>
             </div>
           </div>
