@@ -173,7 +173,7 @@ function UploadZone({ onAdd, disabled }: { onAdd: (files: File[]) => void; disab
       aria-labelledby={zoneId}
       className={`relative rounded-2xl border-2 border-dashed p-7 text-center transition-all outline-none ${
         disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
-      } ${dragOver ? "border-[var(--accent)] bg-[var(--accent-soft)]" : "border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--accent)]/50 focus-visible:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/30`}`}
+      } ${dragOver ? "border-[var(--accent)] bg-[var(--accent-soft)]" : "border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--accent)]/50 focus-visible:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/30"}`}
       onDragOver={(event) => { event.preventDefault(); if (!disabled) setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
       onDrop={(event) => {

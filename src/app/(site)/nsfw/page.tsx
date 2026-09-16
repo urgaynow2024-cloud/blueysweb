@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import AgeVerifier from "@/components/AgeVerifier";
 import { nsfwPricingTiers, nsfwRules } from "@/config/site";
@@ -9,6 +9,13 @@ import PortfolioLightbox from "@/components/PortfolioLightbox";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { ShieldAlert, ArrowRight, Lock, Sparkles, Check, ImageIcon } from "lucide-react";
+
+interface LightboxItem {
+  url: string;
+  caption?: string;
+  title?: string;
+  description?: string;
+}
 
 function SkeletonCard() {
   return (
@@ -23,6 +30,11 @@ export default function NsfwPage() {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const lightboxImages = useMemo(() =>
+    images.map((url, index) => ({ url, title: `NSFW Portfolio ${index + 1}` }) as LightboxItem),
+    [images]
+  );
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -245,13 +257,13 @@ export default function NsfwPage() {
         </div>
       </section>
 
-      {lightboxIndex !== null && (
+      {lightboxIndex !== null && lightboxImages.length > 0 && (
         <PortfolioLightbox
-          images={images}
+          images={lightboxImages}
           index={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
-          onPrev={() => setLightboxIndex((lightboxIndex - 1 + images.length) % images.length)}
-          onNext={() => setLightboxIndex((lightboxIndex + 1) % images.length)}
+          onPrev={() => setLightboxIndex((lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length)}
+          onNext={() => setLightboxIndex((lightboxIndex + 1) % lightboxImages.length)}
         />
       )}
     </div>

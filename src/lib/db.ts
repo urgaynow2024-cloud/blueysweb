@@ -26,7 +26,7 @@ async function fetchSiteConfig() {
   if (!isSupabaseConfigured || !supabase) return FALLBACKS.siteConfig;
   const { data, error } = await supabase.from("site_config").select("key, value");
   if (error || !data) return FALLBACKS.siteConfig;
-  const result: Record<string, string> = { ...FALLBACKS.siteConfig };
+  const result = { ...FALLBACKS.siteConfig } as Record<string, unknown>;
   data.forEach((row: { key: string; value: string }) => { result[row.key] = row.value; });
   return result;
 }

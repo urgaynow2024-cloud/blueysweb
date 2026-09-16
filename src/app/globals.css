@@ -1109,6 +1109,7 @@ select.field option {
   }
 }
 
+  @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
