@@ -5,9 +5,9 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import { ButtonLink } from "@/components/ui/Button";
 import ContactCommissionForm from "@/components/ContactCommissionForm";
 import { siteConfig } from "@/config/site";
-import { pricingTiers, additionalServices, nsfwPricingTiers, nsfwRules, workflowSteps, faqItems } from "@/config/site";
+import { pricingTiers, additionalServices, workflowSteps, faqItems } from "@/config/site";
 import Link from "next/link";
-import { Zap, ArrowRight, ShieldCheck, Layers, PenTool, Send, Sparkles, Check, Clock, HelpCircle, DollarSign, ShieldAlert, Lock } from "lucide-react";
+import { Zap, ArrowRight, ShieldCheck, Layers, PenTool, Send, Sparkles, Check, Clock, HelpCircle, DollarSign } from "lucide-react";
 
 function ServiceCard({ service }: { service: typeof pricingTiers[0] }) {
   return (
@@ -163,111 +163,6 @@ export default function CommissionPage() {
                 </Reveal>
               ))}
             </div>
-          </div>
-
-          {/* NSFW Commissions */}
-          <div className="mt-20">
-            <SectionHeading
-              align="center"
-              eyebrow="18+ Only"
-              title="NSFW Commissions"
-              subtitle="Mature avatar customisation for verified adults. Priced separately from standard work."
-            />
-            <Reveal>
-              <div className="mt-8 mx-auto max-w-3xl rounded-[var(--r-lg)] border border-rose-500/30 bg-rose-500/5 p-6 md:p-8">
-                <div className="flex items-start gap-3 mb-6">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-rose-500/15 text-rose-400">
-                    <ShieldAlert className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-white">Age Verification Required</h3>
-                    <p className="text-sm text-[var(--text-secondary)]">You must be 18+ to commission NSFW work. Proof of age may be requested.</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div>
-                    <h4 className="mb-3 text-sm font-semibold text-rose-400">Requirements</h4>
-                    <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
-                      {nsfwRules.requirements.map((req, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-400" />
-                          {req}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="mb-3 text-sm font-semibold text-rose-400">Not Allowed</h4>
-                    <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
-                      {nsfwRules.notAllowed.map((rule, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-400" />
-                          {rule}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-                <p className="mt-4 text-sm italic text-[var(--text-dim)]">{nsfwRules.note}</p>
-              </div>
-            </Reveal>
-            <Reveal>
-              <div className="mt-8 mx-auto max-w-3xl">
-                {nsfwPricingTiers.map((tier, i) => (
-                  <Reveal key={tier.id} delay={i * 80}>
-                    <div className={`group py-6 md:py-8 ${i < nsfwPricingTiers.length - 1 ? "border-b border-[var(--border)]" : ""}`}>
-                      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3">
-                            {tier.emoji && (
-                              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-rose-500/10 text-xl transition-transform duration-300 group-hover:scale-110">
-                                {tier.emoji}
-                              </span>
-                            )}
-                            <div>
-                              <h3 className="text-base font-semibold text-white md:text-lg">{tier.name}</h3>
-                              {tier.badge && (
-                                <span className="text-xs font-medium text-rose-400">{tier.badge}</span>
-                              )}
-                            </div>
-                          </div>
-                          <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-[var(--text-secondary)]">
-                            {tier.features?.map((feat) => (
-                              <li key={feat} className="flex items-center gap-2">
-                                <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-rose-500/15 text-rose-400">
-                                  <Check className="h-2.5 w-2.5" />
-                                </span>
-                                {feat}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div className="flex items-center gap-4 md:text-right">
-                          <div>
-                            <p className="font-display text-2xl font-bold tracking-tight text-white md:text-3xl">{tier.price}</p>
-                            <p className="text-xs text-[var(--text-dim)]">Per avatar</p>
-                          </div>
-                          <Link href="/contact" className="btn-primary btn-sm">
-                            Request
-                            <ArrowRight className="h-3.5 w-3.5" />
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </Reveal>
-                ))}
-              </div>
-            </Reveal>
-            <Reveal delay={200}>
-              <div className="mt-8 text-center">
-                <p className="mb-3 text-sm text-[var(--text-dim)]">All NSFW work requires age verification and is delivered privately.</p>
-                <Link href="/nsfw" className="btn-secondary inline-flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
-                  View NSFW Page
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </Reveal>
           </div>
 
           {/* Process */}
