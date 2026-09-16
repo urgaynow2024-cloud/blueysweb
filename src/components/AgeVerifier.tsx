@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { ShieldCheck, AlertCircle, Lock } from "lucide-react";
 
 const AGE_VERIFIED_KEY = "bluey_age_verified";
@@ -43,6 +44,11 @@ export default function AgeVerifier({ onVerified }: { onVerified: () => void }) 
   const [age, setAge] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -71,8 +77,8 @@ export default function AgeVerifier({ onVerified }: { onVerified: () => void }) 
 
   const quickAges = [18, 19, 20, 21, 25, 30];
 
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+  const modal = (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-32 left-1/4 h-[400px] w-[400px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.08] blur-[120px]" />
         <div className="absolute -bottom-24 right-1/4 h-[350px] w-[350px] translate-x-1/2 rounded-full bg-[var(--accent-nebula)] opacity-[0.06] blur-[120px]" />
@@ -164,4 +170,8 @@ export default function AgeVerifier({ onVerified }: { onVerified: () => void }) 
       </div>
     </div>
   );
+
+  if (!mounted) return null;
+
+  return createPortal(modal, document.body);
 }
