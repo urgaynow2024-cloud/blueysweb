@@ -2,6 +2,7 @@
 
 import Reveal from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
+import { siteConfig } from "@/config/site";
 import { Check, ArrowRight, MessageCircle, FileText, DollarSign, Pencil, Rocket, Clock, Sparkles, Settings2 } from "lucide-react";
 
 const SERVICES = [
@@ -119,7 +120,7 @@ export default function ServicesPage() {
               <ArrowRight className="h-4 w-4" />
             </ButtonLink>
             <p className="mt-5 text-sm text-[var(--text-dim)]">
-              Interested? DM me on Discord at <span className="font-medium text-white">BlueyBarks</span>
+              Interested? DM me on Discord at <span className="font-medium text-white">{siteConfig.discord}</span>
             </p>
           </div>
         </div>

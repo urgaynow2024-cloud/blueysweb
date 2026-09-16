@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import SpaceParticles from "@/components/SpaceParticles";
+import { siteConfig } from "@/config/site";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -17,36 +18,36 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.comisioner.com"),
+  metadataBase: new URL(siteConfig.websiteUrl),
   title: {
-    default: "Comisioner",
-    template: "%s | Comisioner",
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
   },
-  description: "A premium creator studio for VRChat avatars — handcrafted with care in Blender & Unity.",
+  description: siteConfig.description,
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
     apple: "/favicon.svg",
   },
   openGraph: {
-    title: "Comisioner",
-    description: "A premium creator studio for VRChat avatars — handcrafted with care in Blender & Unity.",
-    url: "https://www.comisioner.com",
-    siteName: "Comisioner",
+    title: siteConfig.name,
+    description: siteConfig.description,
+    url: siteConfig.websiteUrl,
+    siteName: siteConfig.name,
     type: "website",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Comisioner - Premium VRChat Avatar Commissions",
+        alt: `${siteConfig.name} - Premium VRChat Avatar Commissions`,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Comisioner",
-    description: "A premium creator studio for VRChat avatars — handcrafted with care in Blender & Unity.",
+    title: siteConfig.name,
+    description: siteConfig.description,
     images: ["/opengraph-image"],
   },
 };

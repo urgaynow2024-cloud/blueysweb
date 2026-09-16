@@ -24,8 +24,16 @@
 CREATE TABLE IF NOT EXISTS portfolio_images (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   url TEXT NOT NULL,
+  storage_path TEXT,
+  original_filename TEXT,
+  mime_type TEXT,
+  file_size BIGINT,
+  width INTEGER,
+  height INTEGER,
   sort_order INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  media_role TEXT DEFAULT 'portfolio',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Client reviews with approval workflow
@@ -109,7 +117,10 @@ CREATE TABLE IF NOT EXISTS site_config (
 CREATE TABLE IF NOT EXISTS site_images (
   key TEXT PRIMARY KEY,
   url TEXT NOT NULL,
-  path TEXT,
+  storage_path TEXT,
+  original_filename TEXT,
+  mime_type TEXT,
+  file_size BIGINT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -118,9 +129,16 @@ CREATE TABLE IF NOT EXISTS site_images (
 CREATE TABLE IF NOT EXISTS nsfw_portfolio_images (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   url TEXT NOT NULL,
-  path TEXT,
+  storage_path TEXT,
+  original_filename TEXT,
+  mime_type TEXT,
+  file_size BIGINT,
+  width INTEGER,
+  height INTEGER,
   sort_order INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  media_role TEXT DEFAULT 'portfolio',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Commission queue items
@@ -208,10 +226,17 @@ CREATE TABLE IF NOT EXISTS adoptable_gallery (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   adoptable_id UUID NOT NULL REFERENCES adoptables(id) ON DELETE CASCADE,
   url TEXT NOT NULL,
-  path TEXT,
+  storage_path TEXT,
+  original_filename TEXT,
+  mime_type TEXT,
+  file_size BIGINT,
+  width INTEGER,
+  height INTEGER,
   sort_order INTEGER DEFAULT 0,
+  media_role TEXT DEFAULT 'gallery',
   is_nsfw BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Adoptable before & after comparisons (optional)
@@ -222,33 +247,57 @@ CREATE TABLE IF NOT EXISTS adoptable_before_after (
   after_url TEXT NOT NULL,
   before_path TEXT,
   after_path TEXT,
+  before_original_filename TEXT,
+  after_original_filename TEXT,
+  before_mime_type TEXT,
+  after_mime_type TEXT,
+  before_file_size BIGINT,
+  after_file_size BIGINT,
   label TEXT,
   sort_order INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- =============================================================================
 -- MIGRATIONS
 -- =============================================================================
 
--- Migrate reviews table to new schema if it already exists
+-- Migrate reviews table to new schema if it already exists (additive — no column drops)
 DO $$
+DECLARE
+  old_count INTEGER;
+  new_count INTEGER;
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'reviews') THEN
-    -- Drop old columns if they exist
-    BEGIN ALTER TABLE reviews DROP COLUMN IF EXISTS name; EXCEPTION WHEN others THEN NULL; END;
-    BEGIN ALTER TABLE reviews DROP COLUMN IF EXISTS text; EXCEPTION WHEN others THEN NULL; END;
-    BEGIN ALTER TABLE reviews DROP COLUMN IF EXISTS star_rating; EXCEPTION WHEN others THEN NULL; END;
-    BEGIN ALTER TABLE reviews DROP COLUMN IF EXISTS approved; EXCEPTION WHEN others THEN NULL; END;
-    BEGIN ALTER TABLE reviews DROP COLUMN IF EXISTS project; EXCEPTION WHEN others THEN NULL; END;
-    BEGIN ALTER TABLE reviews DROP COLUMN IF EXISTS avatar; EXCEPTION WHEN others THEN NULL; END;
-
-    -- Add new columns if they do not exist
+    -- Add new columns if they do not exist (additive only)
     BEGIN ALTER TABLE reviews ADD COLUMN IF NOT EXISTS display_name TEXT; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE reviews ADD COLUMN IF NOT EXISTS rating INTEGER DEFAULT 5; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE reviews ADD COLUMN IF NOT EXISTS review_text TEXT; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE reviews ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending'; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE reviews ADD COLUMN IF NOT EXISTS image_url TEXT; EXCEPTION WHEN others THEN NULL; END;
+
+    -- Backfill from legacy columns (only if the old columns still exist)
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'reviews' AND column_name = 'name') THEN
+      UPDATE reviews SET display_name = name WHERE display_name IS NULL AND name IS NOT NULL;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'reviews' AND column_name = 'star_rating') THEN
+      UPDATE reviews SET rating = star_rating WHERE rating IS NULL AND star_rating IS NOT NULL;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'reviews' AND column_name = 'text') THEN
+      UPDATE reviews SET review_text = text WHERE review_text IS NULL AND text IS NOT NULL;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'reviews' AND column_name = 'approved') THEN
+      UPDATE reviews SET status = CASE WHEN approved THEN 'approved' ELSE 'pending' END WHERE status = 'pending' AND approved IS NOT NULL;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'reviews' AND column_name = 'project') THEN
+      UPDATE reviews SET image_url = project WHERE image_url IS NULL AND project IS NOT NULL;
+    END IF;
+
+    -- Record counts for verification
+    SELECT COUNT(*) INTO old_count FROM reviews;
+    SELECT COUNT(*) INTO new_count FROM reviews WHERE display_name IS NOT NULL OR review_text IS NOT NULL;
+    RAISE NOTICE 'reviews migration: total=%, backfilled=%', old_count, new_count;
   END IF;
 END $$;
 
@@ -279,11 +328,19 @@ BEGIN
   END IF;
 END $$;
 
--- Migrate adoptable_gallery table to add is_nsfw column
+-- Migrate adoptable_gallery table to add is_nsfw and metadata columns
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'adoptable_gallery') THEN
     BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS is_nsfw BOOLEAN DEFAULT FALSE; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS storage_path TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS original_filename TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS mime_type TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS file_size BIGINT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS width INTEGER; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS height INTEGER; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS media_role TEXT DEFAULT 'gallery'; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW(); EXCEPTION WHEN others THEN NULL; END;
   END IF;
 END $$;
 
@@ -399,15 +456,15 @@ DO $$ BEGIN
   DROP POLICY IF EXISTS "Public deletes portfolio-images" ON storage.objects;
 END $$;
 
-CREATE POLICY "Public uploads portfolio-images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'portfolio-images');
 CREATE POLICY "Public reads portfolio-images" ON storage.objects FOR SELECT USING (bucket_id = 'portfolio-images');
-CREATE POLICY "Public updates portfolio-images" ON storage.objects FOR UPDATE USING (bucket_id = 'portfolio-images');
-CREATE POLICY "Public deletes portfolio-images" ON storage.objects FOR DELETE USING (bucket_id = 'portfolio-images');
+CREATE POLICY "Authenticated uploads portfolio-images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'portfolio-images' AND auth.role() = 'authenticated');
+CREATE POLICY "Authenticated updates portfolio-images" ON storage.objects FOR UPDATE USING (bucket_id = 'portfolio-images' AND auth.role() = 'authenticated');
+CREATE POLICY "Authenticated deletes portfolio-images" ON storage.objects FOR DELETE USING (bucket_id = 'portfolio-images' AND auth.role() = 'authenticated');
 
 -- Adoptables storage bucket and policies
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'adoptables') THEN
-    INSERT INTO storage.buckets (id, name, public) VALUES ('adoptables', 'adoptables', true);
+    INSERT INTO storage.buckets (id, name, public) VALUES ('adoptables', 'adoptables', false);
   END IF;
 END $$;
 
@@ -418,10 +475,10 @@ DO $$ BEGIN
   DROP POLICY IF EXISTS "Public deletes adoptables" ON storage.objects;
 END $$;
 
-CREATE POLICY "Public uploads adoptables" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'adoptables');
-CREATE POLICY "Public reads adoptables" ON storage.objects FOR SELECT USING (bucket_id = 'adoptables');
-CREATE POLICY "Public updates adoptables" ON storage.objects FOR UPDATE USING (bucket_id = 'adoptables');
-CREATE POLICY "Public deletes adoptables" ON storage.objects FOR DELETE USING (bucket_id = 'adoptables');
+CREATE POLICY "Authenticated reads adoptables" ON storage.objects FOR SELECT USING (bucket_id = 'adoptables' AND auth.role() = 'authenticated');
+CREATE POLICY "Authenticated uploads adoptables" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'adoptables' AND auth.role() = 'authenticated');
+CREATE POLICY "Authenticated updates adoptables" ON storage.objects FOR UPDATE USING (bucket_id = 'adoptables' AND auth.role() = 'authenticated');
+CREATE POLICY "Authenticated deletes adoptables" ON storage.objects FOR DELETE USING (bucket_id = 'adoptables' AND auth.role() = 'authenticated');
 
 -- =============================================================================
 -- DEFAULT DATA
@@ -570,30 +627,30 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO tos_sections (id, title, icon, section_type, content, items, highlight_box, box_type, box_title, sort_order, visible) VALUES
 ('11111111-1111-1111-1111-111111111111', 'Definitions', '📚', 'paragraphs', 'For the purposes of these Terms of Service, the following terms shall have the meanings set forth below:
 
-**Bluey Commissions**, **we**, **us**, or **our** refers to Bluey Commissions, operating under the business name associated with the VRChat avatar editing services provided.
+**Bluey''s Creation**, **we**, **us**, or **our** refers to Bluey''s Creation, operating under the business name associated with the VRChat avatar editing services provided.
 
-**Client**, **you**, or **your** refers to any individual or entity that engages Bluey Commissions for services, whether through commission requests, direct contact, or any other means.
+**Client**, **you**, or **your** refers to any individual or entity that engages Bluey''s Creation for services, whether through commission requests, direct contact, or any other means.
 
-**Services** refers to all digital art, 3D modelling, avatar editing, avatar optimisation, clothing creation, texture editing, material setup, Unity configuration, FBX editing, Adoptables (custom avatar designs and edits), and any other services offered by Bluey Commissions.
+**Services** refers to all digital art, 3D modelling, avatar editing, avatar optimisation, clothing creation, texture editing, material setup, Unity configuration, FBX editing, Adoptables (custom avatar designs and edits), and any other services offered by Bluey''s Creation.
 
-**Commission** or **Project** refers to any request, order, or work undertaken by Bluey Commissions at the Client''s direction, whether accepted or pending acceptance.
+**Commission** or **Project** refers to any request, order, or work undertaken by Bluey''s Creation at the Client''s direction, whether accepted or pending acceptance.
 
-**Assets** refers to any digital files, models, textures, avatars, references, or other materials provided by the Client to Bluey Commissions for the purpose of fulfilling a Commission.
+**Assets** refers to any digital files, models, textures, avatars, references, or other materials provided by the Client to Bluey''s Creation for the purpose of fulfilling a Commission.
 
-**Completed Work** refers to the final deliverables produced by Bluey Commissions upon completion of a Commission, including all digital files, edits, and modifications.
+**Completed Work** refers to the final deliverables produced by Bluey''s Creation upon completion of a Commission, including all digital files, edits, and modifications.
 
 **Platform** refers to VRChat and any other platform where avatars or assets may be used, modified, or displayed by the Client.', '{}', '', 'info', NULL, 0, TRUE),
-('11111111-1111-1111-1111-111111111112', 'Acceptance of Terms', '✅', 'paragraphs', 'By submitting a commission request, placing a deposit, or otherwise engaging Bluey Commissions for Services, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. These Terms constitute a legally binding agreement between you and Bluey Commissions.
+('11111111-1111-1111-1111-111111111112', 'Acceptance of Terms', '✅', 'paragraphs', 'By submitting a commission request, placing a deposit, or otherwise engaging Bluey''s Creation for Services, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. These Terms constitute a legally binding agreement between you and Bluey''s Creation.
 
-If you do not agree with any part of these Terms, you must not engage Bluey Commissions for Services. You are responsible for reviewing these Terms prior to each commission request.
+If you do not agree with any part of these Terms, you must not engage Bluey''s Creation for Services. You are responsible for reviewing these Terms prior to each commission request.
 
-Bluey Commissions reserves the right to update these Terms at any time. The most current version will always be available at /tos. Continued use of our Services following any changes constitutes acceptance of the revised Terms.', '{}', 'Important: By proceeding with a commission, you affirm your agreement to these Terms.', 'warning', 'Legal Binding', 1, TRUE),
-('11111111-1111-1111-1111-111111111113', 'Eligibility', '🔒', 'paragraphs', 'You must be at least 18 (eighteen) years of age to engage Bluey Commissions for Services. By submitting a commission request, you represent and warrant that you are at least 18 years old.
+Bluey''s Creation reserves the right to update these Terms at any time. The most current version will always be available at /tos. Continued use of our Services following any changes constitutes acceptance of the revised Terms.', '{}', 'Important: By proceeding with a commission, you affirm your agreement to these Terms.', 'warning', 'Legal Binding', 1, TRUE),
+('11111111-1111-1111-1111-111111111113', 'Eligibility', '🔒', 'paragraphs', 'You must be at least 18 (eighteen) years of age to engage Bluey''s Creation for Services. By submitting a commission request, you represent and warrant that you are at least 18 years old.
 
-If you are engaging Bluey Commissions on behalf of a company, organisation, or other legal entity, you represent that you have the authority to bind such entity to these Terms. If you do not have such authority, you must not submit a commission request.
+If you are engaging Bluey''s Creation on behalf of a company, organisation, or other legal entity, you represent that you have the authority to bind such entity to these Terms. If you do not have such authority, you must not submit a commission request.
 
-Bluey Commissions may refuse service to any individual or entity at our sole discretion.', '{}', '', 'info', NULL, 2, TRUE),
-('11111111-1111-1111-1111-111111111114', 'Commission Requests', '📨', 'paragraphs', 'Commission requests are submitted through the official contact form at blueysweb.com or via Discord (@BlueyBarks). All commission requests are subject to availability and acceptance by Bluey Commissions.
+Bluey''s Creation may refuse service to any individual or entity at our sole discretion.', '{}', '', 'info', NULL, 2, TRUE),
+('11111111-1111-1111-1111-111111111114', 'Commission Requests', '📨', 'paragraphs', 'Commission requests are submitted through the official contact form at blueycomissions.website or via Discord (@BlueyBarks). All commission requests are subject to availability and acceptance by Bluey''s Creation.
 
 To submit a commission request, you must provide:
 - Your preferred method of contact (Discord or email)
@@ -601,8 +658,8 @@ To submit a commission request, you must provide:
 - Reference images, links, or files as applicable
 - Any additional information that may help assess the request
 
-Bluey Commissions will review your request and may respond with questions, clarifications, or a quotation. We are under no obligation to accept any commission request.', '{}', '', 'info', NULL, 3, TRUE),
-('11111111-1111-1111-1111-111111111115', 'Quotations & Estimates', '💷', 'paragraphs', 'If your commission request is accepted, Bluey Commissions will provide a quotation based on the estimated complexity, scope, and time required to complete the work. All quotations are estimates only and are not guaranteed to be accurate.
+Bluey''s Creation will review your request and may respond with questions, clarifications, or a quotation. We are under no obligation to accept any commission request.', '{}', '', 'info', NULL, 3, TRUE),
+('11111111-1111-1111-1111-111111111115', 'Quotations & Estimates', '💷', 'paragraphs', 'If your commission request is accepted, Bluey''s Creation will provide a quotation based on the estimated complexity, scope, and time required to complete the work. All quotations are estimates only and are not guaranteed to be accurate.
 
 The final price may differ from the estimate based on:
 - Complexity discovered during the work
@@ -610,7 +667,7 @@ The final price may differ from the estimate based on:
 - Availability of assets or references
 - Technical constraints encountered
 
-Bluey Commissions will notify you if the final price is expected to differ significantly from the estimate before proceeding with additional work.', '{}', '', 'info', NULL, 4, TRUE),
+Bluey''s Creation will notify you if the final price is expected to differ significantly from the estimate before proceeding with additional work.', '{}', '', 'info', NULL, 4, TRUE),
 ('11111111-1111-1111-1111-111111111116', 'Services Provided', '🛠', 'bullets', '{}', ARRAY[
   'VRChat Avatar Editing',
   'Blender Work (modelling, sculpting, retopology, UV unwrapping)',
@@ -632,23 +689,23 @@ Bluey Commissions will notify you if the final price is expected to differ signi
 - Supplying all required avatar files, models, and assets in the correct format
 - Being available for communication during the agreed timeframe
 - Reviewing deliverables promptly and providing timely feedback
-- Notifying Bluey Commissions of any issues or concerns
+- Notifying Bluey''s Creation of any issues or concerns
 
-Delays caused by the Client''s failure to provide required information or feedback may extend the estimated completion time. Bluey Commissions is not responsible for delays caused by Client unresponsiveness.', '{}', '', 'info', NULL, 6, TRUE),
-('11111111-1111-1111-1111-111111111118', 'Communication', '💬', 'paragraphs', 'All communication between Bluey Commissions and the Client will be conducted through the agreed-upon channel (Discord or email). Bluey Commissions will make reasonable efforts to respond within 24-48 hours, though response times may vary depending on workload and availability.
+Delays caused by the Client''s failure to provide required information or feedback may extend the estimated completion time. Bluey''s Creation is not responsible for delays caused by Client unresponsiveness.', '{}', '', 'info', NULL, 6, TRUE),
+('11111111-1111-1111-1111-111111111118', 'Communication', '💬', 'paragraphs', 'All communication between Bluey''s Creation and the Client will be conducted through the agreed-upon channel (Discord or email). Bluey''s Creation will make reasonable efforts to respond within 24-48 hours, though response times may vary depending on workload and availability.
 
-By submitting a commission request, you consent to receive communications from us, including emails, Discord messages, and notifications. You agree that electronic communications constitute a legally binding record of the agreement between you and Bluey Commissions.
+By submitting a commission request, you consent to receive communications from us, including emails, Discord messages, and notifications. You agree that electronic communications constitute a legally binding record of the agreement between you and Bluey''s Creation.
 
-You must inform Bluey Commissions of any changes to your contact information. We are not responsible for missed communications due to incorrect contact details.', '{}', '', 'info', NULL, 7, TRUE),
-('11111111-1111-1111-1111-111111111119', 'Asset Ownership', '⚠️', 'paragraphs', 'You represent and warrant that you have the legal right and authority to provide all Assets to Bluey Commissions for the purpose of fulfilling the Commission. This includes:
+You must inform Bluey''s Creation of any changes to your contact information. We are not responsible for missed communications due to incorrect contact details.', '{}', '', 'info', NULL, 7, TRUE),
+('11111111-1111-1111-1111-111111111119', 'Asset Ownership', '⚠️', 'paragraphs', 'You represent and warrant that you have the legal right and authority to provide all Assets to Bluey''s Creation for the purpose of fulfilling the Commission. This includes:
 
 - Ownership or licensed rights to any avatar base, model, texture, or other digital asset
 - The right to sublicense or grant permissions for the use of such assets
 - Non-infringement of any third-party rights, including but not limited to copyright, trademark, and personality rights
 - Compliance with all applicable laws and regulations
 
-Bluey Commissions shall not be liable for any claims, damages, or disputes arising from the use of Assets that you do not own or have permission to use. If any such claim arises, you agree to indemnify and hold harmless Bluey Commissions from all liability.', '{}', 'You must be able to prove ownership or licensing rights for every asset you provide. If proof cannot be supplied, the commission will not proceed.', 'error', 'Client Responsibility', 8, TRUE),
-('11111111-1111-1111-1111-111111111120', 'Proof of Ownership Requirements', '🔎', 'paragraphs', 'Bluey Commissions may request proof of ownership or licensing for any Asset provided by the Client. Proof must be submitted in a form acceptable to us and may include:
+Bluey''s Creation shall not be liable for any claims, damages, or disputes arising from the use of Assets that you do not own or have permission to use. If any such claim arises, you agree to indemnify and hold harmless Bluey''s Creation from all liability.', '{}', 'You must be able to prove ownership or licensing rights for every asset you provide. If proof cannot be supplied, the commission will not proceed.', 'error', 'Client Responsibility', 8, TRUE),
+('11111111-1111-1111-1111-111111111120', 'Proof of Ownership Requirements', '🔎', 'paragraphs', 'Bluey''s Creation may request proof of ownership or licensing for any Asset provided by the Client. Proof must be submitted in a form acceptable to us and may include:
 
 - Receipt from Booth, Gumroad, Jinxxy, or other legitimate marketplace
 - Official store receipt or invoice
@@ -657,27 +714,27 @@ Bluey Commissions shall not be liable for any claims, damages, or disputes arisi
 
 For Adoptable commissions specifically, proof of ownership for any avatar base or asset used in the adoptable is mandatory. This must be provided before work can begin.
 
-If you cannot provide satisfactory proof of ownership, Bluey Commissions reserves the right to refuse or cancel the commission. Any deposit paid will be refunded in full if the cancellation occurs before work begins.', '{}', '', 'info', NULL, 9, TRUE),
+If you cannot provide satisfactory proof of ownership, Bluey''s Creation reserves the right to refuse or cancel the commission. Any deposit paid will be refunded in full if the cancellation occurs before work begins.', '{}', '', 'info', NULL, 9, TRUE),
 ('11111111-1111-1111-1111-111111111121', 'Adoptable Policy', '🔗', 'paragraphs', 'Adoptables involve creating custom avatar designs, edits, and combinations. Due to the creative and legal considerations involved, the following additional rules apply:
 
 **Proof of Ownership**: You must provide proof of ownership or licensing for every avatar base or asset used in the adoptable. Accepted proof includes receipts from Booth, Gumroad, Jinxxy, official creator stores, and other legitimate marketplaces. Without proof for every asset, the commission will not be accepted.
 
-**No Unauthorised Assets**: Bluey Commissions will not knowingly work with leaked, ripped, pirated, stolen, or otherwise unauthorised assets. If any asset used in an adoptable cannot be verified, the commission will be cancelled immediately.
+**No Unauthorised Assets**: Bluey''s Creation will not knowingly work with leaked, ripped, pirated, stolen, or otherwise unauthorised assets. If any asset used in an adoptable cannot be verified, the commission will be cancelled immediately.
 
 **Single Client Use Only**: Adoptable results are created for the individual Client who commissioned the work. Redistribution, resale, or sharing of adoptable results with other parties is strictly prohibited unless explicitly agreed upon.
 
 **Complexity Pricing**: Adoptable pricing depends on the design complexity, the amount of required Blender and Unity work, and the uniqueness of the request. Pricing is quoted per project and may differ from standard avatar editing rates.', '{}', 'All assets must be owned or licensed by you. Proof may be requested at any time before, during, or after the commission.', 'warning', 'Adoptable Requirements', 10, TRUE),
-('11111111-1111-1111-1111-111111111122', 'Third-Party Assets', '🧩', 'paragraphs', 'If you request work involving third-party assets (models, textures, avatars, or other digital content not created by you or Bluey Commissions), you are responsible for ensuring that you have the necessary rights to use, modify, and distribute those assets.
+('11111111-1111-1111-1111-111111111122', 'Third-Party Assets', '🧩', 'paragraphs', 'If you request work involving third-party assets (models, textures, avatars, or other digital content not created by you or Bluey''s Creation), you are responsible for ensuring that you have the necessary rights to use, modify, and distribute those assets.
 
-Bluey Commissions may, at our discretion, request proof of ownership or licensing for third-party assets before proceeding with the work. If proof is not provided, we may refuse the commission or remove the third-party assets from the scope of work.
+Bluey''s Creation may, at our discretion, request proof of ownership or licensing for third-party assets before proceeding with the work. If proof is not provided, we may refuse the commission or remove the third-party assets from the scope of work.
 
-You agree to indemnify and hold harmless Bluey Commissions against any claims, damages, or liabilities arising from the use of third-party assets in our work.', '{}', '', 'info', NULL, 11, TRUE),
-('11111111-1111-1111-1111-111111111123', 'Copyright & Intellectual Property', '©️', 'paragraphs', 'All intellectual property rights in deliverables created by Bluey Commissions remain the property of Bluey Commissions, except where explicit written agreements state otherwise. This includes all original work produced as part of a Commission, including but not limited to 3D models, textures, materials, rigging, and configuration files.
+You agree to indemnify and hold harmless Bluey''s Creation against any claims, damages, or liabilities arising from the use of third-party assets in our work.', '{}', '', 'info', NULL, 11, TRUE),
+('11111111-1111-1111-1111-111111111123', 'Copyright & Intellectual Property', '©️', 'paragraphs', 'All intellectual property rights in deliverables created by Bluey''s Creation remain the property of Bluey''s Creation, except where explicit written agreements state otherwise. This includes all original work produced as part of a Commission, including but not limited to 3D models, textures, materials, rigging, and configuration files.
 
 The Client receives a limited licence to use the Completed Work for personal, non-commercial purposes as described in the Licence Granted section below. No ownership rights are transferred to the Client unless explicitly stated in writing.
 
-Any trademarks, logos, or copyrighted material belonging to third parties remain the property of their respective owners. Bluey Commissions does not claim ownership of any third-party content provided by the Client.', '{}', '', 'info', NULL, 12, TRUE),
-('11111111-1111-1111-1111-111111111124', 'Licence Granted to Clients', '📄', 'paragraphs', 'Upon full payment for a Commission, Bluey Commissions grants the Client a non-exclusive, non-transferable, non-sublicensable licence to use the Completed Work for the following purposes:
+Any trademarks, logos, or copyrighted material belonging to third parties remain the property of their respective owners. Bluey''s Creation does not claim ownership of any third-party content provided by the Client.', '{}', '', 'info', NULL, 12, TRUE),
+('11111111-1111-1111-1111-111111111124', 'Licence Granted to Clients', '📄', 'paragraphs', 'Upon full payment for a Commission, Bluey''s Creation grants the Client a non-exclusive, non-transferable, non-sublicensable licence to use the Completed Work for the following purposes:
 
 - Personal use within VRChat and other compatible 3D platforms
 - Modification and further editing of the avatar or asset for personal use
@@ -690,7 +747,7 @@ The following uses are NOT permitted unless explicitly agreed in writing:
 - Distributing the Completed Work outside of the agreed scope
 
 Any breach of this licence agreement may result in the immediate revocation of the licence and refusal of future services.', '{}', '', 'info', NULL, 13, TRUE),
-('11111111-1111-1111-1111-111111111125', 'Portfolio & Showcase Rights', '🖼️', 'paragraphs', 'Bluey Commissions reserves the right to use, reproduce, display, and distribute images, screenshots, or other representations of the Completed Work for portfolio, marketing, and promotional purposes. This includes display on websites, social media, and other platforms.
+('11111111-1111-1111-1111-111111111125', 'Portfolio & Showcase Rights', '🖼️', 'paragraphs', 'Bluey''s Creation reserves the right to use, reproduce, display, and distribute images, screenshots, or other representations of the Completed Work for portfolio, marketing, and promotional purposes. This includes display on websites, social media, and other platforms.
 
 If you do not wish for your Commission to appear in our portfolio, you must request exclusion in writing before the work begins. Requests for exclusion made after completion will not be accepted.
 
@@ -710,19 +767,19 @@ Late payments may result in delays to the commission timeline or cancellation of
 - **Dissatisfaction with results**: If you are not satisfied with the Completed Work, revisions will be provided as outlined in the Revisions section. Refunds are not available for subjective dissatisfaction.
 
 All refund requests must be made in writing. Approved refunds will be processed using the original payment method within 5-10 business days.', '{}', 'Refunds are limited once work has begun. Please review all details carefully before committing to a commission.', 'warning', 'Limited Refunds', 16, TRUE),
-('11111111-1111-1111-1111-111111111128', 'Chargebacks & Payment Disputes', '🚫', 'paragraphs', 'Initiating a chargeback, payment dispute, or claim against Bluey Commissions for a completed or in-progress Commission is strictly prohibited. By proceeding with a payment, you acknowledge that:
+('11111111-1111-1111-1111-111111111128', 'Chargebacks & Payment Disputes', '🚫', 'paragraphs', 'Initiating a chargeback, payment dispute, or claim against Bluey''s Creation for a completed or in-progress Commission is strictly prohibited. By proceeding with a payment, you acknowledge that:
 
 - You have received and agreed to these Terms
 - You acknowledge receipt of Services commensurate with the payment made
 - You do not have grounds for a chargeback or payment dispute
 
-If a chargeback or payment dispute is initiated, Bluey Commissions reserves the right to:
+If a chargeback or payment dispute is initiated, Bluey''s Creation reserves the right to:
 - Immediately blacklist you from all future services
 - Pursue legal action to recover the disputed amount
 - Report the dispute to relevant payment processors and platforms
 
 Any chargebacks or disputes that are resolved in our favour do not entitle you to any refund, compensation, or continuation of service.', '{}', 'Chargebacks are considered fraudulent and will result in immediate blacklisting.', 'error', 'No Chargebacks', 17, TRUE),
-('11111111-1111-1111-1111-111111111129', 'Revisions', '🔄', 'paragraphs', 'Bluey Commissions offers revisions to ensure you are satisfied with the Completed Work. The revision policy is as follows:
+('11111111-1111-1111-1111-111111111129', 'Revisions', '🔄', 'paragraphs', 'Bluey''s Creation offers revisions to ensure you are satisfied with the Completed Work. The revision policy is as follows:
 
 - Minor revisions (colour changes, small adjustments, positioning tweaks) are included for up to 2 rounds per Commission.
 - Major revisions (significant structural changes, new features, additional assets) may incur additional fees.
@@ -730,7 +787,7 @@ Any chargebacks or disputes that are resolved in our favour do not entitle you t
 - Revisions are only available for the original scope of work. New additions are considered new Commissions.
 
 Additional revision rounds or major changes may be subject to extra charges, which will be quoted before work begins.', '{}', '', 'info', NULL, 18, TRUE),
-('11111111-1111-1111-1111-111111111130', 'Turnaround Times', '⏱️', 'paragraphs', 'Estimated completion times are provided as approximations only. Bluey Commissions will make reasonable efforts to meet estimated timelines, but we cannot guarantee completion by any specific date.
+('11111111-1111-1111-1111-111111111130', 'Turnaround Times', '⏱️', 'paragraphs', 'Estimated completion times are provided as approximations only. Bluey''s Creation will make reasonable efforts to meet estimated timelines, but we cannot guarantee completion by any specific date.
 
 Factors that may affect completion times include:
 - Complexity of the requested work
@@ -740,7 +797,7 @@ Factors that may affect completion times include:
 - Technical issues or unforeseen circumstances
 
 If delays are expected, we will communicate with you proactively. Time is not of the essence in the performance of Services.', '{}', '', 'info', NULL, 19, TRUE),
-('11111111-1111-1111-1111-111111111131', 'Delivery of Digital Goods', '📦', 'paragraphs', 'Completed Work is delivered digitally via Discord file upload, Google Drive link, or other agreed-upon method. Bluey Commissions is not responsible for delivery failures caused by:
+('11111111-1111-1111-1111-111111111131', 'Delivery of Digital Goods', '📦', 'paragraphs', 'Completed Work is delivered digitally via Discord file upload, Google Drive link, or other agreed-upon method. Bluey''s Creation is not responsible for delivery failures caused by:
 
 - Incorrect contact information provided by the Client
 - Platform outages or restrictions (Discord, Google Drive, etc.)
@@ -751,14 +808,14 @@ It is your responsibility to download and verify the Completed Work upon deliver
 ('11111111-1111-1111-1111-111111111132', 'Acceptance of Completed Work', '✅', 'paragraphs', 'Upon delivery of the Completed Work, you have 48 hours to review and confirm acceptance. If no feedback or objection is received within 48 hours, the work is considered accepted and the Commission is deemed complete.
 
 If you wish to request revisions or report issues, you must do so within 48 hours of delivery. Failure to provide feedback within this window waives your right to revisions for that delivery.', '{}', 'Work is considered accepted if no feedback is received within 48 hours of delivery.', 'warning', 'Acceptance Window', 21, TRUE),
-('11111111-1111-1111-1111-111111111133', 'Support After Delivery', '🎧', 'paragraphs', 'Bluey Commissions provides limited support after delivery of the Completed Work:
+('11111111-1111-1111-1111-111111111133', 'Support After Delivery', '🎧', 'paragraphs', 'Bluey''s Creation provides limited support after delivery of the Completed Work:
 
 - **Bug fixes**: Minor bugs or issues related to the delivered files (incorrect imports, missing components, etc.) will be fixed at no additional cost within 7 days of delivery.
 - **Guidance**: Basic guidance on how to use or import the files will be provided upon request.
 - **Major issues**: Significant problems or feature additions are treated as new revisions and may incur additional fees.
 
 Support is provided through Discord or email and is subject to availability. We are not obligated to provide ongoing or indefinite support.', '{}', '', 'info', NULL, 22, TRUE),
-('11111111-1111-1111-1111-111111111134', 'Refusal of Service', '🚫', 'paragraphs', 'Bluey Commissions reserves the right to refuse or cancel any Commission, in whole or in part, at our sole discretion, for any reason, including but not limited to:
+('11111111-1111-1111-1111-111111111134', 'Refusal of Service', '🚫', 'paragraphs', 'Bluey''s Creation reserves the right to refuse or cancel any Commission, in whole or in part, at our sole discretion, for any reason, including but not limited to:
 
 - Violation of these Terms
 - Inappropriate or abusive behaviour
@@ -769,9 +826,9 @@ Support is provided through Discord or email and is subject to availability. We 
 - Current high workload or unavailability
 
 If a Commission is refused before work begins, any deposit paid will be refunded in full. If a Commission is cancelled after work has begun, the refund policy in the Refund Policy section applies.', '{}', '', 'info', NULL, 23, TRUE),
-('11111111-1111-1111-1111-111111111135', 'Client Conduct', '👥', 'paragraphs', 'Bluey Commissions expects all Clients to communicate respectfully and professionally throughout the Commission process. Unacceptable behaviour includes, but is not limited to:
+('11111111-1111-1111-1111-111111111135', 'Client Conduct', '👥', 'paragraphs', 'Bluey''s Creation expects all Clients to communicate respectfully and professionally throughout the Commission process. Unacceptable behaviour includes, but is not limited to:
 
-- Harassment, bullying, or abusive language directed at Bluey Commissions or other clients
+- Harassment, bullying, or abusive language directed at Bluey''s Creation or other clients
 - Threats of any kind, including threats of violence, legal action, or chargebacks
 - Repeated unreasonable demands or excessive revision requests
 - Discriminatory or offensive language
@@ -779,9 +836,9 @@ If a Commission is refused before work begins, any deposit paid will be refunded
 - Disruptive behaviour in Discord servers or other communication channels
 
 Any violation of this conduct policy may result in immediate cancellation of the Commission, refusal of future services, and permanent blacklisting.', '{}', 'Respectful communication is expected at all times.', 'warning', 'Code of Conduct', 24, TRUE),
-('11111111-1111-1111-1111-111111111136', 'Blacklisting Policy', '🚫', 'paragraphs', 'Bluey Commissions maintains the right to permanently blacklist any Client from future services. Grounds for blacklisting include, but are not limited to:
+('11111111-1111-1111-1111-111111111136', 'Blacklisting Policy', '🚫', 'paragraphs', 'Bluey''s Creation maintains the right to permanently blacklist any Client from future services. Grounds for blacklisting include, but are not limited to:
 
-- Harassment of Bluey Commissions or staff
+- Harassment of Bluey''s Creation or staff
 - Harassment of other clients or community members
 - Abuse of the revision system or payment structure
 - Threats or intimidation
@@ -790,15 +847,15 @@ Any violation of this conduct policy may result in immediate cancellation of the
 - Lying about order details or asset ownership
 - Providing stolen, leaked, ripped, or pirated assets
 - Asset theft or distribution of unauthorized content
-- Redistributing Bluey Commissions'' work without permission
-- Claiming Bluey Commissions'' work as your own
-- Selling Bluey Commissions'' work without authorisation
+- Redistributing Bluey''s Creation''s work without permission
+- Claiming Bluey''s Creation''s work as your own
+- Selling Bluey''s Creation''s work without authorisation
 - Removing or altering required credits or watermarks
 - Repeated breaches of these Terms of Service
-- Attempting to scam or deceive Bluey Commissions in any way
+- Attempting to scam or deceive Bluey''s Creation in any way
 
 Blacklisted clients will be refused service permanently and may be reported to relevant platforms or authorities if illegal activity is suspected.', '{}', 'We reserve the right to blacklist anyone who violates these Terms or engages in harmful behaviour.', 'error', 'Strict Enforcement', 25, TRUE),
-('11111111-1111-1111-1111-111111111137', 'Privacy', '🔐', 'paragraphs', 'Bluey Commissions respects your privacy. This Privacy section summarises how we collect, use, and protect your information:
+('11111111-1111-1111-1111-111111111137', 'Privacy', '🔐', 'paragraphs', 'Bluey''s Creation respects your privacy. This Privacy section summarises how we collect, use, and protect your information:
 
 - **Data collected**: Name, Discord handle, email, commission details, and reference materials.
 - **Purpose**: To process and fulfil your Commission request.
@@ -808,25 +865,25 @@ Blacklisted clients will be refused service permanently and may be reported to r
 - **Third-party services**: We may use third-party platforms (Discord, Stripe, PayPal) for communication and payment processing. Your data is subject to their respective privacy policies.
 
 For full privacy information, please contact us directly.', '{}', '', 'info', NULL, 26, TRUE),
-('11111111-1111-1111-1111-111111111138', 'Limitation of Liability', '⚖️', 'paragraphs', 'To the fullest extent permitted by law, Bluey Commissions'' total liability to you for any claim arising from or related to these Terms or the Services, whether in contract, tort (including negligence), breach of statutory duty, or otherwise, shall be limited to the amount you paid to Bluey Commissions for the Commission giving rise to the claim.
+('11111111-1111-1111-1111-111111111138', 'Limitation of Liability', '⚖️', 'paragraphs', 'To the fullest extent permitted by law, Bluey''s Creation''s total liability to you for any claim arising from or related to these Terms or the Services, whether in contract, tort (including negligence), breach of statutory duty, or otherwise, shall be limited to the amount you paid to Bluey''s Creation for the Commission giving rise to the claim.
 
-Bluey Commissions shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation:
+Bluey''s Creation shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation:
 - Loss of profits, data, or revenue
 - Loss of use or business opportunity
 - Any indirect or intangible losses
 - Damage to reputation or loss of goodwill
 
-These limitations apply even if Bluey Commissions has been advised of the possibility of such damages.', '{}', '', 'info', NULL, 27, TRUE),
-('11111111-1111-1111-1111-111111111139', 'Disclaimer', '⚠️', 'paragraphs', 'The Services are provided on an "as is" and "as available" basis. Bluey Commissions makes no warranties of any kind, whether express, implied, statutory, or otherwise.
+These limitations apply even if Bluey''s Creation has been advised of the possibility of such damages.', '{}', '', 'info', NULL, 27, TRUE),
+('11111111-1111-1111-1111-111111111139', 'Disclaimer', '⚠️', 'paragraphs', 'The Services are provided on an "as is" and "as available" basis. Bluey''s Creation makes no warranties of any kind, whether express, implied, statutory, or otherwise.
 
-Bluey Commissions does not warrant that:
+Bluey''s Creation does not warrant that:
 - The Services will be uninterrupted, secure, or error-free
 - The results obtained from the Services will be accurate or reliable
 - Any defects will be corrected
 - The Services will meet your specific requirements
 
 While we strive for high quality in all deliverables, we cannot guarantee specific outcomes, compatibility with all platforms, or freedom from technical issues. You acknowledge that you use the Services at your own risk.', '{}', '', 'info', NULL, 28, TRUE),
-('11111111-1111-1111-1111-111111111140', 'Force Majeure', '🌪️', 'paragraphs', 'Bluey Commissions shall not be liable for any failure or delay in performing any obligation under these Terms that is caused by circumstances beyond our reasonable control, including but not limited to:
+('11111111-1111-1111-1111-111111111140', 'Force Majeure', '🌪️', 'paragraphs', 'Bluey''s Creation shall not be liable for any failure or delay in performing any obligation under these Terms that is caused by circumstances beyond our reasonable control, including but not limited to:
 
 - Acts of God (earthquakes, floods, storms, fires, pandemics)
 - War, terrorism, or civil unrest
@@ -838,23 +895,22 @@ While we strive for high quality in all deliverables, we cannot guarantee specif
 - Other events beyond reasonable control
 
 If a force majeure event occurs, we will make reasonable efforts to notify you and minimise disruption to the Commission.', '{}', '', 'info', NULL, 29, TRUE),
-('11111111-1111-1111-1111-111111111141', 'Changes to the Terms', '📝', 'paragraphs', 'Bluey Commissions reserves the right to modify or replace these Terms of Service at any time, at our sole discretion. When we do, we will update the "Last Updated" date at the top of this page and, where appropriate, the version number.
+('11111111-1111-1111-1111-111111111141', 'Changes to the Terms', '📝', 'paragraphs', 'Bluey''s Creation reserves the right to modify or replace these Terms of Service at any time, at our sole discretion. When we do, we will update the "Last Updated" date at the top of this page and, where appropriate, the version number.
 
-It is your responsibility to review these Terms periodically. Your continued engagement with Bluey Commissions after any changes constitutes acceptance of the revised Terms. If you do not agree with any change, you must discontinue using our Services and must not submit further commission requests.
+It is your responsibility to review these Terms periodically. Your continued engagement with Bluey''s Creation after any changes constitutes acceptance of the revised Terms. If you do not agree with any change, you must discontinue using our Services and must not submit further commission requests.
 
 Material changes will be communicated via the website or Discord.', '{}', '', 'info', NULL, 30, TRUE),
 ('11111111-1111-1111-1111-111111111142', 'Governing Law', '🏛️', 'paragraphs', 'These Terms are governed by and construed in accordance with the laws of England and Wales. Any disputes arising from or in connection with these Terms or the Services will be subject to the exclusive jurisdiction of the courts of England and Wales.
 
 If any provision of these Terms is found to be invalid or unenforceable by a court of competent jurisdiction, the remaining provisions will remain in full force and effect.', '{}', '', 'info', NULL, 31, TRUE),
 ('11111111-1111-1111-1111-111111111143', 'Severability', '✂️', 'paragraphs', 'If any provision of these Terms is held by a court of competent jurisdiction to be invalid, illegal, or unenforceable, the remaining provisions will remain in full force and effect. The invalid, illegal, or unenforceable provision shall be replaced by a valid, legal, and enforceable provision that most closely reflects the parties'' original intent.', '{}', '', 'info', NULL, 32, TRUE),
-('11111111-1111-1111-1111-111111111144', 'Entire Agreement', '📜', 'paragraphs', 'These Terms, together with any policies or documents referenced herein, constitute the entire agreement between you and Bluey Commissions with respect to the subject matter hereof and supersede any and all prior or contemporaneous communications, representations, agreements, or understandings, whether oral or written, whether electronic, or by any means of communication.
+('11111111-1111-1111-1111-111111111144', 'Entire Agreement', '📜', 'paragraphs', 'These Terms, together with any policies or documents referenced herein, constitute the entire agreement between you and Bluey''s Creation with respect to the subject matter hereof and supersede any and all prior or contemporaneous communications, representations, agreements, or understandings, whether oral or written, whether electronic, or by any means of communication.
 
 These Terms are not intended to confer any rights or benefits upon any third party, and no provision of these Terms will be construed as conferring any right or benefit to any third party.', '{}', '', 'info', NULL, 33, TRUE),
-('11111111-1111-1111-1111-111111111145', 'Contact Information', '📧', 'paragraphs', 'If you have any questions about these Terms of Service, or wish to contact Bluey Commissions for any reason, please contact us through the following methods:
+('11111111-1111-1111-1111-111111111145', 'Contact Information', '📧', 'paragraphs', 'If you have any questions about these Terms of Service, or wish to contact Bluey''s Creation for any reason, please contact us through the following methods:
 
 - **Discord**: @BlueyBarks
-- **Email**: Available via the contact form at blueysweb.com
-- **Website**: https://blueysweb.com
+- **Website**: https://www.blueycomissions.website/
 
 We will respond to your inquiry within a reasonable timeframe.', '{}', '', 'info', NULL, 34, TRUE)
 ON CONFLICT (id) DO NOTHING;
