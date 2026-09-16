@@ -1,43 +1,51 @@
 export const siteConfig = {
-  name: "Bluey's Avatar Commissions",
-  tagline: "Avatar creator • VRChat artist • Digital creator",
-  description: "Premium VRChat avatar commissions — handcrafted with care in Blender & Unity.",
-  websiteUrl: "https://www.blueycomissions.website/",
+  name: "Bluey's Creations",
+  tagline: "VRChat avatar edits • Blender work • Unity setup",
+  description: "Clean, stylish, performance-friendly avatars built for VRChat.",
+  websiteUrl: "https://www.blueycomisions.website/",
   discord: "BlueyBarks",
   discordUrl: "https://discord.gg/zt48MZm5kD",
   commissionPath: "/commission",
   nav: [
     { href: "/", label: "Home" },
-    { href: "/portfolio", label: "Portfolio" },
-    { href: "/adoptables", label: "Adoptables" },
     { href: "/services", label: "Services" },
-    { href: "/reviews", label: "Reviews" },
-    { href: "/about", label: "About" },
+    { href: "/portfolio", label: "Portfolio" },
+    { href: "/adoptables", label: "Adopt" },
     { href: "/faq", label: "FAQ" },
+  ],
+  moreMenu: [
+    { href: "/nsfw", label: "NSFW" },
+    { href: "/tos", label: "Terms of Service" },
+    { href: "/credits", label: "Credits" },
+    { href: "/privacy", label: "Privacy" },
     { href: "/contact", label: "Contact" },
   ],
   mobileNav: [
-    { href: "/", label: "Portfolio" },
-    { href: "/commission", label: "Commissions" },
-    { href: "/adoptables", label: "Adoptables" },
+    { href: "/", label: "Home" },
     { href: "/services", label: "Services" },
-    { href: "/about", label: "About" },
-    { href: "/reviews", label: "Reviews" },
+    { href: "/portfolio", label: "Portfolio" },
+    { href: "/adoptables", label: "Adoptables" },
+    { href: "/nsfw", label: "NSFW" },
+    { href: "/faq", label: "FAQ" },
     { href: "/contact", label: "Contact" },
+    { href: "/commission", label: "Commissions" },
   ],
   footerNav: [
-    { href: "/portfolio", label: "Portfolio" },
-    { href: "/commission", label: "Commissions" },
-    { href: "/adoptables", label: "Adoptables" },
+    { href: "/", label: "Home" },
     { href: "/services", label: "Services" },
+    { href: "/portfolio", label: "Portfolio" },
+    { href: "/adoptables", label: "Adopt" },
     { href: "/faq", label: "FAQ" },
-    { href: "/reviews", label: "Reviews" },
-    { href: "/contact", label: "Contact" },
+  ],
+  footerInfo: [
+    { href: "/tos", label: "TOS" },
+    { href: "/credits", label: "Credits" },
+    { href: "/privacy", label: "Privacy" },
   ],
   hero: {
-    eyebrow: "VRChat Avatar Commissions",
+    eyebrow: "VRChat Avatar Work",
     title: "Avatars that feel unmistakably yours",
-    subtitle: "Bluey's Avatar Commissions — handcrafted VRChat avatars built in Blender and Unity. Clean, stylish, and performance-friendly, tailored around your vision.",
+    subtitle: "Bluey's Creations — handcrafted VRChat avatars built in Blender and Unity. Clean, stylish, and performance-friendly, tailored around your vision.",
     primaryCta: "Commission Me",
     secondaryCta: "View My Work",
     status: "Commissions Open",
@@ -68,6 +76,7 @@ export const pricingTiers = [
     price: "£15–£25",
     badge: null,
     popular: false,
+    description: "Quick edits and small adjustments for existing avatar bases.",
     features: [
       "Accessory additions",
       "Simple clothing fitting",
@@ -86,6 +95,7 @@ export const pricingTiers = [
     price: "£30–£55",
     badge: "Most Requested",
     popular: true,
+    description: "The most common tier — multiple asset additions with full Unity setup.",
     features: [
       "Multiple asset additions",
       "Clothing fitting",
@@ -106,6 +116,7 @@ export const pricingTiers = [
     price: "£60–£90",
     badge: null,
     popular: false,
+    description: "Full avatar overhauls with heavy customisation and large Blender edits.",
     features: [
       "Full avatar overhauls",
       "Large Blender edits",
@@ -466,13 +477,40 @@ export const nsfwRules = {
   note: "Age verification may be requested. Failure to verify = automatic refusal.",
 };
 
+export const faqCategories = [
+  { id: "general", label: "General" },
+  { id: "commissions", label: "Commissions" },
+  { id: "pricing", label: "Pricing" },
+  { id: "blender", label: "Blender" },
+  { id: "unity", label: "Unity" },
+  { id: "avatar-uploads", label: "Avatar Uploads" },
+  { id: "delivery", label: "Delivery" },
+  { id: "revisions", label: "Revisions" },
+  { id: "payments", label: "Payments" },
+  { id: "refunds", label: "Refunds" },
+];
+
 export const faqItems = [
-  { question: "What do I need to provide?", answer: "What you want done, avatar base name, reference images, and any required assets provided." },
-  { question: "How long does a commission take?", answer: "Depends on the tier and complexity. Light work is faster, full overhauls take longer." },
-  { question: "Do you work on Quest?", answer: "Quest compatibility depends on the tier. Overhauls include Quest optimisation." },
-  { question: "What payment methods?", answer: "PayPal and Payhip only. 50% deposit before work begins." },
-  { question: "Can I request NSFW work?", answer: "Limited NSFW commissions are accepted case-by-case for 18+ clients. See NSFW page for details." },
-  { question: "What files do I get?", answer: "Unity-ready VRChat avatar files. Blender source files on request." },
+  { question: "What do I need to provide?", answer: "What you want done, avatar base name, reference images, and any required assets provided.", category: "general" },
+  { question: "How long does a commission take?", answer: "Depends on the tier and complexity. Light work is faster, full overhauls take longer.", category: "delivery" },
+  { question: "Do you work on Quest?", answer: "Quest compatibility depends on the tier. Overhauls include Quest optimisation.", category: "general" },
+  { question: "What payment methods?", answer: "PayPal and Payhip only. 50% deposit before work begins.", category: "payments" },
+  { question: "Can I request NSFW work?", answer: "Limited NSFW commissions are accepted case-by-case for 18+ clients. See NSFW page for details.", category: "general" },
+  { question: "What files do I get?", answer: "Unity-ready VRChat avatar files. Blender source files on request.", category: "delivery" },
+  { question: "Can I request revisions?", answer: "Minor revisions are included for up to 2 rounds per commission. Major changes may incur additional fees.", category: "revisions" },
+  { question: "What happens after I submit?", answer: "I review your request, confirm details, and provide a quote before starting any work.", category: "commissions" },
+  { question: "Do I need to own the assets?", answer: "Yes, you must legally own or have permission for every asset you provide. Proof may be requested.", category: "commissions" },
+  { question: "How much does a simple edit cost?", answer: "Light Blender Work starts at £15–£25 depending on scope and complexity.", category: "pricing" },
+  { question: "What is included in Standard tier?", answer: "Multiple asset additions, clothing fitting, hair swaps, toggle setup, material setup, weight painting, and more.", category: "pricing" },
+  { question: "Can I upgrade my tier later?", answer: "Yes, you can upgrade at any point before work begins. The price difference will be calculated.", category: "pricing" },
+  { question: "Do you do Blender modelling?", answer: "Yes, Blender work is available for custom modelling, retopology, UV unwrapping, and asset creation.", category: "blender" },
+  { question: "Do you do Unity setup?", answer: "Yes, Unity setup includes material configuration, toggles, optimisation, viseme setup, and VRChat packaging.", category: "unity" },
+  { question: "How do I upload my avatar?", answer: "After delivery, I send files via Discord or Google Drive. You import them into Unity/VRChat yourself.", category: "avatar-uploads" },
+  { question: "What if my avatar doesn't work?", answer: "Minor import bugs within 7 days of delivery are fixed at no extra cost. Contact me if you have issues.", category: "avatar-uploads" },
+  { question: "When will my avatar be delivered?", answer: "Estimated completion times are provided as approximations. Factors include complexity, queue, and your response time.", category: "delivery" },
+  { question: "How do I request a revision?", answer: "Submit revision requests within 7 days of delivery via Discord or email. Minor revisions are included.", category: "revisions" },
+  { question: "Are refunds available?", answer: "Refunds are limited. Full deposit refunds before work begins; no refunds once work has started.", category: "refunds" },
+  { question: "How do I pay?", answer: "Payment is via PayPal invoice or Payhip. 50% deposit required before work starts, balance before delivery.", category: "payments" },
 ];
 
 export const reviews: any[] = [];
@@ -569,3 +607,39 @@ export const navLinks = [
   { href: "/about", label: "About" },
   { href: "/faq", label: "FAQ" },
 ];
+
+export const creditsData = {
+  websiteDev: {
+    title: "Website & Development",
+    items: [
+      { name: "Next.js", description: "Framework", url: "https://nextjs.org" },
+      { name: "Tailwind CSS", description: "Styling", url: "https://tailwindcss.com" },
+      { name: "Lucide Icons", description: "Icon library", url: "https://lucide.dev" },
+      { name: "Supabase", description: "Backend & database", url: "https://supabase.com" },
+    ],
+  },
+  icons: {
+    title: "Icons",
+    items: [
+      { name: "Lucide", description: "Primary icon library", url: "https://lucide.dev" },
+    ],
+  },
+  fonts: {
+    title: "Fonts",
+    items: [
+      { name: "Inter", description: "Body font", url: "https://fonts.google.com/specimen/Inter" },
+      { name: "Space Grotesk", description: "Display font", url: "https://fonts.google.com/specimen/Space+Grotesk" },
+    ],
+  },
+  visualAssets: {
+    title: "Visual Assets",
+    items: [],
+  },
+  specialThanks: {
+    title: "Special Thanks",
+    items: [
+      { name: "Beta testers", description: "Early feedback and testing" },
+      { name: "Community", description: "Support and encouragement" },
+    ],
+  },
+};

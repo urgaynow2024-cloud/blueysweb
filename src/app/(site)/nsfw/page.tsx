@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import AgeVerifier from "@/components/AgeVerifier";
 import { nsfwPricingTiers, nsfwRules } from "@/config/site";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { getNsfwPortfolioImages } from "@/lib/db";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -48,24 +48,8 @@ export default function NsfwPage() {
       if (!isVerified) return;
       setLoading(true);
       try {
-        if (!isSupabaseConfigured || !supabase) {
-          const stored = localStorage.getItem("adminData");
-          if (stored) {
-            try {
-              const data = JSON.parse(stored);
-              if (data.nsfwPortfolioImages && data.nsfwPortfolioImages.length > 0) {
-                setImages(data.nsfwPortfolioImages);
-              }
-            } catch (e) {}
-          }
-          setLoading(false);
-          return;
-        }
-        const { data } = await supabase
-          .from("nsfw_portfolio_images")
-          .select("url")
-          .order("sort_order", { ascending: true });
-        if (data && data.length > 0) setImages(data.map((img) => img.url));
+        const data = await getNsfwPortfolioImages();
+        setImages((data || []).map((img: { id: string; url: string }) => img.url));
       } catch (e) {
         console.error("Failed to load NSFW portfolio:", e);
       } finally {
