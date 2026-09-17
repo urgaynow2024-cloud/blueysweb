@@ -107,7 +107,7 @@ export default function ReviewsPage() {
                     </div>
                     {featured.image_url && (
                       <div className="mt-6 overflow-hidden rounded-xl border border-[var(--border)]">
-                        <img src={featured.image_url} alt="Commission preview" loading="lazy" className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
+                        <img src={featured.image_url} alt="Commission preview" loading="lazy" className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" onError={(e) => { e.currentTarget.src = "https://picsum.photos/id/1000/800/450"; e.currentTarget.alt = "Image failed to load - placeholder shown"; }} />
                       </div>
                     )}
                   </div>

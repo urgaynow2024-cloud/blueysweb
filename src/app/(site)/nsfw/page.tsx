@@ -142,7 +142,7 @@ export default function NsfwPage() {
                       aria-label={`View NSFW image ${i + 1} full size`}
                       className="gallery-masonry-item group relative overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] cursor-pointer transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[var(--shadow-md)]"
                     >
-                      <img src={url} alt={`NSFW Work ${i + 1}`} loading="lazy" className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+                      <img src={url} alt={`NSFW Work ${i + 1}`} loading="lazy" className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" onError={(e) => { e.currentTarget.src = "https://picsum.photos/id/1000/600/600"; e.currentTarget.alt = "Image failed to load - placeholder shown"; }} />
                       <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                         <span className="grid h-10 w-10 place-items-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition-transform duration-300 group-hover:scale-110">
                           <ImageIcon className="h-4 w-4" />

@@ -64,6 +64,10 @@ export default function Hero() {
                       src={heroImage}
                       alt="Featured VRChat avatar commission showcase"
                       className="h-full min-h-[340px] max-h-[60vh] w-full object-cover transition-transform duration-700 ease-out hover:scale-[1.02]"
+                      onError={(e) => {
+                        e.currentTarget.src = "https://picsum.photos/id/1000/1200/675";
+                        e.currentTarget.alt = "Image failed to load - placeholder shown";
+                      }}
                     />
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--bg)]/40 via-transparent to-transparent" />
                   </>

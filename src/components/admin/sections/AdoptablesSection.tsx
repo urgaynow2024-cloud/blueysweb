@@ -690,7 +690,7 @@ export function AdoptablesSection() {
                   <div className="flex items-center gap-4">
                     {mainImages[project.id || ""] ? (
                       <div className="relative group">
-                        <img src={mainImages[project.id || ""]} alt="Main" className="h-20 w-20 rounded-lg border border-[var(--border)] object-cover" />
+                        <img src={mainImages[project.id || ""]} alt="Main" className="h-20 w-20 rounded-lg border border-[var(--border)] object-cover" onError={(e) => { e.currentTarget.src = "https://picsum.photos/id/1000/100/100"; e.currentTarget.alt = "Image failed to load - placeholder shown"; }} />
                         <button type="button" onClick={() => project.id && deleteMainImage(i)} className="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-[var(--danger)] text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Delete main image">×</button>
                       </div>
                     ) : (
@@ -792,7 +792,7 @@ export function AdoptablesSection() {
                   <div className="mt-3 flex flex-wrap gap-3">
                     {(galleryImages[project.id || ""] || []).map((img, gi) => (
                       <div key={img.id || gi} className="relative group">
-                        <img src={img.url} alt={`Gallery ${gi + 1}`} className="h-20 w-20 rounded-lg border border-[var(--border)] object-cover" />
+                        <img src={img.url} alt={`Gallery ${gi + 1}`} className="h-20 w-20 rounded-lg border border-[var(--border)] object-cover" onError={(e) => { e.currentTarget.src = "https://picsum.photos/id/1000/100/100"; e.currentTarget.alt = "Image failed to load - placeholder shown"; }} />
                         <button type="button" onClick={() => project.id && deleteGalleryImage(project.id, img.id!, img.path)} className="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-[var(--danger)] text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Delete image">×</button>
                       </div>
                     ))}
@@ -805,9 +805,9 @@ export function AdoptablesSection() {
                   <div className="space-y-3">
                     {(beforeAfters[project.id || ""] || []).map((ba, bi) => (
                        <div key={ba.id || bi} className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3 glass">
-                        <img src={ba.before_url} alt="Before" className="h-16 w-16 rounded-lg border border-[var(--border)] object-cover" />
+                        <img src={ba.before_url} alt="Before" className="h-16 w-16 rounded-lg border border-[var(--border)] object-cover" onError={(e) => { e.currentTarget.src = "https://picsum.photos/id/1000/100/100"; e.currentTarget.alt = "Image failed to load - placeholder shown"; }} />
                         <span className="text-[var(--text-dim)] text-xs">→</span>
-                        <img src={ba.after_url} alt="After" className="h-16 w-16 rounded-lg border border-[var(--border)] object-cover" />
+                        <img src={ba.after_url} alt="After" className="h-16 w-16 rounded-lg border border-[var(--border)] object-cover" onError={(e) => { e.currentTarget.src = "https://picsum.photos/id/1000/100/100"; e.currentTarget.alt = "Image failed to load - placeholder shown"; }} />
                         <Field label="Label" className="flex-1">
                           <Input value={ba.label} onChange={(e) => {
                             const next = (beforeAfters[project.id || ""] || []).slice();

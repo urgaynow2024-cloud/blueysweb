@@ -321,7 +321,7 @@ export function CreditsSection({ value, onChange }: Props) {
           </div>
           {editData.avatar_url && (
             <div className="mt-4">
-              <img src={editData.avatar_url} alt="Avatar preview" className="h-16 w-16 rounded-xl object-cover border border-[var(--border)]" />
+              <img src={editData.avatar_url} alt="Avatar preview" className="h-16 w-16 rounded-xl object-cover border border-[var(--border)]" onError={(e) => { e.currentTarget.src = "https://picsum.photos/id/1000/100/100"; e.currentTarget.alt = "Image failed to load - placeholder shown"; }} />
             </div>
           )}
           <div className="mt-5 flex justify-end">
@@ -352,7 +352,7 @@ export function CreditsSection({ value, onChange }: Props) {
                   </button>
                 </div>
                 {credit.avatar_url ? (
-                  <img src={credit.avatar_url} alt={credit.name} className="h-10 w-10 rounded-lg object-cover" />
+                  <img src={credit.avatar_url} alt={credit.name} className="h-10 w-10 rounded-lg object-cover" onError={(e) => { e.currentTarget.src = "https://picsum.photos/id/1000/100/100"; e.currentTarget.alt = "Image failed to load - placeholder shown"; }} />
                 ) : (
                   <div className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-[var(--accent)]/20 to-[var(--accent-2)]/20 text-sm font-bold text-white">
                     {credit.name?.[0]?.toUpperCase() || "?"}

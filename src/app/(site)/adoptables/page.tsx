@@ -84,6 +84,10 @@ function AdoptableCard({
                 className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04] ${
                   hasNsfw && !showNsfw ? "blur-[6px] grayscale" : ""
                 }`}
+                onError={(e) => {
+                  e.currentTarget.src = "https://picsum.photos/id/1000/600/800";
+                  e.currentTarget.alt = "Image failed to load - placeholder shown";
+                }}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center">

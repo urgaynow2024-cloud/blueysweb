@@ -118,6 +118,10 @@ export function PortfolioCard({
             loading="lazy"
             draggable={false}
             className="mx-auto block h-auto max-w-full object-contain"
+            onError={(e) => {
+              e.currentTarget.src = "https://picsum.photos/id/1000/400/300";
+              e.currentTarget.alt = "Image failed to load - placeholder shown";
+            }}
           />
         )}
 

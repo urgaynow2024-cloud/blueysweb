@@ -102,6 +102,10 @@ export default function PortfolioPage() {
                         alt="Featured portfolio artwork"
                         loading="eager"
                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                        onError={(e) => {
+                          e.currentTarget.src = "https://picsum.photos/id/1000/1200/675";
+                          e.currentTarget.alt = "Image failed to load - placeholder shown";
+                        }}
                       />
                     </div>
                     <div className="absolute inset-0 flex items-end justify-end bg-gradient-to-t from-black/50 via-transparent to-transparent p-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
@@ -164,6 +168,10 @@ export default function PortfolioPage() {
                           alt={`Portfolio ${i + 1}`}
                           loading="lazy"
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                          onError={(e) => {
+                            e.currentTarget.src = "https://picsum.photos/id/1000/600/600";
+                            e.currentTarget.alt = "Image failed to load - placeholder shown";
+                          }}
                         />
                       </div>
                       <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">

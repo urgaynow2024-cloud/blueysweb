@@ -82,6 +82,10 @@ export default function Lightbox({ images, index, onClose, onPrev, onNext }: Lig
           src={current.url}
           alt={current.caption || current.title || `Portfolio ${index + 1}`}
           className="max-h-[80vh] max-w-full rounded-2xl border border-white/10 object-contain shadow-2xl shadow-black/60"
+          onError={(e) => {
+            e.currentTarget.src = "https://picsum.photos/id/1000/800/600";
+            e.currentTarget.alt = "Image failed to load - placeholder shown";
+          }}
         />
 
         {current.caption && (
