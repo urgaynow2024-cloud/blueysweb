@@ -71,6 +71,12 @@ export function PortfolioSection() {
     return uploadMedia(file, "portfolio");
   }
 
+  function describeError(e: unknown): string {
+    if (e instanceof UploadError) return e.details ? `${e.message} (${e.details})` : e.message;
+    if (e instanceof Error) return e.message;
+    return "Upload failed";
+  }
+
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
     for (let i = 0; i < files.length; i++) {
@@ -82,7 +88,7 @@ export function PortfolioSection() {
         setImages((prev) => prev.map((img) => (img === temp ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path } : img)));
         toast.success("Image uploaded");
       } catch (e) {
-        const msg = e instanceof UploadError ? e.message : e instanceof Error ? e.message : "Upload failed";
+        const msg = describeError(e);
         setImages((prev) => prev.map((img) => (img === temp ? { ...img, uploading: false, error: msg } : img)));
         toast.error(msg);
       }
@@ -102,7 +108,7 @@ export function PortfolioSection() {
         setImages((prev) => prev.map((img, i) => (i === index ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path, uploading: false, retrying: false, error: undefined } : img)));
         toast.success("Image uploaded");
       } catch (e) {
-        const msg = e instanceof UploadError ? e.message : e instanceof Error ? e.message : "Upload failed";
+        const msg = describeError(e);
         setImages((prev) => prev.map((img, i) => (i === index ? { ...img, uploading: false, retrying: false, error: msg } : img)));
         toast.error(msg);
       }
@@ -155,8 +161,8 @@ export function PortfolioSection() {
       }
       toast.success("Image replaced");
     } catch (e) {
-      const msg = e instanceof UploadError ? e.message : e instanceof Error ? e.message : "Replace failed";
-      toast.error(msg);
+const msg = describeError(e);
+    toast.error(msg);
     }
   }
 

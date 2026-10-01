@@ -60,20 +60,60 @@ export async function uploadMedia(
   return parseResponse(response);
 }
 
-function parseResponse(response: Response): Promise<UploadResult> {
-  if (!response.ok) {
-    return response.json().then((body: any) => {
-      const details = body?.details;
-      const error = body?.error || (details ? `Upload failed: ${details}` : "Upload failed");
-      const code = body?.code || "UPLOAD_FAILED";
-      const category = body?.category;
-      throw new UploadError(code, error, true, details, category);
-    }).catch((err) => {
-      if (err instanceof UploadError) throw err;
-      throw new UploadError("UPLOAD_FAILED", "Upload failed", true);
-    });
+function describeUnparsedResponse(status: number, statusText: string, raw: string): string {
+  const body = raw.replace(/\s+/g, " ").trim().slice(0, 300);
+  return `HTTP ${status}${statusText ? ` ${statusText}` : ""}${body ? ` — ${body}` : " (empty body)"}`;
+}
+
+/**
+ * Reads an error body as JSON when possible, keeping the raw text when it is not
+ * parseable. A proxy or platform error page carries the real cause, so it must
+ * not be discarded in favour of a generic message.
+ */
+async function readErrorBody(response: Response): Promise<{ body: any | null; raw: string }> {
+  const text = typeof response.text === "function" ? response.text.bind(response) : null;
+  if (text) {
+    try {
+      const raw = await text();
+      const trimmed = raw.trim();
+      if (!trimmed) return { body: null, raw: "" };
+      try {
+        return { body: JSON.parse(trimmed), raw: trimmed };
+      } catch {
+        return { body: null, raw: trimmed };
+      }
+    } catch {
+      /* fall through to json() */
+    }
   }
-  return response.json() as Promise<UploadResult>;
+  if (typeof response.json === "function") {
+    try {
+      return { body: await response.json(), raw: "" };
+    } catch {
+      /* unreadable */
+    }
+  }
+  return { body: null, raw: "" };
+}
+
+async function parseResponse(response: Response): Promise<UploadResult> {
+  if (!response.ok) {
+    const { body, raw } = await readErrorBody(response);
+    if (!body && !raw) {
+      throw new UploadError("UPLOAD_FAILED", "Upload failed", true, describeUnparsedResponse(response.status, response.statusText, ""));
+    }
+    if (!body) {
+      throw new UploadError("UPLOAD_FAILED", "Upload failed", true, `Non-JSON response: ${describeUnparsedResponse(response.status, response.statusText, raw)}`);
+    }
+    const details = body?.details;
+    const error = body?.error || (details ? `Upload failed: ${details}` : "Upload failed");
+    throw new UploadError(body?.code || "UPLOAD_FAILED", error, true, details, body?.category);
+  }
+  try {
+    return await response.json();
+  } catch {
+    throw new UploadError("UPLOAD_FAILED", "Upload failed", true, describeUnparsedResponse(response.status, response.statusText, ""));
+  }
 }
 
 function uploadWithProgress(formData: FormData, onProgress: (progress: UploadProgress) => void): Promise<UploadResult> {
@@ -95,14 +135,19 @@ function uploadWithProgress(formData: FormData, onProgress: (progress: UploadPro
           const result = JSON.parse(xhr.responseText) as UploadResult;
           resolve(result);
         } catch {
-          reject(new UploadError("UPLOAD_FAILED", "Invalid upload response", true));
+          reject(new UploadError("UPLOAD_FAILED", "Upload failed", true, `Server returned HTTP ${xhr.status} with a non-JSON body: ${(xhr.responseText || "").slice(0, 300)}`));
         }
       } else {
+        const raw = xhr.responseText || "";
+        if (!raw.trim()) {
+          reject(new UploadError("UPLOAD_FAILED", "Upload failed", true, `Server returned HTTP ${xhr.status} with an empty body.`));
+          return;
+        }
         try {
-          const body = JSON.parse(xhr.responseText) as any;
+          const body = JSON.parse(raw);
           reject(new UploadError(body?.code || "UPLOAD_FAILED", body?.error || "Upload failed", true, body?.details, body?.category));
         } catch {
-          reject(new UploadError("UPLOAD_FAILED", "Upload failed", true));
+          reject(new UploadError("UPLOAD_FAILED", "Upload failed", true, `HTTP ${xhr.status} non-JSON response: ${raw.replace(/\s+/g, " ").slice(0, 300)}`));
         }
       }
     };
