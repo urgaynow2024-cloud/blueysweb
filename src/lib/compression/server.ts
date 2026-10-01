@@ -27,7 +27,8 @@ async function loadSharp(): Promise<typeof sharp | null> {
     await resolved({ create: { width: 1, height: 1, channels: 3, background: "#000" } }).png().toBuffer();
     sharpModule = resolved;
   } catch (error) {
-    console.warn("sharp is unavailable on this runtime; server-side image compression is disabled.", error);
+    const reason = error instanceof Error ? error.message.split("\n")[0] : String(error);
+    console.warn(`sharp unavailable on this runtime (${reason}); uploads will store the original file instead of a WebP conversion.`);
     sharpModule = null;
   }
   return sharpModule;

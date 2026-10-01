@@ -18,6 +18,16 @@ const REQUIRED_AUTH_ROLES: Record<AssetType, Role[]> = {
   "commission-reference": ["owner", "moderator"],
 };
 
+const REQUIRED_METADATA: Partial<Record<AssetType, string[]>> = {
+  "adoptable-main": ["adoptableId"],
+  "adoptable-gallery": ["adoptableId"],
+  "adoptable-before": ["adoptableId"],
+  "adoptable-after": ["adoptableId"],
+  site: ["key"],
+  review: ["display_name", "review_text"],
+  "credit-avatar": ["creditId"],
+};
+
 function parseMissingColumn(errorMessage: string): string | null {
   const match = errorMessage.match(/'(\w+)' column|"Could not find the '(\w+)' column/);
   return match ? (match[1] || match[2]) : null;
@@ -91,6 +101,23 @@ export async function POST(request: NextRequest) {
     const sizeValidation = validateUploadSize(file.size, file.type);
     if (!sizeValidation.valid) {
       return NextResponse.json({ error: sizeValidation.error!.message, code: "TOO_LARGE", category: sizeValidation.error!.category }, { status: 400 });
+    }
+
+    // Validate before touching storage. Previously a missing field surfaced as a
+    // generic "Database error" only after the file had already been written and
+    // then rolled back, with no indication of which asset type was at fault.
+    const requiredFields = REQUIRED_METADATA[type] || [];
+    const missingFields = requiredFields.filter((field) => !metadata[field]);
+    if (missingFields.length > 0) {
+      return NextResponse.json(
+        {
+          error: `Cannot upload "${type}" without ${missingFields.join(" and ")}`,
+          code: "MISSING_METADATA",
+          details: `assetType "${type}" requires: ${requiredFields.join(", ")}`,
+          category: "invalid request",
+        },
+        { status: 400 }
+      );
     }
 
     let uploadBuffer: Buffer = Buffer.from(await file.arrayBuffer());
@@ -233,10 +260,10 @@ export async function POST(request: NextRequest) {
         }
       }
     } catch (dbErr: any) {
-      console.error("DB insert error:", dbErr);
+      console.error(`DB insert error [assetType=${type}]:`, dbErr);
       await supabaseAdmin.storage.from(config.bucket).remove([storagePath]);
       return NextResponse.json(
-        { error: "Database error", code: "DB_ERROR", details: dbErr?.message },
+        { error: `Failed to save "${type}" upload`, code: "DB_ERROR", details: dbErr?.message, category: "DB failure" },
         { status: 500 }
       );
     }
