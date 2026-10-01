@@ -24,7 +24,6 @@ const REQUIRED_METADATA: Partial<Record<AssetType, string[]>> = {
   "adoptable-before": ["adoptableId"],
   "adoptable-after": ["adoptableId"],
   site: ["key"],
-  review: ["display_name", "review_text"],
   "credit-avatar": ["creditId"],
 };
 
@@ -191,11 +190,11 @@ export async function POST(request: NextRequest) {
           break;
         }
         case "adoptable-main": {
-          const { id } = metadata;
-          if (!id) throw new Error("adoptableId is required");
-          const { error } = await supabaseAdmin.from("adoptables").update({ main_image: url, main_image_path: storagePath, updated_at: now }).eq("id", id);
+          const { adoptableId } = metadata;
+          if (!adoptableId) throw new Error("adoptableId is required");
+          const { error } = await supabaseAdmin.from("adoptables").update({ main_image: url, main_image_path: storagePath, updated_at: now }).eq("id", adoptableId);
           if (error) throw error;
-          dbResult = { id, url, path: storagePath };
+          dbResult = { id: adoptableId, url, path: storagePath };
           break;
         }
         case "adoptable-gallery": {
@@ -239,11 +238,11 @@ export async function POST(request: NextRequest) {
           break;
         }
         case "review": {
-          const { display_name, review_text, rating } = metadata;
-          if (!display_name || !review_text) throw new Error("display_name and review_text are required");
-          const { data, error } = await insertWithRetry(supabaseAdmin, "reviews", { display_name, review_text, rating: typeof rating === "number" ? rating : 5, status: "pending", image_url: url, created_at: now });
-          if (error || !data) throw error;
-          dbResult = data;
+          // Both callers upload the image first and attach the returned URL to a
+          // review afterwards (POST /api/reviews, or the admin edit form). The
+          // row is created by that step, so creating one here would duplicate it
+          // and this upload has no display_name or review_text to insert with.
+          dbResult = { id: storageFilename, url, path: storagePath };
           break;
         }
         case "credit-avatar": {
