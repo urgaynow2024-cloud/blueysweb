@@ -16,8 +16,42 @@ export const SESSION_COOKIE = "bc_session";
 export const OWNER_USERNAME = "owner";
 export const DEFAULT_OWNER_PASSWORD = process.env.ADMIN_PASSWORD || "blueyadmin";
 
+/**
+ * Session signing secret.
+ *
+ * Previously this silently fell back to the literal string
+ * "insecure-dev-secret-change-me", which meant a production deployment with no
+ * SESSION_SECRET set would sign and verify admin sessions with a publicly
+ * known key. That is a full admin-session compromise.
+ *
+ * Resolution order:
+ *   1. SESSION_SECRET (preferred)
+ *   2. SUPABASE_SERVICE_ROLE_KEY (acceptable — already a server-only secret)
+ *
+ * If neither is present we fail closed in production instead of signing with a
+ * guessable key. In development we keep a fixed dev-only value so `next dev`
+ * still works without setup.
+ */
+function resolveSecret(): string {
+  const secret = process.env.SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (secret && secret.trim().length > 0) return secret;
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "SESSION_SECRET or SUPABASE_SERVICE_ROLE_KEY must be set in production. " +
+        "Refusing to sign admin sessions with a default secret.",
+    );
+  }
+
+  return "dev-only-insecure-secret";
+}
+
+let cachedSecret: string | null = null;
+
 function secret(): string {
-  return process.env.SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "insecure-dev-secret-change-me";
+  if (!cachedSecret) cachedSecret = resolveSecret();
+  return cachedSecret;
 }
 
 /* ----------------------------- Passwords ----------------------------- */
@@ -76,6 +110,22 @@ export function verifySession(token: string | undefined | null): SessionUser | n
 export function getSession(req: NextRequest): SessionUser | null {
   const token = req.cookies.get(SESSION_COOKIE)?.value;
   return verifySession(token);
+}
+
+export function isSecretConfigured(): boolean {
+  return Boolean((process.env.SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim());
+}
+
+/** Timing-safe string comparison for secret material. */
+export function safeCompare(a: string, b: string): boolean {
+  const bufA = Buffer.from(String(a));
+  const bufB = Buffer.from(String(b));
+  if (bufA.length !== bufB.length) {
+    // Still compare something of equal length to keep timing flat.
+    timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return timingSafeEqual(bufA, bufB);
 }
 
 /* --------------------------- Authorization --------------------------- */

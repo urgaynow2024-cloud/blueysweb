@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdminSession } from "@/lib/auth/guard";
 
 export async function DELETE(request: Request) {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return guard.response!;
   try {
     const { id, path } = await request.json();
 

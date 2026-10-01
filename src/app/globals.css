@@ -154,12 +154,12 @@ body {
 }
 
 ::selection {
-  background: rgba(90, 176, 240, 0.35);
+  background: var(--accent-glow);
   color: #fff;
 }
 
 ::-moz-selection {
-  background: rgba(90, 176, 240, 0.35);
+  background: var(--accent-glow);
   color: #fff;
 }
 
@@ -213,7 +213,7 @@ select:focus {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(90, 176, 240, 0.03), transparent);
+  background: linear-gradient(180deg, var(--accent-soft), transparent);
   pointer-events: none;
 }
 
@@ -627,7 +627,7 @@ textarea.field {
 
 select.field {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235ab0f0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2369bdf5' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 2.5rem;
@@ -979,7 +979,11 @@ select.field option {
 
 /* Floating badge */
 .float-badge {
-  animation: float 3s ease-in-out infinite;
+  /* Previously bobbed continuously (float 3s infinite). Three chips in the
+     hero were in permanent motion, which competed with the artwork and read as
+     an "animated decoration". The stagger delay is still honoured so they
+     appear in sequence; the endless bob is not. */
+  animation: none;
 }
 
 /* Stagger children for lists */
@@ -1164,10 +1168,10 @@ select.field option {
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(90, 176, 240, 0.2);
+  background: var(--accent-glow);
   border-radius: 99px;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(90, 176, 240, 0.35); }
+::-webkit-scrollbar-thumb:hover { background: var(--border-accent); }
 
 /* ----------------------------------------------------------------------------
     Misc helpers
@@ -1727,13 +1731,16 @@ select.field option {
   pointer-events: none;
 }
 
-.orb-slow { animation: orbFloat 30s ease-in-out infinite alternate; }
-.orb-med { animation: orbFloat 22s ease-in-out infinite alternate-reverse; }
-.orb-fast { animation: orbFloat 16s ease-in-out infinite alternate; }
-
-@keyframes orbFloat {
-  from { transform: translate3d(-2%, -1%, 0) scale(1); }
-  to { transform: translate3d(3%, 2%, 0) scale(1.06); }
+/* The orbs are soft background glows and are now rendered STATIC.
+   They previously drifted continuously (orbFloat, 16-30s infinite) across 28+
+   pages/containers. That is exactly the "over-animated background" the design
+   brief warns against, and it kept the compositor and main thread busy for no
+   visual benefit: the drift is so slow that it reads as a flicker, not motion.
+   The glows still read as depth from their colour and blur alone. */
+.orb-slow,
+.orb-med,
+.orb-fast {
+  animation: none;
 }
 
 :root {
@@ -1980,7 +1987,24 @@ select.field option {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Admin section cards */
+/* Clearance for the fixed bottom bars on small screens.
+
+   FloatingCommissionCTA becomes a full-width fixed bar on mobile
+   (max-width: 767px), so it sits on top of the bottom of the viewport. The
+   Footer sits outside <main>, which already carries pb-safe-mobile, so the
+   footer's own bottom rows could end up underneath that bar and be
+   unclickable. This reserves the space. */
+   .pb-floating-cta-mobile {
+     padding-bottom: 0;
+   }
+
+   @media (max-width: 767px) {
+     .pb-floating-cta-mobile {
+       padding-bottom: 4.5rem;
+     }
+   }
+
+   /* Admin section cards */
 .ad-section-card {
   position: relative;
   background: var(--bg-card);

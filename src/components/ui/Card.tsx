@@ -43,7 +43,7 @@ export function PremiumCard({
   return (
     <div
       className={`relative overflow-hidden rounded-[var(--r-lg)] transition-all duration-500 ${variantClasses[variant]} ${paddingClasses[padding]} ${
-        hoverGlow ? "hover:shadow-[0_0_40px_rgba(90,176,240,0.1)]" : ""
+        hoverGlow ? "hover:shadow-[0_0_40px_var(--accent-soft)]" : ""
       } ${className}`}
       {...props}
     >

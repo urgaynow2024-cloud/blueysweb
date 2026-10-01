@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getSiteConfig } from "@/lib/db";
-import { tosSections } from "@/config/site";
+
 import Link from "next/link";
 import { FileText, ShieldCheck, Clock, Sparkles, List, X } from "lucide-react";
 
@@ -84,34 +84,51 @@ export default function ToSPage() {
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [version, setVersion] = useState<string>("");
   const [tocOpen, setTocOpen] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
+      setLoadFailed(false);
       try {
-        if (isSupabaseConfigured) {
-          const res = await fetch("/api/tos-sections");
-          if (res.ok) {
-            const data = await res.json();
-            setSections(data);
-          } else {
-            setSections(tosSections as TosSection[]);
-          }
-        } else {
-          setSections(tosSections as TosSection[]);
-        }
+        // The database is the canonical Terms of Service.
+        //
+        // A previous version fell back to the shorter, differently-worded
+        // `tosSections` copy in src/config/site.ts whenever the request failed
+        // or returned nothing. That meant a Supabase outage silently published a
+        // DIFFERENT legal document to visitors — including different payment,
+        // refund and revision terms. That is not acceptable for legal content.
+        //
+        // The fallback copy is intentionally NOT used as a display fallback any
+        // more. If the canonical terms cannot be loaded, the page shows an
+        // explicit error instead. The two conflicts between the two versions
+        // (accepted payment methods, and the revision request window) are still
+        // awaiting the owner's decision.
         if (!isSupabaseConfigured) {
-          setLastUpdated("August 2025");
-          setVersion("2.0");
-        } else {
-          const config = await getSiteConfig();
-          setLastUpdated((config as any).tos_last_updated || "August 2025");
-          setVersion((config as any).tos_version || "2.0");
+          setLoadFailed(true);
+          return;
         }
+
+        const res = await fetch("/api/tos-sections");
+        if (!res.ok) {
+          setLoadFailed(true);
+          return;
+        }
+
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) {
+          setLoadFailed(true);
+          return;
+        }
+        setSections(data);
+
+        const config = await getSiteConfig();
+        setLastUpdated((config as any).tos_last_updated || "August 2025");
+        setVersion((config as any).tos_version || "2.0");
       } catch (e) {
         console.error("Failed to load TOS:", e);
-        setSections(tosSections as TosSection[]);
+        setLoadFailed(true);
       } finally {
         setLoading(false);
       }
@@ -124,6 +141,37 @@ export default function ToSPage() {
     num: s.number || String(i + 1).padStart(2, "0"),
     title: s.title,
   }));
+
+  if (loadFailed) {
+    return (
+      <div className="relative">
+        <div className="bg-nebula" />
+        <div className="bg-cosmic-fog" />
+        <section className="section">
+          <div className="container max-w-2xl">
+            <div className="empty-state">
+              <div className="empty-state-icon">
+                <ShieldCheck className="h-7 w-7" />
+              </div>
+              <h1 className="empty-state-title">Terms are temporarily unavailable</h1>
+              <p className="empty-state-desc">
+                We couldn&rsquo;t load the current Terms of Service. We don&rsquo;t show a
+                different version, because the terms in force are the ones published in the
+                database.
+              </p>
+              <p className="mt-4 text-sm text-[var(--text-dim)]">
+                Please try again shortly, or{" "}
+                <Link href="/contact" className="text-[var(--accent)] underline underline-offset-4">
+                  get in touch
+                </Link>{" "}
+                if you need the terms in the meantime.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="relative" ref={contentRef}>

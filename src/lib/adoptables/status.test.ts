@@ -88,4 +88,24 @@ describe("status metadata", () => {
     expect(() => unavailabilityMessage("nonsense")).not.toThrow();
     expect(canPurchase("nonsense")).toBe(true);
   });
+
+  it("keeps every status visually distinct", () => {
+    // The lifecycle relies on colour to separate states, so no two statuses may
+    // collapse onto the same hue.
+    const hues = ADOPTABLE_STATUSES.map((status) => ADOPTABLE_STATUS_META[status].dot);
+    expect(new Set(hues).size).toBe(ADOPTABLE_STATUSES.length);
+  });
+
+  it("uses design tokens rather than the legacy blue palette", () => {
+    // `sky-*` was the last raw Tailwind blue in the admin status metadata. Every
+    // colour must now come from the theme so it cannot drift back to the old
+    // Bluey's Creations blue.
+    for (const status of ADOPTABLE_STATUSES) {
+      const meta = ADOPTABLE_STATUS_META[status];
+      for (const value of [meta.text, meta.bg, meta.border, meta.dot]) {
+        expect(value).not.toMatch(/sky-|blue-/);
+      }
+    }
+    expect(ADOPTABLE_STATUS_META.pending.dot).toBe("bg-[var(--accent-3)]");
+  });
 });

@@ -1,16 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { ExternalLink, Link2, Globe, Sparkles } from "lucide-react";
 import { getSocialLinks } from "@/lib/db";
+import { siteConfig } from "@/config/site";
 
-const MOCK_LINKS = [
-  { id: "mock-link-1", name: "Discord", url: "https://discord.gg/zt48MZm5kD", description: "Chat with me directly on Discord" },
-  { id: "mock-link-2", name: "Booth", url: "https://booth.pm/en", description: "Buy avatar bases and assets" },
-  { id: "mock-link-3", name: "Gumroad", url: "https://gumroad.com", description: "Commission marketplace" },
-  { id: "mock-link-4", name: "VRChat", url: "https://vrchat.com", description: "The platform I build for" },
+/**
+ * Real, owned links only. Bluey's Discord invite is authoritative site config,
+ * so it stays available even when no `social_links` rows exist in Supabase.
+ * Invented marketplace links (Booth, Gumroad, VRChat) were previously shown
+ * here as placeholders and have been removed.
+ */
+const FALLBACK_LINKS = [
+  {
+    id: "site-discord",
+    name: "Discord",
+    url: siteConfig.discordUrl,
+    description: "Chat with me directly on Discord",
+  },
 ];
 
 function getDomain(url: string): string {
@@ -29,20 +39,19 @@ function getFaviconUrl(url: string): string {
 export default function LinksPage() {
   const [links, setLinks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
   const [faviconErrors, setFaviconErrors] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function load() {
       setLoading(true);
+      setFailed(false);
       try {
         const data = await getSocialLinks();
-        if (data && data.length > 0) {
-          setLinks(data);
-        } else {
-          setLinks(MOCK_LINKS);
-        }
+        setLinks(data && data.length > 0 ? data : FALLBACK_LINKS);
       } catch {
-        setLinks(MOCK_LINKS);
+        setFailed(true);
+        setLinks(FALLBACK_LINKS);
       } finally {
         setLoading(false);
       }
@@ -69,12 +78,22 @@ export default function LinksPage() {
                 </Reveal>
               ))}
             </div>
+          ) : failed ? (
+            <div className="mt-12 empty-state">
+              <div className="empty-state-icon">
+                <Globe className="h-7 w-7" />
+              </div>
+              <h3 className="empty-state-title">Something went wrong.</h3>
+              <p className="empty-state-desc">
+                We couldn&rsquo;t load links. Please try again later.
+              </p>
+            </div>
           ) : links.length === 0 ? (
             <div className="mt-12 empty-state">
               <div className="empty-state-icon">
                 <Globe className="h-7 w-7" />
               </div>
-              <h3 className="empty-state-title">No links yet</h3>
+              <h3 className="empty-state-title">No links have been added yet.</h3>
               <p className="empty-state-desc">Links will appear here when added.</p>
             </div>
           ) : (
@@ -126,11 +145,11 @@ export default function LinksPage() {
           )}
 
           <div className="mt-10 text-center">
-            <a href="/commission" className="btn-secondary inline-flex items-center gap-2">
+            <Link href="/commission" className="btn-secondary inline-flex items-center gap-2">
               <Link2 className="h-4 w-4" />
               Or just message me
               <ExternalLink className="h-4 w-4" />
-            </a>
+            </Link>
           </div>
         </div>
       </section>

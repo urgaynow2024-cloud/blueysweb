@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdminSession } from "@/lib/auth/guard";
 
 const REQUIRED_BUCKETS = ["portfolio-images"] as const;
 
@@ -48,6 +49,12 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return guard.response!;
+  if (guard.session?.role !== "owner") {
+    return NextResponse.json({ error: "Owner access required" }, { status: 403 });
+  }
+
   if (!supabaseAdmin) {
     return NextResponse.json({ success: false, error: "Supabase admin not configured" });
   }
@@ -57,6 +64,17 @@ export async function POST(request: NextRequest) {
     const { action, bucket } = body as { action?: string; bucket?: string };
 
     if (action === "test-upload" && bucket) {
+      // SECURITY: the bucket name used to be taken straight from the request
+      // and passed to the service-role client, which let any authenticated
+      // caller write and delete objects in ANY bucket in the project. Bucket
+      // names are now validated against the known allow-list.
+      if (!(REQUIRED_BUCKETS as readonly string[]).includes(bucket)) {
+        return NextResponse.json(
+          { success: false, error: "Unknown bucket" },
+          { status: 400 },
+        );
+      }
+
       const testPath = `_cors-test-${Date.now()}.txt`;
       const testContent = new Blob(["test"], { type: "text/plain" });
 

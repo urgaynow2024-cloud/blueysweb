@@ -37,7 +37,7 @@ export async function GET() {
             width: "400px",
             height: "400px",
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(90,176,240,0.25) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(105,189,245,0.25) 0%, transparent 70%)",
             bottom: "-100px",
             right: "-50px",
           }}
@@ -126,9 +126,9 @@ export async function GET() {
           <svg width="100" height="100" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="boneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style={{ stopColor: "#5ab0f0" }} />
-                <stop offset="50%" style={{ stopColor: "#a78bfa" }} />
-                <stop offset="100%" style={{ stopColor: "#4fd1c5" }} />
+                <stop offset="0%" style={{ stopColor: "#69bdf5" }} />
+                <stop offset="50%" style={{ stopColor: "#b49cff" }} />
+                <stop offset="100%" style={{ stopColor: "#ff8b7a" }} />
               </linearGradient>
               <filter id="glow">
                 <feGaussianBlur stdDeviation="2" result="coloredBlur" />
@@ -157,7 +157,7 @@ export async function GET() {
           style={{
             fontSize: "64px",
             fontWeight: "bold",
-            background: "linear-gradient(135deg, #ffffff 0%, #a78bfa 50%, #5ab0f0 100%)",
+            background: "linear-gradient(135deg, #ffffff 0%, #b49cff 50%, #69bdf5 100%)",
             backgroundClip: "text",
             color: "transparent",
             fontFamily: "system-ui, sans-serif",
@@ -211,7 +211,7 @@ export async function GET() {
             transform: "translateX(-50%)",
             width: "200px",
             height: "3px",
-            background: "linear-gradient(90deg, transparent, #5ab0f0, #a78bfa, transparent)",
+            background: "linear-gradient(90deg, transparent, #69bdf5, #b49cff, transparent)",
             borderRadius: "2px",
             zIndex: 2,
           }}

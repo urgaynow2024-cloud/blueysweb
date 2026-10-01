@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import Image from "next/image";
 import { getPortfolioImages } from "@/lib/db";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
 import Reveal from "@/components/ui/Reveal";
@@ -96,11 +97,13 @@ export default function PortfolioPage() {
                     aria-label="View featured artwork full size"
                     className="portfolio-card portfolio-hero group relative mb-8 cursor-pointer overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[var(--shadow-lg)]"
                   >
-                    <div className="portfolio-image aspect-[16/9] w-full">
-                      <img
+                    <div className="portfolio-image relative aspect-[16/9] w-full">
+                      <Image
                         src={featuredImage.url}
                         alt="Featured portfolio artwork"
-                        loading="eager"
+                        fill
+                        priority
+                        sizes="(max-width: 1024px) 100vw, 900px"
                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
                       />
                     </div>
@@ -158,11 +161,12 @@ export default function PortfolioPage() {
                       aria-label={`View portfolio image ${i + 1} full size`}
                       className="portfolio-card group relative overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] cursor-pointer transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[var(--shadow-md)]"
                     >
-                      <div className="portfolio-image">
-                        <img
+                      <div className="portfolio-image relative aspect-[4/3] w-full">
+                        <Image
                           src={item.url}
                           alt={`Portfolio ${i + 1}`}
-                          loading="lazy"
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                         />
                       </div>

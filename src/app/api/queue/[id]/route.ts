@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdminSession } from "@/lib/auth/guard";
 
 export async function PUT(request: Request) {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return guard.response!;
+
   try {
     const body = await request.json();
     const { id, title, stage, progress, estimated_completion, status, sort_order } = body;
@@ -42,6 +46,9 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return guard.response!;
+
   try {
     const { id } = await request.json();
 

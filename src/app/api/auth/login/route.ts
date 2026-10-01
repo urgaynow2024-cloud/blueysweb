@@ -3,6 +3,8 @@ import { supabaseAdmin } from "@/lib/supabase";
 import {
   signSession,
   verifyPassword,
+  safeCompare,
+  isSecretConfigured,
   OWNER_USERNAME,
   DEFAULT_OWNER_PASSWORD,
   ownerPermissions,
@@ -14,6 +16,19 @@ import {
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000;
 
+/**
+ * Rate limiting notes.
+ *
+ * This in-memory Map is per serverless instance, so on Vercel it only limits an
+ * attacker who keeps hitting the same warm instance. It is a useful first line
+ * of defence but is NOT a complete control.
+ *
+ * A stronger, still stack-native option is to record failed attempts in
+ * Supabase (a `login_attempts` table keyed by IP hash) so the limit is shared
+ * across every instance. That requires a schema addition and has deliberately
+ * NOT been done here, because it needs a migration and Bluey's approval.
+ * Recommended as a follow-up.
+ */
 const attempts = new Map<string, { count: number; lockedUntil: number | null }>();
 
 function checkRateLimit(ip: string): { ok: boolean; retryAfter?: number } {
@@ -50,6 +65,16 @@ function cookieOpts() {
 }
 
 export async function POST(req: NextRequest) {
+  // Fail closed with a clear server-side error rather than attempting to sign
+  // a session with a default secret.
+  if (!isSecretConfigured()) {
+    console.error("Login rejected: SESSION_SECRET and SUPABASE_SERVICE_ROLE_KEY are both unset.");
+    return NextResponse.json(
+      { error: "Server is not configured for authentication" },
+      { status: 500 },
+    );
+  }
+
   try {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
       || req.headers.get("x-real-ip")
@@ -68,7 +93,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (username === OWNER_USERNAME) {
-      if (password !== DEFAULT_OWNER_PASSWORD) {
+      if (!safeCompare(password, DEFAULT_OWNER_PASSWORD)) {
         recordFailure(ip);
         return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
       }

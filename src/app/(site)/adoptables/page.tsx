@@ -211,19 +211,21 @@ export default function AdoptablesPage() {
     setLoading(true);
     setError(null);
 
+    // SECURITY: this is a public page. It must never trigger database schema
+    // execution. Previously it called POST /api/setup/database on first visit,
+    // which meant any anonymous visitor could ask the server to apply the whole
+    // schema. That endpoint is now owner-only, and this page only performs a
+    // read-only setup *check*; if the database is not initialised the page
+    // shows its "not set up" state and setup happens from the admin panel.
     if (checkSetup && !setupAttemptedRef.current) {
       setupAttemptedRef.current = true;
       try {
         const checkRes = await fetch("/api/setup/database", { method: "GET" });
         const checkData = await checkRes.json();
-        if (checkData.needsSetup) {
-          const setupRes = await fetch("/api/setup/database", { method: "POST" });
-          const setupData = await setupRes.json();
-          if (!setupData.success && setupData.error?.includes("SUPABASE_ACCESS_TOKEN")) {
-            setError("MANUAL_SETUP_REQUIRED");
-            setLoading(false);
-            return;
-          }
+        if (checkData?.needsSetup) {
+          setError("DATABASE_NOT_SETUP");
+          setLoading(false);
+          return;
         }
       } catch (e) {
         console.error("Database setup check failed:", e);

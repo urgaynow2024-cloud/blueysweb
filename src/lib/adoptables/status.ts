@@ -51,10 +51,14 @@ export const ADOPTABLE_STATUS_META: Record<AdoptableStatus, AdoptableStatusMeta>
     label: "PENDING",
     title: "Pending",
     description: "Someone is currently claiming this adoptable.",
-    text: "text-sky-300",
-    bg: "bg-sky-500/10",
-    border: "border-sky-500/30",
-    dot: "bg-sky-400",
+    // Was `sky-*`, the last Tailwind-blue status colour left in the admin. The
+    // lifecycle keeps a distinct hue per state, so this uses the theme's cosmic
+    // violet instead — still clearly "in progress", but on-design and no longer
+    // reading as the old blue admin branding.
+    text: "text-[var(--accent-3)]",
+    bg: "bg-[var(--accent-3)]/10",
+    border: "border-[var(--accent-3)]/30",
+    dot: "bg-[var(--accent-3)]",
     purchasable: true,
     publiclyListed: true,
   },

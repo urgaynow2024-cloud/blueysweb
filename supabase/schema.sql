@@ -926,9 +926,11 @@ We may also include the Completed Work in demo reels, showcases, or promotional 
 
 A deposit (typically 50% of the estimated total) is required to commence work. The remaining balance (50%) is due before final delivery of the Completed Work.
 
-Payment is processed through Stripe, PayPal, or bank transfer, depending on the agreed method. All payment details will be communicated through secure channels.
+**PayPal is the only accepted payment method.** All commissions are paid via a PayPal invoice issued by Bluey''s Creation. No other payment method is accepted, including card payments, Stripe, Payhip, bank transfer, or cryptocurrency.
 
-Late payments may result in delays to the commission timeline or cancellation of the commission.', '{}', 'Full payment is required before final delivery.', 'warning', 'Payment Required', 15, TRUE),
+**Clients must join the Bluey''s Creation Discord server before a commission can be accepted.** The PayPal invoice and all payment details are provided through Discord. Commissions from clients who have not joined the server cannot be accepted or processed.
+
+Late payments may result in delays to the commission timeline or cancellation of the commission.', '{}', 'PayPal only. Clients must join the Discord server before a commission can be accepted.', 'warning', 'Payment Required', 15, TRUE),
 ('11111111-1111-1111-1111-111111111127', 'Refund Policy', '💸', 'paragraphs', 'Due to the nature of digital creative services, refunds are extremely limited and are only available under the following circumstances:
 
 - **Before work begins**: The full deposit is refundable if the commission is cancelled before any work starts. However, a small administrative fee may apply.
@@ -1032,7 +1034,7 @@ Blacklisted clients will be refused service permanently and may be reported to r
 - **Storage**: Information is stored securely and retained only as long as necessary for business purposes.
 - **No resale**: Your information will not be sold, traded, or rented to third parties.
 - **Cookies**: This site may use cookies for basic functionality. No personal tracking cookies are used.
-- **Third-party services**: We may use third-party platforms (Discord, Stripe, PayPal) for communication and payment processing. Your data is subject to their respective privacy policies.
+- **Third-party services**: We may use third-party platforms (Discord and PayPal) for communication and payment processing. Your data is subject to their respective privacy policies.
 
 For full privacy information, please contact us directly.', '{}', '', 'info', NULL, 26, TRUE),
 ('11111111-1111-1111-1111-111111111138', 'Limitation of Liability', '⚖️', 'paragraphs', 'To the fullest extent permitted by law, Bluey''s Creation''s total liability to you for any claim arising from or related to these Terms or the Services, whether in contract, tort (including negligence), breach of statutory duty, or otherwise, shall be limited to the amount you paid to Bluey''s Creation for the Commission giving rise to the claim.

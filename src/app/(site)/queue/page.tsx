@@ -26,9 +26,11 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; border: stri
   },
   hold: {
     label: "On Hold",
-    color: "text-blue-400",
-    border: "border-blue-500/30",
-    dot: "bg-blue-400",
+    // Was `blue-*`. Still a distinct, semantically "paused" hue rather than a
+    // status colour that competes with Open/Closed, but off the legacy blue.
+    color: "text-[var(--accent-3)]",
+    border: "border-[var(--accent-3)]/30",
+    dot: "bg-[var(--accent-3)]",
   },
 };
 

@@ -10,6 +10,54 @@ function parseMissingColumn(errorMessage: string): string | null {
   return match ? match[1] || match[2] : null;
 }
 
+/**
+ * Lists an adoptable's gallery images.
+ *
+ * The admin editor's `reload()` fetches this per adoptable to populate the media
+ * panel, and previously this route exported no GET at all. Next answered every
+ * read with 405, the client treated that as "no images", and the panel reported
+ * an adoptable with no gallery even though rows existed in the database — the
+ * admin's gallery and card artwork silently disappeared.
+ *
+ * This route reads through the service-role client, so it bypasses RLS and is
+ * therefore admin-only. The public site keeps using the anon client in
+ * `lib/db.ts`, whose RLS policies still scope it to listed adoptables.
+ */
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireAdminSession();
+  if (!auth.ok) return auth.response!;
+
+  try {
+    const { id } = await params;
+    if (!UUID_RE.test(id)) {
+      return NextResponse.json({ error: "Invalid adoptable id" }, { status: 400 });
+    }
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("adoptable_gallery")
+      .select("*")
+      .eq("adoptable_id", id)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Adoptable gallery read error:", error);
+      return NextResponse.json({ error: "Failed to load gallery" }, { status: 500 });
+    }
+
+    return NextResponse.json(data ?? []);
+  } catch (error) {
+    console.error("Adoptable gallery read error:", error);
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+}
+
 /** Reorders gallery thumbnails. The first image is used when no main image is set. */
 export async function PUT(
   request: Request,

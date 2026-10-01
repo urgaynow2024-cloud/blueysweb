@@ -1,61 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import Link from "next/link";
 import { CircleCheck, CalendarClock } from "lucide-react";
-
-const STATUS_CONFIG: Record<string, { label: string; text: string; border: string; bg: string; dot: string; desc: string }> = {
-  open: {
-    label: "Open",
-    text: "text-emerald-400",
-    border: "border-emerald-500/40",
-    bg: "bg-emerald-500/10",
-    dot: "bg-emerald-400",
-    desc: "Currently accepting new commissions.",
-  },
-  limited: {
-    label: "Limited Slots",
-    text: "text-amber-400",
-    border: "border-amber-500/40",
-    bg: "bg-amber-500/10",
-    dot: "bg-amber-400",
-    desc: "Only a few commission slots are currently available.",
-  },
-  closed: {
-    label: "Closed",
-    text: "text-red-400",
-    border: "border-red-500/40",
-    bg: "bg-red-500/10",
-    dot: "bg-red-400",
-    desc: "Not accepting new commissions at this time.",
-  },
-};
+import { useCommissionStatus } from "@/lib/commission-status";
 
 export default function CommissionAvailability() {
-  const [status, setStatus] = useState("open");
-  const [slotsTotal, setSlotsTotal] = useState(6);
-  const [slotsUsed, setSlotsUsed] = useState(3);
-  const [note, setNote] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch("/api/queue/config");
-        if (res.ok) {
-          const data = await res.json();
-          setStatus(data.queue_status || "open");
-          setSlotsTotal(parseInt(data.queue_slots_total || "6", 10));
-          setSlotsUsed(parseInt(data.queue_slots_used || "0", 10));
-          setNote(data.queue_notes || "");
-        }
-      } catch (e) {
-        console.error("Failed to load availability:", e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
+  const state = useCommissionStatus();
+  const { label, desc, dot, border, bg, text, slotsTotal, slotsUsed, slotsAvailable, note, loading } = state;
 
   if (loading) {
     return (
@@ -67,20 +18,18 @@ export default function CommissionAvailability() {
     );
   }
 
-  const config = STATUS_CONFIG[status] || STATUS_CONFIG.open;
-  const slotsAvailable = Math.max(0, slotsTotal - slotsUsed);
   const progressPercent = slotsTotal > 0 ? (slotsUsed / slotsTotal) * 100 : 0;
 
   return (
-    <div className={`relative overflow-hidden rounded-[var(--r-lg)] border ${config.border} ${config.bg} p-5 md:p-7`}>
+    <div className={`relative overflow-hidden rounded-[var(--r-lg)] border ${border} ${bg} p-5 md:p-7`}>
       <div className="pointer-events-none absolute -top-20 -right-20 h-[250px] w-[250px] rounded-full bg-[var(--accent-cosmic)] opacity-[0.05] blur-[80px]" />
       <div className="pointer-events-none absolute -bottom-16 -left-16 h-[200px] w-[200px] rounded-full bg-[var(--accent-nebula)] opacity-[0.04] blur-[80px]" />
       <div className="relative flex flex-col items-start gap-5 md:flex-row md:items-center">
         <div className="flex items-center gap-3">
-          <span className={`h-2.5 w-2.5 animate-pulse rounded-full ${config.dot}`} />
+          <span className={`h-2.5 w-2.5 animate-pulse rounded-full ${dot}`} />
           <div>
-            <h3 className={`text-lg font-bold ${config.text}`}>{config.label}</h3>
-            <p className="mt-0.5 text-xs text-[var(--text-secondary)]">{config.desc}</p>
+            <h3 className={`text-lg font-bold ${text}`}>{label}</h3>
+            <p className="mt-0.5 text-xs text-[var(--text-secondary)]">{desc}</p>
           </div>
         </div>
 
@@ -95,10 +44,10 @@ export default function CommissionAvailability() {
         </div>
 
         <div className="flex shrink-0">
-          <a href="/contact" className="btn-primary !py-2.5 !px-5 !text-sm inline-flex items-center gap-2">
+          <Link href="/commission" className="btn-primary !py-2.5 !px-5 !text-sm inline-flex items-center gap-2">
             <CalendarClock className="h-4 w-4" />
             Request Commission
-          </a>
+          </Link>
         </div>
       </div>
 

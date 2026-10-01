@@ -9,6 +9,7 @@ import CommissionTierCard from "@/components/ui/CommissionTierCard";
 import { ButtonLink } from "@/components/ui/Button";
 import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages, getAdoptables } from "@/lib/db";
 import Link from "next/link";
+import Image from "next/image";
 import { Star, Zap, ArrowRight, Check, Sparkles, Clock, ShieldCheck, Rocket, HelpCircle, DollarSign, Palette, Box, Layers, Brush, Wrench } from "lucide-react";
 
 function Stars({ rating, size = "h-4 w-4" }: { rating?: number; size?: string }) {
@@ -97,11 +98,12 @@ function AdoptableCard({ adoptable }: { adoptable: any }) {
       >
         {adoptable.main_image && (
           <div className="product-image relative aspect-[4/3] overflow-hidden">
-            <img
+            <Image
               src={adoptable.main_image}
               alt={adoptable.title}
-              loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)]/60 via-transparent to-transparent" />
             <div className="absolute top-3 left-3 flex gap-2">
@@ -357,8 +359,14 @@ export default function Home() {
                             </div>
                             <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">"{review.review_text}"</p>
                             {review.image_url && (
-                              <div className="mt-3 overflow-hidden rounded-lg border border-[var(--border)]">
-                                <img src={review.image_url} alt="Commission preview" loading="lazy" className="w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />
+                              <div className="relative mt-3 aspect-[4/3] overflow-hidden rounded-lg border border-[var(--border)]">
+                                <Image
+                                  src={review.image_url}
+                                  alt="Commission preview"
+                                  fill
+                                  sizes="(max-width: 640px) 100vw, 400px"
+                                  className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                                />
                               </div>
                             )}
                           </div>

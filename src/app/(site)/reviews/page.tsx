@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import ClientReviewForm from "@/components/ClientReviewForm";
 import Reveal from "@/components/ui/Reveal";
 import { getApprovedReviews } from "@/lib/db";
@@ -106,8 +107,14 @@ export default function ReviewsPage() {
                       </div>
                     </div>
                     {featured.image_url && (
-                      <div className="mt-6 overflow-hidden rounded-xl border border-[var(--border)]">
-                        <img src={featured.image_url} alt="Commission preview" loading="lazy" className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
+                      <div className="relative mt-6 aspect-[4/3] overflow-hidden rounded-xl border border-[var(--border)]">
+                        <Image
+                          src={featured.image_url}
+                          alt="Commission preview"
+                          fill
+                          sizes="(max-width: 1024px) 100vw, 50vw"
+                          className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                        />
                       </div>
                     )}
                   </div>

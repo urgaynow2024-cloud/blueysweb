@@ -165,6 +165,35 @@ describe("pickAdoptableArtwork", () => {
     const result = pickAdoptableArtwork(adoptable({ main_image_path: "adoptables/x.webp" }), []);
     expect(result?.url).toBe(`${PUBLIC_BASE}/adoptables/x.webp`);
   });
+
+  it("falls back to gallery artwork when no main image is stored", () => {
+    // Regression: the admin card used to render `adoptable.main_image` directly,
+    // so this case produced an empty artwork frame even though a perfectly
+    // loadable gallery image existed. It is the common case, because the main
+    // image is optional.
+    const result = pickAdoptableArtwork(adoptable(), [galleryImage()]);
+    expect(result).toMatchObject({ source: "gallery" });
+    expect(result?.url).toBe(`${PUBLIC_BASE}/adoptables/one.webp`);
+  });
+
+  it("carries the gallery row so its storage path can be used for retry", () => {
+    // AdoptableCard passes `galleryImage.path` back in as the `path` prop, which
+    // is what lets the frame recover if the stored URL 404s.
+    const row = galleryImage({ path: "adoptables/one.webp" } as Partial<AdoptableGalleryImage>);
+    const result = pickAdoptableArtwork(adoptable(), [row]);
+    expect(result?.galleryImage?.path).toBe("adoptables/one.webp");
+    expect(resolveMediaUrl(result!.url, result!.galleryImage?.path)).toBe(result!.url);
+  });
+
+  it("does not report a problem when only gallery artwork exists", () => {
+    // describeMediaProblem only inspects the main image columns, so the card
+    // must gate it behind a successful pick rather than showing it directly.
+    const artwork = pickAdoptableArtwork(adoptable(), [galleryImage()]);
+    expect(artwork).not.toBeNull();
+    expect(describeMediaProblem(adoptable().main_image, adoptable().main_image_path)).toMatch(
+      /no artwork/i,
+    );
+  });
 });
 
 describe("pickHeroArtwork", () => {

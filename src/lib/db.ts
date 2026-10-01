@@ -1,20 +1,30 @@
 import { supabase, isSupabaseConfigured } from "./supabase/client";
-import { pricingTiers, additionalServices, faqItems, workflowSteps, mockReviews, mockPortfolioImages, mockNsfwPortfolioImages, siteConfig } from "../config/site";
+import { pricingTiers, additionalServices, faqItems, workflowSteps, siteConfig } from "../config/site";
 import type { Adoptable, AdoptableGalleryImage } from "../types/database";
 import type { AdoptableStatus } from "./adoptables/status";
 import { normalizeStatus, visibleForStatus } from "./adoptables/status";
 
+/**
+ * Fallbacks are only ever used for editorial content that Bluey authored and
+ * that is already published on the live site (pricing tiers, FAQ answers,
+ * process steps, site branding).
+ *
+ * Customer-facing records (reviews, portfolio images, NSFW images, credits,
+ * adoptables) MUST NOT fall back to anything. If Supabase has zero real
+ * records the correct result is an empty list so the UI can render a real
+ * empty state. Fabricated reviews or placeholder imagery are never acceptable.
+ */
 const FALLBACKS = {
   siteConfig,
   workflowSteps,
   pricingTiers,
   additionalServices,
   faqItems,
-  reviews: mockReviews,
-  portfolioImages: mockPortfolioImages,
-  nsfwPortfolioImages: mockNsfwPortfolioImages,
-  adoptables: [],
-  adoptableGallery: [],
+  reviews: [] as any[],
+  portfolioImages: [] as { id: string; url: string; sort_order: number }[],
+  nsfwPortfolioImages: [] as { id: string; url: string; sort_order: number }[],
+  adoptables: [] as Adoptable[],
+  adoptableGallery: [] as AdoptableGalleryImage[],
 };
 
 async function fetchAll<T>(table: string, fallback: T[]): Promise<T[]> {

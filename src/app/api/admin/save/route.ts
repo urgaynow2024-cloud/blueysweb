@@ -1,7 +1,22 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdminSession } from "@/lib/auth/guard";
 
+/**
+ * Bulk "save everything" endpoint for the Founder Center.
+ *
+ * This route uses the Supabase service-role key, which bypasses RLS entirely,
+ * and rewrites site_config, pricing_tiers, faq_items, workflow_steps, reviews,
+ * social_links and tos_sections. It therefore MUST be authenticated and
+ * owner-only server-side. Frontend visibility is not a security control.
+ */
 export async function POST(request: Request) {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return guard.response!;
+  if (guard.session?.role !== "owner") {
+    return NextResponse.json({ error: "Owner access required" }, { status: 403 });
+  }
+
   try {
     const data = await request.json();
     const { site, pricing, faq, workflow, reviews, socialLinks, tos } = data;
@@ -9,52 +24,41 @@ export async function POST(request: Request) {
     if (!supabaseAdmin) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
+    const db = supabaseAdmin;
 
     const siteRows = Object.entries(site || {}).map(([key, value]) => ({ key, value: String(value) }));
-    await supabaseAdmin.from("site_config").upsert(siteRows, { onConflict: "key" });
+    await db.from("site_config").upsert(siteRows, { onConflict: "key" });
 
-    await supabaseAdmin.from("pricing_tiers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-    if (pricing && pricing.length > 0) {
-      for (const item of pricing) {
-        await supabaseAdmin.from("pricing_tiers").upsert({ ...item, id: item.id || undefined });
+    // NOTE: the previous implementation deleted every row in each table and
+    // then re-inserted the payload. A partial payload therefore destroyed all
+    // existing records, and any error between delete and insert left the table
+    // empty. Each table is now only replaced when the caller actually sent it,
+    // and a failed upsert aborts the request instead of silently continuing.
+    const replaceAll = async (
+      table: string,
+      rows: Record<string, unknown>[] | undefined,
+      sent: boolean
+    ) => {
+      if (!sent) return;
+      if (!Array.isArray(rows)) return;
+      if (rows.length === 0) {
+        await db.from(table).delete().neq("id", "00000000-0000-0000-0000-000000000000");
+        return;
       }
-    }
+      for (const item of rows) {
+        const { error } = await db
+          .from(table)
+          .upsert({ ...item, id: item.id || undefined });
+        if (error) throw new Error(`${table} upsert failed`);
+      }
+    };
 
-    await supabaseAdmin.from("faq_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-    if (faq && faq.length > 0) {
-      for (const item of faq) {
-        await supabaseAdmin.from("faq_items").upsert({ ...item, id: item.id || undefined });
-      }
-    }
-
-    await supabaseAdmin.from("workflow_steps").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-    if (workflow && workflow.length > 0) {
-      for (const item of workflow) {
-        await supabaseAdmin.from("workflow_steps").upsert({ ...item, id: item.id || undefined });
-      }
-    }
-
-    await supabaseAdmin.from("reviews").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-    if (reviews && reviews.length > 0) {
-      for (const item of reviews) {
-        await supabaseAdmin.from("reviews").upsert({ ...item, id: item.id || undefined });
-      }
-    }
-
-    await supabaseAdmin.from("social_links").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-    if (socialLinks && socialLinks.length > 0) {
-      for (const item of socialLinks) {
-        await supabaseAdmin.from("social_links").upsert({ ...item, id: item.id || undefined });
-      }
-    }
-
-    // TOS sections
-    await supabaseAdmin.from("tos_sections").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-    if (tos && tos.length > 0) {
-      for (const item of tos) {
-        await supabaseAdmin.from("tos_sections").upsert({ ...item, id: item.id || undefined });
-      }
-    }
+    await replaceAll("pricing_tiers", pricing, "pricing" in data);
+    await replaceAll("faq_items", faq, "faq" in data);
+    await replaceAll("workflow_steps", workflow, "workflow" in data);
+    await replaceAll("reviews", reviews, "reviews" in data);
+    await replaceAll("social_links", socialLinks, "socialLinks" in data);
+    await replaceAll("tos_sections", tos, "tos" in data);
 
     return NextResponse.json({ success: true });
   } catch (error) {

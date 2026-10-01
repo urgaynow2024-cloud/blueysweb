@@ -16,7 +16,9 @@ export default function SiteLayout({
       <main className="relative z-10 flex min-h-screen flex-col pb-safe-mobile md:pb-0">
         <PageTransition>{children}</PageTransition>
       </main>
-      <Footer />
+      <div className="pb-floating-cta-mobile">
+        <Footer />
+      </div>
       <FloatingCommissionCTA />
     </>
   );

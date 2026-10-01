@@ -95,6 +95,11 @@ export function AdoptableCard({
   }, [menuOpen]);
 
   const status = normalizeStatus(adoptable.availability);
+  // The card used to render `adoptable.main_image` directly, so an adoptable
+  // whose artwork only exists in the gallery — the common case, since the main
+  // image is optional — always showed the "no artwork" frame even though a
+  // perfectly loadable image was sitting in its own gallery. Reusing the same
+  // picker as the public site keeps the two views showing the same artwork.
   const artwork = pickAdoptableArtwork(adoptable, gallery as any);
   const mediaProblem = artwork ? null : describeMediaProblem(adoptable.main_image, adoptable.main_image_path);
   const priceSummary = adoptablePriceSummary(adoptable, true);
@@ -115,8 +120,8 @@ export function AdoptableCard({
       {/* Artwork */}
       <div className="relative aspect-[4/5] w-full overflow-hidden bg-[var(--bg)]">
         <AdoptableArtwork
-          url={adoptable.main_image}
-          path={adoptable.main_image_path}
+          url={artwork?.url ?? adoptable.main_image}
+          path={artwork?.source === "gallery" ? artwork.galleryImage?.path ?? artwork.galleryImage?.storage_path : adoptable.main_image_path}
           alt={adoptable.title || "Untitled adoptable"}
           wrapperClassName="h-full w-full"
           className="h-full w-full object-cover"

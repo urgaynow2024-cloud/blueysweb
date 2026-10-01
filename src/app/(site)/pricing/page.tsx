@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { pricingTiers, additionalServices, tosSections } from "@/config/site";
+import { pricingTiers, additionalServices } from "@/config/site";
 import { getPricingTiers } from "@/lib/db";
 import Reveal from "@/components/ui/Reveal";
 import { Check, ArrowRight, Info, Sparkles, DollarSign } from "lucide-react";
@@ -159,25 +159,24 @@ export default function PricingPage() {
               </p>
             </div>
 
-            <div className="mx-auto max-w-3xl grid grid-cols-1 gap-4 md:grid-cols-2 mt-12">
-              {tosSections.map((section, i) => (
-                <Reveal key={section.title} delay={(i % 4) * 60}>
-                  <div className="group py-4">
-                    <div className="flex items-center gap-3">
-                      <span className="grid h-7 w-7 place-items-center rounded-lg bg-[var(--accent-soft)] text-sm">{section.icon}</span>
-                      <h2 className="text-sm font-bold text-white">{section.title}</h2>
-                    </div>
-                    <ul className="mt-3 space-y-2 text-sm text-[var(--text-secondary)]">
-                      {section.items.map((item: string) => (
-                        <li key={item} className="flex items-start gap-3">
-                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </Reveal>
-              ))}
+            {/* The full Terms live only on /tos. This page previously embedded
+                a second, differently-worded copy of the Terms (including a
+                conflicting "PayPal only" payment policy), which contradicted
+                the canonical Terms and duplicated the legal document. */}
+            <div className="mx-auto mt-10 max-w-2xl rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-7 text-center">
+              <Info className="mx-auto h-6 w-6 text-[var(--accent)]" />
+              <h2 className="mt-3 text-lg font-bold text-white">Terms of Service</h2>
+              <p className="mx-auto mt-2 max-w-md text-sm text-[var(--text-secondary)]">
+                All commissions are subject to the full Terms of Service. Please read them
+                before placing an order.
+              </p>
+              <Link
+                href="/tos"
+                className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent)] underline underline-offset-4"
+              >
+                Read the full Terms of Service
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
 
             <div className="mt-12 flex flex-wrap items-center justify-center gap-3 text-sm text-[var(--text-secondary)]">

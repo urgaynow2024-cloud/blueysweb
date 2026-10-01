@@ -2,45 +2,70 @@ export const siteConfig = {
   name: "Bluey's Creations",
   tagline: "VRChat avatar edits • Blender work • Unity setup",
   description: "Clean, stylish, performance-friendly avatars built for VRChat.",
-  websiteUrl: "https://www.blueycomisions.website/",
+  websiteUrl: "https://www.blueycommissions.website/",
   discord: "BlueyBarks",
   discordUrl: "https://discord.gg/zt48MZm5kD",
   commissionPath: "/commission",
+  /**
+   * Single source of truth for site navigation.
+   *
+   * Desktop, mobile and footer all derive from these arrays. Do not add a
+   * second parallel list — that was the cause of five divergent nav
+   * definitions (nav / moreMenu / mobileNav / footerNav / navLinks).
+   */
   nav: [
     { href: "/", label: "Home" },
     { href: "/services", label: "Services" },
     { href: "/portfolio", label: "Portfolio" },
-    { href: "/adoptables", label: "Adopt" },
+    { href: "/adoptables", label: "Adoptables" },
+    { href: "/pricing", label: "Pricing" },
+    { href: "/about", label: "About" },
     { href: "/faq", label: "FAQ" },
   ],
-  moreMenu: [
-    { href: "/nsfw", label: "NSFW" },
-    { href: "/tos", label: "Terms of Service" },
-    { href: "/credits", label: "Credits" },
-    { href: "/privacy", label: "Privacy" },
+  /** Secondary/legal pages, shown in the footer and the mobile overflow menu. */
+  footerLinks: [
     { href: "/contact", label: "Contact" },
+    { href: "/tos", label: "Terms" },
+    { href: "/privacy", label: "Privacy" },
+    { href: "/credits", label: "Credits" },
+    { href: "/links", label: "Links" },
   ],
+  /** Age-restricted page. Kept out of primary nav. */
+  moreMenu: [{ href: "/nsfw", label: "NSFW" }],
+  /**
+   * Mobile menu = primary + secondary + CTA. Derived, never hand-maintained.
+   */
   mobileNav: [
     { href: "/", label: "Home" },
     { href: "/services", label: "Services" },
     { href: "/portfolio", label: "Portfolio" },
     { href: "/adoptables", label: "Adoptables" },
-    { href: "/nsfw", label: "NSFW" },
+    { href: "/pricing", label: "Pricing" },
+    { href: "/about", label: "About" },
     { href: "/faq", label: "FAQ" },
+    { href: "/nsfw", label: "NSFW" },
     { href: "/contact", label: "Contact" },
-    { href: "/commission", label: "Commissions" },
+    { href: "/tos", label: "Terms" },
+    { href: "/privacy", label: "Privacy" },
+    { href: "/credits", label: "Credits" },
+    { href: "/links", label: "Links" },
+    { href: "/commission", label: "Start a Commission" },
   ],
   footerNav: [
     { href: "/", label: "Home" },
     { href: "/services", label: "Services" },
     { href: "/portfolio", label: "Portfolio" },
-    { href: "/adoptables", label: "Adopt" },
+    { href: "/adoptables", label: "Adoptables" },
+    { href: "/pricing", label: "Pricing" },
+    { href: "/about", label: "About" },
     { href: "/faq", label: "FAQ" },
   ],
   footerInfo: [
-    { href: "/tos", label: "TOS" },
-    { href: "/credits", label: "Credits" },
+    { href: "/contact", label: "Contact" },
+    { href: "/tos", label: "Terms" },
     { href: "/privacy", label: "Privacy" },
+    { href: "/credits", label: "Credits" },
+    { href: "/links", label: "Links" },
   ],
   hero: {
     eyebrow: "VRChat Avatar Work",
@@ -48,7 +73,9 @@ export const siteConfig = {
     subtitle: "Bluey's Creations — handcrafted VRChat avatars built in Blender and Unity. Clean, stylish, and performance-friendly, tailored around your vision.",
     primaryCta: "Commission Me",
     secondaryCta: "View My Work",
-    status: "Commissions Open",
+    // Commission status is NOT stored here. It is read at runtime from the
+    // `site_config` queue keys via useCommissionStatus() so the Hero, the
+    // availability panel and the admin panel can never disagree.
   },
 };
 
@@ -199,6 +226,28 @@ export const nsfwPricingTiers = [
   },
 ];
 
+/**
+ * @deprecated UNUSED — DO NOT RENDER. Retained only as historical reference.
+ *
+ * The canonical Terms of Service are the `tos_sections` rows in Supabase and are
+ * published exclusively on /tos.
+ *
+ * This shorter copy was previously used as an offline fallback and was also
+ * duplicated into the /pricing, /services and /commission pages. It must not be
+ * displayed, because a silent fallback would publish a DIFFERENT legal document
+ * than the one in force.
+ *
+ * Conflict status:
+ *   - Payment methods: RESOLVED by the owner on 2026-10-01 — PayPal only, and
+ *     clients must join the Discord server before a commission is accepted. The
+ *     canonical Terms were updated to match. This copy happens to agree on
+ *     "PayPal only" but does not mention the Discord requirement.
+ *   - Revision request window: STILL UNRESOLVED. The canonical Terms contradict
+ *     themselves (7 days in "Revisions" vs 48 hours in "Acceptance of Completed
+ *     Work"). Do not edit either side until the owner confirms the policy.
+ *
+ * Once the revision window is settled this constant should simply be deleted.
+ */
 export const tosSections = [
   {
     title: "General Terms",
@@ -494,7 +543,7 @@ export const faqItems = [
   { question: "What do I need to provide?", answer: "What you want done, avatar base name, reference images, and any required assets provided.", category: "general" },
   { question: "How long does a commission take?", answer: "Depends on the tier and complexity. Light work is faster, full overhauls take longer.", category: "delivery" },
   { question: "Do you work on Quest?", answer: "Quest compatibility depends on the tier. Overhauls include Quest optimisation.", category: "general" },
-  { question: "What payment methods?", answer: "PayPal and Payhip only. 50% deposit before work begins.", category: "payments" },
+  { question: "What payment methods?", answer: "PayPal only, via a PayPal invoice issued by Bluey's Creation. A 50% deposit is required before work begins.", category: "payments" },
   { question: "Can I request NSFW work?", answer: "Limited NSFW commissions are accepted case-by-case for 18+ clients. See NSFW page for details.", category: "general" },
   { question: "What files do I get?", answer: "Unity-ready VRChat avatar files. Blender source files on request.", category: "delivery" },
   { question: "Can I request revisions?", answer: "Minor revisions are included for up to 2 rounds per commission. Major changes may incur additional fees.", category: "revisions" },
@@ -510,103 +559,31 @@ export const faqItems = [
   { question: "When will my avatar be delivered?", answer: "Estimated completion times are provided as approximations. Factors include complexity, queue, and your response time.", category: "delivery" },
   { question: "How do I request a revision?", answer: "Submit revision requests within 7 days of delivery via Discord or email. Minor revisions are included.", category: "revisions" },
   { question: "Are refunds available?", answer: "Refunds are limited. Full deposit refunds before work begins; no refunds once work has started.", category: "refunds" },
-  { question: "How do I pay?", answer: "Payment is via PayPal invoice or Payhip. 50% deposit required before work starts, balance before delivery.", category: "payments" },
+  { question: "How do I pay?", answer: "Payment is via a PayPal invoice. You must join the Discord server first, as the invoice and payment details are sent there. 50% deposit required before work starts, balance before delivery.", category: "payments" },
+  { question: "Do I need to join the Discord server?", answer: "Yes. Clients must join the Bluey's Creation Discord server before a commission can be accepted, because invoices and payment details are provided there.", category: "general" },
 ];
 
 export const reviews: any[] = [];
 
 /* =============================================================================
-   Mock / placeholder data
-   Used for UI preview and development only. These do NOT connect to or
-   depend on any production database. They ensure every page renders fully
-   even without a Supabase backend.
+   Removed: fabricated placeholder data
+   -----------------------------------------------------------------------------
+   mockPortfolioImages, mockNsfwPortfolioImages, mockAdoptables,
+   mockAdoptableGallery, mockReviews and mockCredits were previously exported
+   from here and used as production fallbacks in src/lib/db.ts.
+
+   They contained invented customer names (Astra, Kai, Rin, Val), invented
+   people (Nova, Rift, Luna, Orion, Starfall) and picsum.photos placeholder
+   imagery. That is fake production content and it has been removed.
+
+   Zero real records must render a real empty state instead. Editorial content
+   Bluey authored (pricing tiers, FAQ answers, process steps, branding) is
+   unaffected and remains below.
    ============================================================================ */
 
-export const mockPortfolioImages: { id: string; url: string; sort_order: number }[] = [
-  { id: "mock-port-1", url: "https://picsum.photos/id/10/800/600", sort_order: 0 },
-  { id: "mock-port-2", url: "https://picsum.photos/id/20/800/600", sort_order: 1 },
-  { id: "mock-port-3", url: "https://picsum.photos/id/30/800/600", sort_order: 2 },
-  { id: "mock-port-4", url: "https://picsum.photos/id/40/800/600", sort_order: 3 },
-  { id: "mock-port-5", url: "https://picsum.photos/id/50/800/600", sort_order: 4 },
-  { id: "mock-port-6", url: "https://picsum.photos/id/60/800/600", sort_order: 5 },
-  { id: "mock-port-7", url: "https://picsum.photos/id/70/800/600", sort_order: 6 },
-  { id: "mock-port-8", url: "https://picsum.photos/id/80/800/600", sort_order: 7 },
-  { id: "mock-port-9", url: "https://picsum.photos/id/90/800/600", sort_order: 8 },
-  { id: "mock-port-10", url: "https://picsum.photos/id/100/800/600", sort_order: 9 },
-];
-
-export const mockNsfwPortfolioImages: { id: string; url: string; sort_order: number }[] = [
-  { id: "mock-nsfw-1", url: "https://picsum.photos/id/110/800/600", sort_order: 0 },
-  { id: "mock-nsfw-2", url: "https://picsum.photos/id/120/800/600", sort_order: 1 },
-  { id: "mock-nsfw-3", url: "https://picsum.photos/id/130/800/600", sort_order: 2 },
-  { id: "mock-nsfw-4", url: "https://picsum.photos/id/140/800/600", sort_order: 3 },
-];
-
-export const mockAdoptables: any[] = [];
-
-export const mockAdoptableGallery: any[] = [];
-
-export const mockReviews = [
-  {
-    id: "mock-review-1",
-    display_name: "Astra",
-    rating: 5,
-    review_text: "Bluey transformed my avatar into something I absolutely love. The attention to detail and communication was stellar throughout. Highly recommend!",
-    status: "approved",
-    hidden: false,
-    image_url: "https://picsum.photos/id/20/800/600",
-    created_at: "2025-08-15T00:00:00Z",
-  },
-  {
-    id: "mock-review-2",
-    display_name: "Kai",
-    rating: 5,
-    review_text: "Professional, fast, and the quality is excellent. Got my avatar optimised for Quest and it runs flawlessly. Will definitely commission again.",
-    status: "approved",
-    hidden: false,
-    image_url: null,
-    created_at: "2025-07-22T00:00:00Z",
-  },
-  {
-    id: "mock-review-3",
-    display_name: "Rin",
-    rating: 4,
-    review_text: "Great work on my custom clothing set. The weight painting is solid and the fit is perfect on my avatar. Minor revisions were handled quickly.",
-    status: "approved",
-    hidden: false,
-    image_url: null,
-    created_at: "2025-06-10T00:00:00Z",
-  },
-  {
-    id: "mock-review-4",
-    display_name: "Val",
-    rating: 5,
-    review_text: "Commissioned an adoptable and the result exceeded my expectations. Clean topology, proper weights, and it looks amazing in-game.",
-    status: "approved",
-    hidden: false,
-    image_url: "https://picsum.photos/id/30/800/600",
-    created_at: "2025-05-03T00:00:00Z",
-  },
-];
-
-export const mockCredits = [
-  { id: "mock-credit-1", name: "Nova", description: "Early tester and feedback machine. Helped shape the first public builds.", categories: ["Testers", "Helpers"], avatar_url: "https://picsum.photos/id/35/200/200", sort_order: 1 },
-  { id: "mock-credit-2", name: "Rift", description: "Provided the base model for several featured commissions.", categories: ["Assets / Resources"], avatar_url: "https://picsum.photos/id/45/200/200", sort_order: 2 },
-  { id: "mock-credit-3", name: "Luna", description: "Designed the original Bluey's Creation logo and brand identity.", categories: ["Artists", "Collaborators"], avatar_url: "https://picsum.photos/id/55/200/200", sort_order: 3 },
-  { id: "mock-credit-4", name: "Orion", description: "Bug fixes, performance improvements, and general code wizardry.", categories: ["Developers"], avatar_url: "https://picsum.photos/id/65/200/200", sort_order: 4 },
-  { id: "mock-credit-5", name: "Starfall", description: "Continuous support, testing, and morale boosts throughout the whole journey.", categories: ["Supporters", "Special Thanks"], avatar_url: "https://picsum.photos/id/75/200/200", sort_order: 5 },
-];
-
-export const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/portfolio", label: "Portfolio" },
-  { href: "/adoptables", label: "Adoptables" },
-  { href: "/commission", label: "Commissions" },
-  { href: "/credits", label: "Credits" },
-  { href: "/nsfw", label: "NSFW" },
-  { href: "/about", label: "About" },
-  { href: "/faq", label: "FAQ" },
-];
+// NOTE: the standalone `navLinks` export that used to live here was dead code
+// (nothing imported it) and was a duplicate source of navigation truth. All
+// navigation now derives from `siteConfig.nav` / `siteConfig.footerLinks`.
 
 export const creditsData = {
   websiteDev: {

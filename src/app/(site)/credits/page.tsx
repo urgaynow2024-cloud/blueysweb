@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { getCredits } from "@/lib/db";
-import { creditsData, mockCredits } from "@/config/site";
+import { creditsData } from "@/config/site";
 import { ExternalLink, Globe, Heart, Code, Palette, Type, Package, Users, Sparkles } from "lucide-react";
 
 const CREDIT_ICONS: Record<string, React.ElementType> = {
@@ -20,18 +21,27 @@ const SECTION_ORDER = ["websiteDev", "icons", "fonts", "visualAssets", "specialT
 
 export default function CreditsPage() {
   const [dbCredits, setDbCredits] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     async function load() {
-      const credits = await getCredits();
-      if (credits && credits.length > 0) {
-        setDbCredits(credits);
+      setLoading(true);
+      setFailed(false);
+      try {
+        const credits = await getCredits();
+        setDbCredits(Array.isArray(credits) ? credits : []);
+      } catch (e) {
+        console.error("Failed to load credits:", e);
+        setFailed(true);
+      } finally {
+        setLoading(false);
       }
     }
     load();
   }, []);
 
-  const configCredits = dbCredits.length > 0 ? dbCredits : mockCredits;
+  const configCredits = dbCredits;
 
   return (
     <div className="relative">
@@ -108,7 +118,19 @@ export default function CreditsPage() {
               );
             })}
 
-            {configCredits.length > 0 && (
+            {loading ? (
+              <div className="empty-state">
+                <div className="empty-state-icon skeleton h-14 w-14" />
+              </div>
+            ) : failed ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">
+                  <Heart className="h-7 w-7" />
+                </div>
+                <h3 className="empty-state-title">Something went wrong.</h3>
+                <p className="empty-state-desc">We couldn&rsquo;t load credits. Please try again.</p>
+              </div>
+            ) : configCredits.length > 0 ? (
               <Reveal delay={0}>
                 <div className="space-y-5">
                   <div className="flex items-center gap-3">
@@ -127,9 +149,11 @@ export default function CreditsPage() {
                         className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4"
                       >
                         {credit.avatar_url ? (
-                          <img
+                          <Image
                             src={credit.avatar_url}
                             alt={credit.name}
+                            width={40}
+                            height={40}
                             className="h-10 w-10 shrink-0 rounded-full object-cover"
                           />
                         ) : (
@@ -153,6 +177,16 @@ export default function CreditsPage() {
                   </div>
                 </div>
               </Reveal>
+            ) : (
+              <div className="empty-state">
+                <div className="empty-state-icon">
+                  <Heart className="h-7 w-7" />
+                </div>
+                <h3 className="empty-state-title">No credits have been added yet.</h3>
+                <p className="empty-state-desc">
+                  Contributors and supporters will be listed here once added.
+                </p>
+              </div>
             )}
           </div>
 

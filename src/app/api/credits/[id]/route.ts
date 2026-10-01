@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdminSession } from "@/lib/auth/guard";
 
 function getIdFromUrl(url: string) {
   const parts = url.split("/");
@@ -32,6 +33,9 @@ export async function GET(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return guard.response!;
+
   try {
     if (!supabaseAdmin) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
@@ -66,6 +70,9 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return guard.response!;
+
   try {
     if (!supabaseAdmin) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });

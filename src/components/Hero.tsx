@@ -4,9 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import { getSiteImages } from "@/lib/db";
 import { siteConfig } from "@/config/site";
 import Link from "next/link";
+import Image from "next/image";
 import { Zap, ArrowDown, Circle, Sparkles, Award, ShieldCheck } from "lucide-react";
+import { useCommissionStatus } from "@/lib/commission-status";
 
 export default function Hero() {
+  const commission = useCommissionStatus();
   const [heroImage, setHeroImage] = useState<string | null>(null);
   const [scrollY, setScrollY] = useState(0);
   const [mounted, setMounted] = useState(false);
@@ -60,18 +63,24 @@ export default function Hero() {
               >
                 {heroImage ? (
                   <>
-                    <img
+                    <Image
                       src={heroImage}
                       alt="Featured VRChat avatar commission showcase"
+                      fill
+                      priority
+                      fetchPriority="high"
+                      sizes="(max-width: 1024px) 100vw, 50vw"
                       className="h-full min-h-[340px] max-h-[60vh] w-full object-cover transition-transform duration-700 ease-out hover:scale-[1.02]"
                     />
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--bg)]/40 via-transparent to-transparent" />
                   </>
                 ) : (
                   <div className="grid min-h-[360px] max-h-[60vh] place-items-center text-[var(--text-dim)]">
-                    <img
+                    <Image
                       src="/bluey-avatar.svg"
                       alt="Bluey avatar placeholder"
+                      width={180}
+                      height={180}
                       className="h-[180px] w-[180px] object-contain opacity-30"
                       onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
@@ -86,9 +95,9 @@ export default function Hero() {
                 </div>
 
                 <div className="absolute left-4 top-4">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-semibold text-emerald-400 status-pulse" style={{ color: "var(--success)" }}>
+                  <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-semibold status-pulse ${commission.border} ${commission.bg} ${commission.text}`}>
                     <Circle className="h-2 w-2 fill-current animate-pulse" />
-                    Commissions Open
+                    {commission.loading ? "…" : `Commissions ${commission.label}`}
                   </span>
                 </div>
 

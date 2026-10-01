@@ -6,6 +6,7 @@ import AgeVerifier from "@/components/AgeVerifier";
 import { nsfwPricingTiers, nsfwRules } from "@/config/site";
 import { getNsfwPortfolioImages } from "@/lib/db";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
+import Image from "next/image";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { ShieldAlert, ArrowRight, Lock, Sparkles, Check, ImageIcon } from "lucide-react";
@@ -140,9 +141,15 @@ export default function NsfwPage() {
                       role="button"
                       tabIndex={0}
                       aria-label={`View NSFW image ${i + 1} full size`}
-                      className="gallery-masonry-item group relative overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] cursor-pointer transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[var(--shadow-md)]"
+                      className="gallery-masonry-item group relative aspect-[4/3] w-full overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] cursor-pointer transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[var(--shadow-md)]"
                     >
-                      <img src={url} alt={`NSFW Work ${i + 1}`} loading="lazy" className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+                      <Image
+                        src={url}
+                        alt={`NSFW Work ${i + 1}`}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                      />
                       <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                         <span className="grid h-10 w-10 place-items-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition-transform duration-300 group-hover:scale-110">
                           <ImageIcon className="h-4 w-4" />

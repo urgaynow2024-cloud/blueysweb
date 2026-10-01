@@ -6,7 +6,7 @@ import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import CommissionTierCard from "@/components/ui/CommissionTierCard";
 import ContactCommissionForm from "@/components/ContactCommissionForm";
-import { siteConfig, pricingTiers, additionalServices, faqItems, tosSections } from "@/config/site";
+import { siteConfig, pricingTiers, additionalServices, faqItems } from "@/config/site";
 import { getPricingTiers } from "@/lib/db";
 import { Zap, ArrowRight, ShieldCheck, Check, Sparkles, MessageCircle, Clock, FileText, DollarSign, Send, HelpCircle } from "lucide-react";
 
@@ -153,26 +153,22 @@ export default function CommissionPage() {
               title="Terms of Service"
               subtitle="Key rules before commissioning."
             />
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {tosSections.slice(0, 6).map((section, i) => (
-                <Reveal key={section.title} delay={i * 60}>
-                  <div className="group py-3 flex items-start gap-3">
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[var(--accent-soft)] text-sm">{section.icon}</span>
-                    <div>
-                      <h4 className="text-sm font-bold text-white">{section.title}</h4>
-                      {section.items?.[0] && (
-                        <p className="mt-1 text-xs text-[var(--text-secondary)]">{section.items[0]}</p>
-                      )}
-                    </div>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-            <div className="mt-6 text-center">
-              <Link href="/tos" className="btn-secondary inline-flex items-center gap-2">
-                Read Full Terms
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+            {/* Key rules live only on /tos. This page previously listed the first six
+                sections of a second, differently-worded copy of the Terms,
+                including a conflicting "PayPal only" payment policy. */}
+            <div className="mx-auto max-w-2xl rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-7 text-center">
+              <ShieldCheck className="mx-auto h-6 w-6 text-[var(--accent)]" />
+              <p className="mx-auto mt-3 max-w-md text-sm text-[var(--text-secondary)]">
+                Every commission is subject to the full Terms of Service, including payment
+                terms, refunds, revisions and asset ownership. Please read them before
+                submitting a request.
+              </p>
+              <div className="mt-5">
+                <Link href="/tos" className="btn-secondary inline-flex items-center gap-2">
+                  Read the full Terms of Service
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
             </div>
           </div>
         </div>

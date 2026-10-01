@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { requireAdminSession } from "@/lib/auth/guard";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SCHEMA_PATH = join(__dirname, "../../../../../supabase/schema.sql");
@@ -38,6 +39,14 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    // This executes the entire schema against the project using a management
+    // token. It must never be reachable anonymously.
+    const guard = await requireAdminSession();
+    if (!guard.ok) return guard.response!;
+    if (guard.session?.role !== "owner") {
+      return NextResponse.json({ error: "Owner access required" }, { status: 403 });
+    }
+
     if (!supabaseAdmin) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
