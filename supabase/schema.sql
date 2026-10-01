@@ -401,8 +401,9 @@ BEGIN
 
     -- 6. Keep `updated_at` honest even for writes that do not set it
     --    (status quick-actions, reordering, bulk operations).
-    --    The body uses its own dollar-quote tag: an inner `$$` would close this
-    --    DO block early.
+    --    The body uses a distinct dollar-quote tag. A comment here must never
+    --    contain a literal quote tag: this whole block is a string literal, so
+    --    such a token would close it early and the rest would be parsed as SQL.
     CREATE OR REPLACE FUNCTION adoptables_touch_updated_at() RETURNS trigger AS $fn$
     BEGIN
       NEW.updated_at = NOW();
