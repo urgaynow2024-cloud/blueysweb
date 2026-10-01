@@ -491,12 +491,24 @@ CREATE POLICY "Authenticated write social_links" ON social_links FOR ALL USING (
 -- STORAGE POLICIES
 -- =============================================================================
 
+-- Create the public upload bucket if it does not exist yet.
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'portfolio-images') THEN
+    INSERT INTO storage.buckets (id, name, public, file_size_limit) VALUES ('portfolio-images', 'portfolio-images', true, 52428800);
+  ELSE
+    UPDATE storage.buckets SET public = true WHERE id = 'portfolio-images' AND public = false;
+  END IF;
+END $$;
+
 -- Drop existing storage policies
 DO $$ BEGIN
   DROP POLICY IF EXISTS "Public uploads portfolio-images" ON storage.objects;
   DROP POLICY IF EXISTS "Public reads portfolio-images" ON storage.objects;
   DROP POLICY IF EXISTS "Public updates portfolio-images" ON storage.objects;
   DROP POLICY IF EXISTS "Public deletes portfolio-images" ON storage.objects;
+  DROP POLICY IF EXISTS "Authenticated uploads portfolio-images" ON storage.objects;
+  DROP POLICY IF EXISTS "Authenticated updates portfolio-images" ON storage.objects;
+  DROP POLICY IF EXISTS "Authenticated deletes portfolio-images" ON storage.objects;
 END $$;
 
 CREATE POLICY "Public reads portfolio-images" ON storage.objects FOR SELECT USING (bucket_id = 'portfolio-images');
@@ -516,6 +528,10 @@ DO $$ BEGIN
   DROP POLICY IF EXISTS "Public reads adoptables" ON storage.objects;
   DROP POLICY IF EXISTS "Public updates adoptables" ON storage.objects;
   DROP POLICY IF EXISTS "Public deletes adoptables" ON storage.objects;
+  DROP POLICY IF EXISTS "Authenticated reads adoptables" ON storage.objects;
+  DROP POLICY IF EXISTS "Authenticated uploads adoptables" ON storage.objects;
+  DROP POLICY IF EXISTS "Authenticated updates adoptables" ON storage.objects;
+  DROP POLICY IF EXISTS "Authenticated deletes adoptables" ON storage.objects;
 END $$;
 
 CREATE POLICY "Authenticated reads adoptables" ON storage.objects FOR SELECT USING (bucket_id = 'adoptables' AND auth.role() = 'authenticated');

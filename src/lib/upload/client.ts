@@ -63,8 +63,8 @@ export async function uploadMedia(
 function parseResponse(response: Response): Promise<UploadResult> {
   if (!response.ok) {
     return response.json().then((body: any) => {
-      const error = body?.error || "Upload failed";
       const details = body?.details;
+      const error = body?.error || (details ? `Upload failed: ${details}` : "Upload failed");
       const code = body?.code || "UPLOAD_FAILED";
       const category = body?.category;
       throw new UploadError(code, error, true, details, category);

@@ -7,6 +7,7 @@ export const REQUIRED_BUCKETS = [
 export type BucketStatus = {
   name: string;
   exists: boolean;
+  public?: boolean;
   error?: string;
 };
 
@@ -49,7 +50,7 @@ async function checkStorageBucketsAdmin(): Promise<BucketStatus[]> {
           error: error.message || `Bucket "${bucketName}" not found`,
         });
       } else if (data) {
-        results.push({ name: bucketName, exists: true });
+        results.push({ name: bucketName, exists: true, public: data.public });
       } else {
         results.push({
           name: bucketName,
@@ -71,14 +72,24 @@ async function checkStorageBucketsAdmin(): Promise<BucketStatus[]> {
 
 export function getMissingBucketMessage(bucketStatuses: BucketStatus[]): string | null {
   const missing = bucketStatuses.filter((b) => !b.exists);
-  if (missing.length === 0) return null;
+  const privateBuckets = bucketStatuses.filter((b) => b.exists && b.public === false);
 
-  const bucketList = missing.map((b) => `"${b.name}"`).join(" and ");
-  const details = missing
-    .map((b) => `- ${b.name}: ${b.error}`)
-    .join("\n");
+  const parts: string[] = [];
+  if (missing.length > 0) {
+    parts.push(
+      `Missing: ${missing.map((b) => `"${b.name}"`).join(", ")}\n${missing
+        .map((b) => `- ${b.name}: ${b.error}`)
+        .join("\n")}`
+    );
+  }
+  if (privateBuckets.length > 0) {
+    parts.push(
+      `Not publicly readable: ${privateBuckets.map((b) => `"${b.name}"`).join(", ")} — images stored here will not load on the public site.`
+    );
+  }
+  if (parts.length === 0) return null;
 
-  return `Missing Supabase Storage bucket(s): ${bucketList}\n\n${details}\n\nCreate them in Supabase Dashboard → Storage → New bucket. Set them to Public for read access.`;
+  return `${parts.join("\n\n")}\n\nFix in Supabase Dashboard → Storage: set each bucket to Public for read access.`;
 }
 
 export async function testBucketUpload(bucket: string): Promise<{ success: boolean; error?: string }> {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { authorize, type AuthResult, type Role } from "@/lib/auth";
 import { compressImageBuffer, getCompressedExtension, validateUploadSize, validateUploadType, isImageType, isVideoType } from "@/lib/compression/server";
+import { ensureBuckets } from "@/lib/supabase/buckets";
 import { AssetType, ASSET_CONFIG } from "@/lib/upload/types";
 
 const REQUIRED_AUTH_ROLES: Record<AssetType, Role[]> = {
@@ -109,6 +110,22 @@ export async function POST(request: NextRequest) {
     const storageFilename = uniqueFilename(file.name);
     const storagePath = `${config.storagePrefix}/${storageFilename}`;
 
+    const bucketResults = await ensureBuckets([config.bucket]);
+    const bucketResult = bucketResults[0];
+    if (!bucketResult.ok) {
+      console.error("Bucket provisioning failed:", bucketResult.error);
+      return NextResponse.json(
+        { error: "Storage is not available", code: "STORAGE_ERROR", details: bucketResult.error },
+        { status: 500 }
+      );
+    }
+    if (bucketResult.created) {
+      console.warn(`Created missing storage bucket "${bucketResult.created}"`);
+    }
+    if (bucketResult.madePublic) {
+      console.warn(`Storage bucket "${bucketResult.madePublic}" was private and has been made public`);
+    }
+
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from(config.bucket)
       .upload(storagePath, uploadBuffer, {
@@ -119,7 +136,10 @@ export async function POST(request: NextRequest) {
 
     if (uploadError || !uploadData) {
       console.error("Storage upload error:", uploadError);
-      return NextResponse.json({ error: "Upload failed", code: "STORAGE_ERROR" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Upload failed", code: "STORAGE_ERROR", details: uploadError?.message },
+        { status: 500 }
+      );
     }
 
     const { data: urlData } = supabaseAdmin.storage.from(config.bucket).getPublicUrl(storagePath);
@@ -214,12 +234,18 @@ export async function POST(request: NextRequest) {
     } catch (dbErr: any) {
       console.error("DB insert error:", dbErr);
       await supabaseAdmin.storage.from(config.bucket).remove([storagePath]);
-      return NextResponse.json({ error: "Database error", code: "DB_ERROR" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Database error", code: "DB_ERROR", details: dbErr?.message },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ id: dbResult?.id || storageFilename, url, path: storagePath });
   } catch (error: any) {
     console.error("Unified upload error:", error);
-    return NextResponse.json({ error: "Upload failed", code: "INVALID_REQUEST" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Upload failed", code: "INVALID_REQUEST", details: error?.message },
+      { status: 400 }
+    );
   }
 }
