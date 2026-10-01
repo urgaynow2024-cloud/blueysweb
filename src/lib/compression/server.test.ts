@@ -1,3 +1,4 @@
+import sharp from "sharp";
 import {
   validateUploadType,
   validateUploadSize,
@@ -153,5 +154,43 @@ describe("getCompressedExtension", () => {
 
   it("returns webp for webp", () => {
     expect(getCompressedExtension("image/webp")).toBe("webp");
+  });
+});
+
+describe("compressImageBuffer never returns a degenerate image", () => {
+  // A 1x1 result stretched across a container renders as a flat block of colour,
+  // which is what made uploads appear as solid blue rectangles.
+  async function dimensions(buffer: Buffer) {
+    const meta = await sharp(buffer).metadata();
+    return { width: meta.width, height: meta.height };
+  }
+
+  it("preserves the real dimensions of a genuine image", async () => {
+    const source = await sharp({
+      create: { width: 640, height: 480, channels: 3, background: "#3355ff" },
+    })
+      .png()
+      .toBuffer();
+
+    expect(await dimensions(source)).toEqual({ width: 640, height: 480 });
+
+    const out = await compressImageBuffer(source, "image/png");
+    const after = await dimensions(out);
+
+    expect(after.width).toBe(640);
+    expect(after.height).toBe(480);
+  });
+
+  it("returns the original when the source is already 1x1", async () => {
+    const tiny = await sharp({
+      create: { width: 1, height: 1, channels: 3, background: "#0000ff" },
+    })
+      .png()
+      .toBuffer();
+
+    const out = await compressImageBuffer(tiny, "image/png");
+
+    // Must come back untouched rather than being re-encoded.
+    expect(out.equals(tiny)).toBe(true);
   });
 });

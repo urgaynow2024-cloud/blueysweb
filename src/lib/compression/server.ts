@@ -59,32 +59,77 @@ export async function isCompressionAvailable(): Promise<boolean> {
   return (await loadSharp()) !== null;
 }
 
+type Dimensions = { width?: number; height?: number };
+
+async function readDimensions(sharpLib: typeof sharp, buffer: Buffer): Promise<Dimensions> {
+  try {
+    const { width, height } = await sharpLib(buffer).metadata();
+    return { width, height };
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * A compression result is only usable if it is not degenerate.
+ *
+ * A 1x1 output is never a legitimate result of compressing a real photo, and
+ * when one is produced the browser stretches that single pixel across the whole
+ * container, which reads as a flat solid block of colour rather than an image.
+ * Treating that as "compression failed" and keeping the original is strictly
+ * better than storing it.
+ */
+function isUsableResult(source: Dimensions, output: Dimensions): boolean {
+  if (output.width === undefined || output.height === undefined) return true;
+  if (output.width <= 1 || output.height <= 1) return false;
+  if (source.width && source.height && (output.width > source.width * 1.05 || output.height > source.height * 1.05)) {
+    return false;
+  }
+  return true;
+}
+
 export async function compressImageBuffer(buffer: Buffer, mimeType: string): Promise<Buffer> {
   const sharpLib = await loadSharp();
   if (!sharpLib) return buffer;
 
   try {
+    const source = await readDimensions(sharpLib, buffer);
+    if (source.width && source.height && source.width <= 1 && source.height <= 1) {
+      return buffer;
+    }
+
     if (mimeType === "image/gif") {
-      const metadata = await sharpLib(buffer).metadata();
-      if (metadata.width && metadata.height && (metadata.width > MAX_IMAGE_DIMENSION || metadata.height > MAX_IMAGE_DIMENSION)) {
-        return sharpLib(buffer)
+      if (source.width && source.height && (source.width > MAX_IMAGE_DIMENSION || source.height > MAX_IMAGE_DIMENSION)) {
+        const resized = await sharpLib(buffer)
           .resize(MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION, {
             fit: "inside",
             withoutEnlargement: true,
           })
           .gif()
           .toBuffer();
+        const output = await readDimensions(sharpLib, resized);
+        if (isUsableResult(source, output)) return resized;
+        console.warn(`GIF resize produced a degenerate image (${output.width}x${output.height}); storing the original instead.`);
       }
       return buffer;
     }
 
-    return sharpLib(buffer)
+    const encoded = await sharpLib(buffer)
       .resize(MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION, {
         fit: "inside",
         withoutEnlargement: true,
       })
       .webp({ quality: MAX_IMAGE_QUALITY })
       .toBuffer();
+
+    const output = await readDimensions(sharpLib, encoded);
+    if (!isUsableResult(source, output)) {
+      console.warn(
+        `Compression produced a degenerate image (${output.width}x${output.height} from ${source.width}x${source.height}); storing the original instead.`
+      );
+      return buffer;
+    }
+    return encoded;
   } catch (error) {
     console.error("Image compression failed:", error);
     return buffer;
