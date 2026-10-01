@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { getSiteImages } from "@/lib/db";
 import { siteConfig } from "@/config/site";
 import Link from "next/link";
-import Image from "next/image";
-import { Zap, ArrowDown, Circle, Sparkles, Award, ShieldCheck } from "lucide-react";
+import StorageImage from "@/components/ui/StorageImage";
+import { Zap, ArrowDown, Circle, Sparkles, Award, ShieldCheck, ImageOff } from "lucide-react";
 import { useCommissionStatus } from "@/lib/commission-status";
 
 export default function Hero() {
@@ -63,7 +63,7 @@ export default function Hero() {
               >
                 {heroImage ? (
                   <>
-                    <Image
+                    <StorageImage
                       src={heroImage}
                       alt="Featured VRChat avatar commission showcase"
                       fill
@@ -75,16 +75,14 @@ export default function Hero() {
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--bg)]/40 via-transparent to-transparent" />
                   </>
                 ) : (
-                  <div className="grid min-h-[360px] max-h-[60vh] place-items-center text-[var(--text-dim)]">
-                    <Image
-                      src="/bluey-avatar.svg"
-                      alt="Bluey avatar placeholder"
-                      width={180}
-                      height={180}
-                      className="h-[180px] w-[180px] object-contain opacity-30"
-                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                    />
-                    <span className="text-7xl opacity-20">★</span>
+                  <div className="grid min-h-[360px] max-h-[60vh] place-items-center px-6 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <ImageOff className="h-7 w-7 text-[var(--text-dim)]" aria-hidden />
+                      <p className="text-sm text-[var(--text-dim)]">No hero image uploaded yet</p>
+                      <p className="text-xs text-[var(--text-dim)]">
+                        Upload one from Admin &rarr; Site Images.
+                      </p>
+                    </div>
                   </div>
                 )}
 

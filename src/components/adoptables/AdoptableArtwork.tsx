@@ -103,7 +103,16 @@ export function AdoptableArtwork({
         alt={alt}
         loading={loading}
         decoding="async"
-        onLoad={() => {
+        onLoad={(event) => {
+          // A 1x1 WebP loads successfully, so `onError` never fires for it, and
+          // the browser stretches that single pixel over the whole frame — the
+          // flat blue rectangle this component is meant to prevent. The decoded
+          // intrinsic size is the only reliable signal, so check it here too.
+          const img = event.currentTarget;
+          if (img.naturalWidth <= 1 || img.naturalHeight <= 1) {
+            handleError();
+            return;
+          }
           setState("ready");
           if (resolved) onLoaded?.(resolved);
         }}

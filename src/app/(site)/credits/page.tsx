@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import StorageImage from "@/components/ui/StorageImage";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { getCredits } from "@/lib/db";
@@ -149,12 +149,14 @@ export default function CreditsPage() {
                         className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4"
                       >
                         {credit.avatar_url ? (
-                          <Image
+                          <StorageImage
                             src={credit.avatar_url}
                             alt={credit.name}
                             width={40}
                             height={40}
                             className="h-10 w-10 shrink-0 rounded-full object-cover"
+                            unavailableLabel="No avatar"
+                            unavailableClassName="h-10 w-10 min-h-0 shrink-0 rounded-full"
                           />
                         ) : (
                           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)] text-sm font-bold">

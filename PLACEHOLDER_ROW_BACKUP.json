@@ -1,0 +1,59 @@
+{
+  "at": "2026-10-01T15:29:12.693Z",
+  "rows": {
+    "portfolio_images/b925bae8-993c-4afe-8e9a-ab2f8c470eab": {
+      "id": "b925bae8-993c-4afe-8e9a-ab2f8c470eab",
+      "url": "https://qxphnlcqqdhoavtuzbnt.supabase.co/storage/v1/object/public/portfolio-images/portfolio/24dfcf5c-8a0e-4d33-8370-8220e04e7fb9.png",
+      "sort_order": 0,
+      "created_at": "2026-09-16T23:15:00.407+00:00",
+      "category": "VRChat Avatars",
+      "path": "portfolio/24dfcf5c-8a0e-4d33-8370-8220e04e7fb9.png",
+      "original_filename": null,
+      "mime_type": null,
+      "file_size": null,
+      "width": null,
+      "height": null,
+      "media_role": "portfolio",
+      "updated_at": "2026-10-01T00:14:32.0439+00:00"
+    },
+    "portfolio_images/41588ce0-8e44-49e1-a6cb-7ece4db0c261": {
+      "id": "41588ce0-8e44-49e1-a6cb-7ece4db0c261",
+      "url": "https://qxphnlcqqdhoavtuzbnt.supabase.co/storage/v1/object/public/portfolio-images/portfolio/6162b700-ce0d-4202-98f2-7fb619354db3.png",
+      "sort_order": 0,
+      "created_at": "2026-09-16T23:17:02.228+00:00",
+      "category": "VRChat Avatars",
+      "path": "portfolio/6162b700-ce0d-4202-98f2-7fb619354db3.png",
+      "original_filename": null,
+      "mime_type": null,
+      "file_size": null,
+      "width": null,
+      "height": null,
+      "media_role": "portfolio",
+      "updated_at": "2026-10-01T00:14:32.0439+00:00"
+    },
+    "nsfw_portfolio_images/b8cf2556-364d-4e56-afac-c6c0ae402cf6": {
+      "id": "b8cf2556-364d-4e56-afac-c6c0ae402cf6",
+      "url": "https://qxphnlcqqdhoavtuzbnt.supabase.co/storage/v1/object/public/portfolio-images/nsfw/2bfaa0a8-10f0-4765-ad38-6bcaf6c08d28.png",
+      "sort_order": 0,
+      "created_at": "2026-09-16T23:17:01.885+00:00",
+      "path": "nsfw/2bfaa0a8-10f0-4765-ad38-6bcaf6c08d28.png",
+      "original_filename": null,
+      "mime_type": null,
+      "file_size": null,
+      "width": null,
+      "height": null,
+      "media_role": "portfolio",
+      "updated_at": "2026-10-01T00:14:32.0439+00:00"
+    }
+  },
+  "hero": {
+    "key": "hero",
+    "url": "https://qxphnlcqqdhoavtuzbnt.supabase.co/storage/v1/object/public/portfolio-images/site/c741f18d-f8b9-40c7-8349-bc5f1ccf3a24.png",
+    "path": "site/c741f18d-f8b9-40c7-8349-bc5f1ccf3a24.png",
+    "created_at": "2026-07-10T23:26:44.421595+00:00",
+    "updated_at": "2026-09-16T23:17:02.565+00:00",
+    "original_filename": null,
+    "mime_type": null,
+    "file_size": null
+  }
+}

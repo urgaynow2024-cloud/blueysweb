@@ -127,7 +127,19 @@ export function SiteImagesSection() {
               <div className={`relative ${slot.aspect} overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]`}>
                 {image ? (
                   <>
-                    <img src={image.url} alt={slot.label} className="h-full w-full object-cover" />
+                    <img
+                      src={image.url}
+                      alt={slot.label}
+                      className="h-full w-full object-cover"
+                      onLoad={(e) => {
+                        // Guard against a 1x1 placeholder WebP, which loads
+                        // without error but renders as a flat solid block.
+                        const el = e.currentTarget;
+                        if (el.naturalWidth <= 1 || el.naturalHeight <= 1) {
+                          el.style.display = "none";
+                        }
+                      }}
+                    />
                     <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/55 opacity-0 transition-opacity duration-300 hover:opacity-100">
                       <Button size="sm" variant="secondary" onClick={() => triggerUpload(slot.key)} disabled={isUploading}>
                         {isUploading ? "Uploading…" : "Replace"}

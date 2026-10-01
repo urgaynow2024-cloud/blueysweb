@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import Image from "next/image";
+import StorageImage from "@/components/ui/StorageImage";
 import { getPortfolioImages } from "@/lib/db";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
 import Reveal from "@/components/ui/Reveal";
@@ -98,15 +98,14 @@ export default function PortfolioPage() {
                     className="portfolio-card portfolio-hero group relative mb-8 cursor-pointer overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[var(--shadow-lg)]"
                   >
                     <div className="portfolio-image relative aspect-[16/9] w-full">
-                      <Image
+                      <StorageImage
                         src={featuredImage.url}
                         alt="Featured portfolio artwork"
                         fill
                         priority
                         sizes="(max-width: 1024px) 100vw, 900px"
                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-                      />
-                    </div>
+                      />                    </div>
                     <div className="absolute inset-0 flex items-end justify-end bg-gradient-to-t from-black/50 via-transparent to-transparent p-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                       <span className="grid h-12 w-12 place-items-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition-transform duration-300 group-hover:scale-110">
                         <Maximize2 className="h-5 w-5" />
@@ -162,7 +161,7 @@ export default function PortfolioPage() {
                       className="portfolio-card group relative overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] cursor-pointer transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[var(--shadow-md)]"
                     >
                       <div className="portfolio-image relative aspect-[4/3] w-full">
-                        <Image
+                        <StorageImage
                           src={item.url}
                           alt={`Portfolio ${i + 1}`}
                           fill

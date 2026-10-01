@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { getSiteImages, getPortfolioImages } from "@/lib/db";
 import Link from "next/link";
-import Image from "next/image";
+import StorageImage from "@/components/ui/StorageImage";
 import { ArrowRight, ArrowUpRight, ImageIcon, Sparkles } from "lucide-react";
 import Reveal from "@/components/ui/Reveal";
 
@@ -66,7 +66,7 @@ export default function FeaturedWork() {
                   href="/portfolio"
                   className="sheen group relative mb-5 block aspect-[4/3] cursor-pointer overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[rgba(255,255,255,0.02)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/40 gallery-masonry-item card-lift"
                 >
-                  <Image
+                  <StorageImage
                     src={url}
                     alt={`Commission ${i + 1}`}
                     fill

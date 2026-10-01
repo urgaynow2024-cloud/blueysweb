@@ -9,7 +9,7 @@ import CommissionTierCard from "@/components/ui/CommissionTierCard";
 import { ButtonLink } from "@/components/ui/Button";
 import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages, getAdoptables } from "@/lib/db";
 import Link from "next/link";
-import Image from "next/image";
+import StorageImage from "@/components/ui/StorageImage";
 import { Star, Zap, ArrowRight, Check, Sparkles, Clock, ShieldCheck, Rocket, HelpCircle, DollarSign, Palette, Box, Layers, Brush, Wrench } from "lucide-react";
 
 function Stars({ rating, size = "h-4 w-4" }: { rating?: number; size?: string }) {
@@ -98,7 +98,7 @@ function AdoptableCard({ adoptable }: { adoptable: any }) {
       >
         {adoptable.main_image && (
           <div className="product-image relative aspect-[4/3] overflow-hidden">
-            <Image
+            <StorageImage
               src={adoptable.main_image}
               alt={adoptable.title}
               fill
@@ -360,7 +360,7 @@ export default function Home() {
                             <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">"{review.review_text}"</p>
                             {review.image_url && (
                               <div className="relative mt-3 aspect-[4/3] overflow-hidden rounded-lg border border-[var(--border)]">
-                                <Image
+                                <StorageImage
                                   src={review.image_url}
                                   alt="Commission preview"
                                   fill
