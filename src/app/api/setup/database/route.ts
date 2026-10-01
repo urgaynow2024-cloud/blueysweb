@@ -11,29 +11,74 @@ const SETUP_FLAG_KEY = "db_setup_completed";
 
 export const runtime = "nodejs";
 
+/**
+ * Read-only readiness probe.
+ *
+ * This used to answer from a single `db_setup_completed` row that is only ever
+ * written by the owner-only POST handler below. A database initialised by
+ * pasting `supabase/schema.sql` into the SQL Editor never has that row, so this
+ * reported `needsSetup: true` for a database whose tables were all present and
+ * readable — which is what made the public Adoptables page claim it was not set
+ * up. It now probes the actual tables instead of trusting a bookkeeping flag.
+ */
 export async function GET() {
+  if (!supabaseAdmin) {
+    return NextResponse.json({ needsSetup: true, reason: "not_configured" });
+  }
+
+  // The adoptables tables defined in supabase/schema.sql and read by the
+  // public site. This is the authoritative list — it is deliberately not
+  // guessed, because a name that does not exist in the schema would report a
+  // healthy database as broken.
+  const required = ["adoptables", "adoptable_gallery", "adoptable_before_after"];
+
   try {
-    if (!supabaseAdmin) {
-      return NextResponse.json({ needsSetup: true, reason: "not_configured" });
+    // `head: true` issues SELECT 1 LIMIT 0, so a missing relation still errors
+    // while an existing one costs nothing.
+    const results = await Promise.all(
+      required.map((table) =>
+        supabaseAdmin!.from(table).select("*", { head: true, count: "exact" })
+      )
+    );
+
+    // PostgREST reports a relation it cannot resolve as PGRST205 ("not found in
+    // the schema cache"), which is not the same as Postgres' own 42P01. Both
+    // mean the table is genuinely absent, so both count as missing.
+    const isMissing = (error: { code?: string; message?: string } | null) =>
+      !!error &&
+      (error.code === "42P01" ||
+        error.code === "PGRST205" ||
+        /does not exist|not find .* in the schema cache|schema cache/i.test(
+          error.message ?? ""
+        ));
+
+    const missing = required.filter((_, i) => isMissing(results[i].error));
+
+    const failed = results
+      .map((r, i) => ({ table: required[i], error: r.error }))
+      .filter((r) => r.error && !missing.includes(r.table));
+
+    if (failed.length > 0) {
+      return NextResponse.json(
+        {
+          needsSetup: true,
+          reason: "probe_failed",
+          detail: failed.map((f) => `${f.table}: ${f.error?.code ?? ""} ${f.error?.message ?? ""}`),
+        },
+        { status: 200 }
+      );
     }
 
-    const { data, error } = await supabaseAdmin
-      .from("site_config")
-      .select("value")
-      .eq("key", SETUP_FLAG_KEY)
-      .maybeSingle();
-
-    if (error) {
-      return NextResponse.json({ needsSetup: true, reason: "query_failed" });
-    }
-
-    if (data?.value === "true") {
-      return NextResponse.json({ needsSetup: false });
-    }
-
-    return NextResponse.json({ needsSetup: true, reason: "not_setup" });
-  } catch {
-    return NextResponse.json({ needsSetup: true, reason: "error" });
+    return NextResponse.json({
+      needsSetup: missing.length > 0,
+      reason: missing.length > 0 ? "missing_tables" : "ready",
+      missing,
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { needsSetup: true, reason: "probe_error", detail: String(error?.message ?? error) },
+      { status: 200 }
+    );
   }
 }
 

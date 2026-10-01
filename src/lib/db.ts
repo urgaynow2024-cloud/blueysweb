@@ -3,6 +3,7 @@ import { pricingTiers, additionalServices, faqItems, workflowSteps, siteConfig }
 import type { Adoptable, AdoptableGalleryImage } from "../types/database";
 import type { AdoptableStatus } from "./adoptables/status";
 import { normalizeStatus, visibleForStatus } from "./adoptables/status";
+import { notConfiguredFailure, toAdoptablesQueryError } from "./adoptables/errors";
 
 /**
  * Fallbacks are only ever used for editorial content that Bluey authored and
@@ -316,7 +317,8 @@ const ADOPTABLE_COLUMNS =
   "id, title, description, category, price, availability, featured, visible, sort_order, species, included_items, rules_license, vrchat_info, sfw_price, nsfw_price, bundle_price, sfw_price_usd, nsfw_price_usd, bundle_price_usd, sfw_available, nsfw_available, bundle_available, main_image, main_image_path, created_at, updated_at";
 
 export async function getAdoptables(): Promise<Adoptable[]> {
-  if (!isSupabaseConfigured || !supabase) return FALLBACKS.adoptables;
+  if (!isSupabaseConfigured || !supabase) throw notConfiguredFailure();
+
   // `availability` is the single source of truth: HIDDEN adoptables are not
   // listed publicly, and SOLD adoptables stay listed as portfolio history.
   // `visible` is the mirrored column kept for backwards compatibility.
@@ -328,13 +330,10 @@ export async function getAdoptables(): Promise<Adoptable[]> {
     .order("sort_order", { ascending: true });
 
   if (error) {
-    const msg = typeof error === "object" && error && "message" in error ? (error as any).message : String(error);
-    if (/relation .* does not exist/i.test(msg) || /schema .* does not exist/i.test(msg) || error.code === "42P01") {
-      console.error("Adoptables table is missing in Supabase. Run supabase/schema.sql in the SQL Editor.", error);
-      throw new Error("ADOPTABLES_TABLE_MISSING");
-    }
-    console.error("Failed to load adoptables:", error);
-    return FALLBACKS.adoptables;
+    // Errors are surfaced, not swallowed. Returning `[]` on failure made an RLS
+    // denial indistinguishable from a genuinely empty table, which is how a
+    // permission problem ends up looking like "no adoptables yet".
+    throw toAdoptablesQueryError(error).failure;
   }
 
   if (!data || data.length === 0) return FALLBACKS.adoptables;
@@ -448,20 +447,14 @@ export async function reorderAdoptableGalleryImages(
 }
 
 export async function getAllAdoptableGalleryImages(): Promise<AdoptableGalleryImage[]> {
-  if (!isSupabaseConfigured || !supabase) return [];
+  if (!isSupabaseConfigured || !supabase) throw notConfiguredFailure();
   const { data, error } = await supabase
     .from("adoptable_gallery")
     .select("*")
     .order("sort_order", { ascending: true });
 
   if (error) {
-    const msg = typeof error === "object" && error && "message" in error ? (error as any).message : String(error);
-    if (/relation .* does not exist/i.test(msg) || /schema .* does not exist/i.test(msg) || error.code === "42P01") {
-      console.error("adoptable_gallery table is missing in Supabase. Run supabase/schema.sql in the SQL Editor.", error);
-      throw new Error("ADOPTABLE_GALLERY_TABLE_MISSING");
-    }
-    console.error("Failed to load adoptable gallery:", error);
-    return [];
+    throw toAdoptablesQueryError(error).failure;
   }
 
   return data || [];

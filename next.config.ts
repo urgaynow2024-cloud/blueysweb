@@ -28,6 +28,21 @@ const nextConfig: NextConfig = {
    */
   images: {
     formats: ["image/avif", "image/webp"],
+
+    /**
+     * Widths the optimizer is allowed to produce.
+     *
+     * Next's default tops out at 3840, which made browsers request a 3840px
+     * variant of sources that are far smaller than that — the largest review
+     * photo here is 2350x1322, so 3840 is a pure upscale. Optimizing a 4.2MB
+     * PNG to that width reliably took over seven seconds and returned HTTP 500,
+     * which is what left review images failing on wide/high-DPR displays.
+     *
+     * Capping at 2560 keeps a sensible 2x asset for the largest artwork while
+     * never asking the optimizer for a size these sources cannot justify.
+     */
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 2560],
+
     remotePatterns: [
       // Supabase Storage public/signed asset host.
       ...(SUPABASE_HOST

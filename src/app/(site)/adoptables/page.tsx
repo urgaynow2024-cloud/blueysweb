@@ -30,6 +30,7 @@ import {
   unavailabilityMessage,
 } from "@/lib/adoptables/status";
 import { adoptablePriceSummary, categoryLabel } from "@/lib/adoptables/catalog";
+import { classifyAdoptablesError, type AdoptablesFailure } from "@/lib/adoptables/errors";
 import { pickAdoptableArtwork, pickHeroArtwork } from "@/lib/adoptables/images";
 import { AdoptableArtwork } from "@/components/adoptables/AdoptableArtwork";
 import { StatusBadge } from "@/components/adoptables/StatusBadge";
@@ -200,46 +201,33 @@ export default function AdoptablesPage() {
   const [archiveTab, setArchiveTab] = useState<ArchiveTab>("available");
   const [statusFilter, setStatusFilter] = useState<AdoptableStatus | "all">("all");
   const [extras, setExtras] = useState<Set<ExtraFilter>>(new Set());
-  const setupAttemptedRef = useRef(false);
+  const [failure, setFailure] = useState<AdoptablesFailure | null>(null);
   const galleryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setAgeVerified(isAgeVerified());
   }, []);
 
-  const load = useCallback(async (checkSetup: boolean) => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setFailure(null);
 
-    // SECURITY: this is a public page. It must never trigger database schema
-    // execution. Previously it called POST /api/setup/database on first visit,
-    // which meant any anonymous visitor could ask the server to apply the whole
-    // schema. That endpoint is now owner-only, and this page only performs a
-    // read-only setup *check*; if the database is not initialised the page
-    // shows its "not set up" state and setup happens from the admin panel.
-    if (checkSetup && !setupAttemptedRef.current) {
-      setupAttemptedRef.current = true;
-      try {
-        const checkRes = await fetch("/api/setup/database", { method: "GET" });
-        const checkData = await checkRes.json();
-        if (checkData?.needsSetup) {
-          setError("DATABASE_NOT_SETUP");
-          setLoading(false);
-          return;
-        }
-      } catch (e) {
-        console.error("Database setup check failed:", e);
-      }
-    }
-
+    // The real query is the source of truth. This page used to bail out early
+    // whenever `/api/setup/database` reported `needsSetup`, and that endpoint
+    // only ever checks a `db_setup_completed` row which is written by the
+    // owner-only POST handler. A database initialised by running
+    // `supabase/schema.sql` in the SQL Editor never gets that row, so a
+    // perfectly working database still rendered "Adoptables are not set up yet"
+    // and was never queried at all. Probing the actual tables is authoritative
+    // in a way that flag is not.
     try {
-      const [adoptablesData, galleryData] = await Promise.all([
-        getAdoptables(),
-        getAllAdoptableGalleryImages().catch((err) => {
-          if (String(err?.message ?? "").includes("ADOPTABLE_GALLERY_TABLE_MISSING")) throw err;
-          return [] as AdoptableGalleryImage[];
-        }),
-      ]);
+      const adoptablesData = await getAdoptables();
+      // Gallery is supplementary: the listing still renders without it.
+      const galleryData = await getAllAdoptableGalleryImages().catch((err) => {
+        console.error("Adoptable gallery failed to load:", err);
+        return [] as AdoptableGalleryImage[];
+      });
 
       const map: Record<string, AdoptableGalleryImage[]> = {};
       for (const img of galleryData) {
@@ -253,15 +241,17 @@ export default function AdoptablesPage() {
       if (adoptablesData.length === 0) setError("EMPTY");
     } catch (e: any) {
       console.error("Failed to load adoptables:", e);
-      const msg = String(e?.message ?? "");
-      setError(msg.includes("ADOPTABLES_TABLE_MISSING") ? "DATABASE_NOT_SETUP" : "ERROR");
+      // Every failure is classified, so a permission or network problem is no
+      // longer reported to the owner as "your tables are missing".
+      const failure = classifyAdoptablesError(e?.failure ?? e);
+      setFailure(failure);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void load(true);
+    void load();
   }, [load]);
 
   const galleryFor = useCallback((id: string) => galleryMap[id] ?? [], [galleryMap]);
@@ -322,55 +312,84 @@ export default function AdoptablesPage() {
 
   /* --------------------------------------------------------------- States */
 
-  if (error === "MANUAL_SETUP_REQUIRED" || error === "DATABASE_NOT_SETUP") {
+  // Each database failure gets its own message. The previous single
+  // "not set up yet" branch told the owner to re-run SQL for problems that had
+  // nothing to do with schema, and hid the real Postgres error entirely.
+  if (failure) {
+    const copy: Record<
+      AdoptablesFailure["kind"],
+      { title: string; body: string; tone: "danger" | "warning" }
+    > = {
+      table_missing: {
+        title: "Adoptables are not set up yet",
+        body: "The adoptables tables were not found in the Supabase project this site is connected to. This is the one case where the schema really is absent — check that the SQL was run against the same project as NEXT_PUBLIC_SUPABASE_URL.",
+        tone: "warning",
+      },
+      permission_denied: {
+        title: "Database permission error",
+        body: "Supabase refused to read the adoptables table. This is a row-level security or grants problem, not a missing schema, so re-running the SQL will not help. The public anon key needs a SELECT policy on \u201cadoptables\u201d.",
+        tone: "danger",
+      },
+      not_configured: {
+        title: "Database not configured",
+        body: "This deployment is missing NEXT_PUBLIC_SUPABASE_URL or its public anon key, so no database call could be made.",
+        tone: "danger",
+      },
+      network: {
+        title: "Could not reach the database",
+        body: "The request to Supabase never completed. This is usually temporary — retry in a moment.",
+        tone: "danger",
+      },
+      query: {
+        title: "The adoptables query failed",
+        body: "Supabase returned an error for this query. The database message is shown below exactly as it was returned.",
+        tone: "danger",
+      },
+    };
+    const view = copy[failure.kind];
     return (
       <div className="container section">
         <div className="mx-auto max-w-lg text-center">
-          <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
-            <Package className="h-7 w-7" aria-hidden />
+          <div
+            className={`mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl ${
+              view.tone === "danger"
+                ? "bg-[var(--danger-soft)] text-[var(--danger)]"
+                : "bg-[var(--accent-soft)] text-[var(--accent)]"
+            }`}
+          >
+            {view.tone === "danger" ? (
+              <XCircle className="h-7 w-7" aria-hidden />
+            ) : (
+              <Package className="h-7 w-7" aria-hidden />
+            )}
           </div>
-          <h1 className="mb-3 text-2xl font-bold text-white">Adoptables are not set up yet</h1>
-          <p className="mb-4 leading-relaxed text-[var(--text-secondary)]">
-            The adoptables gallery needs its Supabase tables before it can load anything.
-          </p>
-          <p className="mb-6 text-sm text-[var(--text-dim)]">
-            In your Supabase project open <span className="font-mono text-[var(--accent)]">SQL Editor</span>,
-            paste the contents of <span className="font-mono text-[var(--accent)]">supabase/schema.sql</span> and run it.
-          </p>
+          <h1 className="mb-3 text-2xl font-bold text-white">{view.title}</h1>
+          <p className="mb-4 leading-relaxed text-[var(--text-secondary)]">{view.body}</p>
+
+          {/* The real database error, never swallowed. */}
+          <pre className="mb-6 overflow-x-auto whitespace-pre-wrap break-words rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 text-left text-xs text-[var(--text-dim)]">
+            {failure.code
+              ? `${failure.code}: ${failure.message || "(no message returned)"}`
+              : failure.detail}
+          </pre>
+
+          {failure.kind === "table_missing" && (
+            <p className="mb-6 text-sm text-[var(--text-dim)]">
+              In your Supabase project open <span className="font-mono text-[var(--accent)]">SQL Editor</span>,
+              paste the contents of{" "}
+              <span className="font-mono text-[var(--accent)]">supabase/schema.sql</span> and run it
+              against the project referenced by{" "}
+              <span className="font-mono text-[var(--accent)]">NEXT_PUBLIC_SUPABASE_URL</span>.
+            </p>
+          )}
+
           <button
             type="button"
-            onClick={() => {
-              setupAttemptedRef.current = false;
-              void load(true);
-            }}
+            onClick={() => void load()}
             className="btn-primary inline-flex items-center gap-2"
           >
             <RefreshCw className="h-4 w-4" aria-hidden />
             Try again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (error === "ERROR") {
-    return (
-      <div className="container section">
-        <div className="mx-auto max-w-lg text-center">
-          <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--danger-soft)] text-[var(--danger)]">
-            <XCircle className="h-7 w-7" aria-hidden />
-          </div>
-          <h1 className="mb-3 text-2xl font-bold text-white">We could not load the adoptables</h1>
-          <p className="mb-6 leading-relaxed text-[var(--text-secondary)]">
-            Something went wrong talking to the database. The rest of the site is still working.
-          </p>
-          <button
-            type="button"
-            onClick={() => void load(false)}
-            className="btn-primary inline-flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" aria-hidden />
-            Retry
           </button>
         </div>
       </div>

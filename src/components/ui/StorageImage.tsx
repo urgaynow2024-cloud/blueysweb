@@ -61,6 +61,12 @@ export function StorageImage({
   const handleLoad = useCallback(
     (event: React.SyntheticEvent<HTMLImageElement>) => {
       const img = event.currentTarget;
+      // next/image renders lazy `fill` images with a 1x1 transparent GIF as an
+      // initial placeholder and swaps in the real source once it intersects.
+      // That placeholder fires its own load event, and measuring it would latch
+      // a real photograph into the unavailable state. Keep waiting instead.
+      if (img.currentSrc?.startsWith("data:")) return;
+
       // naturalWidth is the decoded intrinsic width. For a 1x1 placeholder this
       // is 1, which is the only reliable way to spot the corrupt uploads.
       if (isDegenerate(img.naturalWidth, img.naturalHeight)) {
