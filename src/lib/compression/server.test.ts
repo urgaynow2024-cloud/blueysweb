@@ -1,12 +1,9 @@
-import sharp from "sharp";
 import {
   validateUploadType,
   validateUploadSize,
   isImageType,
   isVideoType,
   getMaxSizeForType,
-  getCompressedExtension,
-  compressImageBuffer,
 } from "@/lib/compression/server";
 
 describe("validateUploadType", () => {
@@ -125,72 +122,5 @@ describe("getMaxSizeForType", () => {
 
   it("returns 10MB for unknown type", () => {
     expect(getMaxSizeForType("application/pdf")).toBe(10);
-  });
-});
-
-describe("compressImageBuffer preserves GIFs", () => {
-  it("does not convert GIFs to WebP (preserves animation)", async () => {
-    const { compressImageBuffer } = await import("./server");
-    // Create a minimal 1x1 GIF buffer
-    const gifBuffer = Buffer.from("GIF89a100010080000000000002C00000000010001000002024401003B", "hex");
-    const result = await compressImageBuffer(gifBuffer, "image/gif");
-    // Should NOT be webp - should remain GIF or original format
-    expect(result).not.toBeUndefined();
-  });
-});
-
-describe("getCompressedExtension", () => {
-  it("returns webp for jpeg", () => {
-    expect(getCompressedExtension("image/jpeg")).toBe("webp");
-  });
-
-  it("returns webp for png", () => {
-    expect(getCompressedExtension("image/png")).toBe("webp");
-  });
-
-  it("returns gif for gif (preserves animation)", () => {
-    expect(getCompressedExtension("image/gif")).toBe("gif");
-  });
-
-  it("returns webp for webp", () => {
-    expect(getCompressedExtension("image/webp")).toBe("webp");
-  });
-});
-
-describe("compressImageBuffer never returns a degenerate image", () => {
-  // A 1x1 result stretched across a container renders as a flat block of colour,
-  // which is what made uploads appear as solid blue rectangles.
-  async function dimensions(buffer: Buffer) {
-    const meta = await sharp(buffer).metadata();
-    return { width: meta.width, height: meta.height };
-  }
-
-  it("preserves the real dimensions of a genuine image", async () => {
-    const source = await sharp({
-      create: { width: 640, height: 480, channels: 3, background: "#3355ff" },
-    })
-      .png()
-      .toBuffer();
-
-    expect(await dimensions(source)).toEqual({ width: 640, height: 480 });
-
-    const out = await compressImageBuffer(source, "image/png");
-    const after = await dimensions(out);
-
-    expect(after.width).toBe(640);
-    expect(after.height).toBe(480);
-  });
-
-  it("returns the original when the source is already 1x1", async () => {
-    const tiny = await sharp({
-      create: { width: 1, height: 1, channels: 3, background: "#0000ff" },
-    })
-      .png()
-      .toBuffer();
-
-    const out = await compressImageBuffer(tiny, "image/png");
-
-    // Must come back untouched rather than being re-encoded.
-    expect(out.equals(tiny)).toBe(true);
   });
 });

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { authorize, type AuthResult, type Role } from "@/lib/auth";
-import { compressImageBuffer, getCompressedExtension, isCompressionAvailable, validateUploadSize, validateUploadType, isImageType, isVideoType } from "@/lib/compression/server";
+import { validateUploadSize, validateUploadType } from "@/lib/compression/server";
 import { ensureBuckets } from "@/lib/supabase/buckets";
 import { AssetType, ASSET_CONFIG } from "@/lib/upload/types";
 
@@ -119,24 +119,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let uploadBuffer: Buffer = Buffer.from(await file.arrayBuffer());
-    let fileExtension = file.name.split(".").pop() || "bin";
-    let uploadContentType = file.type;
-    const isGif = file.type === "image/gif";
-
-    // The client already compresses images to WebP before sending. Re-encoding a
-    // WebP only compounds quality loss, so only compress formats that still
-    // arrive in their original encoding.
-    const alreadyCompressed = uploadContentType === "image/webp";
-    if (isImageType(file.type) && !isGif && !alreadyCompressed && (await isCompressionAvailable())) {
-      try {
-        uploadBuffer = await compressImageBuffer(uploadBuffer, file.type);
-        fileExtension = getCompressedExtension(file.type);
-        uploadContentType = "image/webp";
-      } catch {
-        console.error("Compression failed, using original");
-      }
-    }
+    // Stored exactly as received. The browser compresses images to WebP before
+    // sending, so there is nothing useful to re-encode here.
+    const uploadBuffer: Buffer = Buffer.from(await file.arrayBuffer());
+    const fileExtension = file.name.split(".").pop() || "bin";
+    const uploadContentType = file.type || "application/octet-stream";
 
     const storageFilename = uniqueFilename(file.name);
     const storagePath = `${config.storagePrefix}/${storageFilename}`;

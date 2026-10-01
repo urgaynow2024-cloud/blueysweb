@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { compressImageBuffer, getCompressedExtension, isImageType } from "@/lib/compression/server";
 
 export async function POST(
   request: Request,
@@ -19,19 +18,8 @@ export async function POST(
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const ext = file.name.split(".").pop() || "bin";
-    let uploadBuffer: Buffer = Buffer.from(await file.arrayBuffer());
-    let fileExtension = ext;
-
-    if (isImageType(file.type)) {
-      try {
-        const compressed = await compressImageBuffer(uploadBuffer, file.type);
-        uploadBuffer = compressed as Buffer;
-        fileExtension = getCompressedExtension(file.type);
-      } catch (compressionError) {
-        console.error("Image compression failed, using original:", compressionError);
-      }
-    }
+    const fileExtension = file.name.split(".").pop() || "bin";
+    const uploadBuffer: Buffer = Buffer.from(await file.arrayBuffer());
 
     const storagePath = `adoptables/${id}/main-${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExtension}`;
 
@@ -40,7 +28,7 @@ export async function POST(
       .upload(storagePath, uploadBuffer, {
         cacheControl: "3600",
         upsert: true,
-        contentType: isImageType(file.type) && file.type !== "image/gif" ? "image/webp" : file.type,
+        contentType: file.type || "application/octet-stream",
       });
 
     if (uploadError || !uploadData) {

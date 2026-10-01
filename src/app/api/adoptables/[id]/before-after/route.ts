@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { compressImageBuffer, getCompressedExtension, validateUploadSize, validateUploadType, isImageType } from "@/lib/compression/server";
+import { validateUploadSize, validateUploadType } from "@/lib/compression/server";
 
 function parseMissingColumn(errorMessage: string): string | null {
   const match = errorMessage.match(/'(\w+)'? column|Could not find the '(\w+)' column/);
@@ -76,20 +76,14 @@ export async function POST(
       return NextResponse.json({ error: sizeValidation.error!.message, category: sizeValidation.error!.category }, { status: 400 });
     }
 
-    let uploadBuffer: Buffer = Buffer.from(await file.arrayBuffer());
-    let fileExtension = file.name.split(".").pop() || "bin";
-
-    if (isImageType(file.type)) {
-      const compressed = await compressImageBuffer(uploadBuffer, file.type);
-      uploadBuffer = compressed;
-      fileExtension = getCompressedExtension(file.type);
-    }
+    const uploadBuffer: Buffer = Buffer.from(await file.arrayBuffer());
+    const fileExtension = file.name.split(".").pop() || "bin";
 
     const storagePath = `adoptables/${id}/${type}-${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExtension}`;
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from("portfolio-images")
-      .upload(storagePath, uploadBuffer, { cacheControl: "3600", upsert: true, contentType: isImageType(file.type) && file.type !== "image/gif" ? "image/webp" : file.type });
+      .upload(storagePath, uploadBuffer, { cacheControl: "3600", upsert: true, contentType: file.type || "application/octet-stream" });
 
     if (uploadError || !uploadData) {
       console.error("Storage upload error:", uploadError);
