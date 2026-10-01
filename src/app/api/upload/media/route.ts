@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { authorize, type AuthResult, type Role } from "@/lib/auth";
-import { compressImageBuffer, getCompressedExtension, validateUploadSize, validateUploadType, isImageType, isVideoType } from "@/lib/compression/server";
+import { compressImageBuffer, getCompressedExtension, isCompressionAvailable, validateUploadSize, validateUploadType, isImageType, isVideoType } from "@/lib/compression/server";
 import { ensureBuckets } from "@/lib/supabase/buckets";
 import { AssetType, ASSET_CONFIG } from "@/lib/upload/types";
 
@@ -95,13 +95,14 @@ export async function POST(request: NextRequest) {
 
     let uploadBuffer: Buffer = Buffer.from(await file.arrayBuffer());
     let fileExtension = file.name.split(".").pop() || "bin";
+    let uploadContentType = file.type;
     const isGif = file.type === "image/gif";
 
-    if (isImageType(file.type) && !isGif) {
+    if (isImageType(file.type) && !isGif && (await isCompressionAvailable())) {
       try {
-        const compressed = await compressImageBuffer(uploadBuffer, file.type);
-        uploadBuffer = compressed;
+        uploadBuffer = await compressImageBuffer(uploadBuffer, file.type);
         fileExtension = getCompressedExtension(file.type);
+        uploadContentType = "image/webp";
       } catch {
         console.error("Compression failed, using original");
       }
@@ -131,7 +132,7 @@ export async function POST(request: NextRequest) {
       .upload(storagePath, uploadBuffer, {
         cacheControl: "3600",
         upsert: true,
-        contentType: isImageType(file.type) && !isGif ? "image/webp" : file.type,
+        contentType: uploadContentType,
       });
 
     if (uploadError || !uploadData) {
