@@ -1,212 +1,194 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { getAdoptables, getAllAdoptableGalleryImages } from "@/lib/db";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Clock3,
+  EyeOff,
+  Filter,
+  Lock,
+  Package,
+  RefreshCw,
+  Sparkles,
+  Star,
+  XCircle,
+} from "lucide-react";
+import {
+  getAdoptables,
+  getAllAdoptableGalleryImages,
+} from "@/lib/db";
 import { isAgeVerified } from "@/components/AgeVerifier";
 import AgeVerifier from "@/components/AgeVerifier";
-import type { Adoptable, AdoptableGalleryImage } from "@/types/database";
-import Reveal from "@/components/ui/Reveal";
-import SectionHeading from "@/components/ui/SectionHeading";
-import { Sparkles, ShoppingCart, Package, CheckCircle, Clock, XCircle, Filter, Eye, Lock, Layers } from "lucide-react";
+import type { Adoptable, AdoptableGalleryImage, AdoptableStatus } from "@/types/database";
+import {
+  ADOPTABLE_STATUS_META,
+  canPurchase,
+  isPubliclyListed,
+  normalizeStatus,
+  unavailabilityMessage,
+} from "@/lib/adoptables/status";
+import { adoptablePriceSummary, categoryLabel } from "@/lib/adoptables/catalog";
+import { pickAdoptableArtwork, pickHeroArtwork } from "@/lib/adoptables/images";
+import { AdoptableArtwork } from "@/components/adoptables/AdoptableArtwork";
+import { StatusBadge } from "@/components/adoptables/StatusBadge";
+import { PriceList } from "@/components/adoptables/PriceList";
 
-const STATUS_CONFIG = {
-  available: { label: "AVAILABLE", icon: CheckCircle, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
-  reserved: { label: "RESERVED", icon: Clock, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
-  sold: { label: "SOLD", icon: XCircle, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/30" },
-} as const;
+const DISCORD_URL = "https://discord.gg/zt48MZm5kD";
 
-function StatusBadge({ status }: { status: "available" | "sold" | "reserved" }) {
-  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.available;
-  const Icon = cfg.icon;
+const STATUS_FILTERS: AdoptableStatus[] = ["available", "pending", "reserved", "sold"];
+
+const STATUS_ICONS: Record<AdoptableStatus, typeof CheckCircle2> = {
+  available: CheckCircle2,
+  pending: Clock3,
+  reserved: Sparkles,
+  sold: XCircle,
+  hidden: EyeOff,
+};
+
+type ArchiveTab = "available" | "sold";
+type ExtraFilter = "sfw" | "nsfw" | "featured";
+
+/* ------------------------------------------------------------------ Cards */
+
+function AdoptableCard({
+  adoptable,
+  gallery,
+  ageVerified,
+}: {
+  adoptable: Adoptable;
+  gallery: AdoptableGalleryImage[];
+  ageVerified: boolean;
+}) {
+  const status = normalizeStatus(adoptable.availability);
+  const meta = ADOPTABLE_STATUS_META[status];
+  const artwork = pickAdoptableArtwork(adoptable, gallery);
+  const hasNsfw =
+    Boolean(adoptable.nsfw_available) || gallery.some((img) => img.is_nsfw);
+  const blurArtwork = hasNsfw && !ageVerified;
+  const purchasable = canPurchase(status);
+
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold tracking-wider ${cfg.color} ${cfg.bg} ${cfg.border}`}>
-      <Icon className="h-3 w-3" />
-      {cfg.label}
-    </span>
+    <article className="adoptable-card group overflow-hidden">
+      <Link
+        href={`/adoptables/${adoptable.id}`}
+        className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
+      >
+        <div className="relative aspect-[3/4] w-full overflow-hidden bg-[var(--bg)]">
+          <AdoptableArtwork
+            url={artwork?.url}
+            alt={adoptable.title || "Untitled adoptable"}
+            wrapperClassName="h-full w-full"
+            className={`h-full w-full object-cover transition-transform duration-[600ms] ease-out group-hover:scale-[1.05] ${
+              blurArtwork ? "blur-[8px] scale-105" : ""
+            }`}
+            fallbackLabel="Artwork coming soon"
+          />
+
+          {blurArtwork && (
+            <div className="pointer-events-none absolute inset-0 grid place-items-center">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-400/40 bg-black/70 px-3 py-1.5 text-[11px] font-semibold text-rose-200 backdrop-blur">
+                <Lock className="h-3 w-3" aria-hidden />
+                NSFW — verify to view
+              </span>
+            </div>
+          )}
+
+          <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
+            {adoptable.featured ? (
+              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--accent)]/45 bg-black/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--accent)] backdrop-blur">
+                <Star className="h-3 w-3 fill-current" aria-hidden />
+                Featured
+              </span>
+            ) : (
+              <span />
+            )}
+            <StatusBadge status={status} className="shadow-lg" />
+          </div>
+
+          {status === "sold" && (
+            <div className="adoptable-sold-overlay">
+              <span className="adoptable-sold-text">SOLD</span>
+              <span className="adoptable-sold-subtext">Already found a home</span>
+            </div>
+          )}
+
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 to-transparent" />
+        </div>
+
+        <div className="p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="truncate text-base font-semibold text-white transition-colors group-hover:text-[var(--accent)]">
+                {adoptable.title || "Untitled"}
+              </h3>
+              <p className="mt-0.5 truncate text-[11px] uppercase tracking-wider text-[var(--text-dim)]">
+                {adoptable.species ? `${adoptable.species} · ` : ""}
+                {categoryLabel(adoptable.category)}
+              </p>
+            </div>
+            <span className="shrink-0 text-[11px] font-semibold text-[var(--text-dim)]">
+              {adoptablePriceSummary(adoptable, ageVerified)}
+            </span>
+          </div>
+
+          {adoptable.description && (
+            <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[var(--text-secondary)]">
+              {adoptable.description}
+            </p>
+          )}
+
+          <PriceList
+            adoptable={adoptable}
+            ageVerified={ageVerified}
+            className="mt-3"
+            variant="card"
+          />
+
+          <div className="mt-4">
+            {purchasable ? (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  window.open(DISCORD_URL, "_blank", "noopener,noreferrer");
+                }}
+                className="btn-primary inline-flex w-full items-center justify-center gap-2 !py-2.5 !px-4 !text-sm"
+              >
+                {status === "pending" ? "Join the Claim" : "Adopt Now"}
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </button>
+            ) : (
+              <div
+                className={`inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-semibold ${meta.text} ${meta.bg} ${meta.border}`}
+              >
+                {status === "sold" ? "Sold Out" : "Reserved"}
+                <span className="font-normal text-[var(--text-dim)]">· View details</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </Link>
+    </article>
   );
 }
 
-function SkeletonCard() {
+function CardSkeleton() {
   return (
-    <div className="product-card animate-pulse">
-      <div className="product-image aspect-[3/4] w-full skeleton" />
-      <div className="mt-3 space-y-2 p-3">
-        <div className="h-4 w-3/4 rounded bg-[var(--border)]" />
-        <div className="h-3 w-1/3 rounded bg-[var(--border)]" />
+    <div className="overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)]">
+      <div className="skeleton aspect-[3/4] w-full" />
+      <div className="space-y-3 p-4">
+        <div className="skeleton h-4 w-2/3 rounded" />
+        <div className="skeleton h-3 w-1/3 rounded" />
+        <div className="skeleton h-8 w-full rounded-xl" />
       </div>
     </div>
   );
 }
 
-function AdoptableCard({
-  adoptable,
-  galleryMap,
-  ageVerified,
-}: {
-  adoptable: Adoptable;
-  galleryMap: Record<string, AdoptableGalleryImage[]>;
-  ageVerified: boolean;
-}) {
-  const preview = useMemo(() => {
-    if (adoptable.main_image) return adoptable.main_image;
-    const imgs = galleryMap[adoptable.id];
-    if (imgs && imgs.length > 0) {
-      const sfwImg = imgs.find((img) => !img.is_nsfw);
-      return sfwImg ? sfwImg.url : imgs[0].url;
-    }
-    return null;
-  }, [adoptable, galleryMap]);
-
-  const hasNsfw = useMemo(() => {
-    if (adoptable.nsfw_available) return true;
-    const g = galleryMap[adoptable.id];
-    return !!g && g.some((img) => img.is_nsfw);
-  }, [adoptable, galleryMap]);
-
-  const showNsfw = ageVerified || !hasNsfw;
-  const isSold = adoptable.availability === "sold";
-  const isReserved = adoptable.availability === "reserved";
-
-  const cfg = STATUS_CONFIG[adoptable.availability] || STATUS_CONFIG.available;
-
-  return (
-    <div className="group relative">
-      <Link href={`/adoptables/${adoptable.id}`} className="block">
-        <div className="product-card">
-          <div className="product-image relative aspect-[3/4] overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] transition-all duration-300 group-hover:border-[var(--accent)]/40 group-hover:shadow-[var(--shadow-lg)]">
-            {preview ? (
-              <img
-                src={preview}
-                alt={adoptable.title}
-                loading="lazy"
-                className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04] ${
-                  hasNsfw && !showNsfw ? "blur-[6px] grayscale" : ""
-                }`}
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center">
-                <Package className="h-12 w-12 text-[var(--text-dim)]" />
-              </div>
-            )}
-
-            <div className="absolute top-3 right-3 z-10">
-              <StatusBadge status={adoptable.availability} />
-            </div>
-
-            {hasNsfw && !showNsfw && (
-              <div className="absolute top-3 left-3 z-10">
-                <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-rose-400">
-                  <Lock className="h-3 w-3" />
-                  NSFW
-                </span>
-              </div>
-            )}
-
-            {adoptable.featured && (
-              <div className="absolute top-3 left-3 z-10">
-                <span className="inline-flex items-center gap-1 rounded-full border border-[var(--accent)]/40 bg-[var(--accent-soft)] px-2.5 py-0.5 text-[10px] font-semibold text-[var(--accent)]">
-                  <Sparkles className="h-3 w-3 fill-current" />
-                  Featured
-                </span>
-              </div>
-            )}
-
-            {isSold && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center bg-rose-500/20 backdrop-blur-sm">
-                <span className="text-3xl font-black text-rose-400">SOLD</span>
-              </div>
-            )}
-
-            {isReserved && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center bg-amber-500/20 backdrop-blur-sm">
-                <span className="text-3xl font-black text-amber-400">RESERVED</span>
-              </div>
-            )}
-
-            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-              <span className="grid h-10 w-10 place-items-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition-transform duration-300 group-hover:scale-110">
-                <Eye className="h-5 w-5" />
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-3 px-1">
-            <h3 className="text-base font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
-              {adoptable.title || "Unnamed"}
-            </h3>
-            {adoptable.species && (
-              <p className="mt-0.5 text-xs text-[var(--text-secondary)] uppercase tracking-wider">{adoptable.species}</p>
-            )}
-            {adoptable.description && (
-              <p className="mt-1 line-clamp-2 text-xs text-[var(--text-dim)] leading-relaxed">
-                {adoptable.description}
-              </p>
-            )}
-
-            <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1">
-              {adoptable.sfw_available && adoptable.sfw_price && (
-                <span className="text-xs text-[var(--text-secondary)]">
-                  SFW <strong className="text-white font-semibold">{adoptable.sfw_price}</strong>
-                </span>
-              )}
-              {adoptable.nsfw_available && adoptable.nsfw_price && (
-                <span className="text-xs text-[var(--text-secondary)]">
-                  NSFW <strong className="text-white font-semibold">{showNsfw ? adoptable.nsfw_price : "Age-restricted"}</strong>
-                </span>
-              )}
-              {adoptable.bundle_available && adoptable.bundle_price && (
-                <span className="text-xs text-[var(--text-secondary)]">
-                  Bundle <strong className="text-white font-semibold">{showNsfw ? adoptable.bundle_price : "Age-restricted"}</strong>
-                </span>
-              )}
-              {!adoptable.sfw_available && !adoptable.nsfw_available && !adoptable.bundle_available && adoptable.price && (
-                <span className="text-xs text-[var(--text-secondary)]">
-                  <strong className="text-white font-semibold">{adoptable.price}</strong>
-                </span>
-              )}
-            </div>
-
-            <div className="mt-4">
-              {!isSold && !isReserved && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    window.open("https://discord.gg/zt48MZm5kD", "_blank", "noopener,noreferrer");
-                  }}
-                  className="btn-primary w-full !py-2.5 !px-4 !text-sm inline-flex items-center justify-center gap-2"
-                >
-                  <ShoppingCart className="h-4 w-4" />
-                  Adopt Now
-                </button>
-              )}
-              {isReserved && (
-                <button
-                  disabled
-                  className="btn-secondary w-full !py-2.5 !px-4 !text-sm inline-flex items-center justify-center gap-2 opacity-50 cursor-not-allowed"
-                >
-                  <Clock className="h-4 w-4" />
-                  Reserved
-                </button>
-              )}
-              {isSold && (
-                <button
-                  disabled
-                  className="w-full !py-2.5 !px-4 !text-sm inline-flex items-center justify-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 cursor-not-allowed"
-                >
-                  <XCircle className="h-4 w-4" />
-                  Sold Out
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </Link>
-    </div>
-  );
-}
+/* ------------------------------------------------------------------- Page */
 
 export default function AdoptablesPage() {
   const [adoptables, setAdoptables] = useState<Adoptable[]>([]);
@@ -215,32 +197,31 @@ export default function AdoptablesPage() {
   const [error, setError] = useState<string | null>(null);
   const [ageVerified, setAgeVerified] = useState(false);
   const [showAgeGate, setShowAgeGate] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [archiveTab, setArchiveTab] = useState<ArchiveTab>("available");
+  const [statusFilter, setStatusFilter] = useState<AdoptableStatus | "all">("all");
+  const [extras, setExtras] = useState<Set<ExtraFilter>>(new Set());
   const setupAttemptedRef = useRef(false);
+  const galleryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setAgeVerified(isAgeVerified());
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
+  const load = useCallback(async (checkSetup: boolean) => {
+    setLoading(true);
+    setError(null);
 
-    async function ensureDatabaseReady() {
-      if (setupAttemptedRef.current) return;
+    if (checkSetup && !setupAttemptedRef.current) {
       setupAttemptedRef.current = true;
-
       try {
         const checkRes = await fetch("/api/setup/database", { method: "GET" });
         const checkData = await checkRes.json();
-
         if (checkData.needsSetup) {
           const setupRes = await fetch("/api/setup/database", { method: "POST" });
           const setupData = await setupRes.json();
-
-          if (!setupData.success && setupData.error && setupData.error.includes("SUPABASE_ACCESS_TOKEN")) {
-            if (!cancelled) {
-              setError("MANUAL_SETUP_REQUIRED");
-            }
+          if (!setupData.success && setupData.error?.includes("SUPABASE_ACCESS_TOKEN")) {
+            setError("MANUAL_SETUP_REQUIRED");
+            setLoading(false);
             return;
           }
         }
@@ -249,288 +230,451 @@ export default function AdoptablesPage() {
       }
     }
 
-    async function load() {
-      setLoading(true);
-      setError(null);
+    try {
+      const [adoptablesData, galleryData] = await Promise.all([
+        getAdoptables(),
+        getAllAdoptableGalleryImages().catch((err) => {
+          if (String(err?.message ?? "").includes("ADOPTABLE_GALLERY_TABLE_MISSING")) throw err;
+          return [] as AdoptableGalleryImage[];
+        }),
+      ]);
 
-      try {
-        await ensureDatabaseReady();
-
-        const [adoptablesData, galleryData] = await Promise.all([
-          getAdoptables().catch((err) => {
-            console.error("getAdoptables failed:", err);
-            if (err && typeof err === "object" && "message" in err && typeof (err as any).message === "string" && (err as any).message.includes("ADOPTABLES_TABLE_MISSING")) {
-              throw err;
-            }
-            return [] as Adoptable[];
-          }),
-          getAllAdoptableGalleryImages().catch((err) => {
-            console.error("getAllAdoptableGalleryImages failed:", err);
-            if (err && typeof err === "object" && "message" in err && typeof (err as any).message === "string" && (err as any).message.includes("ADOPTABLE_GALLERY_TABLE_MISSING")) {
-              throw err;
-            }
-            return [] as AdoptableGalleryImage[];
-          }),
-        ]);
-
-        if (cancelled) return;
-
-        const gMap: Record<string, AdoptableGalleryImage[]> = {};
-        galleryData.forEach((img) => {
-          const aid = img.adoptable_id;
-          if (aid) {
-            if (!gMap[aid]) gMap[aid] = [];
-            gMap[aid].push(img);
-          }
-        });
-
-        setAdoptables(adoptablesData);
-        setGalleryMap(gMap);
-
-        if (adoptablesData.length === 0 && galleryData.length === 0) {
-          setError("EMPTY");
-        }
-      } catch (e: any) {
-        if (!cancelled) {
-          console.error("Failed to load adoptables:", e);
-          const msg = e?.message || "Unable to load adoptables.";
-          if (msg.includes("ADOPTABLES_TABLE_MISSING")) {
-            setError("DATABASE_NOT_SETUP");
-          } else {
-            setError("ERROR");
-          }
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+      const map: Record<string, AdoptableGalleryImage[]> = {};
+      for (const img of galleryData) {
+        if (!img.adoptable_id) continue;
+        (map[img.adoptable_id] ??= []).push(img);
       }
+
+      setAdoptables(adoptablesData);
+      setGalleryMap(map);
+
+      if (adoptablesData.length === 0) setError("EMPTY");
+    } catch (e: any) {
+      console.error("Failed to load adoptables:", e);
+      const msg = String(e?.message ?? "");
+      setError(msg.includes("ADOPTABLES_TABLE_MISSING") ? "DATABASE_NOT_SETUP" : "ERROR");
+    } finally {
+      setLoading(false);
     }
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
-  const filters = useMemo(() => [
-    { id: "all", label: "All", icon: Layers },
-    { id: "available", label: "Available", icon: CheckCircle },
-    { id: "reserved", label: "Reserved", icon: Clock },
-    { id: "sold", label: "Sold", icon: XCircle },
-    { id: "sfw", label: "SFW", icon: Eye },
-    { id: "nsfw", label: "NSFW", icon: Lock },
-    { id: "both", label: "SFW+NSFW", icon: Package },
-  ], []);
+  useEffect(() => {
+    void load(true);
+  }, [load]);
+
+  const galleryFor = useCallback((id: string) => galleryMap[id] ?? [], [galleryMap]);
+
+  const listed = useMemo(() => adoptables.filter((a) => isPubliclyListed(a.availability)), [adoptables]);
+
+  const counts = useMemo(() => {
+    const result: Record<string, number> = { all: listed.length };
+    for (const status of STATUS_FILTERS) {
+      result[status] = listed.filter((a) => normalizeStatus(a.availability) === status).length;
+    }
+    return result;
+  }, [listed]);
+
+  const toggleExtra = (filter: ExtraFilter) => {
+    setExtras((prev) => {
+      const next = new Set(prev);
+      if (next.has(filter)) next.delete(filter);
+      else next.add(filter);
+      return next;
+    });
+  };
 
   const filtered = useMemo(() => {
-    return adoptables.filter((a) => {
-      switch (activeFilter) {
-        case "available":
-          return a.availability === "available";
-        case "reserved":
-          return a.availability === "reserved";
-        case "sold":
-          return a.availability === "sold";
-        case "sfw":
-          return a.sfw_available && a.availability !== "sold";
-        case "nsfw":
-          return a.nsfw_available && a.availability !== "sold";
-        case "both":
-          return a.sfw_available && a.nsfw_available && a.availability !== "sold";
-        default:
-          return true;
-      }
-    });
-  }, [adoptables, activeFilter]);
+    return listed.filter((adoptable) => {
+      const status = normalizeStatus(adoptable.availability);
 
-  const totalAdoptables = adoptables.length;
-  const availableCount = adoptables.filter((a) => a.availability === "available").length;
-  const soldCount = adoptables.filter((a) => a.availability === "sold").length;
-  const reservedCount = adoptables.filter((a) => a.availability === "reserved").length;
+      if (archiveTab === "sold" && status !== "sold") return false;
+      if (archiveTab === "available" && status === "sold") return false;
+      if (statusFilter !== "all" && status !== statusFilter) return false;
+
+      if (extras.has("sfw") && !adoptable.sfw_available) return false;
+      if (extras.has("nsfw") && !adoptable.nsfw_available) return false;
+      if (extras.has("featured") && !adoptable.featured) return false;
+
+      return true;
+    });
+  }, [listed, archiveTab, statusFilter, extras]);
+
+  const hero = useMemo(() => pickHeroArtwork(listed, galleryMap), [listed, galleryMap]);
+
+  const hasNsfwAnywhere = useMemo(
+    () =>
+      listed.some(
+        (a) => a.nsfw_available || galleryFor(a.id).some((img) => img.is_nsfw),
+      ),
+    [listed, galleryFor],
+  );
+
+  const scrollToGallery = () => {
+    galleryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const handleAgeVerified = () => {
     setAgeVerified(true);
     setShowAgeGate(false);
   };
 
-  function ErrorState({ error }: { error: string }) {
+  /* --------------------------------------------------------------- States */
+
+  if (error === "MANUAL_SETUP_REQUIRED" || error === "DATABASE_NOT_SETUP") {
     return (
-      <section className="section-sm">
-        <div className="container">
-          <div className="mx-auto max-w-lg text-center">
-            <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
-              <Package className="h-7 w-7" />
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-3">Adoptables database not set up</h2>
-            <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
-              The adoptables feature needs its Supabase tables created before it can load anything.
-            </p>
-            <p className="text-sm text-[var(--text-dim)] mb-6">
-              Go to your Supabase project &rarr; <span className="font-mono text-[var(--accent)]">SQL Editor</span> &rarr; New query, paste the contents of <span className="font-mono text-[var(--accent)]">supabase/schema.sql</span>, and run it.
-            </p>
-            <button
-              onClick={() => {
-                setError(null);
-                setLoading(true);
-                setupAttemptedRef.current = false;
-                const load = async () => {
-                  try {
-                    const [adoptablesData, galleryData] = await Promise.all([
-                      getAdoptables().catch((err) => { console.error("getAdoptables failed:", err); return [] as Adoptable[]; }),
-                      getAllAdoptableGalleryImages().catch((err) => { console.error("getAllAdoptableGalleryImages failed:", err); return [] as AdoptableGalleryImage[]; }),
-                    ]);
-                    const gMap: Record<string, AdoptableGalleryImage[]> = {};
-                    galleryData.forEach((img) => {
-                      const aid = img.adoptable_id;
-                      if (aid) { if (!gMap[aid]) gMap[aid] = []; gMap[aid].push(img); }
-                    });
-                    setAdoptables(adoptablesData);
-                    setGalleryMap(gMap);
-                  } catch (e) {
-                    console.error("Retry failed:", e);
-                    setError("DATABASE_NOT_SETUP");
-                  } finally {
-                    setLoading(false);
-                  }
-                };
-                load();
-              }}
-              className="btn-primary inline-flex items-center gap-2"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
-              Retry after setup
-            </button>
+      <div className="container section">
+        <div className="mx-auto max-w-lg text-center">
+          <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+            <Package className="h-7 w-7" aria-hidden />
           </div>
+          <h1 className="mb-3 text-2xl font-bold text-white">Adoptables are not set up yet</h1>
+          <p className="mb-4 leading-relaxed text-[var(--text-secondary)]">
+            The adoptables gallery needs its Supabase tables before it can load anything.
+          </p>
+          <p className="mb-6 text-sm text-[var(--text-dim)]">
+            In your Supabase project open <span className="font-mono text-[var(--accent)]">SQL Editor</span>,
+            paste the contents of <span className="font-mono text-[var(--accent)]">supabase/schema.sql</span> and run it.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setupAttemptedRef.current = false;
+              void load(true);
+            }}
+            className="btn-primary inline-flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" aria-hidden />
+            Try again
+          </button>
         </div>
-      </section>
+      </div>
+    );
+  }
+
+  if (error === "ERROR") {
+    return (
+      <div className="container section">
+        <div className="mx-auto max-w-lg text-center">
+          <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--danger-soft)] text-[var(--danger)]">
+            <XCircle className="h-7 w-7" aria-hidden />
+          </div>
+          <h1 className="mb-3 text-2xl font-bold text-white">We could not load the adoptables</h1>
+          <p className="mb-6 leading-relaxed text-[var(--text-secondary)]">
+            Something went wrong talking to the database. The rest of the site is still working.
+          </p>
+          <button
+            type="button"
+            onClick={() => void load(false)}
+            className="btn-primary inline-flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" aria-hidden />
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (error === "EMPTY") {
+    return (
+      <div className="container section">
+        <div className="mx-auto max-w-md text-center empty-state">
+          <div className="empty-state-icon">
+            <Package className="h-7 w-7" aria-hidden />
+          </div>
+          <h1 className="empty-state-title">No adoptables yet</h1>
+          <p className="empty-state-desc">
+            No characters are available for adoption right now. New adoptables are added regularly —
+            check back soon.
+          </p>
+          <Link href="/commission" className="btn-primary mt-6 inline-flex items-center gap-2">
+            Commission an Avatar
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </Link>
+        </div>
+      </div>
     );
   }
 
   return (
     <div className="relative">
+      {/* ---------------------------------------------------------------- Hero */}
       <section className="section">
         <div className="container">
-          <SectionHeading
-            eyebrow="Adoptables"
-            title="Adoptable Characters"
-            subtitle="Handcrafted avatar designs available for instant adoption. Browse the gallery, pick a character you love, and message me on Discord to claim it."
-          />
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+            <div>
+              <p className="section-eyebrow">Commissions / Adoptables</p>
+              <h1 className="display-lg mt-3 text-white">
+                Characters looking
+                <br />
+                for their new home.
+              </h1>
+              <p className="mt-5 max-w-lg text-base leading-relaxed text-[var(--text-secondary)]">
+                Unique VRChat characters designed and created by Bluey&rsquo;s Creations. Every
+                adoptable is VRChat ready and ready for its next owner.
+              </p>
+
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <button type="button" onClick={scrollToGallery} className="btn-primary inline-flex items-center gap-2">
+                  Browse Adoptables
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </button>
+                <Link href="/commission" className="btn-secondary inline-flex items-center gap-2">
+                  Commission an Avatar
+                </Link>
+              </div>
+
+              <dl className="mt-10 flex flex-wrap gap-x-8 gap-y-4">
+                {STATUS_FILTERS.filter((s) => counts[s] > 0).map((status) => {
+                  const meta = ADOPTABLE_STATUS_META[status];
+                  const Icon = STATUS_ICONS[status];
+                  return (
+                    <div key={status}>
+                      <dt className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-[var(--text-dim)]">
+                        <Icon className={`h-3.5 w-3.5 ${meta.text}`} aria-hidden />
+                        {meta.label}
+                      </dt>
+                      <dd className="mt-0.5 text-2xl font-semibold text-white">{counts[status]}</dd>
+                    </div>
+                  );
+                })}
+              </dl>
+            </div>
+
+            {/* Real artwork from the database — never a solid colour block. */}
+            <div className="adoptable-hero">
+              <div className="relative aspect-[4/5] w-full overflow-hidden sm:aspect-[5/4] lg:aspect-[4/5]">
+                {hero ? (
+                  <>
+                    <AdoptableArtwork
+                      url={hero.artwork.url}
+                      alt={hero.adoptable.title || "Featured adoptable character"}
+                      wrapperClassName="h-full w-full"
+                      className="h-full w-full object-cover"
+                      loading="eager"
+                      fallbackLabel="Artwork coming soon"
+                    />
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#0e111a] via-[#0e111a]/60 to-transparent" />
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-6">
+                      <div className="min-w-0">
+                        <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--accent)]">
+                          {hero.adoptable.featured ? "Featured adoptable" : "Latest character"}
+                        </p>
+                        <p className="mt-1 truncate text-xl font-semibold text-white">
+                          {hero.adoptable.title}
+                        </p>
+                        <p className="truncate text-xs uppercase tracking-wider text-[var(--text-dim)]">
+                          {hero.adoptable.species || categoryLabel(hero.adoptable.category)}
+                        </p>
+                      </div>
+                      <Link
+                        href={`/adoptables/${hero.adoptable.id}`}
+                        className="btn-secondary inline-flex shrink-0 items-center gap-2 !py-2 !text-xs"
+                      >
+                        View
+                        <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                      </Link>
+                    </div>
+                  </>
+                ) : (
+                  <div className="adoptable-artwork-fallback flex h-full w-full flex-col items-center justify-center gap-3 px-8 text-center">
+                    <Package className="h-10 w-10 text-[var(--text-dim)]" aria-hidden />
+                    <p className="text-sm font-semibold text-white">New characters are on the way</p>
+                    <p className="max-w-xs text-xs leading-relaxed text-[var(--text-secondary)]">
+                      No adoptable artwork has been published yet. Follow along or commission a
+                      character of your own.
+                    </p>
+                    <Link href="/commission" className="btn-secondary mt-1 !py-2 !text-xs">
+                      Commission an Avatar
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {loading ? (
-        <div className="container section-sm">
-          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <Reveal key={i} delay={(i % 4) * 60}>
-                <SkeletonCard />
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      ) : error === "MANUAL_SETUP_REQUIRED" || error === "DATABASE_NOT_SETUP" ? (
-        <ErrorState error={error || "DATABASE_NOT_SETUP"} />
-      ) : error === "EMPTY" ? (
-        <section className="section-sm">
-          <div className="container">
-            <div className="mx-auto max-w-md text-center empty-state">
-              <div className="empty-state-icon">
-                <Package className="h-7 w-7" />
-              </div>
-              <h3 className="empty-state-title">No adoptables yet</h3>
-              <p className="empty-state-desc">
-                There are currently no adoptables available. Check back later &mdash; new characters are added regularly.
-              </p>
+      {/* ------------------------------------------------------------- Gallery */}
+      <section ref={galleryRef} className="section-sm scroll-mt-24">
+        <div className="container">
+          {/* Archive tabs */}
+          <div className="adoptable-glass-panel mb-6 flex flex-wrap items-center justify-between gap-4 p-3">
+            <div role="tablist" aria-label="Adoptables archive" className="flex items-center gap-1">
+              {(["available", "sold"] as ArchiveTab[]).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  role="tab"
+                  aria-selected={archiveTab === tab}
+                  onClick={() => setArchiveTab(tab)}
+                  className="adoptable-archive-tab"
+                >
+                  {tab === "available" ? "Available" : "Sold archive"}
+                  <span className="ml-2 text-[10px] tabular-nums text-[var(--text-dim)]">
+                    {tab === "available"
+                      ? counts.available + counts.pending + counts.reserved
+                      : counts.sold}
+                  </span>
+                </button>
+              ))}
             </div>
-          </div>
-        </section>
-      ) : (
-        <div className="container section-sm">
-          <div className="mb-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[var(--text-secondary)]">
-            <span className="inline-flex items-center gap-1.5">
-              <Package className="h-4 w-4" />
-              {totalAdoptables} total
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-emerald-400">
-              <CheckCircle className="h-4 w-4" />
-              {availableCount} available
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-amber-400">
-              <Clock className="h-4 w-4" />
-              {reservedCount} reserved
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-rose-400">
-              <XCircle className="h-4 w-4" />
-              {soldCount} sold
-            </span>
+
+            {archiveTab === "sold" && (
+              <p className="px-2 text-xs text-[var(--text-dim)]">
+                Previous adoptables, kept as a portfolio.
+              </p>
+            )}
           </div>
 
-          <div className="mb-8 flex flex-wrap gap-2">
-            {filters.map((f) => {
-              const isActive = activeFilter === f.id;
-              return (
+          {/* Filters */}
+          <div className="mb-8 flex flex-wrap items-center gap-2">
+            {archiveTab === "available" && (
+              <>
                 <button
-                  key={f.id}
-                  onClick={() => setActiveFilter(f.id)}
-                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[12px] font-semibold transition-all duration-300 ${
-                    isActive
+                  type="button"
+                  onClick={() => setStatusFilter("all")}
+                  aria-pressed={statusFilter === "all"}
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[12px] font-semibold transition-all ${
+                    statusFilter === "all"
                       ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
                       : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-white"
                   }`}
                 >
-                  <f.icon className="h-3.5 w-3.5" />
-                  {f.label}
+                  All
+                  <span className="tabular-nums opacity-70">{counts.available + counts.pending + counts.reserved}</span>
                 </button>
-              );
-            })}
+                {STATUS_FILTERS.filter((s) => s !== "sold").map((status) => {
+                  const meta = ADOPTABLE_STATUS_META[status];
+                  const Icon = STATUS_ICONS[status];
+                  const isActive = statusFilter === status;
+                  return (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() => setStatusFilter(isActive ? "all" : status)}
+                      aria-pressed={isActive}
+                      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[12px] font-semibold transition-all ${
+                        isActive
+                          ? `${meta.border} ${meta.bg} ${meta.text}`
+                          : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-white"
+                      }`}
+                    >
+                      <Icon className="h-3.5 w-3.5" aria-hidden />
+                      {meta.title}
+                      <span className="tabular-nums opacity-70">{counts[status]}</span>
+                    </button>
+                  );
+                })}
+
+                <span className="mx-1 hidden h-5 w-px bg-[var(--border)] sm:block" aria-hidden />
+
+                {(
+                  [
+                    { id: "sfw", label: "SFW" },
+                    { id: "nsfw", label: "NSFW" },
+                    { id: "featured", label: "Featured" },
+                  ] as { id: ExtraFilter; label: string }[]
+                ).map((option) => {
+                  const isActive = extras.has(option.id);
+                  const total = listed.filter((a) =>
+                    option.id === "sfw"
+                      ? a.sfw_available
+                      : option.id === "nsfw"
+                        ? a.nsfw_available
+                        : a.featured,
+                  ).length;
+                  if (total === 0) return null;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => toggleExtra(option.id)}
+                      aria-pressed={isActive}
+                      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[11px] font-semibold transition-all ${
+                        isActive
+                          ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
+                          : "border-[var(--border)] text-[var(--text-dim)] hover:border-[var(--border-hover)] hover:text-white"
+                      }`}
+                    >
+                      {option.label}
+                      <span className="tabular-nums opacity-70">{total}</span>
+                    </button>
+                  );
+                })}
+              </>
+            )}
           </div>
 
-          {filtered.length === 0 ? (
+          {/* Grid */}
+          {loading ? (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <CardSkeleton key={i} />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="py-16 text-center empty-state">
               <div className="empty-state-icon">
-                <Filter className="h-6 w-6" />
+                <Filter className="h-6 w-6" aria-hidden />
               </div>
-              <h3 className="empty-state-title">No matches</h3>
-              <p className="empty-state-desc">No adoptables match the selected filter.</p>
+              <h2 className="empty-state-title">
+                {archiveTab === "sold" ? "No sold adoptables yet" : "Nothing here yet"}
+              </h2>
+              <p className="empty-state-desc">
+                {archiveTab === "sold"
+                  ? "Once characters find a home they stay here as part of the portfolio."
+                  : "No adoptables match the filters you picked. Try widening them."}
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                {(extras.size > 0 || statusFilter !== "all") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setExtras(new Set());
+                      setStatusFilter("all");
+                    }}
+                    className="btn-secondary !py-2 !text-sm"
+                  >
+                    Clear filters
+                  </button>
+                )}
+                <Link href="/commission" className="btn-primary !py-2 !text-sm">
+                  Commission an Avatar
+                </Link>
+              </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filtered.map((adoptable) => (
-                <Reveal key={adoptable.id} delay={0}>
-                  <AdoptableCard
-                    adoptable={adoptable}
-                    galleryMap={galleryMap}
-                    ageVerified={ageVerified}
-                  />
-                </Reveal>
+                <AdoptableCard
+                  key={adoptable.id}
+                  adoptable={adoptable}
+                  gallery={galleryFor(adoptable.id)}
+                  ageVerified={ageVerified}
+                />
               ))}
             </div>
           )}
         </div>
-      )}
+      </section>
 
-      {!ageVerified &&
-        totalAdoptables > 0 &&
-        filtered.some(
-          (a) =>
-            a.nsfw_available || (galleryMap[a.id] || []).some((img) => img.is_nsfw),
-        ) && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[45] max-w-md rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-center backdrop-blur-md">
-            <p className="mb-2 text-sm text-white">
-              Some adoptables contain NSFW content. Verify your age to view
-              NSFW prices and images.
-            </p>
-            <button
-              onClick={() => setShowAgeGate(true)}
-              className="btn-primary !py-1.5 !px-4 !text-sm inline-flex items-center gap-2"
-            >
-              <Lock className="h-3 w-3" />
-              Verify Age
-            </button>
-          </div>
-        )}
+      {/* Age gate */}
+      {!ageVerified && hasNsfwAnywhere && (
+        <div className="fixed bottom-6 left-1/2 z-[45] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-2xl border border-rose-500/30 bg-[#120d12]/90 p-4 text-center backdrop-blur-xl">
+          <p className="mb-3 text-sm text-white">
+            Some adoptables contain NSFW artwork. Verify your age to view their images and prices.
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowAgeGate(true)}
+            className="btn-primary inline-flex items-center gap-2 !py-2 !text-sm"
+          >
+            <Lock className="h-3.5 w-3.5" aria-hidden />
+            Verify Age
+          </button>
+        </div>
+      )}
 
       {showAgeGate && <AgeVerifier onVerified={handleAgeVerified} />}
     </div>

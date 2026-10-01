@@ -1,6 +1,8 @@
 import { supabase, isSupabaseConfigured } from "./supabase/client";
 import { pricingTiers, additionalServices, faqItems, workflowSteps, mockReviews, mockPortfolioImages, mockNsfwPortfolioImages, siteConfig } from "../config/site";
 import type { Adoptable, AdoptableGalleryImage } from "../types/database";
+import type { AdoptableStatus } from "./adoptables/status";
+import { normalizeStatus, visibleForStatus } from "./adoptables/status";
 
 const FALLBACKS = {
   siteConfig,
@@ -300,12 +302,19 @@ export async function getTosSections() {
   return data || [];
 }
 
+const ADOPTABLE_COLUMNS =
+  "id, title, description, category, price, availability, featured, visible, sort_order, species, included_items, rules_license, vrchat_info, sfw_price, nsfw_price, bundle_price, sfw_price_usd, nsfw_price_usd, bundle_price_usd, sfw_available, nsfw_available, bundle_available, main_image, main_image_path, created_at, updated_at";
+
 export async function getAdoptables(): Promise<Adoptable[]> {
   if (!isSupabaseConfigured || !supabase) return FALLBACKS.adoptables;
+  // `availability` is the single source of truth: HIDDEN adoptables are not
+  // listed publicly, and SOLD adoptables stay listed as portfolio history.
+  // `visible` is the mirrored column kept for backwards compatibility.
   const { data, error } = await supabase
     .from("adoptables")
-    .select("id, title, description, category, price, availability, featured, visible, sort_order, species, included_items, rules_license, vrchat_info, sfw_price, nsfw_price, bundle_price, sfw_available, nsfw_available, bundle_available, main_image, main_image_path, created_at, updated_at")
+    .select(ADOPTABLE_COLUMNS)
     .eq("visible", true)
+    .neq("availability", "hidden")
     .order("sort_order", { ascending: true });
 
   if (error) {
@@ -329,6 +338,7 @@ export async function getAdoptableById(id: string) {
     .select("*")
     .eq("id", id)
     .eq("visible", true)
+    .neq("availability", "hidden")
     .single();
   if (error || !data) return null;
   return data;
@@ -402,11 +412,28 @@ export async function deleteAdoptableGalleryImage(id: string, path?: string) {
   return !error;
 }
 
-export async function reorderAdoptableGalleryImages(items: { id: string; sort_order: number }[]) {
-  if (!isSupabaseConfigured || !supabase) return;
-  for (const item of items) {
-    const { error } = await supabase.from("adoptable_gallery").update({ sort_order: item.sort_order }).eq("id", item.id);
-    if (error) console.error("Adoptable gallery reorder error:", error);
+/**
+ * Persists a new gallery ordering through the authenticated API route.
+ *
+ * The anon client cannot write to `adoptable_gallery` (the RLS write policy
+ * requires an authenticated role), so this goes through the admin endpoint
+ * instead of issuing updates directly.
+ */
+export async function reorderAdoptableGalleryImages(
+  adoptableId: string,
+  items: { id: string; sort_order: number }[],
+) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  try {
+    const response = await fetch(`/api/adoptables/${adoptableId}/gallery`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items }),
+    });
+    return response.ok;
+  } catch (error) {
+    console.error("Adoptable gallery reorder error:", error);
+    return false;
   }
 }
 
@@ -430,11 +457,16 @@ export async function getAllAdoptableGalleryImages(): Promise<AdoptableGalleryIm
   return data || [];
 }
 
-export async function updateAdoptableStatus(id: string, status: "available" | "sold" | "reserved") {
+export async function updateAdoptableStatus(id: string, status: AdoptableStatus) {
   if (!isSupabaseConfigured || !supabase) return null;
+  const resolved = normalizeStatus(status);
   const { data, error } = await supabase
     .from("adoptables")
-    .update({ availability: status, updated_at: new Date().toISOString() })
+    .update({
+      availability: resolved,
+      visible: visibleForStatus(resolved),
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", id)
     .select();
   if (error) return null;

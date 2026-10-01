@@ -1,850 +1,784 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { deleteFromSupabaseStorage } from "@/lib/supabase/storage";
-import { useSave } from "../SaveProvider";
-import { useToast } from "../Toast";
-import { Card, CardHeader } from "../Card";
-import { UploadArea } from "../UploadArea";
-import { Button } from "../Button";
-import { Field, Input, Textarea, Select } from "../Field";
-import { Plus, Trash2, GripVertical, Eye, EyeOff, ChevronUp, ChevronDown, Image as ImageIcon, GitCompare, Layers, Package } from "lucide-react";
-import { uploadMedia } from "@/lib/upload/client";
-import { UploadError } from "@/lib/upload/errors";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  AlertTriangle,
+  LayoutGrid,
+  List,
+  Package,
+  Plus,
+  RefreshCw,
+  Search,
+  X,
+  EyeOff,
+  CheckCircle2,
+  Clock3,
+  XCircle,
+  Sparkles,
+  Layers,
+  Trash2,
+} from "lucide-react";
+import type { Adoptable, AdoptableStatus } from "@/types/database";
+import { ADOPTABLE_STATUSES, ADOPTABLE_STATUS_META, normalizeStatus } from "@/lib/adoptables/status";
+import { categoryLabel, priceSortValue, adoptablePriceSummary } from "@/lib/adoptables/catalog";
+import { useToast } from "@/components/admin/Toast";
+import { Button } from "@/components/admin/Button";
+import { Badge } from "@/components/admin/Badge";
+import { AdoptableCard } from "@/components/admin/adoptables/AdoptableCard";
+import { StatusControl } from "@/components/admin/adoptables/StatusControl";
+import { ConfirmDialog } from "@/components/admin/adoptables/ConfirmDialog";
+import { AdoptableEditor } from "@/components/admin/adoptables/AdoptableEditor";
+import { Tooltip } from "@/components/admin/adoptables/Tooltip";
+import { useAdoptables } from "@/components/admin/adoptables/useAdoptables";
 
-interface Adoptable {
-  id?: string;
-  title: string;
-  description: string;
-  category: string;
-  price: string;
-  sfw_price: string;
-  nsfw_price: string;
-  bundle_price: string;
-  sfw_available: boolean;
-  nsfw_available: boolean;
-  bundle_available: boolean;
-  availability: string;
-  featured: boolean;
-  visible: boolean;
-  sort_order: number;
-}
+type StatusFilter = AdoptableStatus | "all";
+type SortKey = "updated" | "name" | "price" | "status";
+type ViewMode = "grid" | "list";
 
-interface AdoptableGalleryImage {
-  id?: string;
-  adoptable_id?: string;
-  url: string;
-  path?: string;
-  storage_path?: string;
-  sort_order: number;
-  uploading?: boolean;
-  error?: string;
-}
+const STATUS_ORDER: AdoptableStatus[] = ["available", "pending", "reserved", "sold", "hidden"];
 
-interface AdoptableBeforeAfter {
-  id?: string;
-  adoptable_id?: string;
-  before_url: string;
-  after_url: string;
-  before_path?: string;
-  after_path?: string;
-  label: string;
-  sort_order: number;
-}
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "updated", label: "Recently Updated" },
+  { value: "name", label: "Name" },
+  { value: "price", label: "Price" },
+  { value: "status", label: "Status" },
+];
+
+const FILTER_ICONS: Record<StatusFilter, typeof Layers> = {
+  all: Layers,
+  available: CheckCircle2,
+  pending: Clock3,
+  reserved: Sparkles,
+  sold: XCircle,
+  hidden: EyeOff,
+};
+
+const LIST_COLUMNS = "grid grid-cols-[auto_1fr_auto] items-center gap-4";
 
 export function AdoptablesSection() {
-  const sb = supabase!;
-  const [projects, setProjects] = useState<Adoptable[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [editingProject, setEditingProject] = useState<number | null>(null);
-  const [galleryImages, setGalleryImages] = useState<Record<string, AdoptableGalleryImage[]>>({});
-  const [beforeAfters, setBeforeAfters] = useState<Record<string, AdoptableBeforeAfter[]>>({});
-  const [mainImages, setMainImages] = useState<Record<string, string>>({});
-  const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
-  const projectsRef = useRef<Adoptable[]>([]);
-  const originalIdsRef = useRef<Set<string>>(new Set());
-  const mainImageInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
-  const { markDirty, register } = useSave();
+  const controller = useAdoptables();
   const toast = useToast();
 
-  useEffect(() => {
-    projectsRef.current = projects;
-  }, [projects]);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("updated");
+  const [view, setView] = useState<ViewMode>("grid");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [editorId, setEditorId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Adoptable | null>(null);
+  const [pendingDeleteBulkOpen, setPendingDeleteBulkOpen] = useState(false);
+  const [confirmingAll, setConfirmingAll] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setLoading(false);
-      return;
+  const { adoptables, gallery, comparisons, loading, error, busyIds } = controller;
+
+  const counts = useMemo(() => {
+    const result: Record<StatusFilter, number> = {
+      all: adoptables.length,
+      available: 0,
+      pending: 0,
+      reserved: 0,
+      sold: 0,
+      hidden: 0,
+    };
+    for (const row of adoptables) {
+      result[normalizeStatus(row.availability)] += 1;
     }
-    (async () => {
-      try {
-        if (!sb) throw new Error("Supabase not configured");
-        const { data, error } = await sb
-          .from("adoptables")
-          .select("*")
-          .order("sort_order", { ascending: true });
-        if (error) throw error;
-        const loaded = (data || []).map((p: any) => ({
-          id: p.id,
-          title: p.title || "",
-          description: p.description || "",
-          category: p.category || "avatar",
-          price: p.price || "",
-          sfw_price: p.sfw_price || "",
-          nsfw_price: p.nsfw_price || "",
-          bundle_price: p.bundle_price || "",
-          sfw_available: p.sfw_available || false,
-          nsfw_available: p.nsfw_available || false,
-          bundle_available: p.bundle_available || false,
-          availability: p.availability || "available",
-          featured: p.featured || false,
-          visible: p.visible !== false,
-          sort_order: p.sort_order || 0,
-        }));
-        setProjects(loaded);
-        originalIdsRef.current = new Set(loaded.map((p) => p.id).filter(Boolean));
+    return result;
+  }, [adoptables]);
 
-        const mainImgMap: Record<string, string> = {};
-        loaded.forEach((p: any) => {
-          if (p.main_image) mainImgMap[p.id] = p.main_image;
-        });
-        setMainImages(mainImgMap);
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    const matched = adoptables.filter((row) => {
+      if (statusFilter !== "all" && normalizeStatus(row.availability) !== statusFilter) return false;
+      if (!needle) return true;
+      return (
+        (row.title ?? "").toLowerCase().includes(needle) ||
+        (row.description ?? "").toLowerCase().includes(needle) ||
+        (row.species ?? "").toLowerCase().includes(needle) ||
+        categoryLabel(row.category).toLowerCase().includes(needle) ||
+        (row.category ?? "").toLowerCase().includes(needle)
+      );
+    });
 
-        const { data: galleryData } = await sb
-          .from("adoptable_gallery")
-          .select("*")
-          .order("sort_order", { ascending: true });
-        const galleryMap: Record<string, AdoptableGalleryImage[]> = {};
-        (galleryData || []).forEach((img: any) => {
-          const mid = img.adoptable_id;
-          if (mid) {
-            if (!galleryMap[mid]) galleryMap[mid] = [];
-            galleryMap[mid].push(img);
-          }
-        });
-        setGalleryImages(galleryMap);
-
-        const { data: baData } = await sb
-          .from("adoptable_before_after")
-          .select("*")
-          .order("sort_order", { ascending: true });
-        const baMap: Record<string, AdoptableBeforeAfter[]> = {};
-        (baData || []).forEach((ba: any) => {
-          const mid = ba.adoptable_id;
-          if (mid) {
-            if (!baMap[mid]) baMap[mid] = [];
-            baMap[mid].push(ba);
-          }
-        });
-        setBeforeAfters(baMap);
-      } catch {
-        toast.error("Failed to load adoptables");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [toast]);
-
-  const saveProjects = useCallback(async () => {
-    if (!isSupabaseConfigured) return;
-    if (!sb) return;
-
-    const current = projectsRef.current;
-
-    for (const project of current) {
-      const payload = {
-        title: project.title,
-        description: project.description,
-        category: project.category,
-        price: project.price,
-        sfw_price: project.sfw_price,
-        nsfw_price: project.nsfw_price,
-        bundle_price: project.bundle_price,
-        sfw_available: project.sfw_available,
-        nsfw_available: project.nsfw_available,
-        bundle_available: project.bundle_available,
-        availability: project.availability,
-        featured: project.featured,
-        visible: project.visible,
-        sort_order: project.sort_order,
-        main_image: (project as any).main_image || null,
-        main_image_path: (project as any).main_image_path || null,
-      };
-      if (project.id) {
-        const res = await fetch(`/api/adoptables/${project.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) {
-          const r = await res.json().catch(() => ({}));
-          throw new Error(r.error || "Failed to update adoptable");
+    return matched.sort((a, b) => {
+      switch (sortKey) {
+        case "name":
+          return (a.title ?? "").localeCompare(b.title ?? "", undefined, { sensitivity: "base" });
+        case "price": {
+          const diff = priceSortValue(a) - priceSortValue(b);
+          return Number.isFinite(diff) ? diff : priceSortValue(a) === priceSortValue(b) ? 0 : 1;
         }
-      } else {
-        const res = await fetch("/api/adoptables", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) {
-          const r = await res.json().catch(() => ({}));
-          throw new Error(r.error || "Failed to create adoptable");
-        }
-        const data = await res.json();
-        if (data && data.id) {
-          originalIdsRef.current.add(data.id);
+        case "status":
+          return (
+            STATUS_ORDER.indexOf(normalizeStatus(a.availability)) -
+            STATUS_ORDER.indexOf(normalizeStatus(b.availability))
+          );
+        case "updated":
+        default: {
+          const at = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+          const bt = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+          return bt - at;
         }
       }
-    }
+    });
+  }, [adoptables, query, statusFilter, sortKey]);
 
-    const { data: reloaded, error } = await sb
-      .from("adoptables")
-      .select("*")
-      .order("sort_order", { ascending: true });
-    if (!error && reloaded) {
-      setProjects(
-        reloaded.map((p: any) => ({
-          id: p.id,
-          title: p.title || "",
-          description: p.description || "",
-          category: p.category || "avatar",
-          price: p.price || "",
-          sfw_price: p.sfw_price || "",
-          nsfw_price: p.nsfw_price || "",
-          bundle_price: p.bundle_price || "",
-          sfw_available: p.sfw_available || false,
-          nsfw_available: p.nsfw_available || false,
-          bundle_available: p.bundle_available || false,
-          availability: p.availability || "available",
-          featured: p.featured || false,
-          visible: p.visible !== false,
-          sort_order: p.sort_order || 0,
-        })),
-      );
-      const mainImgMap: Record<string, string> = {};
-      reloaded.forEach((p: any) => {
-        if (p.main_image) mainImgMap[p.id] = p.main_image;
-      });
-      setMainImages(mainImgMap);
-      originalIdsRef.current = new Set(
-        reloaded.map((p: any) => p.id).filter(Boolean),
-      );
-    }
+  const editorAdoptable = useMemo(
+    () => adoptables.find((row) => row.id === editorId) ?? null,
+    [adoptables, editorId],
+  );
+
+  // A selection that points at rows no longer visible is meaningless.
+  useEffect(() => {
+    setSelected((prev) => {
+      if (prev.size === 0) return prev;
+      const visible = new Set(filtered.map((row) => row.id));
+      const next = new Set([...prev].filter((id) => visible.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [filtered]);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   }, []);
 
-  useEffect(() => {
-    if (!isSupabaseConfigured) return;
-    return register("adoptables", saveProjects);
-  }, [register, saveProjects]);
-
-  function updateProject(i: number, patch: Partial<Adoptable>) {
-    const next = projects.slice();
-    next[i] = { ...next[i], ...patch };
-    setProjects(next);
-    markDirty();
-  }
-
-  async function removeProject(i: number) {
-    const project = projects[i];
-    if (project.id) {
-      try {
-        const res = await fetch(`/api/adoptables/${project.id}`, { method: "DELETE" });
-        if (!res.ok) {
-          const r = await res.json().catch(() => ({}));
-          throw new Error(r.error || "Delete failed");
-        }
-        originalIdsRef.current.delete(project.id);
-        toast.success("Adoptable deleted");
-      } catch (e: any) {
-        toast.error(e.message || "Failed to delete adoptable");
-        return;
-      }
-    }
-    setProjects(projects.filter((_, j) => j !== i));
-    if (project.id) {
-      setMainImages((prev) => {
-        const next = { ...prev };
-        delete next[project.id!];
-        return next;
-      });
-    }
-    markDirty();
-  }
-
-  async function addProject() {
-    if (!isSupabaseConfigured || !sb) {
-      setProjects([
-        ...projects,
-        { title: "", description: "", category: "avatar", price: "", sfw_price: "", nsfw_price: "", bundle_price: "", sfw_available: false, nsfw_available: false, bundle_available: false, availability: "available", featured: false, visible: true, sort_order: projects.length },
-      ]);
-      setEditingProject(projects.length);
-      markDirty();
-      return;
-    }
+  const handleCreate = useCallback(async () => {
+    setCreating(true);
     try {
-      const res = await fetch("/api/adoptables", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "", description: "", category: "avatar", price: "", sfw_price: "", nsfw_price: "", bundle_price: "", sfw_available: false, nsfw_available: false, bundle_available: false, availability: "available", featured: false, visible: true, sort_order: projects.length }),
-      });
-      if (!res.ok) {
-        const r = await res.json().catch(() => ({}));
-        throw new Error(r.error || "Failed to create adoptable");
+      const id = await controller.createAdoptable();
+      if (id) {
+        toast.success("Adoptable created — add artwork and pricing to publish it");
+        setEditorId(id);
+      } else {
+        toast.error("Could not create the adoptable. Check your session and try again.");
       }
-      const data = await res.json();
-      if (data && data.id) {
-        setProjects([
-          ...projects,
-          { id: data.id, title: "", description: "", category: "avatar", price: "", sfw_price: "", nsfw_price: "", bundle_price: "", sfw_available: false, nsfw_available: false, bundle_available: false, availability: "available", featured: false, visible: true, sort_order: projects.length },
-        ]);
-        setEditingProject(projects.length);
-        originalIdsRef.current.add(data.id);
-        markDirty();
-      }
-    } catch (e: any) {
-      toast.error(e.message || "Failed to create adoptable");
+    } finally {
+      setCreating(false);
     }
-  }
+  }, [controller, toast]);
 
-  async function clearAllProjects() {
-    if (!window.confirm("This will permanently delete ALL adoptables, gallery images, and comparisons. This cannot be undone. Continue?")) return;
-    try {
-      const res = await fetch("/api/adoptables", { method: "DELETE" });
-      if (!res.ok) {
-        const r = await res.json().catch(() => ({}));
-        throw new Error(r.error || "Failed to clear adoptables");
+  const handleStatus = useCallback(
+    async (id: string, status: AdoptableStatus) => {
+      const name = adoptables.find((row) => row.id === id)?.title || "Adoptable";
+      const ok = await controller.setStatus(id, status);
+      if (ok) {
+        toast.success(`${name} is now ${ADOPTABLE_STATUS_META[status].title.toLowerCase()}`);
+      } else {
+        toast.error(`Could not update ${name}. The previous status was restored.`);
       }
-      setProjects([]);
-      setGalleryImages({});
-      setBeforeAfters({});
-      setMainImages({});
-      originalIdsRef.current = new Set();
-      toast.success("All adoptables cleared");
-    } catch (e: any) {
-      toast.error(e.message || "Failed to clear adoptables");
+    },
+    [adoptables, controller, toast],
+  );
+
+  const handleToggleVisibility = useCallback(
+    async (id: string) => {
+      const row = adoptables.find((item) => item.id === id);
+      if (!row) return;
+      await handleStatus(id, normalizeStatus(row.availability) === "hidden" ? "available" : "hidden");
+    },
+    [adoptables, handleStatus],
+  );
+
+  const handleFeatured = useCallback(
+    async (id: string, featured: boolean) => {
+      const ok = await controller.setFeatured(id, featured);
+      if (ok) toast.success(featured ? "Marked as featured" : "Removed from featured");
+      else toast.error("Could not update the featured flag");
+    },
+    [controller, toast],
+  );
+
+  const handleMove = useCallback(
+    async (id: string, direction: -1 | 1) => {
+      const ok = await controller.moveOrder(id, direction);
+      if (!ok) toast.error("Could not change the display order");
+    },
+    [controller, toast],
+  );
+
+  const runBulkStatus = useCallback(
+    async (status: AdoptableStatus) => {
+      const ids = [...selected];
+      if (ids.length === 0) return;
+      setBulkBusy(true);
+      const updated = await controller.setStatusBulk(ids, status);
+      setBulkBusy(false);
+      if (updated > 0) {
+        toast.success(
+          `${updated} adoptable${updated === 1 ? "" : "s"} marked ${ADOPTABLE_STATUS_META[status].title.toLowerCase()}`,
+        );
+        setSelected(new Set());
+      } else {
+        toast.error("Bulk status update failed. Nothing was changed.");
+      }
+    },
+    [controller, selected, toast],
+  );
+
+  const runBulkDelete = useCallback(async () => {
+    const ids = [...selected];
+    setPendingDeleteBulkOpen(false);
+    if (ids.length === 0) return;
+    setBulkBusy(true);
+    const ok = await controller.removeBulk(ids);
+    setBulkBusy(false);
+    if (ok) {
+      toast.success(`${ids.length} adoptable${ids.length === 1 ? "" : "s"} deleted permanently`);
+      setSelected(new Set());
+    } else {
+      toast.error("Bulk delete failed. Nothing was removed.");
     }
-  }
+  }, [controller, selected, toast]);
 
-  async function toggleVisibility(i: number) {
-    const project = projects[i];
-    const newVisible = !project.visible;
-    if (project.id) {
-      try {
-        const res = await fetch(`/api/adoptables/${project.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ visible: newVisible }),
-        });
-        if (!res.ok) {
-          const r = await res.json().catch(() => ({}));
-          throw new Error(r.error || "Update failed");
-        }
-      } catch (e: any) {
-        toast.error(e.message || "Failed to update visibility");
-        return;
-      }
+  const handleDeleteOne = useCallback(async () => {
+    const target = pendingDelete;
+    setPendingDelete(null);
+    if (!target) return;
+    const ok = await controller.removeAdoptable(target.id);
+    if (ok) toast.success(`${target.title || "Adoptable"} deleted permanently`);
+    else toast.error("Delete failed. The adoptable was not removed.");
+  }, [controller, pendingDelete, toast]);
+
+  const handleDeleteAll = useCallback(async () => {
+    setConfirmingAll(false);
+    const ok = await controller.deleteEverything();
+    if (ok) {
+      toast.success("All adoptables were deleted");
+      setSelected(new Set());
+    } else {
+      toast.error("Could not delete all adoptables");
     }
-    updateProject(i, { visible: newVisible });
-  }
+  }, [controller, toast]);
 
-  async function toggleFeatured(i: number) {
-    const project = projects[i];
-    const newFeatured = !project.featured;
-    if (project.id) {
-      try {
-        const res = await fetch(`/api/adoptables/${project.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ featured: newFeatured }),
-        });
-        if (!res.ok) {
-          const r = await res.json().catch(() => ({}));
-          throw new Error(r.error || "Update failed");
-        }
-      } catch (e: any) {
-        toast.error(e.message || "Failed to update featured status");
-        return;
+  const allVisibleSelected =
+    filtered.length > 0 && filtered.every((row) => selected.has(row.id));
+
+  const toggleSelectAll = useCallback(() => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) {
+        for (const row of filtered) next.delete(row.id);
+      } else {
+        for (const row of filtered) next.add(row.id);
       }
-    }
-    updateProject(i, { featured: newFeatured });
-  }
+      return next;
+    });
+  }, [allVisibleSelected, filtered]);
 
-  async function handleMainImageUpload(i: number, files: FileList | null) {
-    if (!files || files.length === 0) return;
-    const project = projects[i];
-    let adoptableId: string | null = project.id ?? null;
-    if (!adoptableId) {
-      adoptableId = await ensureProjectHasId(i);
-      if (!adoptableId) {
-        toast.error("Save the adoptable first before uploading images");
-        return;
-      }
-    }
-    const file = files[0];
-    try {
-      const uploaded = await uploadMedia(file, "adoptable-main", { adoptableId });
-      setMainImages((prev) => ({ ...prev, [adoptableId!]: uploaded.url }));
-      toast.success("Main image uploaded");
-    } catch (e: any) {
-      toast.error(e instanceof UploadError ? e.message : "Failed to upload main image");
-    }
-  }
+  const orderedForMove = useMemo(
+    () => [...adoptables].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+    [adoptables],
+  );
 
-  async function deleteMainImage(i: number) {
-    const project = projects[i];
-    if (!project.id) return;
-    const path = (project as any).main_image_path;
-    try {
-      if (path) {
-        await deleteFromSupabaseStorage("portfolio-images", path);
-      }
-
-      const res = await fetch(`/api/adoptables/${project.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ main_image: null, main_image_path: null }),
-      });
-      if (!res.ok) {
-        const r = await res.json().catch(() => ({}));
-        throw new Error(r.error || "Failed to update adoptable");
-      }
-
-      setMainImages((prev) => {
-        const next = { ...prev };
-        delete next[project.id!];
-        return next;
-      });
-      toast.success("Main image removed");
-    } catch (e: any) {
-      toast.error(e.message || "Failed to remove main image");
-    }
-  }
-
-  function moveProject(i: number, dir: number) {
-    const next = projects.slice();
-    const j = i + dir;
-    if (j < 0 || j >= next.length) return;
-    [next[i], next[j]] = [next[j], next[i]];
-    next.forEach((p, idx) => (p.sort_order = idx));
-    setProjects(next);
-    markDirty();
-  }
-
-  async function ensureProjectHasId(projectIndex: number): Promise<string | null> {
-    const project = projects[projectIndex];
-    if (project.id) return project.id;
-    try {
-      const res = await fetch("/api/adoptables", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: project.title,
-          description: project.description,
-          category: project.category,
-          price: project.price,
-          sfw_price: project.sfw_price,
-          nsfw_price: project.nsfw_price,
-          bundle_price: project.bundle_price,
-          sfw_available: project.sfw_available,
-          nsfw_available: project.nsfw_available,
-          bundle_available: project.bundle_available,
-          availability: project.availability,
-          featured: project.featured,
-          visible: project.visible,
-          sort_order: project.sort_order,
-        }),
-      });
-      if (!res.ok) {
-        const r = await res.json().catch(() => ({}));
-        throw new Error(r.error || "Failed to create adoptable");
-      }
-      const data = await res.json();
-      if (data && data.id) {
-        const next = projects.slice();
-        next[projectIndex] = { ...next[projectIndex], id: data.id };
-        setProjects(next);
-        originalIdsRef.current.add(data.id);
-        markDirty();
-        return data.id;
-      }
-      return null;
-    } catch (e: any) {
-      toast.error(e.message || "Failed to create adoptable");
-      return null;
-    }
-  }
-
-  async function handleGalleryUpload(projectIndex: number, files: FileList | null) {
-    if (!files || files.length === 0) return;
-    const project = projects[projectIndex];
-    let adoptableId: string | null = project.id ?? null;
-    if (!adoptableId) {
-      adoptableId = await ensureProjectHasId(projectIndex);
-      if (!adoptableId) {
-        toast.error("Save the adoptable first before uploading images");
-        return;
-      }
-    }
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const temp: AdoptableGalleryImage = { url: "", sort_order: (galleryImages[adoptableId] || []).length + i };
-      setGalleryImages((prev) => ({ ...prev, [adoptableId]: [...(prev[adoptableId] || []), temp] }));
-      try {
-        const isNsfw = file.type.includes("nsfw") || file.name.toLowerCase().includes("nsfw");
-        const uploaded = await uploadMedia(file, "adoptable-gallery", { adoptableId, isNsfw });
-        setGalleryImages((prev) => {
-          const current = prev[adoptableId] || [];
-          return { ...prev, [adoptableId]: current.map((img) => (img === temp ? { id: uploaded.id, url: uploaded.url, path: uploaded.path, sort_order: temp.sort_order } : img)) };
-        });
-        toast.success("Image uploaded");
-      } catch (e: any) {
-        console.error("Gallery upload error:", e);
-        setGalleryImages((prev) => {
-          const current = prev[adoptableId] || [];
-          return { ...prev, [adoptableId]: current.map((img) => (img === temp ? { ...img, error: e?.message || "Upload failed" } : img)) };
-        });
-        toast.error(e?.message || "Failed to upload image");
-      }
-    }
-  }
-
-  async function handleBeforeAfterUpload(projectIndex: number, type: "before" | "after", files: FileList | null) {
-    if (!files || files.length === 0) return;
-    const project = projects[projectIndex];
-    let adoptableId: string | null = project.id ?? null;
-    if (!adoptableId) {
-      adoptableId = await ensureProjectHasId(projectIndex);
-      if (!adoptableId) {
-        toast.error("Save the adoptable first before uploading images");
-        return;
-      }
-    }
-    const file = files[0];
-    const temp: AdoptableBeforeAfter = {
-      adoptable_id: adoptableId,
-      before_url: type === "before" ? "" : (beforeAfters[adoptableId]?.[0]?.before_url || ""),
-      after_url: type === "after" ? "" : (beforeAfters[adoptableId]?.[0]?.after_url || ""),
-      label: "",
-      sort_order: (beforeAfters[adoptableId] || []).length,
-    };
-    if (type === "before") temp.before_url = "";
-    else temp.after_url = "";
-
-    setBeforeAfters((prev) => ({ ...prev, [adoptableId]: [...(prev[adoptableId] || []), temp] }));
-
-    try {
-      const uploaded = await uploadMedia(file, type === "before" ? "adoptable-before" : "adoptable-after", { adoptableId, label: "" });
-      setBeforeAfters((prev) => {
-        const current = prev[adoptableId] || [];
-        const urlField = type === "before" ? "before_url" : "after_url";
-        const pathField = type === "before" ? "before_path" : "after_path";
-        return { ...prev, [adoptableId]: current.map((img) => (img === temp ? { ...img, id: uploaded.id || img.id, [urlField]: uploaded.url, [pathField]: uploaded.path } : img)) };
-      });
-      toast.success(`${type === "before" ? "Before" : "After"} image uploaded`);
-    } catch (e: any) {
-      console.error("Before-after upload error:", e);
-      toast.error(e?.message || "Failed to upload image");
-    }
-  }
-
-  async function deleteGalleryImage(adoptableId: string, imageId: string, path?: string) {
-    try {
-      if (path) {
-        await deleteFromSupabaseStorage("portfolio-images", path);
-      }
-
-      const params = new URLSearchParams();
-      if (imageId) params.set("imageId", imageId);
-      const res = await fetch(`/api/adoptables/${adoptableId}/gallery?${params.toString()}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const r = await res.json().catch(() => ({}));
-        throw new Error(r.error || "Delete failed");
-      }
-      setGalleryImages((prev) => ({
-        ...prev,
-        [adoptableId]: (prev[adoptableId] || []).filter((img) => img.id !== imageId),
-      }));
-      toast.success("Image deleted");
-    } catch (e: any) {
-      toast.error(e.message || "Failed to delete image");
-    }
-  }
-
-  async function deleteBeforeAfter(adoptableId: string, baId: string, beforePath?: string, afterPath?: string) {
-    try {
-      if (beforePath) await deleteFromSupabaseStorage("portfolio-images", beforePath);
-      if (afterPath) await deleteFromSupabaseStorage("portfolio-images", afterPath);
-
-      const params = new URLSearchParams();
-      if (baId) params.set("id", baId);
-      const res = await fetch(`/api/adoptables/${adoptableId}/before-after?${params.toString()}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const r = await res.json().catch(() => ({}));
-        throw new Error(r.error || "Delete failed");
-      }
-      setBeforeAfters((prev) => ({
-        ...prev,
-        [adoptableId]: (prev[adoptableId] || []).filter((ba) => ba.id !== baId),
-      }));
-      toast.success("Comparison deleted");
-    } catch (e: any) {
-      toast.error(e.message || "Failed to delete comparison");
-    }
-  }
-
-  if (!isSupabaseConfigured) {
+  if (loading) {
     return (
-      <Card className="p-8">
-        <CardHeader title="Adoptables" description="Manage adoptable listings." />
-        <p className="mt-4 text-sm text-[var(--text-secondary)]">Supabase is not configured. Add your credentials to enable adoptable management.</p>
-      </Card>
+      <div className="space-y-6">
+        <div className="ad-section-card glow-border p-6">
+          <div className="skeleton h-6 w-40 rounded" />
+          <div className="skeleton mt-3 h-4 w-72 rounded" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="ad-section-card overflow-hidden">
+              <div className="skeleton aspect-[4/5] w-full" />
+              <div className="space-y-3 p-4">
+                <div className="skeleton h-4 w-24 rounded" />
+                <div className="skeleton h-3 w-32 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     );
   }
 
+  const hasAdoptables = adoptables.length > 0;
+
   return (
-    <div className="space-y-6 relative">
-      <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" />
-      <Card className="p-8 relative overflow-hidden">
-        <div className="pointer-events-none absolute -top-10 -right-10 h-[200px] w-[200px] rounded-full bg-[var(--accent-2)]/5 blur-[100px] orb-med" />
-        <CardHeader
-          title="Adoptables"
-          description="Manage your adoptable listings. Each adoptable can have gallery images and before/after comparisons."
-          actions={
-            <>
-              {projects.length > 0 && (
-                <Button size="sm" variant="ghost" onClick={clearAllProjects} leftIcon={<Trash2 className="h-4 w-4" />} className="!text-[var(--danger)] hover:!bg-[var(--danger-soft)]">
-                  Clear All
-                </Button>
-              )}
-              <Button size="sm" variant="primary" onClick={addProject} leftIcon={<Plus className="h-4 w-4" />}>
-                Add Adoptable
-              </Button>
-            </>
-          }
-        />
-
-        {loading ? (
-          <div className="mt-6 space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 rounded-xl bg-[var(--bg)] animate-pulse" />
-            ))}
+    <div className="space-y-6">
+      {/* ---------------------------------------------------------------- Header */}
+      <div className="ad-section-card glow-border relative overflow-hidden p-6">
+        <div className="pointer-events-none absolute -right-20 -top-20 h-[280px] w-[280px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" aria-hidden />
+        <div className="relative flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
+              Content
+            </p>
+            <h1 className="mt-1.5 text-2xl font-semibold tracking-[-0.02em] text-white">
+              Adoptables
+            </h1>
+            <p className="mt-1.5 max-w-xl text-sm text-[var(--text-secondary)]">
+              Manage your characters, availability, pricing and listings from one place.
+            </p>
           </div>
-        ) : (
-          <div className="mt-6 space-y-4">
-            {projects.map((project, i) => (
-              <div key={project.id || i} className="ad-section-card ad-section-card-hover p-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <button type="button" onClick={() => moveProject(i, -1)} disabled={i === 0} className="grid h-7 w-7 place-items-center rounded-lg text-[var(--text-dim)] hover:text-white disabled:opacity-30" aria-label="Move up">
-                      <ChevronUp className="h-4 w-4" />
-                    </button>
-                    <button type="button" onClick={() => moveProject(i, 1)} disabled={i === projects.length - 1} className="grid h-7 w-7 place-items-center rounded-lg text-[var(--text-dim)] hover:text-white disabled:opacity-30" aria-label="Move down">
-                      <ChevronDown className="h-4 w-4" />
-                    </button>
-                    <h3 className="text-sm font-semibold text-white">{project.title || `Adoptable ${i + 1}`}</h3>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => toggleVisibility(i)} className={`grid h-8 w-8 place-items-center rounded-lg transition-colors ${project.visible ? "text-[var(--accent)] bg-[var(--accent-soft)]" : "text-[var(--text-dim)] hover:bg-white/5"}`} aria-label={project.visible ? "Hide adoptable" : "Show adoptable"}>
-                      {project.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                    </button>
-                    <button type="button" onClick={() => toggleFeatured(i)} className={`grid h-8 w-8 place-items-center rounded-lg transition-colors ${project.featured ? "text-[var(--accent)] bg-[var(--accent-soft)]" : "text-[var(--text-dim)] hover:bg-white/5"}`} aria-label={project.featured ? "Unfeature adoptable" : "Feature adoptable"}>
-                      <Layers className="h-4 w-4" />
-                    </button>
-                    <button type="button" onClick={() => removeProject(i)} className="grid h-8 w-8 place-items-center rounded-lg text-[var(--text-dim)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]" aria-label="Delete adoptable">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Tooltip label="Reload from the database">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => void controller.reload()}
+                leftIcon={<RefreshCw className="h-4 w-4" />}
+                aria-label="Reload adoptables"
+              >
+                Refresh
+              </Button>
+            </Tooltip>
+            <Button
+              variant="primary"
+              size="sm"
+              loading={creating}
+              onClick={handleCreate}
+              leftIcon={<Plus className="h-4 w-4" />}
+            >
+              Add Adoptable
+            </Button>
+          </div>
+        </div>
 
-                <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <Field label="Title">
-                    <Input value={project.title} onChange={(e) => updateProject(i, { title: e.target.value })} />
-                  </Field>
-                  <Field label="Price">
-                    <Input value={project.price} onChange={(e) => updateProject(i, { price: e.target.value })} placeholder="£XX - £XX" />
-                  </Field>
-                  <Field label="Category">
-                    <Select value={project.category} onChange={(e) => updateProject(i, { category: e.target.value })}>
-                      <option value="avatar">Avatar</option>
-                      <option value="accessory">Accessory</option>
-                      <option value="clothing">Clothing</option>
-                      <option value="texture">Texture</option>
-                      <option value="other">Other</option>
-                    </Select>
-                  </Field>
-                  <Field label="Availability">
-                    <Select value={project.availability} onChange={(e) => updateProject(i, { availability: e.target.value })}>
-                      <option value="available">Available</option>
-                      <option value="sold">Sold</option>
-                      <option value="reserved">Reserved</option>
-                    </Select>
-                  </Field>
-
-                <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-3">Main Image</p>
-                  <div className="flex items-center gap-4">
-                    {mainImages[project.id || ""] ? (
-                      <div className="relative group">
-                        <img src={mainImages[project.id || ""]} alt="Main" className="h-20 w-20 rounded-lg border border-[var(--border)] object-cover" />
-                        <button type="button" onClick={() => project.id && deleteMainImage(i)} className="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-[var(--danger)] text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Delete main image">×</button>
-                      </div>
-                    ) : (
-                      <div className="h-20 w-20 rounded-lg border border-dashed border-[var(--border)] flex items-center justify-center text-[var(--text-dim)]">
-                        <ImageIcon className="h-6 w-6" />
-                      </div>
-                    )}
-                    <div>
-                      <input
-                        ref={(el) => {
-                          mainImageInputRefs.current[i] = el;
-                        }}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const files = e.target.files;
-                          if (files && files.length > 0) {
-                            handleMainImageUpload(i, files);
-                          }
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const input = mainImageInputRefs.current[i];
-                          if (input) input.click();
-                        }}
-                        className="btn-secondary !py-1.5 !px-3 !text-xs"
-                      >
-                        {mainImages[project.id || ""] ? "Replace" : "Upload"} Main Image
-                      </button>
-                      <p className="mt-1 text-[10px] text-[var(--text-dim)]">Recommended: 1200x1200px or larger</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-4 space-y-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)]">Pricing</p>
-
-                  <div className="flex items-center gap-3">
-                    <label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--text-secondary)]">
-                      <input type="checkbox" checked={project.sfw_available} onChange={(e) => updateProject(i, { sfw_available: e.target.checked })} className="h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]" />
-                      SFW available
-                    </label>
-                    <div className="flex-1">
-                      <Input value={project.sfw_price} onChange={(e) => updateProject(i, { sfw_price: e.target.value })} placeholder="SFW price, e.g. £20" disabled={!project.sfw_available} />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--text-secondary)]">
-                      <input type="checkbox" checked={project.nsfw_available} onChange={(e) => updateProject(i, { nsfw_available: e.target.checked })} className="h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]" />
-                      NSFW available
-                    </label>
-                    <div className="flex-1">
-                      <Input value={project.nsfw_price} onChange={(e) => updateProject(i, { nsfw_price: e.target.value })} placeholder="NSFW price, e.g. £30" disabled={!project.nsfw_available} />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--text-secondary)]">
-                      <input type="checkbox" checked={project.bundle_available} onChange={(e) => updateProject(i, { bundle_available: e.target.checked })} className="h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]" />
-                      Bundle available
-                    </label>
-                    <div className="flex-1">
-                      <Input value={project.bundle_price} onChange={(e) => updateProject(i, { bundle_price: e.target.value })} placeholder="Bundle price, e.g. £40" disabled={!project.bundle_available} />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-[var(--text-secondary)]">Legacy price</span>
-                    <div className="flex-1">
-                      <Input value={project.price} onChange={(e) => updateProject(i, { price: e.target.value })} placeholder="Fallback price (optional)" />
-                    </div>
-                  </div>
-                </div>
-                </div>
-
-                <Field label="Description" className="mt-4">
-                  <Textarea rows={3} value={project.description} onChange={(e) => updateProject(i, { description: e.target.value })} />
-                </Field>
-
-                <div className="mt-4 flex flex-wrap items-center gap-6">
-                  <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[var(--text-secondary)]">
-                    <input type="checkbox" checked={project.featured} onChange={(e) => updateProject(i, { featured: e.target.checked })} className="h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]" />
-                    Featured adoptable
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[var(--text-secondary)]">
-                    <input type="checkbox" checked={project.visible} onChange={(e) => updateProject(i, { visible: e.target.checked })} className="h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]" />
-                    Visible on site
-                  </label>
-                </div>
-
-                {/* Gallery Images */}
-                <div className="mt-5">
-                  <h4 className="mb-3 text-sm font-semibold text-white flex items-center gap-2"><ImageIcon className="h-4 w-4 text-[var(--accent)]" /> Gallery Images</h4>
-                  <UploadArea onFiles={(files) => handleGalleryUpload(i, files)} uploading={false} title="Upload Gallery Images" />
-                  <div className="mt-3 flex flex-wrap gap-3">
-                    {(galleryImages[project.id || ""] || []).map((img, gi) => (
-                      <div key={img.id || gi} className="relative group">
-                        <img src={img.url} alt={`Gallery ${gi + 1}`} className="h-20 w-20 rounded-lg border border-[var(--border)] object-cover" />
-                        <button type="button" onClick={() => project.id && deleteGalleryImage(project.id, img.id!, img.path)} className="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-[var(--danger)] text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Delete image">×</button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Before & After */}
-                <div className="mt-5">
-                  <h4 className="mb-3 text-sm font-semibold text-white flex items-center gap-2"><GitCompare className="h-4 w-4 text-[var(--accent)]" /> Before &amp; After Comparisons</h4>
-                  <div className="space-y-3">
-                    {(beforeAfters[project.id || ""] || []).map((ba, bi) => (
-                       <div key={ba.id || bi} className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3 glass">
-                        <img src={ba.before_url} alt="Before" className="h-16 w-16 rounded-lg border border-[var(--border)] object-cover" />
-                        <span className="text-[var(--text-dim)] text-xs">→</span>
-                        <img src={ba.after_url} alt="After" className="h-16 w-16 rounded-lg border border-[var(--border)] object-cover" />
-                        <Field label="Label" className="flex-1">
-                          <Input value={ba.label} onChange={(e) => {
-                            const next = (beforeAfters[project.id || ""] || []).slice();
-                            next[bi] = { ...next[bi], label: e.target.value };
-                            setBeforeAfters((prev) => ({ ...prev, [project.id || ""]: next }));
-                          }} />
-                        </Field>
-                        <button type="button" onClick={() => project.id && deleteBeforeAfter(project.id, ba.id!, ba.before_path, ba.after_path)} className="grid h-8 w-8 place-items-center rounded-lg text-[var(--text-dim)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]" aria-label="Delete comparison">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3 flex gap-3">
-                    <div className="flex-1">
-                      <label className="ad-label">Before Image</label>
-                      <UploadArea onFiles={(files) => handleBeforeAfterUpload(i, "before", files)} uploading={false} title="Upload Before" formats={["PNG", "JPG", "WEBP"]} inputId={`adoptable-before-${i}`} />
-                    </div>
-                    <div className="flex-1">
-                      <label className="ad-label">After Image</label>
-                      <UploadArea onFiles={(files) => handleBeforeAfterUpload(i, "after", files)} uploading={false} title="Upload After" formats={["PNG", "JPG", "WEBP"]} inputId={`adoptable-after-${i}`} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-            {projects.length === 0 && (
-              <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] glass py-16 text-center">
-                <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                  <Package className="h-6 w-6" />
-                </div>
-                <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">No adoptables yet. Add your first adoptable to get started.</p>
-              </div>
-            )}
+        {error && (
+          <div
+            role="alert"
+            className="relative mt-4 flex items-start gap-3 rounded-xl border border-[var(--danger-border)] bg-[var(--danger-soft)] px-4 py-3"
+          >
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--danger)]" aria-hidden />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-white">Something went wrong</p>
+              <p className="mt-0.5 break-words text-xs text-[var(--text-secondary)]">{error}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void controller.reload()}
+              className="shrink-0 text-[11px] font-semibold text-white underline underline-offset-2"
+            >
+              Retry
+            </button>
           </div>
         )}
-      </Card>
+      </div>
+
+      {/* ------------------------------------------------------ Search + filters */}
+      <div className="ad-section-card p-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+          <div className="relative flex-1">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-dim)]"
+              aria-hidden
+            />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search adoptables…"
+              aria-label="Search adoptables by name, description or category"
+              className="field pl-9 pr-9"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label="Clear search"
+                className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-md text-[var(--text-dim)] transition-colors hover:bg-white/10 hover:text-white"
+              >
+                <X className="h-3.5 w-3.5" aria-hidden />
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="sr-only" htmlFor="adoptable-sort">
+              Sort adoptables
+            </label>
+            <select
+              id="adoptable-sort"
+              value={sortKey}
+              onChange={(event) => setSortKey(event.target.value as SortKey)}
+              className="field w-auto appearance-none bg-[var(--bg-elevated)] pr-8 text-sm"
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-1">
+              <Tooltip label="Card view">
+                <button
+                  type="button"
+                  onClick={() => setView("grid")}
+                  aria-label="Card view"
+                  aria-pressed={view === "grid"}
+                  className={`grid h-7 w-7 place-items-center rounded-lg transition-colors ${
+                    view === "grid" ? "bg-white/10 text-white" : "text-[var(--text-dim)] hover:text-white"
+                  }`}
+                >
+                  <LayoutGrid className="h-4 w-4" aria-hidden />
+                </button>
+              </Tooltip>
+              <Tooltip label="List view">
+                <button
+                  type="button"
+                  onClick={() => setView("list")}
+                  aria-label="List view"
+                  aria-pressed={view === "list"}
+                  className={`grid h-7 w-7 place-items-center rounded-lg transition-colors ${
+                    view === "list" ? "bg-white/10 text-white" : "text-[var(--text-dim)] hover:text-white"
+                  }`}
+                >
+                  <List className="h-4 w-4" aria-hidden />
+                </button>
+              </Tooltip>
+            </div>
+          </div>
+        </div>
+
+        {/* Status filters */}
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {(["all", ...ADOPTABLE_STATUSES] as StatusFilter[]).map((filter) => {
+            const Icon = FILTER_ICONS[filter];
+            const isActive = statusFilter === filter;
+            const meta = filter === "all" ? null : ADOPTABLE_STATUS_META[filter];
+            return (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => setStatusFilter(filter)}
+                aria-pressed={isActive}
+                className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200 ${
+                  isActive
+                    ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
+                    : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-white"
+                }`}
+              >
+                <Icon className={`h-3.5 w-3.5 ${isActive ? "" : meta ? meta.text : ""}`} aria-hidden />
+                {filter === "all" ? "All" : ADOPTABLE_STATUS_META[filter].title}
+                <span className="rounded-full bg-black/25 px-1.5 py-px text-[10px] tabular-nums">
+                  {counts[filter]}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ------------------------------------------------------- Bulk action bar */}
+      {selected.size > 0 && (
+        <div className="sticky top-3 z-30 flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--accent)]/40 bg-[var(--bg-elevated)]/95 px-4 py-3 shadow-xl shadow-black/40 backdrop-blur">
+          <span className="text-sm font-medium text-white">
+            {selected.size} selected
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              loading={bulkBusy}
+              onClick={() => void runBulkStatus("available")}
+            >
+              Mark Available
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              loading={bulkBusy}
+              onClick={() => void runBulkStatus("reserved")}
+            >
+              Reserve
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              loading={bulkBusy}
+              onClick={() => void runBulkStatus("sold")}
+            >
+              Mark Sold
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              loading={bulkBusy}
+              onClick={() => void runBulkStatus("hidden")}
+              leftIcon={<EyeOff className="h-3.5 w-3.5" />}
+            >
+              Hide
+            </Button>
+            <Button
+              size="sm"
+              variant="danger"
+              loading={bulkBusy}
+              onClick={() => setPendingDeleteBulkOpen(true)}
+              leftIcon={<Trash2 className="h-3.5 w-3.5" />}
+            >
+              Delete…
+            </Button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelected(new Set())}
+            className="ml-auto text-xs font-medium text-[var(--text-secondary)] underline underline-offset-2 transition-colors hover:text-white"
+          >
+            Clear selection
+          </button>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- Listing */}
+      {!hasAdoptables ? (
+        <div className="ad-section-card flex flex-col items-center justify-center px-6 py-20 text-center">
+          <div className="mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+            <Package className="h-7 w-7" aria-hidden />
+          </div>
+          <h2 className="text-lg font-semibold text-white">No adoptables yet</h2>
+          <p className="mt-2 max-w-md text-sm text-[var(--text-secondary)]">
+            Create your first adoptable to start building the public gallery. It stays hidden from
+            visitors until you give it artwork, pricing and an Available status.
+          </p>
+          <Button
+            variant="primary"
+            className="mt-6"
+            loading={creating}
+            onClick={handleCreate}
+            leftIcon={<Plus className="h-4 w-4" />}
+          >
+            Add Adoptable
+          </Button>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="ad-section-card flex flex-col items-center justify-center px-6 py-16 text-center">
+          <div className="mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-white/[0.04] text-[var(--text-dim)]">
+            <Search className="h-6 w-6" aria-hidden />
+          </div>
+          <h2 className="text-base font-semibold text-white">No adoptables match</h2>
+          <p className="mt-2 max-w-sm text-sm text-[var(--text-secondary)]">
+            {query
+              ? `Nothing matches “${query}” with the current status filter.`
+              : "There are no adoptables with this status yet."}
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-5"
+            onClick={() => {
+              setQuery("");
+              setStatusFilter("all");
+            }}
+            leftIcon={<X className="h-4 w-4" />}
+          >
+            Reset filters
+          </Button>
+        </div>
+      ) : view === "grid" ? (
+        <>
+          <div className="flex items-center justify-between gap-3 px-1">
+            <label className="flex cursor-pointer items-center gap-2 text-xs text-[var(--text-secondary)]">
+              <input
+                type="checkbox"
+                checked={allVisibleSelected}
+                onChange={toggleSelectAll}
+                className="h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
+              />
+              Select all {filtered.length} shown
+            </label>
+            <span className="text-xs text-[var(--text-dim)]">
+              {filtered.length} of {adoptables.length}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            {filtered.map((row) => {
+              const index = orderedForMove.findIndex((item) => item.id === row.id);
+              return (
+                <AdoptableCard
+                  key={row.id}
+                  adoptable={row}
+                  gallery={gallery[row.id] ?? []}
+                  comparisons={comparisons[row.id] ?? []}
+                  busy={busyIds.has(row.id)}
+                  dirty={controller.dirtyIds.has(row.id)}
+                  selected={selected.has(row.id)}
+                  onToggleSelect={toggleSelect}
+                  onEdit={(target) => setEditorId(target.id)}
+                  onStatusChange={(id, status) => void handleStatus(id, status)}
+                  onToggleFeatured={(id, featured) => void handleFeatured(id, featured)}
+                  onToggleVisibility={(id) => void handleToggleVisibility(id)}
+                  onMove={(id, direction) => void handleMove(id, direction)}
+                  onDelete={(target) => setPendingDelete(target)}
+                  canMoveUp={index > 0}
+                  canMoveDown={index >= 0 && index < orderedForMove.length - 1}
+                />
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        <div className="ad-section-card overflow-hidden">
+          <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
+            <label className="flex cursor-pointer items-center gap-2 text-xs text-[var(--text-secondary)]">
+              <input
+                type="checkbox"
+                checked={allVisibleSelected}
+                onChange={toggleSelectAll}
+                className="h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
+              />
+              Select all shown
+            </label>
+            <span className="text-xs text-[var(--text-dim)]">
+              {filtered.length} of {adoptables.length}
+            </span>
+          </div>
+
+          <ul className="divide-y divide-[var(--border)]">
+            {filtered.map((row) => {
+              const status = normalizeStatus(row.availability);
+              const meta = ADOPTABLE_STATUS_META[status];
+              return (
+                <li key={row.id} className={`${LIST_COLUMNS} px-4 py-3 transition-colors hover:bg-white/[0.03]`}>
+                  <input
+                    type="checkbox"
+                    checked={selected.has(row.id)}
+                    onChange={() => toggleSelect(row.id)}
+                    aria-label={`Select ${row.title || "untitled adoptable"}`}
+                    className="h-4 w-4 rounded border-[var(--border-strong)] bg-[var(--bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                  />
+
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="truncate text-sm font-semibold text-white">
+                        {row.title || "Untitled adoptable"}
+                      </span>
+                      {row.featured && <Badge tone="accent">Featured</Badge>}
+                      <span className="text-[11px] uppercase tracking-wider text-[var(--text-dim)]">
+                        {categoryLabel(row.category)}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 truncate text-xs text-[var(--text-secondary)]">
+                      {adoptablePriceSummary(row, true)}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2">
+                    <span className={`hidden text-xs font-semibold sm:inline ${meta.text}`}>
+                      {meta.label}
+                    </span>
+                    <StatusControl
+                      value={status}
+                      onChange={(next) => void handleStatus(row.id, next)}
+                      name={row.title || "this adoptable"}
+                      busy={busyIds.has(row.id)}
+                    />
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setEditorId(row.id)}
+                    >
+                      Edit
+                    </Button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------ Danger zone */}
+      {hasAdoptables && (
+        <div className="ad-section-card border-[var(--danger-border)]/40 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="min-w-0">
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
+                <AlertTriangle className="h-4 w-4 text-[var(--danger)]" aria-hidden />
+                Danger zone
+              </h2>
+              <p className="mt-1 max-w-lg text-xs leading-relaxed text-[var(--text-secondary)]">
+                To take an adoptable off the public site without losing anything, set its status to{" "}
+                <strong className="text-white">Hidden</strong>. Deletion is permanent and removes
+                the images, description, pricing and gallery with it.
+              </p>
+            </div>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => setConfirmingAll(true)}
+              leftIcon={<Trash2 className="h-4 w-4" />}
+            >
+              Delete all adoptables…
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------------------------------------------- Dialogs */}
+      <AdoptableEditor
+        open={editorId !== null}
+        adoptable={editorAdoptable}
+        controller={controller}
+        onClose={() => setEditorId(null)}
+      />
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={handleDeleteOne}
+        title={`Delete “${pendingDelete?.title || "Untitled adoptable"}”?`}
+        description="This is permanent. It cannot be undone."
+        confirmLabel="Delete permanently"
+        requireTypedText={pendingDelete ? pendingDelete.title?.trim() || "untitled" : ""}
+        busy={pendingDelete ? busyIds.has(pendingDelete.id) : false}
+      >
+        <p className="text-sm text-[var(--text-secondary)]">
+          Everything attached to this adoptable is destroyed, including its main image, gallery,
+          before/after comparisons, description, pricing and character details.
+        </p>
+        <p className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3 text-xs text-[var(--text-secondary)]">
+          <strong className="text-white">Prefer not to?</strong> Set the status to{" "}
+          <strong className="text-white">Hidden</strong> instead. The adoptable keeps all of its
+          media and can be brought back at any time.
+        </p>
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={pendingDeleteBulkOpen}
+        onCancel={() => setPendingDeleteBulkOpen(false)}
+        onConfirm={runBulkDelete}
+        title={`Delete ${selected.size} adoptable${selected.size === 1 ? "" : "s"}?`}
+        description="This is permanent. It cannot be undone."
+        confirmLabel={`Delete ${selected.size} permanently`}
+        requireTypedText={`delete ${selected.size}`}
+        busy={bulkBusy}
+      >
+        <p className="text-sm text-[var(--text-secondary)]">
+          All images, descriptions, pricing and galleries for the selected adoptables will be
+          destroyed.
+        </p>
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={confirmingAll}
+        onCancel={() => setConfirmingAll(false)}
+        onConfirm={handleDeleteAll}
+        title="Delete every adoptable?"
+        description="This clears the whole collection. It cannot be undone."
+        confirmLabel="Delete everything"
+        requireTypedText="delete all adoptables"
+      >
+        <div className="space-y-3 text-sm text-[var(--text-secondary)]">
+          <p>
+            This permanently removes all {counts.all} adoptables along with their images, gallery
+            entries and before/after comparisons.
+          </p>
+          <p className="rounded-xl border border-[var(--danger-border)] bg-[var(--danger-soft)] p-3 text-xs text-white">
+            There is no undo. Consider setting the status to <strong>Hidden</strong> instead, which
+            keeps everything and only removes the listings from the public site.
+          </p>
+        </div>
+      </ConfirmDialog>
     </div>
   );
 }

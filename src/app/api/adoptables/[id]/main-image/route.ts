@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdminSession } from "@/lib/auth/guard";
+import { validateUploadSize, validateUploadType } from "@/lib/compression/server";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAdminSession();
+  if (!auth.ok) return auth.response!;
+
   try {
     const { id } = await params;
     const formData = await request.formData();
@@ -16,6 +21,23 @@ export async function POST(
 
     if (!supabaseAdmin) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+    }
+
+    // Same validation the shared upload endpoint applies, so a rejected file
+    // never reaches storage and never produces a broken stored URL.
+    const typeValidation = validateUploadType(file.type);
+    if (!typeValidation.valid) {
+      return NextResponse.json(
+        { error: typeValidation.error!.message, category: typeValidation.error!.category },
+        { status: 400 },
+      );
+    }
+    const sizeValidation = validateUploadSize(file.size, file.type);
+    if (!sizeValidation.valid) {
+      return NextResponse.json(
+        { error: sizeValidation.error!.message, category: sizeValidation.error!.category },
+        { status: 400 },
+      );
     }
 
     const fileExtension = file.name.split(".").pop() || "bin";
@@ -39,6 +61,18 @@ export async function POST(
     const { data: urlData } = supabaseAdmin.storage.from("portfolio-images").getPublicUrl(storagePath);
     const url = urlData.publicUrl;
 
+    // Replace: the previously stored main image object is removed so replacing
+    // the artwork does not accumulate orphans in the bucket.
+    const { data: previous, error: readError } = await supabaseAdmin
+      .from("adoptables")
+      .select("main_image_path")
+      .eq("id", id)
+      .single();
+    if (readError) {
+      await supabaseAdmin.storage.from("portfolio-images").remove([storagePath]);
+      return NextResponse.json({ error: "Adoptable not found" }, { status: 404 });
+    }
+
     const { error: dbError } = await supabaseAdmin
       .from("adoptables")
       .update({ main_image: url, main_image_path: storagePath })
@@ -50,6 +84,11 @@ export async function POST(
       return NextResponse.json({ error: "Database error" }, { status: 500 });
     }
 
+    const oldPath = previous?.main_image_path;
+    if (oldPath && oldPath !== storagePath) {
+      await supabaseAdmin.storage.from("portfolio-images").remove([oldPath]);
+    }
+
     return NextResponse.json({ id, url, path: storagePath }, { status: 201 });
   } catch (error: any) {
     console.error("Adoptable main image upload error:", error);
@@ -58,26 +97,29 @@ export async function POST(
 }
 
 export async function DELETE(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAdminSession();
+  if (!auth.ok) return auth.response!;
+
   try {
     const { id } = await params;
-    const { searchParams } = new URL(request.url);
-    const path = searchParams.get("path");
 
     if (!supabaseAdmin) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    if (id) {
-      const { data: adoptable, error: fetchError } = await supabaseAdmin.from("adoptables").select("main_image_path").eq("id", id).single();
-      if (fetchError || !adoptable) {
-        return NextResponse.json({ error: "Adoptable not found" }, { status: 404 });
-      }
-      if (adoptable.main_image_path) {
-        await supabaseAdmin.storage.from("portfolio-images").remove([adoptable.main_image_path]);
-      }
+    const { data: adoptable, error: fetchError } = await supabaseAdmin
+      .from("adoptables")
+      .select("main_image_path")
+      .eq("id", id)
+      .single();
+    if (fetchError || !adoptable) {
+      return NextResponse.json({ error: "Adoptable not found" }, { status: 404 });
+    }
+    if (adoptable.main_image_path) {
+      await supabaseAdmin.storage.from("portfolio-images").remove([adoptable.main_image_path]);
     }
 
     const { error } = await supabaseAdmin

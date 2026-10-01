@@ -1,127 +1,243 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
-  ShoppingCart,
-  Package,
-  CheckCircle,
-  Clock,
-  XCircle,
-  Eye,
-  Lock,
-  ExternalLink,
+  ArrowLeft,
+  Check,
   ChevronLeft,
   ChevronRight,
-  X,
+  ExternalLink,
+  GitCompare,
+  Lock,
+  Package,
+  RefreshCw,
   Sparkles,
-  ImageIcon,
-  Heart,
+  X,
 } from "lucide-react";
-
-import { getAdoptableById, getAdoptableGalleryImages } from "@/lib/db";
+import {
+  getAdoptableById,
+  getAdoptableBeforeAfters,
+  getAdoptableGalleryImages,
+} from "@/lib/db";
 import { isAgeVerified } from "@/components/AgeVerifier";
 import AgeVerifier from "@/components/AgeVerifier";
-import type { Adoptable, AdoptableGalleryImage } from "@/types/database";
-import Reveal from "@/components/ui/Reveal";
+import type { Adoptable, AdoptableBeforeAfter, AdoptableGalleryImage } from "@/types/database";
+import {
+  ADOPTABLE_STATUS_META,
+  canPurchase,
+  normalizeStatus,
+  unavailabilityMessage,
+} from "@/lib/adoptables/status";
+import { categoryLabel, includedFeatureList } from "@/lib/adoptables/catalog";
+import { resolveMediaUrl } from "@/lib/adoptables/images";
+import { AdoptableArtwork } from "@/components/adoptables/AdoptableArtwork";
+import { StatusBadge } from "@/components/adoptables/StatusBadge";
+import { PriceList } from "@/components/adoptables/PriceList";
 
-const STATUS_CONFIG = {
-  available: {
-    label: "AVAILABLE",
-    icon: CheckCircle,
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/30",
-  },
-  reserved: {
-    label: "RESERVED",
-    icon: Clock,
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/30",
-  },
-  sold: {
-    label: "SOLD",
-    icon: XCircle,
-    color: "text-rose-400",
-    bg: "bg-rose-500/10",
-    border: "border-rose-500/30",
-  },
-} as const;
+const DISCORD_URL = "https://discord.gg/zt48MZm5kD";
 
-function InfoSection({ title, children }: { title: string; children: React.ReactNode }) {
+interface MediaItem {
+  url: string;
+  path?: string | null;
+  isNsfw: boolean;
+  label: string;
+}
+
+function InfoBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="mt-6">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-2">{title}</h3>
-      <div className="text-sm leading-relaxed text-[var(--text-secondary)] whitespace-pre-wrap">
+    <section className="mt-7">
+      <h2 className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-dim)]">
+        {title}
+      </h2>
+      <div className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--text-secondary)]">
         {children}
       </div>
+    </section>
+  );
+}
+
+function ComparisonPair({ pair }: { pair: AdoptableBeforeAfter }) {
+  const before = resolveMediaUrl(pair.before_url, pair.before_path);
+  const after = resolveMediaUrl(pair.after_url, pair.after_path);
+  if (!before && !after) return null;
+
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-dim)]">
+            Before
+          </p>
+          <div className="aspect-square overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg)]">
+            {before ? (
+              <AdoptableArtwork
+                url={before}
+                alt="Before"
+                wrapperClassName="h-full w-full"
+                className="h-full w-full object-cover"
+                fallbackLabel="Not uploaded"
+              />
+            ) : (
+              <div className="adoptable-artwork-fallback grid h-full w-full place-items-center text-[10px] uppercase tracking-wider text-[var(--text-dim)]">
+                Not uploaded
+              </div>
+            )}
+          </div>
+        </div>
+        <div>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--accent)]">
+            After
+          </p>
+          <div className="aspect-square overflow-hidden rounded-xl border border-[var(--accent)]/30 bg-[var(--bg)]">
+            {after ? (
+              <AdoptableArtwork
+                url={after}
+                alt="After"
+                wrapperClassName="h-full w-full"
+                className="h-full w-full object-cover"
+                fallbackLabel="Not uploaded"
+              />
+            ) : (
+              <div className="adoptable-artwork-fallback grid h-full w-full place-items-center text-[10px] uppercase tracking-wider text-[var(--text-dim)]">
+                Not uploaded
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      {pair.label && (
+        <p className="text-xs text-[var(--text-secondary)]">{pair.label}</p>
+      )}
     </div>
   );
 }
 
-export default function AdoptablePage() {
+export default function AdoptableDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
 
   const [adoptable, setAdoptable] = useState<Adoptable | null>(null);
   const [galleryImages, setGalleryImages] = useState<AdoptableGalleryImage[]>([]);
+  const [comparisons, setComparisons] = useState<AdoptableBeforeAfter[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [ageVerified, setAgeVerified] = useState(false);
   const [showAgeGate, setShowAgeGate] = useState(false);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [beforeAfters, setBeforeAfters] = useState<{ before_url?: string; after_url?: string; label?: string }[]>([]);
-  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
+  const [lightbox, setLightbox] = useState<number | null>(null);
 
   useEffect(() => {
     setAgeVerified(isAgeVerified());
   }, []);
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      try {
-        const [adoptableData, galleryData, beforeAfterData] = await Promise.all([
-          getAdoptableById(id),
-          getAdoptableGalleryImages(id),
-          fetch(`/api/adoptables/${id}/before-after`).then((r) => (r.ok ? r.json() : [])).catch(() => []),
-        ]);
-        if (!adoptableData) {
-          setAdoptable(null);
-          setLoading(false);
-          return;
-        }
-        setAdoptable(adoptableData);
-        setGalleryImages(galleryData || []);
-        setBeforeAfters(Array.isArray(beforeAfterData) ? beforeAfterData : []);
-      } catch (e) {
-        console.error("Failed to load adoptable:", e);
-      } finally {
-        setLoading(false);
+  const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const [adoptableData, galleryData, comparisonData] = await Promise.all([
+        getAdoptableById(id),
+        getAdoptableGalleryImages(id),
+        getAdoptableBeforeAfters(id).catch(() => [] as AdoptableBeforeAfter[]),
+      ]);
+
+      if (!adoptableData) {
+        setAdoptable(null);
+        return;
       }
+      setAdoptable(adoptableData);
+      setGalleryImages(galleryData ?? []);
+      setComparisons(comparisonData ?? []);
+    } catch (e) {
+      console.error("Failed to load adoptable:", e);
+      setLoadError("We could not load this adoptable just now.");
+    } finally {
+      setLoading(false);
     }
-    load();
   }, [id]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const status = normalizeStatus(adoptable?.availability);
+  const meta = ADOPTABLE_STATUS_META[status];
+
+  const media = useMemo<MediaItem[]>(() => {
+    if (!adoptable) return [];
+    const items: MediaItem[] = [];
+    const seen = new Set<string>();
+
+    const main = resolveMediaUrl(adoptable.main_image, adoptable.main_image_path);
+    if (main) {
+      items.push({ url: main, path: adoptable.main_image_path, isNsfw: false, label: "Main artwork" });
+      seen.add(main);
+    }
+
+    for (const img of galleryImages) {
+      const url = resolveMediaUrl(img.url, img.path ?? img.storage_path);
+      if (!url || seen.has(url)) continue;
+      seen.add(url);
+      items.push({ url, path: img.path ?? img.storage_path, isNsfw: Boolean(img.is_nsfw), label: "Gallery" });
+    }
+
+    return items;
+  }, [adoptable, galleryImages]);
+
+  const hasNsfw = Boolean(adoptable?.nsfw_available) || media.some((item) => item.isNsfw);
+  const blurAll = hasNsfw && !ageVerified;
+
+  const visibleMedia = useMemo(
+    () => (blurAll ? media.map((item) => ({ ...item, isNsfw: true })) : media),
+    [media, blurAll],
+  );
+
+  const activeIndex = lightbox ?? 0;
+  const active = visibleMedia[Math.min(activeIndex, Math.max(0, visibleMedia.length - 1))];
+
+  const features = useMemo(() => (adoptable ? includedFeatureList(adoptable) : []), [adoptable]);
+  const purchasable = adoptable ? canPurchase(adoptable.availability) : false;
+
+  const stepLightbox = (delta: number) => {
+    if (visibleMedia.length === 0) return;
+    setLightbox(
+      (prev) => (((prev ?? 0) + delta) % visibleMedia.length + visibleMedia.length) % visibleMedia.length,
+    );
+  };
+
+  /* --------------------------------------------------------------- States */
 
   if (loading) {
     return (
-      <div className="relative">
-        <div className="container page">
-          <div className="animate-pulse">
-            <div className="mb-6 h-4 w-24 rounded bg-[var(--border)]" />
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-              <div className="aspect-[4/3] rounded-2xl bg-[var(--border)]" />
-              <div className="space-y-4">
-                <div className="h-8 w-3/4 rounded bg-[var(--border)]" />
-                <div className="h-4 w-1/2 rounded bg-[var(--border)]" />
-                <div className="h-4 w-full rounded bg-[var(--border)]" />
-                <div className="h-4 w-3/4 rounded bg-[var(--border)]" />
-                <div className="mt-6 h-12 w-48 rounded bg-[var(--border)]" />
-              </div>
+      <div className="container page">
+        <div className="animate-pulse">
+          <div className="skeleton mb-8 h-4 w-28 rounded" />
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
+            <div className="skeleton aspect-square w-full rounded-[var(--r-lg)]" />
+            <div className="space-y-4">
+              <div className="skeleton h-10 w-2/3 rounded" />
+              <div className="skeleton h-4 w-1/3 rounded" />
+              <div className="skeleton h-24 w-full rounded-xl" />
+              <div className="skeleton h-14 w-full rounded-xl" />
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="container page">
+        <div className="mx-auto max-w-md py-20 text-center">
+          <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--danger-soft)] text-[var(--danger)]">
+            <RefreshCw className="h-6 w-6" aria-hidden />
+          </div>
+          <h1 className="mb-3 text-xl font-semibold text-white">Something went wrong</h1>
+          <p className="mb-6 text-sm text-[var(--text-secondary)]">{loadError}</p>
+          <button type="button" onClick={() => void load()} className="btn-primary !py-2 !text-sm">
+            Try again
+          </button>
         </div>
       </div>
     );
@@ -130,16 +246,16 @@ export default function AdoptablePage() {
   if (!adoptable) {
     return (
       <div className="container page">
-        <div className="py-16 text-center">
-          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
-            <Package className="h-6 w-6" />
+        <div className="mx-auto max-w-md py-20 text-center">
+          <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+            <Package className="h-6 w-6" aria-hidden />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-3">Adoptable not found</h2>
-          <p className="text-[var(--text-secondary)]">This adoptable doesn&rsquo;t exist or is no longer available.</p>
-          <Link
-            href="/adoptables"
-            className="mt-4 btn-secondary inline-flex items-center gap-2"
-          >
+          <h1 className="mb-3 text-xl font-semibold text-white">Adoptable not found</h1>
+          <p className="mb-7 text-sm text-[var(--text-secondary)]">
+            This character either does not exist or is not currently published.
+          </p>
+          <Link href="/adoptables" className="btn-secondary inline-flex items-center gap-2 !py-2 !text-sm">
+            <ArrowLeft className="h-4 w-4" aria-hidden />
             Back to Adoptables
           </Link>
         </div>
@@ -147,378 +263,282 @@ export default function AdoptablePage() {
     );
   }
 
-  const cfg = STATUS_CONFIG[adoptable.availability] || STATUS_CONFIG.available;
-  const Icon = cfg.icon;
-  const isSold = adoptable.availability === "sold";
-  const isReserved = adoptable.availability === "reserved";
-  const isAvailable = adoptable.availability === "available";
-
-  const allImages: { url: string; isNsfw: boolean; label: string }[] = [];
-  if (adoptable.main_image) {
-    allImages.push({ url: adoptable.main_image, isNsfw: false, label: "Main" });
-  }
-  galleryImages.forEach((img, i) => {
-    if (allImages.every((a) => a.url !== img.url)) {
-      allImages.push({ url: img.url, isNsfw: !!img.is_nsfw, label: `Image ${i + 1}` });
-    }
-  });
-
-  const sfwImages = allImages.filter((img) => !img.isNsfw);
-  const nsfwImages = allImages.filter((img) => img.isNsfw);
-
-  const visibleImages = ageVerified
-    ? allImages
-    : sfwImages.length > 0
-    ? sfwImages
-    : isSold
-    ? allImages.slice(0, 1)
-    : [];
-
-  const hasNsfwContent = adoptable.nsfw_available || nsfwImages.length > 0;
-
-  const handleAgeVerified = () => {
-    setAgeVerified(true);
-    setShowAgeGate(false);
-  };
-
-  const handleImageError = (url: string) => {
-    setImgErrors((prev) => ({ ...prev, [url]: true }));
-  };
-
-  const renderImage = (src: string | undefined, alt: string, className: string) => {
-    if (!src || imgErrors[src]) {
-      return (
-        <div className={`flex items-center justify-center bg-[var(--bg)] ${className}`}>
-          <ImageIcon className="h-10 w-10 text-[var(--text-dim)]" />
-        </div>
-      );
-    }
-    return (
-      <img
-        src={src}
-        alt={alt}
-        className={className}
-        onError={() => handleImageError(src)}
-      />
-    );
-  };
-
-  const openLightbox = (idx: number) => {
-    if (!ageVerified && hasNsfwContent) {
-      setShowAgeGate(true);
-      return;
-    }
-    setLightboxIndex(idx);
-    setLightboxOpen(true);
-  };
-
-  const closeLightbox = () => setLightboxOpen(false);
-  const prevImage = () =>
-    setLightboxIndex((lightboxIndex - 1 + visibleImages.length) % visibleImages.length);
-  const nextImage = () =>
-    setLightboxIndex((lightboxIndex + 1) % visibleImages.length);
-
-  const buyOnDiscord = () => {
-    window.open("https://discord.gg/zt48MZm5kD", "_blank", "noopener,noreferrer");
-  };
-
-  const hasBeforeAfter = beforeAfters.some((ba) => ba.before_url || ba.after_url);
-
   return (
     <div className="relative">
-      <div className="bg-nebula" />
-      <div className="bg-cosmic-fog" />
       <div className="container page">
         <Link
           href="/adoptables"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-white transition-colors"
+          className="mb-8 inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] transition-colors hover:text-white"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" aria-hidden />
           Back to Adoptables
         </Link>
 
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
+          {/* ------------------------------------------------------ LEFT: media */}
           <div className="space-y-4">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[rgba(255,255,255,0.02)]">
-              {visibleImages.length > 0 ? (
-                renderImage(
-                  visibleImages[lightboxIndex < visibleImages.length ? lightboxIndex : 0]?.url,
-                  adoptable.title,
-                  `h-full w-full object-cover ${hasNsfwContent && !ageVerified ? "blur-[4px] grayscale" : ""}`
-                )
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <ImageIcon className="h-16 w-16 text-[var(--text-dim)]" />
-                </div>
-              )}
-
-              <div className="absolute top-4 right-4 z-10">
-                <span
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold tracking-wider ${cfg.color} ${cfg.bg} ${cfg.border}`}
-                >
-                  <Icon className="h-3 w-3" />
-                  {cfg.label}
-                </span>
-              </div>
-
-              {hasNsfwContent && !ageVerified && (
-                <div className="absolute top-4 left-4 z-10">
-                  <span className="inline-flex items-center gap-1 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-400">
-                    <Lock className="h-3 w-3" />
-                    NSFW — Age Restricted
-                  </span>
-                </div>
-              )}
-
-              {isSold && (
-                <div className="adoptable-sold-overlay">
-                  <span className="adoptable-sold-text">SOLD</span>
-                  <span className="adoptable-sold-subtext">This adoptable has been purchased</span>
-                </div>
-              )}
-
-              {isReserved && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-amber-500/15 backdrop-blur-[2px]">
-                  <span className="text-3xl font-black text-amber-400">RESERVED</span>
-                </div>
-              )}
-            </div>
-
-            {visibleImages.length > 1 && (
-              <div className="grid grid-cols-5 gap-2">
-                {visibleImages.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => openLightbox(idx)}
-                    className={`relative aspect-square overflow-hidden rounded-xl border-2 transition-all ${
-                      idx === lightboxIndex
-                        ? "border-[var(--accent)]"
-                        : "border-[var(--border)] hover:border-[var(--border-hover)]"
-                    } ${img.isNsfw && !ageVerified ? "blur-[3px]" : ""}`}
-                  >
-                    {renderImage(img.url, img.label, "h-full w-full object-cover")}
-                    {img.isNsfw && !ageVerified && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                        <Lock className="h-4 w-4 text-white" />
+            <div className="adoptable-glass-panel overflow-hidden">
+              <div className="relative aspect-square w-full overflow-hidden sm:aspect-[4/3]">
+                {active ? (
+                  <>
+                    <AdoptableArtwork
+                      url={active.url}
+                      alt={adoptable.title || "Adoptable artwork"}
+                      wrapperClassName="h-full w-full"
+                      className={`h-full w-full object-cover ${blurAll ? "blur-[6px] grayscale" : ""}`}
+                      loading="eager"
+                      fallbackLabel="Artwork could not be loaded"
+                    />
+                    <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
+                      <span />
+                      <StatusBadge status={status} size="md" className="shadow-lg" />
+                    </div>
+                    {status === "sold" && (
+                      <div className="adoptable-sold-overlay">
+                        <span className="adoptable-sold-text">SOLD</span>
+                        <span className="adoptable-sold-subtext">
+                          This adoptable has already found a home
+                        </span>
                       </div>
                     )}
+                    {blurAll && (
+                      <div className="absolute inset-0 grid place-items-center">
+                        <button
+                          type="button"
+                          onClick={() => setShowAgeGate(true)}
+                          className="inline-flex items-center gap-2 rounded-full border border-rose-400/40 bg-black/70 px-4 py-2 text-xs font-semibold text-rose-200 backdrop-blur"
+                        >
+                          <Lock className="h-3.5 w-3.5" aria-hidden />
+                          Verify age to view
+                        </button>
+                      </div>
+                    )}
+                    {visibleMedia.length > 1 && !blurAll && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => stepLightbox(-1)}
+                          aria-label="Previous image"
+                          className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/50 text-white backdrop-blur transition-colors hover:bg-black/75"
+                        >
+                          <ChevronLeft className="h-5 w-5" aria-hidden />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => stepLightbox(1)}
+                          aria-label="Next image"
+                          className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/50 text-white backdrop-blur transition-colors hover:bg-black/75"
+                        >
+                          <ChevronRight className="h-5 w-5" aria-hidden />
+                        </button>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <div className="adoptable-artwork-fallback flex h-full w-full flex-col items-center justify-center gap-2 px-8 text-center">
+                    <Package className="h-9 w-9 text-[var(--text-dim)]" aria-hidden />
+                    <p className="text-sm font-semibold text-white">No artwork published yet</p>
+                    <p className="max-w-xs text-xs text-[var(--text-secondary)]">
+                      This character does not have any images available right now.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {visibleMedia.length > 1 && (
+              <div className="grid grid-cols-5 gap-2 sm:grid-cols-6">
+                {visibleMedia.map((item, index) => (
+                  <button
+                    key={`${item.url}-${index}`}
+                    type="button"
+                    onClick={() => setLightbox(index)}
+                    aria-label={`View ${item.label.toLowerCase()} ${index + 1}`}
+                    aria-current={index === activeIndex}
+                    className={`relative aspect-square overflow-hidden rounded-xl border-2 transition-all ${
+                      index === activeIndex
+                        ? "border-[var(--accent)]"
+                        : "border-[var(--border)] hover:border-[var(--border-hover)]"
+                    }`}
+                  >
+                    <AdoptableArtwork
+                      url={item.url}
+                      path={item.path}
+                      alt={`${item.label} ${index + 1}`}
+                      wrapperClassName="h-full w-full"
+                      className="h-full w-full object-cover"
+                      fallbackLabel=""
+                    />
                   </button>
                 ))}
               </div>
             )}
-          </div>
 
-          <div>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h1 className="display-lg text-white">{adoptable.title}</h1>
-                {adoptable.species && (
-                  <p className="mt-1 text-sm text-[var(--text-secondary)] uppercase tracking-wider">{adoptable.species}</p>
-                )}
-              </div>
-              <button className="mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--text-dim)] transition-colors hover:border-[var(--accent)]/40 hover:text-[var(--accent)]">
-                <Heart className="h-4 w-4" />
-              </button>
-            </div>
-
-            <InfoSection title="Description">{adoptable.description}</InfoSection>
-
-            {adoptable.included_items && (
-              <InfoSection title="Included Items">{adoptable.included_items}</InfoSection>
-            )}
-
-            {adoptable.vrchat_info && (
-              <InfoSection title="VRChat Information">{adoptable.vrchat_info}</InfoSection>
-            )}
-
-            {adoptable.rules_license && (
-              <InfoSection title="Rules & License">{adoptable.rules_license}</InfoSection>
-            )}
-
-            {(adoptable.sfw_available ||
-              adoptable.nsfw_available ||
-              adoptable.bundle_available ||
-              adoptable.price) && (
-              <div className="mt-6">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-3">Pricing</h3>
-
-                {adoptable.sfw_available && adoptable.sfw_price && (
-                  <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-2">
-                    <span className="text-sm font-semibold text-white">SFW Version</span>
-                    <span className="text-xl font-bold text-[var(--accent)]">
-                      {adoptable.sfw_price}
-                    </span>
-                  </div>
-                )}
-
-                {adoptable.nsfw_available && adoptable.nsfw_price && (
-                  <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-2">
-                    <span className="text-sm font-semibold text-white flex items-center gap-2">
-                      <Lock className="h-4 w-4 text-red-400" />
-                      NSFW Version
-                    </span>
-                    <span className="text-xl font-bold text-red-400">
-                      {ageVerified ? adoptable.nsfw_price : "• • •"}
-                    </span>
-                  </div>
-                )}
-
-                {adoptable.bundle_available && adoptable.bundle_price && (
-                  <div className="flex items-center justify-between pb-2">
-                    <span className="text-sm font-semibold text-white">SFW + NSFW Bundle</span>
-                    <span className="text-xl font-bold text-[var(--accent)]">
-                      {ageVerified ? adoptable.bundle_price : "• • •"}
-                    </span>
-                  </div>
-                )}
-
-                {!adoptable.sfw_available &&
-                  !adoptable.nsfw_available &&
-                  !adoptable.bundle_available &&
-                  adoptable.price && (
-                    <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3">
-                      <span className="text-sm font-semibold text-white">Price</span>
-                      <span className="text-xl font-bold text-white">{adoptable.price}</span>
-                    </div>
-                  )}
-              </div>
-            )}
-
-            {hasBeforeAfter && (
-              <div className="mt-6">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-4">
-                  Before & After
-                </h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {beforeAfters.map((ba, idx) => (
-                    <div key={idx} className="space-y-2">
-                      {ba.before_url && (
-                        <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-1">Before</p>
-                          <div className="aspect-video overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]">
-                            {renderImage(ba.before_url, `Before ${idx + 1}`, "h-full w-full object-cover")}
-                          </div>
-                        </div>
-                      )}
-                      {ba.after_url && (
-                        <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-1">After</p>
-                          <div className="aspect-video overflow-hidden rounded-xl border border-[var(--accent)]/30 bg-[var(--bg-elevated)]">
-                            {renderImage(ba.after_url, `After ${idx + 1}`, "h-full w-full object-cover")}
-                          </div>
-                        </div>
-                      )}
-                      {ba.label && <p className="text-xs text-[var(--text-secondary)]">{ba.label}</p>}
-                    </div>
+            {comparisons.length > 0 && (
+              <div className="adoptable-glass-panel mt-6 p-5">
+                <h2 className="mb-4 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-dim)]">
+                  <GitCompare className="h-3.5 w-3.5 text-[var(--accent)]" aria-hidden />
+                  Before &amp; After
+                </h2>
+                <div className="space-y-6">
+                  {comparisons.map((pair, index) => (
+                    <ComparisonPair key={pair.id ?? index} pair={pair} />
                   ))}
                 </div>
               </div>
             )}
+          </div>
 
-            <div className="mt-8">
-              {isAvailable && (
-                <button
-                  onClick={buyOnDiscord}
-                  className="btn-primary w-full !py-4 !text-sm inline-flex items-center justify-center gap-2"
+          {/* ------------------------------------------------- RIGHT: details */}
+          <div>
+            <div className="flex flex-wrap items-center gap-3">
+              <StatusBadge status={status} size="md" />
+              <span className="text-[11px] uppercase tracking-[0.16em] text-[var(--text-dim)]">
+                {categoryLabel(adoptable.category)}
+              </span>
+              {adoptable.featured && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-[var(--accent)]/40 bg-[var(--accent-soft)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--accent)]">
+                  <Sparkles className="h-3 w-3 fill-current" aria-hidden />
+                  Featured
+                </span>
+              )}
+            </div>
+
+            <h1 className="display-lg mt-3 text-white">{adoptable.title}</h1>
+            {adoptable.species && (
+              <p className="mt-2 text-sm uppercase tracking-[0.14em] text-[var(--text-secondary)]">
+                {adoptable.species}
+              </p>
+            )}
+
+            <PriceList
+              adoptable={adoptable}
+              ageVerified={ageVerified}
+              className="mt-7"
+              variant="detail"
+            />
+
+            {/* Availability / CTA */}
+            <div className="mt-7">
+              {purchasable ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => window.open(DISCORD_URL, "_blank", "noopener,noreferrer")}
+                    className="btn-primary inline-flex w-full items-center justify-center gap-2 !py-4 !text-sm"
+                  >
+                    {status === "pending" ? "Join the Claim" : "Adopt / Claim"}
+                    <ExternalLink className="h-4 w-4" aria-hidden />
+                  </button>
+                  {status === "pending" && (
+                    <p className="mt-3 text-xs text-[var(--text-secondary)]">
+                      Someone is currently claiming this character. Message us anyway and we&rsquo;ll
+                      let you know if they fall through.
+                    </p>
+                  )}
+                </>
+              ) : (
+                <div
+                  className={`rounded-xl border px-5 py-5 text-center ${meta.bg} ${meta.border}`}
                 >
-                  <ShoppingCart className="h-5 w-5" />
-                  Adopt via Discord
-                  <ExternalLink className="h-4 w-4" />
-                </button>
-              )}
-              {isReserved && (
-                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-6 py-4 text-center">
-                  <Clock className="mx-auto mb-2 h-5 w-5 text-amber-400" />
-                  <p className="font-semibold text-amber-400">This adoptable is reserved.</p>
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                    It is temporarily unavailable while a reservation is pending.
+                  <p className={`text-base font-semibold ${meta.text}`}>
+                    {status === "sold"
+                      ? "This adoptable has already found a home."
+                      : "This adoptable is reserved."}
                   </p>
-                </div>
-              )}
-              {isSold && (
-                <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-6 py-4 text-center">
-                  <XCircle className="mx-auto mb-2 h-5 w-5 text-red-400" />
-                  <p className="font-semibold text-red-400">This adoptable has been sold.</p>
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                    It is no longer available for adoption.
+                  <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                    {unavailabilityMessage(adoptable.availability)} It stays in the gallery as part
+                    of the portfolio.
                   </p>
                 </div>
               )}
 
-              {!ageVerified && hasNsfwContent && isAvailable && (
+              {!ageVerified && hasNsfw && (
                 <button
+                  type="button"
                   onClick={() => setShowAgeGate(true)}
-                  className="mt-3 btn-secondary w-full !py-2 !px-4 !text-sm inline-flex items-center justify-center gap-2"
+                  className="btn-secondary mt-3 inline-flex w-full items-center justify-center gap-2 !py-2.5 !text-sm"
                 >
-                  <Lock className="h-4 w-4" />
+                  <Lock className="h-4 w-4" aria-hidden />
                   Verify Age for NSFW Content
                 </button>
               )}
             </div>
+
+            {features.length > 0 && (
+              <InfoBlock title="Included">
+                <ul className="space-y-2">
+                  {features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2.5">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" aria-hidden />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </InfoBlock>
+            )}
+
+            {adoptable.description && <InfoBlock title="Description">{adoptable.description}</InfoBlock>}
+            {adoptable.vrchat_info && <InfoBlock title="VRChat Information">{adoptable.vrchat_info}</InfoBlock>}
+            {adoptable.rules_license && <InfoBlock title="Rules &amp; License">{adoptable.rules_license}</InfoBlock>}
           </div>
         </div>
       </div>
 
-      {showAgeGate && <AgeVerifier onVerified={handleAgeVerified} />}
+      {showAgeGate && <AgeVerifier onVerified={() => { setAgeVerified(true); setShowAgeGate(false); }} />}
 
-      {lightboxOpen && visibleImages.length > 0 && (
+      {lightbox !== null && active && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={`Image ${lightboxIndex + 1} of ${visibleImages.length}`}
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closeLightbox();
+          aria-label={`Artwork ${activeIndex + 1} of ${visibleMedia.length}`}
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4 backdrop-blur-md"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setLightbox(null);
           }}
         >
-          <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="absolute -top-24 left-1/4 h-[300px] w-[300px] -translate-x-1/2 rounded-full bg-[var(--accent-cosmic)] opacity-[0.06] blur-[100px]" />
-            <div className="absolute -bottom-20 right-1/4 h-[250px] w-[250px] translate-x-1/2 rounded-full bg-[var(--accent-nebula)] opacity-[0.05] blur-[100px]" />
-          </div>
-          <div className="relative flex max-h-[95vh] max-w-[95vw] scale-in items-center justify-center">
-            <img
-              src={visibleImages[lightboxIndex]?.url}
-              alt={adoptable.title}
-              className="max-h-[88vh] max-w-full rounded-2xl border border-white/10 object-contain shadow-2xl shadow-black/60"
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            aria-label="Close artwork viewer"
+            className="absolute -top-2 right-0 grid h-10 w-10 translate-x-2 -translate-y-2 place-items-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20 md:-top-3 md:right-2"
+          >
+            <X className="h-5 w-5" aria-hidden />
+          </button>
+
+          {visibleMedia.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => stepLightbox(-1)}
+                aria-label="Previous image"
+                className="absolute left-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20 md:left-5"
+              >
+                <ChevronLeft className="h-6 w-6" aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={() => stepLightbox(1)}
+                aria-label="Next image"
+                className="absolute right-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20 md:right-5"
+              >
+                <ChevronRight className="h-6 w-6" aria-hidden />
+              </button>
+            </>
+          )}
+
+          <div className="flex max-h-[90vh] max-w-[92vw] flex-col items-center gap-4">
+            <AdoptableArtwork
+              url={active.url}
+              path={active.path}
+              alt={adoptable.title || "Adoptable artwork"}
+              className="max-h-[78vh] max-w-full rounded-2xl border border-white/10 object-contain shadow-2xl shadow-black/60"
+              objectFit="contain"
+              fallbackLabel="Artwork could not be loaded"
             />
-
-            {visibleImages.length > 1 && (
-              <>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    prevImage();
-                  }}
-                  className="absolute left-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/10 bg-white/10 text-white backdrop-blur-md transition-all hover:scale-110 hover:bg-white/20 md:left-5"
-                  aria-label="Previous image"
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    nextImage();
-                  }}
-                  className="absolute right-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/10 bg-white/10 text-white backdrop-blur-md transition-all hover:scale-110 hover:bg-white/20 md:right-5"
-                  aria-label="Next image"
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </button>
-              </>
-            )}
-
-            <button
-              onClick={closeLightbox}
-              className="absolute -top-2 right-0 grid h-10 w-10 translate-x-2 -translate-y-2 place-items-center rounded-full border border-white/10 bg-white/10 text-white backdrop-blur-md transition-all hover:scale-110 hover:bg-white/20 md:-top-3 md:right-2"
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="absolute -bottom-10 left-1/2 flex -translate-x-1/2 items-center gap-2 text-sm text-white/60">
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-              {lightboxIndex + 1} / {visibleImages.length}
-            </div>
+            <p className="text-sm text-white/60">
+              {activeIndex + 1} / {visibleMedia.length}
+            </p>
           </div>
         </div>
       )}

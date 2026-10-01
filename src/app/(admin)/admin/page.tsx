@@ -250,7 +250,15 @@ export default function AdminPage() {
     }
   }
 
-  function doLogout() {
+  async function doLogout() {
+    // The session cookie is httpOnly, so clearing client state is not enough —
+    // without this the cookie survives and the admin API stays writable.
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Log out locally regardless: the UI must never stay in a signed-in
+      // state because the network call failed.
+    }
     localStorage.removeItem("adminData");
     setAuthed(false);
   }

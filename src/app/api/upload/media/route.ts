@@ -183,8 +183,18 @@ export async function POST(request: NextRequest) {
         case "adoptable-main": {
           const { adoptableId } = metadata;
           if (!adoptableId) throw new Error("adoptableId is required");
+          // Replacing the main image should not leave the previous object behind.
+          const { data: previous } = await supabaseAdmin
+            .from("adoptables")
+            .select("main_image_path")
+            .eq("id", adoptableId)
+            .single();
           const { error } = await supabaseAdmin.from("adoptables").update({ main_image: url, main_image_path: storagePath, updated_at: now }).eq("id", adoptableId);
           if (error) throw error;
+          const oldPath = previous?.main_image_path;
+          if (oldPath && oldPath !== storagePath) {
+            await supabaseAdmin.storage.from(config.bucket).remove([oldPath]);
+          }
           dbResult = { id: adoptableId, url, path: storagePath };
           break;
         }
@@ -201,17 +211,44 @@ export async function POST(request: NextRequest) {
           const { adoptableId, label } = metadata;
           if (!adoptableId) throw new Error("adoptableId is required");
           const isBefore = type === "adoptable-before";
-          const { data, error } = await insertWithRetry(supabaseAdmin, "adoptable_before_after", {
-            adoptable_id: adoptableId,
-            before_url: isBefore ? url : null,
-            after_url: isBefore ? null : url,
-            before_path: isBefore ? storagePath : null,
-            after_path: isBefore ? null : storagePath,
-            label: label || null,
-            created_at: now,
-          });
-          if (error || !data) throw error;
-          dbResult = data;
+          const urlField = isBefore ? "before_url" : "after_url";
+          const pathField = isBefore ? "before_path" : "after_path";
+          const otherUrlField = isBefore ? "after_url" : "before_url";
+
+          // A pair is written one side at a time. Attach to an open pair when
+          // one exists, otherwise start a new one. Inserting with the other side
+          // explicitly NULL used to violate NOT NULL and roll the upload back.
+          const { data: openPairs } = await supabaseAdmin
+            .from("adoptable_before_after")
+            .select("id")
+            .eq("adoptable_id", adoptableId)
+            .is(otherUrlField, null)
+            .order("created_at", { ascending: false })
+            .limit(1);
+
+          let row: any = null;
+          if (openPairs && openPairs.length > 0) {
+            const { data, error } = await supabaseAdmin
+              .from("adoptable_before_after")
+              .update({ [urlField]: url, [pathField]: storagePath, updated_at: now })
+              .eq("id", openPairs[0].id)
+              .select();
+            if (!error && data && data.length > 0) row = data[0];
+          }
+
+          if (!row) {
+            const { data, error } = await insertWithRetry(supabaseAdmin, "adoptable_before_after", {
+              adoptable_id: adoptableId,
+              [urlField]: url,
+              [pathField]: storagePath,
+              label: label || null,
+              created_at: now,
+              updated_at: now,
+            });
+            if (error || !data) throw error;
+            row = data;
+          }
+          dbResult = row;
           break;
         }
         case "site": {

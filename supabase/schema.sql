@@ -201,7 +201,10 @@ CREATE TABLE IF NOT EXISTS adoptables (
   description TEXT,
   category TEXT DEFAULT 'avatar',
   price TEXT,
-  availability TEXT DEFAULT 'available' CHECK (availability IN ('available', 'sold', 'reserved')),
+  -- Lifecycle status. Single source of truth for public availability.
+  -- AVAILABLE / PENDING / RESERVED / SOLD / HIDDEN (lower-case in the database).
+  -- `visible` is a mirror kept in sync by the API (visible = availability <> 'hidden').
+  availability TEXT DEFAULT 'available' CHECK (availability IN ('available', 'pending', 'reserved', 'sold', 'hidden')),
   featured BOOLEAN DEFAULT FALSE,
   visible BOOLEAN DEFAULT TRUE,
   sort_order INTEGER DEFAULT 0,
@@ -214,6 +217,10 @@ CREATE TABLE IF NOT EXISTS adoptables (
   sfw_price TEXT,
   nsfw_price TEXT,
   bundle_price TEXT,
+  -- Optional USD equivalents, shown next to the GBP price when present.
+  sfw_price_usd TEXT,
+  nsfw_price_usd TEXT,
+  bundle_price_usd TEXT,
   sfw_available BOOLEAN DEFAULT FALSE,
   nsfw_available BOOLEAN DEFAULT FALSE,
   bundle_available BOOLEAN DEFAULT FALSE,
@@ -240,11 +247,13 @@ CREATE TABLE IF NOT EXISTS adoptable_gallery (
 );
 
 -- Adoptable before & after comparisons (optional)
+-- A pair is created when the first side is uploaded, so each side is nullable
+-- until its counterpart arrives (see the adoptable lifecycle migration below).
 CREATE TABLE IF NOT EXISTS adoptable_before_after (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   adoptable_id UUID NOT NULL REFERENCES adoptables(id) ON DELETE CASCADE,
-  before_url TEXT NOT NULL,
-  after_url TEXT NOT NULL,
+  before_url TEXT,
+  after_url TEXT,
   before_path TEXT,
   after_path TEXT,
   before_original_filename TEXT,
@@ -320,11 +329,107 @@ BEGIN
     BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS sfw_price TEXT; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS nsfw_price TEXT; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS bundle_price TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS sfw_price_usd TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS nsfw_price_usd TEXT; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS bundle_price_usd TEXT; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS sfw_available BOOLEAN DEFAULT FALSE; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS nsfw_available BOOLEAN DEFAULT FALSE; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS bundle_available BOOLEAN DEFAULT FALSE; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS main_image TEXT; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptables ADD COLUMN IF NOT EXISTS main_image_path TEXT; EXCEPTION WHEN others THEN NULL; END;
+  END IF;
+END $$;
+
+-- =============================================================================
+-- ADOPTABLE LIFECYCLE MIGRATION
+-- =============================================================================
+-- Expands `adoptables.availability` from the original 3-value set
+-- (available / sold / reserved) to the full 5-value lifecycle:
+--   available | pending | reserved | sold | hidden
+--
+-- This is idempotent and lossless:
+--   * existing rows keep their current value ('available' stays available,
+--     'sold' stays sold, 'reserved' stays reserved);
+--   * legacy mixed-case / padded values are normalised to lower case;
+--   * anything unrecognised falls back to 'available' so a listing can never
+--     become invisible because of a typo in an old row;
+--   * no image, description, price or gallery data is touched.
+DO $$
+DECLARE
+  constraint_name TEXT;
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'adoptables') THEN
+
+    -- 1. Normalise casing/whitespace on existing values.
+    UPDATE adoptables
+       SET availability = lower(btrim(availability))
+     WHERE availability IS NOT NULL
+       AND availability <> lower(btrim(availability));
+
+    -- 2. Coerce unknown values to 'available' (never hide real listings).
+    UPDATE adoptables
+       SET availability = 'available'
+     WHERE availability IS NULL
+        OR availability NOT IN ('available', 'pending', 'reserved', 'sold', 'hidden');
+
+    -- 3. Drop every existing CHECK constraint that references `availability`
+    --    (the inline CHECK from CREATE TABLE and any ALTER TABLE ADD COLUMN
+    --    re-adds) so the new 5-value constraint can be installed cleanly.
+    FOR constraint_name IN
+      SELECT con.conname
+        FROM pg_constraint con
+        JOIN pg_class rel ON rel.oid = con.conrelid
+        JOIN pg_namespace ns ON ns.oid = rel.relnamespace
+       WHERE ns.nspname = current_schema()
+         AND rel.relname = 'adoptables'
+         AND con.contype = 'c'
+         AND pg_get_constraintdef(con.oid) ILIKE '%availability%'
+    LOOP
+      EXECUTE format('ALTER TABLE adoptables DROP CONSTRAINT %I', constraint_name);
+    END LOOP;
+
+    -- 4. Re-apply default and the 5-value CHECK.
+    ALTER TABLE adoptables ALTER COLUMN availability SET DEFAULT 'available';
+    ALTER TABLE adoptables
+      ADD CONSTRAINT adoptables_availability_check
+      CHECK (availability IN ('available', 'pending', 'reserved', 'sold', 'hidden'));
+
+    -- 5. Re-sync the `visible` mirror so the two can never disagree.
+    --    HIDDEN is the only status that is not publicly listed.
+    UPDATE adoptables
+       SET visible = (availability <> 'hidden');
+
+    -- 6. Keep `updated_at` honest even for writes that do not set it
+    --    (status quick-actions, reordering, bulk operations).
+    --    The body uses its own dollar-quote tag: an inner `$$` would close this
+    --    DO block early.
+    CREATE OR REPLACE FUNCTION adoptables_touch_updated_at() RETURNS trigger AS $fn$
+    BEGIN
+      NEW.updated_at = NOW();
+      RETURN NEW;
+    END;
+    $fn$ LANGUAGE plpgsql;
+
+    DROP TRIGGER IF EXISTS adoptables_touch_updated_at ON adoptables;
+    CREATE TRIGGER adoptables_touch_updated_at
+      BEFORE UPDATE ON adoptables
+      FOR EACH ROW EXECUTE FUNCTION adoptables_touch_updated_at();
+
+    -- 7. Index the lifecycle column (drives the public filters and admin lists).
+    CREATE INDEX IF NOT EXISTS adoptables_availability_idx ON adoptables (availability);
+    CREATE INDEX IF NOT EXISTS adoptables_visible_idx ON adoptables (visible);
+  END IF;
+END $$;
+
+-- Before/after pairs are written one side at a time, so the original NOT NULL
+-- on before_url / after_url had to go or every second upload failed with a
+-- 500 and the uploaded object was rolled back.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'adoptable_before_after') THEN
+    BEGIN ALTER TABLE adoptable_before_after ALTER COLUMN before_url DROP NOT NULL; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN ALTER TABLE adoptable_before_after ALTER COLUMN after_url DROP NOT NULL; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN CREATE INDEX IF NOT EXISTS adoptable_before_after_adoptable_idx ON adoptable_before_after (adoptable_id); EXCEPTION WHEN others THEN NULL; END;
   END IF;
 END $$;
 
@@ -343,6 +448,8 @@ BEGIN
     BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS height INTEGER; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS media_role TEXT DEFAULT 'gallery'; EXCEPTION WHEN others THEN NULL; END;
     BEGIN ALTER TABLE adoptable_gallery ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW(); EXCEPTION WHEN others THEN NULL; END;
+    -- Gallery rows are always loaded per adoptable.
+    BEGIN CREATE INDEX IF NOT EXISTS adoptable_gallery_adoptable_idx ON adoptable_gallery (adoptable_id); EXCEPTION WHEN others THEN NULL; END;
   END IF;
 END $$;
 
@@ -463,8 +570,11 @@ CREATE POLICY "Public read nsfw_portfolio_images" ON nsfw_portfolio_images FOR S
 CREATE POLICY "Public read queue_items" ON queue_items FOR SELECT USING (true);
 CREATE POLICY "Public read social_links" ON social_links FOR SELECT USING (true);
 
--- Adoptables: public read, authenticated write
-CREATE POLICY "Public read adoptables" ON adoptables FOR SELECT USING (true);
+-- Adoptables: public read, authenticated write.
+-- HIDDEN adoptables (and the legacy `visible = false` rows) are not readable by
+-- the public anon client, so hiding is enforced in the database and not only in
+-- the UI. Admin reads go through the service-role client, which bypasses RLS.
+CREATE POLICY "Public read adoptables" ON adoptables FOR SELECT USING (visible = true AND availability <> 'hidden');
 CREATE POLICY "Authenticated write adoptables" ON adoptables FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Public read adoptable_gallery" ON adoptable_gallery FOR SELECT USING (true);
 CREATE POLICY "Authenticated write adoptable_gallery" ON adoptable_gallery FOR ALL USING (auth.role() = 'authenticated');
