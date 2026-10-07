@@ -10,6 +10,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages, getAdoptables } from "@/lib/db";
 import Link from "next/link";
 import StorageImage from "@/components/ui/StorageImage";
+import NoAiBadge from "@/components/NoAiBadge";
 import { Star, Zap, ArrowRight, Check, Sparkles, Clock, ShieldCheck, Rocket, HelpCircle, DollarSign, Palette, Box, Layers, Brush, Wrench } from "lucide-react";
 
 function Stars({ rating, size = "h-4 w-4" }: { rating?: number; size?: string }) {
@@ -169,27 +170,21 @@ export default function Home() {
     load();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="relative">
-        <Hero />
-        <div className="container py-20">
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="relative overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)]">
-                <div className="h-[220px] w-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // No full-page loading gate: the hero, the static
+  // sections and the page shell render immediately.
+  // Data-driven blocks (adoptables, reviews, pricing,
+  // process) show a local skeleton until their query
+  // resolves, so the page is usable straight away.
 
   return (
     <div className="relative">
       {/* 1. Hero */}
       <Hero />
+
+      {/* NO AI status — managed from Admin → NO AI Badge */}
+      <div className="container py-8">
+        <NoAiBadge placement="home" />
+      </div>
 
       <div className="relative z-10">
         {/* 2. Featured Artwork */}
@@ -261,7 +256,19 @@ export default function Home() {
               title="How it works"
               subtitle="A simple, transparent workflow from first message to final delivery."
             />
-            <ProcessTimeline steps={workflow} />
+            {loading ? (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="text-center">
+                    <div className="mx-auto mb-4 h-14 w-14 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]" />
+                    <div className="mx-auto h-4 w-24 rounded bg-[var(--border)]" />
+                    <div className="mx-auto mt-2 h-3 w-32 rounded bg-[var(--border)]" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <ProcessTimeline steps={workflow} />
+            )}
             <div className="mt-12 text-center">
               <Link href="/commission" className="btn-secondary inline-flex items-center gap-2">
                 Start Your Commission
@@ -286,7 +293,15 @@ export default function Home() {
               </Link>
             </div>
 
-            {adoptables.length > 0 ? (
+            {loading ? (
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="relative overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)]">
+                    <div className="h-[280px] w-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
+                  </div>
+                ))}
+              </div>
+            ) : adoptables.length > 0 ? (
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {adoptables.map((adoptable, i) => (
                   <AdoptableCard key={adoptable.id} adoptable={adoptable} />
@@ -313,13 +328,26 @@ export default function Home() {
               subtitle="Choose the tier that fits your project scope — from quick edits to complete overhauls."
               align="center"
             />
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-              {pricing.map((tier: any, i: number) => (
-                <Reveal key={tier.id || i} delay={i * 60}>
-                  <CommissionTierCard tier={tier} />
-                </Reveal>
-              ))}
-            </div>
+            {loading ? (
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="relative overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-6">
+                    <div className="h-12 w-12 rounded-xl bg-[var(--border)]" />
+                    <div className="mt-4 h-5 w-2/3 rounded bg-[var(--border)]" />
+                    <div className="mt-2 h-4 w-full rounded bg-[var(--border)]" />
+                    <div className="mt-2 h-4 w-5/6 rounded bg-[var(--border)]" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+                {pricing.map((tier: any, i: number) => (
+                  <Reveal key={tier.id || i} delay={i * 60}>
+                    <CommissionTierCard tier={tier} />
+                  </Reveal>
+                ))}
+              </div>
+            )}
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4 text-sm">
               <Link href="/services" className="btn-secondary inline-flex items-center gap-2">
                 View All Services
@@ -341,9 +369,24 @@ export default function Home() {
               title="Reviews"
               subtitle="What clients say about working together."
             />
-            {reviews.length > 0 && <ReviewSummary reviews={reviews} />}
-            {reviews.length > 0 ? (
+            {loading ? (
+              <div className="mx-auto max-w-3xl space-y-0">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="border-b border-[var(--border)] py-6">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-xl bg-[var(--border)]" />
+                      <div className="flex-1">
+                        <div className="h-4 w-1/3 rounded bg-[var(--border)]" />
+                        <div className="mt-2 h-3 w-full rounded bg-[var(--border)]" />
+                        <div className="mt-2 h-3 w-4/5 rounded bg-[var(--border)]" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : reviews.length > 0 ? (
               <>
+                <ReviewSummary reviews={reviews} />
                 <div className="mx-auto max-w-3xl space-y-0">
                   {reviews.slice(0, 6).map((review, i) => (
                     <Reveal key={review.id || i} delay={i * 60}>

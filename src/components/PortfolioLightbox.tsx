@@ -10,6 +10,12 @@ interface LightboxItem {
   description?: string;
 }
 
+/** Portfolio uploads may be video/mp4 or video/webm. */
+function isVideoUrl(url: string): boolean {
+  const clean = url.split("?")[0].split("#")[0];
+  return /\.(mp4|webm|mov)$/i.test(clean);
+}
+
 interface LightboxProps {
   images: LightboxItem[];
   index: number;
@@ -78,11 +84,25 @@ export default function Lightbox({ images, index, onClose, onPrev, onNext }: Lig
         <div className="absolute -bottom-20 right-1/4 h-[250px] w-[250px] translate-x-1/2 rounded-full bg-[var(--accent-nebula)] opacity-[0.05] blur-[100px]" />
       </div>
       <div className="relative flex max-h-[95vh] max-w-[95vw] scale-in flex-col items-center justify-center">
-        <img
-          src={current.url}
-          alt={current.caption || current.title || `Portfolio ${index + 1}`}
-          className="max-h-[80vh] max-w-full rounded-2xl border border-white/10 object-contain shadow-2xl shadow-black/60"
-        />
+        {isVideoUrl(current.url) ? (
+          // Videos only load metadata until played —
+          // opening the lightbox never blocks the page
+          // with a full download.
+          <video
+            key={current.url}
+            src={current.url}
+            controls
+            preload="metadata"
+            playsInline
+            className="max-h-[80vh] max-w-full rounded-2xl border border-white/10 object-contain shadow-2xl shadow-black/60"
+          />
+        ) : (
+          <img
+            src={current.url}
+            alt={current.caption || current.title || `Portfolio ${index + 1}`}
+            className="max-h-[80vh] max-w-full rounded-2xl border border-white/10 object-contain shadow-2xl shadow-black/60"
+          />
+        )}
 
         {current.caption && (
           <div className="mt-4 max-w-xl text-center">

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
+import NoAiBadge from "@/components/NoAiBadge";
 
 export default function Footer() {
   return (
@@ -68,6 +69,11 @@ export default function Footer() {
               </li>
             </ul>
           </div>
+        </div>
+
+        {/* NO AI status — managed from Admin → NO AI Badge */}
+        <div className="mt-10">
+          <NoAiBadge placement="footer" />
         </div>
 
         <div className="mt-10 pt-6 border-t border-[var(--border)]">

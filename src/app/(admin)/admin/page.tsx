@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { LayoutDashboard, LogOut, RotateCcw, Loader2, Lock, Eye, EyeOff, AlertCircle, ShieldCheck, Sparkles } from "lucide-react";
+import dynamic from "next/dynamic";
+import { LogOut, RotateCcw, Loader2, Lock, Eye, EyeOff, AlertCircle, ShieldCheck } from "lucide-react";
 import { useSave } from "@/components/admin/SaveProvider";
 import { useToast } from "@/components/admin/Toast";
 import { DashboardLayout } from "@/components/admin/DashboardLayout";
@@ -9,21 +10,28 @@ import { Modal } from "@/components/admin/Modal";
 import { Button } from "@/components/admin/Button";
 import { Input } from "@/components/admin/Field";
 
-import { PortfolioSection } from "@/components/admin/sections/PortfolioSection";
-import { PricingSection } from "@/components/admin/sections/PricingSection";
-import { FaqSection } from "@/components/admin/sections/FaqSection";
-import { WorkflowSection } from "@/components/admin/sections/WorkflowSection";
-import { ReviewsSection } from "@/components/admin/sections/ReviewsSection";
-import { SiteImagesSection } from "@/components/admin/sections/SiteImagesSection";
-import { NsfwSection } from "@/components/admin/sections/NsfwSection";
-import { LinksSection } from "@/components/admin/sections/LinksSection";
-import { QueueSection } from "@/components/admin/sections/QueueSection";
-import { SiteInfoSection } from "@/components/admin/sections/SiteInfoSection";
-import { ModeratorsSection } from "@/components/admin/sections/ModeratorsSection";
-import { AdoptablesSection } from "@/components/admin/sections/AdoptablesSection";
-import { TosSection } from "@/components/admin/sections/TosSection";
-import { CreditsSection } from "@/components/admin/sections/CreditsSection";
 import { OverviewSection } from "@/components/admin/sections/OverviewSection";
+
+/**
+ * Sections are code-split so the dashboard's initial JavaScript
+ * only contains the Overview. Each tab's chunk loads the first
+ * time it is opened instead of bloating the first paint.
+ */
+const PortfolioSection = dynamic(() => import("@/components/admin/sections/PortfolioSection").then((m) => ({ default: m.PortfolioSection })), { ssr: false });
+const PricingSection = dynamic(() => import("@/components/admin/sections/PricingSection").then((m) => ({ default: m.PricingSection })), { ssr: false });
+const FaqSection = dynamic(() => import("@/components/admin/sections/FaqSection").then((m) => ({ default: m.FaqSection })), { ssr: false });
+const WorkflowSection = dynamic(() => import("@/components/admin/sections/WorkflowSection").then((m) => ({ default: m.WorkflowSection })), { ssr: false });
+const ReviewsSection = dynamic(() => import("@/components/admin/sections/ReviewsSection").then((m) => ({ default: m.ReviewsSection })), { ssr: false });
+const SiteImagesSection = dynamic(() => import("@/components/admin/sections/SiteImagesSection").then((m) => ({ default: m.SiteImagesSection })), { ssr: false });
+const NsfwSection = dynamic(() => import("@/components/admin/sections/NsfwSection").then((m) => ({ default: m.NsfwSection })), { ssr: false });
+const LinksSection = dynamic(() => import("@/components/admin/sections/LinksSection").then((m) => ({ default: m.LinksSection })), { ssr: false });
+const QueueSection = dynamic(() => import("@/components/admin/sections/QueueSection").then((m) => ({ default: m.QueueSection })), { ssr: false });
+const SiteInfoSection = dynamic(() => import("@/components/admin/sections/SiteInfoSection").then((m) => ({ default: m.SiteInfoSection })), { ssr: false });
+const ModeratorsSection = dynamic(() => import("@/components/admin/sections/ModeratorsSection").then((m) => ({ default: m.ModeratorsSection })), { ssr: false });
+const AdoptablesSection = dynamic(() => import("@/components/admin/sections/AdoptablesSection").then((m) => ({ default: m.AdoptablesSection })), { ssr: false });
+const TosSection = dynamic(() => import("@/components/admin/sections/TosSection").then((m) => ({ default: m.TosSection })), { ssr: false });
+const CreditsSection = dynamic(() => import("@/components/admin/sections/CreditsSection").then((m) => ({ default: m.CreditsSection })), { ssr: false });
+const NoAiBadgeSection = dynamic(() => import("@/components/admin/sections/NoAiBadgeSection").then((m) => ({ default: m.NoAiBadgeSection })), { ssr: false });
 
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -31,12 +39,24 @@ const ADMIN_PASSWORD = "blueyadmin";
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 
+/**
+ * Diagnostics (storage bucket status, the CORS upload probe,
+ * database schema health) change rarely but used to run on
+ * every dashboard load — including a real upload+delete cycle
+ * in storage. Results are cached in sessionStorage for this
+ * long so repeat visits render instantly and the write probe
+ * only happens once per window.
+ */
+const DIAG_CACHE_TTL_MS = 10 * 60 * 1000;
+
 const defaultSite: Record<string, string> = {
   name: "Bluey's Creations",
   queue_status: "open",
   queue_slots_total: "8",
   queue_slots_used: "3",
   queue_wait_time: "2-3 weeks",
+  no_ai_enabled: "true",
+  no_ai_placement: "all",
 };
 const defaultPricing: any[] = [];
 const defaultFaq: any[] = [
@@ -49,19 +69,19 @@ const defaultFaq: any[] = [
 ];
 const defaultWorkflow: any[] = [];
 
-  type Tab = "overview" | "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "adoptables" | "credits" | "tos";
+  type Tab = "overview" | "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "adoptables" | "credits" | "tos" | "no-ai";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [pw, setPw] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
-  const [loading, setLoading] = useState(true);
   const [resetOpen, setResetOpen] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+  const [userName, setUserName] = useState("Admin");
   const pwRef = useRef<HTMLInputElement>(null);
 
   const [site, setSite] = useState<any>(defaultSite);
@@ -74,7 +94,6 @@ export default function AdminPage() {
   const [tos, setTos] = useState<any[]>([]);
   const [storageError, setStorageError] = useState<string | null>(null);
   const [corsTestResult, setCorsTestResult] = useState<{ bucket: string; success: boolean; error?: string } | null>(null);
-  const [testingCors, setTestingCors] = useState(false);
   const [dbHealth, setDbHealth] = useState<{ healthy: boolean; tables: Record<string, { exists: boolean; missingColumns: string[] }>; error?: string } | null>(null);
 
   const { markDirty, register } = useSave();
@@ -84,6 +103,35 @@ export default function AdminPage() {
   useEffect(() => {
     dataRef.current = { site, pricing, faq, workflow, reviews, links, credits, tos };
   }, [site, pricing, faq, workflow, reviews, links, credits, tos]);
+
+  /**
+   * Session restore.
+   *
+   * The login session lives in an httpOnly cookie that survives
+   * refreshes, but the page always started at the login screen.
+   * Checking /api/auth/me on mount lets a returning owner skip
+   * the password step entirely; the API still verifies the
+   * signed cookie on every request, so this does not weaken
+   * the auth flow.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (!res.ok) return;
+        const { user } = (await res.json()) as { user?: { name?: string; username?: string } };
+        if (cancelled || !user) return;
+        setUserName(user.name || user.username || "Admin");
+        setAuthed(true);
+      } catch {
+        // No valid session — show the login form.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (authed) loadAllData();
@@ -99,8 +147,98 @@ export default function AdminPage() {
     }
   }, [lockedUntil]);
 
+  function readDiagCache(key: string): any | null {
+    if (typeof sessionStorage === "undefined") return null;
+    try {
+      const raw = sessionStorage.getItem(`bc_diag_${key}`);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (typeof parsed?.ts !== "number" || Date.now() - parsed.ts > DIAG_CACHE_TTL_MS) return null;
+      return parsed.value ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  function writeDiagCache(key: string, value: any) {
+    if (typeof sessionStorage === "undefined") return;
+    try {
+      sessionStorage.setItem(`bc_diag_${key}`, JSON.stringify({ value, ts: Date.now() }));
+    } catch {
+      // sessionStorage can be unavailable (private browsing);
+      // diagnostics simply run again on the next visit.
+    }
+  }
+
+  /**
+   * Diagnostics: storage bucket status, the CORS upload probe and
+   * database schema health.
+   *
+   * These used to run — sequentially — before any dashboard
+   * content was allowed to render, and the CORS probe performed a
+   * real upload-then-delete in storage on every single visit.
+   *
+   * They are now (a) deferred until after the dashboard has
+   * painted, and (b) cached in sessionStorage for
+   * DIAG_CACHE_TTL_MS, so a repeat visit does zero diagnostic
+   * round-trips. The upload probe still runs, just once per
+   * cache window instead of every load.
+   */
+  async function runDiagnostics() {
+    const { checkStorageBuckets, getMissingBucketMessage, testBucketUpload } = await import("@/lib/supabase/check");
+
+    const cachedBuckets = readDiagCache("storage_buckets");
+    if (cachedBuckets) {
+      setStorageError(getMissingBucketMessage(cachedBuckets));
+    } else {
+      checkStorageBuckets()
+        .then((statuses: any[]) => {
+          writeDiagCache("storage_buckets", statuses);
+          setStorageError(getMissingBucketMessage(statuses));
+
+          const mainBucket = statuses.find((s: any) => s.exists)?.name;
+          if (!mainBucket) return;
+
+          const cachedCors = readDiagCache(`cors:${mainBucket}`);
+          if (cachedCors) {
+            setCorsTestResult({ bucket: mainBucket, ...cachedCors });
+            return;
+          }
+          return testBucketUpload(mainBucket).then((result: any) => {
+            writeDiagCache(`cors:${mainBucket}`, result);
+            setCorsTestResult({ bucket: mainBucket, ...result });
+          });
+        })
+        .catch(() => {});
+    }
+
+    const cachedHealth = readDiagCache("db_health");
+    if (cachedHealth) {
+      setDbHealth(cachedHealth);
+      return;
+    }
+    fetch("/api/database/health")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          writeDiagCache("db_health", data);
+          setDbHealth(data);
+        }
+      })
+      .catch(() => {});
+  }
+
+  function scheduleDiagnostics() {
+    // Yield so the dashboard shell and overview paint first.
+    const run = () => runDiagnostics();
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(run, { timeout: 1500 });
+    } else {
+      setTimeout(run, 100);
+    }
+  }
+
   async function loadAllData() {
-    setLoading(true);
     setStorageError(null);
     setCorsTestResult(null);
     try {
@@ -117,62 +255,49 @@ export default function AdminPage() {
             if (data.links) setLinks(data.links);
           } catch {}
         }
-        setLoading(false);
         return;
       }
 
-      const { checkStorageBuckets, getMissingBucketMessage, testBucketUpload } = await import("@/lib/supabase/check");
-      const bucketStatuses = await checkStorageBuckets();
-      const missingMessage = getMissingBucketMessage(bucketStatuses);
-      if (missingMessage) {
-        setStorageError(missingMessage);
-      }
+      // Content loads first, in parallel. Each result is applied
+      // as soon as it resolves, so the dashboard fills in
+      // progressively instead of waiting for the slowest query.
+      const jobs: PromiseLike<void>[] = [
+        supabase.from("site_config").select("*").then(({ data }) => {
+          if (data && data.length > 0) {
+            const s: any = { ...defaultSite };
+            data.forEach((row: any) => { s[row.key] = row.value; });
+            setSite(s);
+          }
+        }),
+        supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }).then(({ data }) => {
+          if (data && data.length > 0) setPricing(data);
+        }),
+        supabase.from("faq_items").select("*").order("sort_order", { ascending: true }).then(({ data }) => {
+          if (data && data.length > 0) setFaq(data);
+        }),
+        supabase.from("workflow_steps").select("*").order("sort_order", { ascending: true }).then(({ data }) => {
+          if (data && data.length > 0) setWorkflow(data);
+        }),
+        supabase.from("reviews").select("*").order("created_at", { ascending: false }).then(({ data }) => {
+          if (data && data.length > 0) setReviews(data);
+        }),
+        supabase.from("social_links").select("*").order("sort_order", { ascending: true }).then(({ data }) => {
+          if (data && data.length > 0) setLinks(data);
+        }),
+        supabase.from("credits").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: true }).then(({ data }) => {
+          if (data && data.length > 0) setCredits(data);
+        }),
+        supabase.from("tos_sections").select("*").order("sort_order", { ascending: true }).then(({ data }) => {
+          if (data && data.length > 0) setTos(data);
+        }),
+      ];
 
-      if (bucketStatuses.some((s) => s.exists)) {
-        setTestingCors(true);
-        const mainBucket = bucketStatuses.find((s) => s.exists)?.name || "portfolio-images";
-        const result = await testBucketUpload(mainBucket);
-        setCorsTestResult({ bucket: mainBucket, ...result });
-        setTestingCors(false);
-      }
+      // Fire-and-forget: diagnostics must not hold up content.
+      scheduleDiagnostics();
 
-      try {
-        const dbRes = await fetch("/api/database/health");
-        if (dbRes.ok) {
-          const dbData = await dbRes.json();
-          setDbHealth(dbData);
-        }
-      } catch (e) {
-        console.error("Database health check failed:", e);
-      }
-
-      const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }, { data: creditsData }, { data: tosData }] = await Promise.all([
-        supabase.from("site_config").select("*"),
-        supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }),
-        supabase.from("faq_items").select("*").order("sort_order", { ascending: true }),
-        supabase.from("workflow_steps").select("*").order("sort_order", { ascending: true }),
-        supabase.from("reviews").select("*").order("created_at", { ascending: false }),
-        supabase.from("social_links").select("*").order("sort_order", { ascending: true }),
-        supabase.from("credits").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: true }),
-        supabase.from("tos_sections").select("*").order("sort_order", { ascending: true }),
-      ]);
-      if (siteData && siteData.length > 0) {
-        const s: any = { ...defaultSite };
-        siteData.forEach((row: any) => { s[row.key] = row.value; });
-        setSite(s);
-      }
-      if (pricingData && pricingData.length > 0) setPricing(pricingData);
-      if (faqData && faqData.length > 0) setFaq(faqData);
-      if (workflowData && workflowData.length > 0) setWorkflow(workflowData);
-      if (reviewsData && reviewsData.length > 0) setReviews(reviewsData);
-      if (linksData && linksData.length > 0) setLinks(linksData);
-      if (creditsData && creditsData.length > 0) setCredits(creditsData);
-      if (tosData && tosData.length > 0) setTos(tosData);
+      await Promise.all(jobs.map((job) => Promise.resolve(job).catch(() => {})));
     } catch (e) {
       console.error("Failed to load data:", e);
-    } finally {
-      setLoading(false);
-      setTestingCors(false);
     }
   }
 
@@ -358,20 +483,10 @@ export default function AdminPage() {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="ad-dashboard-bg grid min-h-screen place-items-center">
-        <div className="pointer-events-none absolute -top-20 left-1/4 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/10 blur-[120px] orb-slow" />
-        <div className="relative z-10 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-          <Loader2 className="h-5 w-5 animate-spin text-[var(--accent)]" /> Loading dashboard…
-        </div>
-      </div>
-    );
-  }
-
   return (
     <DashboardLayout
       active={tab}
+      userName={userName}
       onSelect={(id) => {
         if (id === "__reset") setResetOpen(true);
         else setTab(id as Tab);
@@ -455,6 +570,7 @@ export default function AdminPage() {
       {tab === "credits" && <CreditsSection value={credits} onChange={(n) => { setCredits(n); markDirty(); }} />}
       {tab === "tos" && <TosSection value={tos} onChange={(n) => { setTos(n); markDirty(); }} />}
       {tab === "site" && <SiteInfoSection value={site} onChange={(n) => { setSite(n); markDirty(); }} />}
+      {tab === "no-ai" && <NoAiBadgeSection site={site} onChange={(n) => { setSite(n); markDirty(); }} />}
 
       <Modal
         open={resetOpen}

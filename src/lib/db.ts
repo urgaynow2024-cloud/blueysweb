@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from "./supabase/client";
+import { cached } from "./api-cache";
 import { pricingTiers, additionalServices, faqItems, workflowSteps, siteConfig } from "../config/site";
 import type { Adoptable, AdoptableGalleryImage } from "../types/database";
 import type { AdoptableStatus } from "./adoptables/status";
@@ -37,26 +38,33 @@ async function fetchAll<T>(table: string, fallback: T[]): Promise<T[]> {
 
 async function fetchSiteConfig() {
   if (!isSupabaseConfigured || !supabase) return FALLBACKS.siteConfig;
-  const { data, error } = await supabase.from("site_config").select("key, value");
-  if (error || !data) return FALLBACKS.siteConfig;
+  // Shared across the homepage, Hero, FeaturedWork and every page that
+  // mounts a component reading site_config — previously each mounted a
+  // separate identical query.
+  const data = await cached(
+    "db:site_config",
+    () => supabase!.from("site_config").select("key, value").then((r) => (r.error ? null : r.data)),
+  );
+  if (!data) return FALLBACKS.siteConfig;
   const result = { ...FALLBACKS.siteConfig } as Record<string, unknown>;
   data.forEach((row: { key: string; value: string }) => { result[row.key] = row.value; });
   return result;
 }
 
 export async function getPortfolioImages() {
-  return fetchAll("portfolio_images", FALLBACKS.portfolioImages);
+  return cached("db:portfolio_images", () => fetchAll("portfolio_images", FALLBACKS.portfolioImages));
 }
 
 export async function getApprovedReviews() {
   if (!isSupabaseConfigured || !supabase) return FALLBACKS.reviews;
-  const { data, error } = await supabase
-    .from("reviews")
-    .select("*")
-    .eq("status", "approved")
-    .order("created_at", { ascending: false });
-  if (error || !data || data.length === 0) return FALLBACKS.reviews;
-  return data;
+  return cached("db:reviews_approved", () =>
+    supabase!
+      .from("reviews")
+      .select("*")
+      .eq("status", "approved")
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => (error || !data || data.length === 0 ? FALLBACKS.reviews : data)),
+  );
 }
 
 export async function getPendingReviews() {
@@ -74,15 +82,15 @@ export async function getAllReviews() {
 }
 
 export async function getPricingTiers() {
-  return fetchAll("pricing_tiers", FALLBACKS.pricingTiers);
+  return cached("db:pricing_tiers", () => fetchAll("pricing_tiers", FALLBACKS.pricingTiers));
 }
 
 export async function getFaqItems() {
-  return fetchAll("faq_items", FALLBACKS.faqItems);
+  return cached("db:faq_items", () => fetchAll("faq_items", FALLBACKS.faqItems));
 }
 
 export async function getWorkflowSteps() {
-  return fetchAll("workflow_steps", FALLBACKS.workflowSteps);
+  return cached("db:workflow_steps", () => fetchAll("workflow_steps", FALLBACKS.workflowSteps));
 }
 
 export async function getSiteConfig() {
@@ -90,25 +98,30 @@ export async function getSiteConfig() {
 }
 
 export async function getSiteImages() {
-  if (!isSupabaseConfigured || !supabase) return {};
-  const { data, error } = await supabase.from("site_images").select("*");
-  if (error || !data) return {};
-  const result: Record<string, { url: string; path?: string }> = {};
-  data.forEach((item: { key: string; url: string; path?: string }) => {
-    result[item.key] = { url: item.url, path: item.path };
+  return cached("db:site_images", async () => {
+    if (!isSupabaseConfigured || !supabase) return {};
+    const { data, error } = await supabase.from("site_images").select("*");
+    if (error || !data) return {};
+    const result: Record<string, { url: string; path?: string }> = {};
+    data.forEach((item: { key: string; url: string; path?: string }) => {
+      result[item.key] = { url: item.url, path: item.path };
+    });
+    return result;
   });
-  return result;
 }
 
 export async function getNsfwPortfolioImages() {
   if (!isSupabaseConfigured || !supabase) return FALLBACKS.nsfwPortfolioImages;
-  const { data, error } = await supabase.from("nsfw_portfolio_images").select("*").order("sort_order", { ascending: true });
-  if (error) {
-    console.error("Failed to load NSFW portfolio images:", error);
-    return FALLBACKS.nsfwPortfolioImages;
-  }
-  if (!data || data.length === 0) return FALLBACKS.nsfwPortfolioImages;
-  return data;
+  return cached("db:nsfw_portfolio_images", () =>
+    supabase!.from("nsfw_portfolio_images").select("*").order("sort_order", { ascending: true }).then(({ data, error }) => {
+      if (error) {
+        console.error("Failed to load NSFW portfolio images:", error);
+        return FALLBACKS.nsfwPortfolioImages;
+      }
+      if (!data || data.length === 0) return FALLBACKS.nsfwPortfolioImages;
+      return data;
+    }),
+  );
 }
 
 export async function uploadNsfwPortfolioImage(file: File) {
@@ -278,7 +291,7 @@ export async function deleteReview(id: string) {
 }
 
 export async function getSocialLinks() {
-  return fetchAll("social_links", []);
+  return cached("db:social_links", () => fetchAll("social_links", []));
 }
 
 export async function addSocialLink(data: { name: string; url: string; description?: string }) {
@@ -301,16 +314,20 @@ export async function deleteSocialLink(id: string) {
 
 export async function getTosSections() {
   if (!isSupabaseConfigured || !supabase) return [];
-  const { data, error } = await supabase
-    .from("tos_sections")
-    .select("*")
-    .eq("visible", true)
-    .order("sort_order", { ascending: true });
-  if (error) {
-    console.error("Failed to load TOS sections:", error);
-    return [];
-  }
-  return data || [];
+  return cached("db:tos_sections", () =>
+    supabase!
+      .from("tos_sections")
+      .select("*")
+      .eq("visible", true)
+      .order("sort_order", { ascending: true })
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Failed to load TOS sections:", error);
+          return [];
+        }
+        return data || [];
+      }),
+  );
 }
 
 const ADOPTABLE_COLUMNS =
@@ -322,22 +339,24 @@ export async function getAdoptables(): Promise<Adoptable[]> {
   // `availability` is the single source of truth: HIDDEN adoptables are not
   // listed publicly, and SOLD adoptables stay listed as portfolio history.
   // `visible` is the mirrored column kept for backwards compatibility.
-  const { data, error } = await supabase
-    .from("adoptables")
-    .select(ADOPTABLE_COLUMNS)
-    .eq("visible", true)
-    .neq("availability", "hidden")
-    .order("sort_order", { ascending: true });
-
-  if (error) {
-    // Errors are surfaced, not swallowed. Returning `[]` on failure made an RLS
-    // denial indistinguishable from a genuinely empty table, which is how a
-    // permission problem ends up looking like "no adoptables yet".
-    throw toAdoptablesQueryError(error).failure;
-  }
-
-  if (!data || data.length === 0) return FALLBACKS.adoptables;
-  return data;
+  return cached("db:adoptables", () =>
+    supabase!
+      .from("adoptables")
+      .select(ADOPTABLE_COLUMNS)
+      .eq("visible", true)
+      .neq("availability", "hidden")
+      .order("sort_order", { ascending: true })
+      .then(({ data, error }) => {
+        if (error) {
+          // Errors are surfaced, not swallowed. Returning `[]` on failure made an RLS
+          // denial indistinguishable from a genuinely empty table, which is how a
+          // permission problem ends up looking like "no adoptables yet".
+          throw toAdoptablesQueryError(error).failure;
+        }
+        if (!data || data.length === 0) return FALLBACKS.adoptables;
+        return data;
+      }),
+  );
 }
 
 export async function getAdoptableById(id: string) {
@@ -489,14 +508,18 @@ export async function updateAdoptableMainImage(adoptableId: string, url: string 
 
 export async function getCredits() {
   if (!isSupabaseConfigured || !supabase) return [];
-  const { data, error } = await supabase
-    .from("credits")
-    .select("*")
-    .eq("visible", true)
-    .order("sort_order", { ascending: true });
-  if (error) {
-    console.error("Failed to load credits:", error);
-    return [];
-  }
-  return data || [];
+  return cached("db:credits", () =>
+    supabase!
+      .from("credits")
+      .select("*")
+      .eq("visible", true)
+      .order("sort_order", { ascending: true })
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Failed to load credits:", error);
+          return [];
+        }
+        return data || [];
+      }),
+  );
 }

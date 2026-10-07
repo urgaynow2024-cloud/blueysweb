@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { cached } from "./api-cache";
 
 /**
  * Single source of truth for commission availability.
@@ -73,9 +74,14 @@ export function useCommissionStatus(): CommissionState {
 
     async function load() {
       try {
-        const res = await fetch("/api/queue/config");
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+        // The Hero and the availability panel both use this hook, so the
+        // queue config is fetched once and shared for a short window
+        // instead of issuing two identical requests per page.
+        const data = await cached("api:queue_config", async () => {
+          const res = await fetch("/api/queue/config");
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        });
         if (cancelled) return;
         setStatus(data.queue_status || "open");
         setSlotsTotal(parseInt(data.queue_slots_total || "0", 10) || 0);

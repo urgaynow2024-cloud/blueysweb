@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useSave } from "../SaveProvider";
 import { Card, CardHeader } from "../Card";
 import { Button } from "../Button";
@@ -73,13 +72,6 @@ export function OverviewSection({
   dbHealth,
   onSelect,
 }: OverviewProps) {
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setLoading(false), 300);
-    return () => clearTimeout(timer);
-  }, []);
-
   const pendingReviews = reviews.filter((r: any) => r.status === "pending").length;
   const approvedReviews = reviews.filter((r: any) => r.status === "approved").length;
   const slotsTotal = parseInt(site.queue_slots_total || "0", 10);
@@ -104,21 +96,6 @@ export function OverviewSection({
     { id: "tos", label: "Terms of Service", icon: FileText, count: tos.length },
     { id: "site", label: "Site Info", icon: Sparkles, count: Object.keys(site).length },
   ];
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <Card className="p-8">
-          <CardHeader title="Dashboard" description="Overview of your commission studio." />
-          <div className="mt-6 space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-4 w-3/4 rounded bg-[var(--border)] animate-pulse" />
-            ))}
-          </div>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

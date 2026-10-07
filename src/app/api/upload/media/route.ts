@@ -147,7 +147,11 @@ export async function POST(request: NextRequest) {
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from(config.bucket)
       .upload(storagePath, uploadBuffer, {
-        cacheControl: "3600",
+        // Every upload gets a unique UUID filename, so an
+        // object is never overwritten — a one-year cache
+        // lifetime is safe and keeps artwork loading from
+        // the browser cache on repeat visits.
+        cacheControl: "31536000",
         upsert: true,
         contentType: uploadContentType,
       });

@@ -20,50 +20,90 @@ const REQUIRED_TABLES: Record<string, string[]> = {
  */
 const ADOPTABLE_STATUSES = ["available", "pending", "reserved", "sold", "hidden"];
 
+/**
+ * Checks one table with a handful of round-trips instead of one
+ * per column.
+ *
+ * The previous implementation ran `select * limit 1` and then a
+ * separate `select <column> limit 1` for EVERY required column —
+ * 24 for the adoptables table, roughly 100 queries in total — on
+ * every single dashboard load. That serialised the whole admin
+ * page behind the health check.
+ *
+ * This version requests every required column in a single query
+ * and, when PostgREST reports a missing column, drops it and
+ * retries. A typical healthy table costs exactly one query; a
+ * drifted table costs one query per missing column. All tables
+ * are checked in parallel, so the worst case is bounded by the
+ * slowest table rather than the sum of every column.
+ */
+async function checkTable(
+  table: string,
+  columns: string[],
+): Promise<{ exists: boolean; missingColumns: string[] }> {
+  let remaining = [...columns];
+  const missing: string[] = [];
+
+  for (let attempt = 0; attempt <= columns.length; attempt++) {
+    if (remaining.length === 0) {
+      return { exists: true, missingColumns: columns };
+    }
+
+    const { error } = await supabaseAdmin!
+      .from(table)
+      .select(remaining.join(","))
+      .limit(1);
+
+    if (!error) {
+      return { exists: true, missingColumns: missing };
+    }
+
+    const msg = error.message || "";
+
+    // The table itself is gone — nothing to inspect further.
+    if (/relation .* does not exist/i.test(msg)) {
+      return { exists: false, missingColumns: columns };
+    }
+
+    // PostgREST names the offending column:
+    // "Could not find the 'foo' column of 'public.adoptables'"
+    const match = msg.match(/Could not find the '(\w+)' column/);
+    if (!match) {
+      // An error we cannot attribute to a column (permissions,
+      // network, RLS). Report the table as present and healthy
+      // rather than alarming the owner with a false schema error.
+      return { exists: true, missingColumns: [] };
+    }
+
+    const absent = match[1];
+    missing.push(absent);
+    remaining = remaining.filter((col) => col !== absent);
+  }
+
+  return { exists: true, missingColumns: missing };
+}
+
 export async function GET() {
   if (!supabaseAdmin) {
     return NextResponse.json({ healthy: false, error: "Server not configured" });
   }
 
   const results: Record<string, { exists: boolean; missingColumns: string[] }> = {};
+
+  const checks = await Promise.all(
+    Object.entries(REQUIRED_TABLES).map(async ([table, columns]) => {
+      try {
+        return [table, await checkTable(table, columns)] as const;
+      } catch {
+        return [table, { exists: false, missingColumns: columns }] as const;
+      }
+    }),
+  );
+
   let allHealthy = true;
-
-  for (const [table, columns] of Object.entries(REQUIRED_TABLES)) {
-    try {
-      const { error } = await supabaseAdmin.from(table).select("*").limit(1);
-
-      if (error) {
-        const msg = error.message || "";
-        if (msg.includes("does not exist") || msg.includes("relation") && msg.includes("not found")) {
-          results[table] = { exists: false, missingColumns: columns };
-          allHealthy = false;
-          continue;
-        }
-        results[table] = { exists: true, missingColumns: [] };
-        continue;
-      }
-
-      const missingColumns: string[] = [];
-      for (const col of columns) {
-        // The client resolves with { error } rather than throwing, so the error
-        // has to be inspected. Wrapping the call in try/catch alone reported
-        // every column as present, which hid real schema drift.
-        const { error: columnError } = await supabaseAdmin.from(table).select(col).limit(1);
-        if (columnError) {
-          const msg = columnError.message || "";
-          if (/column|does not exist/i.test(msg)) {
-            missingColumns.push(col);
-          }
-        }
-      }
-
-      if (missingColumns.length > 0) {
-        allHealthy = false;
-      }
-
-      results[table] = { exists: true, missingColumns };
-    } catch {
-      results[table] = { exists: false, missingColumns: columns };
+  for (const [table, result] of checks) {
+    results[table] = result;
+    if (!result.exists || result.missingColumns.length > 0) {
       allHealthy = false;
     }
   }

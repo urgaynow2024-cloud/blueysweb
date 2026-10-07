@@ -125,6 +125,28 @@ CREATE TABLE IF NOT EXISTS site_images (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- =============================================================================
+-- NO AI BADGE (no migration required — uses the generic tables above)
+-- =============================================================================
+-- The NO AI badge is managed from Admin → NO AI Badge and stores
+-- everything as ordinary rows in the existing tables:
+--
+--   site_images: key = 'no_ai_badge'
+--     The badge image itself. A completely independent asset with its
+--     own storage path (site/<uuid>) — it never shares a path with,
+--     replaces, or overwrites any other icon or image.
+--
+--   site_config: key = 'no_ai_enabled'  → 'true' | 'false'
+--   site_config: key = 'no_ai_placement' → 'footer' | 'home' | 'all'
+--     Whether the public NO AI status is shown, and where. 'footer'
+--     shows it on every page, 'home' shows it on the homepage below
+--     the hero, 'all' shows it in both places.
+--
+-- Both keys default to enabled/'all' so the status is visible before
+-- any configuration, and both are saved through the standard admin
+-- save flow (POST /api/admin/save).
+-- =============================================================================
+
 -- NSFW portfolio images (separate from SFW)
 CREATE TABLE IF NOT EXISTS nsfw_portfolio_images (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -19,6 +19,26 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   /**
+   * Static assets in /public are content-stable, so let
+   * browsers cache them aggressively instead of
+   * re-requesting the favicon and brand mark on every
+   * navigation.
+   */
+  async headers() {
+    return [
+      {
+        source: "/:file(favicon.svg|bluey-avatar.svg)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+    ];
+  },
+
+  /**
    * Image optimisation.
    *
    * Every portfolio, adoptable, review, credit and hero image is served from
