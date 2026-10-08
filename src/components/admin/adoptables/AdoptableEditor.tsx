@@ -161,7 +161,7 @@ export function AdoptableEditor({ open, adoptable, controller, onClose }: Adopta
     };
   }, [open]);
 
-  const dirty = Boolean(draft && baseline && !isDirtyFor(DRAFT_FIELDS, draft, baseline));
+  const dirty = Boolean(draft && baseline && isDirtyFor(DRAFT_FIELDS, draft, baseline));
 
   // markDirty lives in a ref because the controller object is rebuilt on every
   // dirtyIds change, so depending on it directly would re-run this effect in a
