@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { CheckCircle2, Trash2, Edit2, X, ImageIcon, Loader2 } from "lucide-react";
+import { CheckCircle2, Trash2, Edit2, X, ImageIcon, Loader2, AlertCircle } from "lucide-react";
 import StarRating from "@/components/StarRating";
 import { uploadMedia } from "@/lib/upload/client";
 import { UploadError } from "@/lib/upload/errors";
@@ -9,6 +9,7 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 import { Card, CardHeader } from "../Card";
 import { Field, Input, Textarea } from "../Field";
 import { Button } from "../Button";
+import { useToast } from "../Toast";
 
 interface Props {
   value: any[];
@@ -24,7 +25,62 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
     image_url: review.image_url || null,
   });
   const [uploading, setUploading] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const toast = useToast();
+
+  async function handleApprove() {
+    setApproving(true);
+    try {
+      const res = await fetch(`/api/reviews/${review.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "approved" }),
+      });
+      if (!res.ok) throw new Error("Failed to approve review");
+      setReviews(reviews.map((r) => (r.id === review.id ? { ...r, status: "approved" } : r)));
+      toast.success("Review approved");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to approve review");
+    } finally {
+      setApproving(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/reviews/${review.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete review");
+      setReviews(reviews.filter((r) => r.id !== review.id));
+      toast.success("Review deleted");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete review");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/reviews/${review.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editData),
+      });
+      if (!res.ok) throw new Error("Failed to save review");
+      setReviews(reviews.map((r) => (r.id === review.id ? { ...r, ...editData } : r)));
+      setEditing(false);
+      toast.success("Review saved");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save review");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -52,14 +108,14 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
         </span>
         <div className="flex gap-2">
           {review.status !== "approved" && (
-            <Button size="sm" variant="ghost" onClick={() => setReviews(reviews.map((r) => (r.id === review.id ? { ...r, status: "approved" } : r)))} className="!text-emerald-400 hover:!bg-emerald-500/10">
+            <Button size="sm" variant="ghost" onClick={handleApprove} loading={approving} className="!text-emerald-400 hover:!bg-emerald-500/10" disabled={approving}>
               <CheckCircle2 className="h-4 w-4" /> Approve
             </Button>
           )}
           <Button size="sm" variant="ghost" onClick={() => setEditing((v) => !v)} className={editing ? "!text-white" : "!text-[var(--accent)]"}>
             <Edit2 className="h-4 w-4" /> {editing ? "Cancel" : "Edit"}
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setReviews(reviews.filter((r) => r.id !== review.id))} className="!text-[var(--danger)] hover:!bg-[var(--danger-soft)]">
+          <Button size="sm" variant="ghost" onClick={handleDelete} loading={deleting} className="!text-[var(--danger)] hover:!bg-[var(--danger-soft)]" disabled={deleting}>
             <Trash2 className="h-4 w-4" /> Delete
           </Button>
         </div>
@@ -103,10 +159,10 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
             )}
           </Field>
           <div className="flex gap-2">
-            <Button size="sm" variant="primary" onClick={() => { setReviews(reviews.map((r) => (r.id === review.id ? { ...r, ...editData } : r))); setEditing(false); }}>
+            <Button size="sm" variant="primary" onClick={handleSave} loading={saving} disabled={saving}>
               Save
             </Button>
-            <Button size="sm" variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
+            <Button size="sm" variant="secondary" onClick={() => setEditing(false)} disabled={saving}>Cancel</Button>
           </div>
         </div>
       ) : (
