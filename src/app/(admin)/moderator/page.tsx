@@ -17,19 +17,26 @@ import {
   KeyRound,
   UserCog,
   AlertCircle,
+  Package,
 } from "lucide-react";
 import { Button } from "@/components/admin/Button";
 import { Card, CardHeader } from "@/components/admin/Card";
 import { Modal } from "@/components/admin/Modal";
 import { Field, Input, Textarea } from "@/components/admin/Field";
 import { useToast } from "@/components/admin/Toast";
+import dynamic from "next/dynamic";
+
+const AdoptablesSection = dynamic(
+  () => import("@/components/admin/sections/AdoptablesSection").then((m) => ({ default: m.AdoptablesSection })),
+  { ssr: false }
+);
 
 type SessionUser = {
   id: string;
   username: string;
   name: string;
   role: "owner" | "moderator";
-  perms: { reviews: boolean; submissions: boolean; hide_content: boolean };
+  perms: { reviews: boolean; submissions: boolean; hide_content: boolean; adoptables: boolean };
 };
 
 type Review = {
@@ -71,7 +78,7 @@ type LogEntry = {
   created_at: string;
 };
 
-type Tab = "queue" | "hidden" | "log";
+type Tab = "queue" | "hidden" | "log" | "adoptables";
 
 export default function ModeratorPage() {
   const toast = useToast();
@@ -221,6 +228,7 @@ export default function ModeratorPage() {
   const canReviews = session.perms.reviews;
   const canSubmissions = session.perms.submissions;
   const canHide = session.perms.hide_content;
+  const canAdoptables = session.perms.adoptables;
 
   const pendingReviews = reviews.filter((r) => r.status === "pending" && !r.hidden);
   const hiddenReviews = reviews.filter((r) => r.hidden);
@@ -231,6 +239,7 @@ export default function ModeratorPage() {
     { id: "queue", label: "Approval Queue", icon: <Inbox className="h-4 w-4" />, count: pendingReviews.length + pendingSubmissions.length },
     { id: "hidden", label: "Hidden Content", icon: <EyeOff className="h-4 w-4" />, count: hiddenReviews.length + hiddenSubmissions.length },
     { id: "log", label: "Moderation Log", icon: <History className="h-4 w-4" /> },
+    ...(canAdoptables ? [{ id: "adoptables" as Tab, label: "Adoptables", icon: <Package className="h-4 w-4" /> }] : []),
   ];
 
   return (
@@ -347,6 +356,7 @@ export default function ModeratorPage() {
         )}
 
         {tab === "log" && <LogSection log={log} loading={loadingData} />}
+        {tab === "adoptables" && canAdoptables && <AdoptablesSection />}
       </div>
 
       <Modal
@@ -389,6 +399,7 @@ function PermissionSummary({ session }: { session: SessionUser }) {
     { key: "reviews", label: "Review moderation", on: session.perms.reviews },
     { key: "submissions", label: "Submission moderation", on: session.perms.submissions },
     { key: "hide_content", label: "Hide content", on: session.perms.hide_content },
+    { key: "adoptables", label: "Adoptables Management", on: session.perms.adoptables },
   ];
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4">

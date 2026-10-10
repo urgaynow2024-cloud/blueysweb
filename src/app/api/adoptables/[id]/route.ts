@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { requireAdminSession } from "@/lib/auth/guard";
+import { requireAdminSession, requirePermission } from "@/lib/auth/guard";
 import { deleteAdoptable, updateAdoptable } from "@/lib/adoptables/server";
 
 export async function GET(
@@ -10,7 +10,7 @@ export async function GET(
   // The public site reads adoptables through the anon Supabase client, which
   // RLS already limits to listed rows. This route uses the service role, so it
   // can return HIDDEN rows and is admin-only.
-  const auth = await requireAdminSession();
+  const auth = await requirePermission("adoptables");
   if (!auth.ok) return auth.response!;
 
   const { id } = await params;
@@ -32,7 +32,7 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdminSession();
+  const auth = await requirePermission("adoptables");
   if (!auth.ok) return auth.response!;
 
   try {
@@ -63,7 +63,7 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdminSession();
+  const auth = await requirePermission("adoptables");
   if (!auth.ok) return auth.response!;
 
   const { id } = await params;

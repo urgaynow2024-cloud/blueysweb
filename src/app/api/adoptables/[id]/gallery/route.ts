@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { requireAdminSession } from "@/lib/auth/guard";
+import { requireAdminSession, requirePermission } from "@/lib/auth/guard";
 import { validateUploadSize, validateUploadType } from "@/lib/compression/server";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -27,7 +27,7 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdminSession();
+  const auth = await requirePermission("adoptables");
   if (!auth.ok) return auth.response!;
 
   try {
@@ -63,7 +63,7 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdminSession();
+  const auth = await requirePermission("adoptables");
   if (!auth.ok) return auth.response!;
 
   try {
@@ -112,7 +112,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdminSession();
+  const auth = await requirePermission("adoptables");
   if (!auth.ok) return auth.response!;
 
   try {
@@ -153,7 +153,7 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdminSession();
+  const auth = await requirePermission("adoptables");
   if (!auth.ok) return auth.response!;
 
   try {
@@ -268,7 +268,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdminSession();
+  const auth = await requirePermission("adoptables");
   if (!auth.ok) return auth.response!;
 
   try {

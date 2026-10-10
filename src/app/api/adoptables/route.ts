@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { requireAdminSession } from "@/lib/auth/guard";
+import { requireAdminSession, requirePermission } from "@/lib/auth/guard";
 import { createAdoptable } from "@/lib/adoptables/server";
 
 export async function GET(request: Request) {
@@ -13,15 +13,28 @@ export async function GET(request: Request) {
   // includes HIDDEN adoptables and is therefore admin-only.
   const scope = new URL(request.url).searchParams.get("scope");
 
-  let query = supabaseAdmin.from("adoptables").select("*").order("sort_order", { ascending: true });
   if (scope === "public") {
-    query = query.eq("visible", true).neq("availability", "hidden");
-  } else {
-    const auth = await requireAdminSession();
-    if (!auth.ok) return auth.response!;
+    const { data, error } = await supabaseAdmin
+      .from("adoptables")
+      .select("*")
+      .eq("visible", true)
+      .neq("availability", "hidden")
+      .order("sort_order", { ascending: true });
+    if (error) {
+      return NextResponse.json({ error: "Failed to load adoptables" }, { status: 500 });
+    }
+    return NextResponse.json(data || []);
   }
 
-  const { data, error } = await query;
+  // Admin access requires adoptables permission
+  const auth = await requirePermission("adoptables");
+  if (!auth.ok) return auth.response!;
+
+  const { data, error } = await supabaseAdmin
+    .from("adoptables")
+    .select("*")
+    .order("sort_order", { ascending: true });
+
   if (error) {
     return NextResponse.json({ error: "Failed to load adoptables" }, { status: 500 });
   }
@@ -29,7 +42,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireAdminSession();
+  const auth = await requirePermission("adoptables");
   if (!auth.ok) return auth.response!;
 
   try {
@@ -58,7 +71,7 @@ export async function POST(request: Request) {
  * — the UI requires a typed confirmation first — and it is authenticated.
  */
 export async function DELETE() {
-  const auth = await requireAdminSession();
+  const auth = await requirePermission("adoptables");
   if (!auth.ok) return auth.response!;
 
   if (!supabaseAdmin) {
