@@ -9,6 +9,7 @@ import { Card, CardHeader } from "../Card";
 import { Button } from "../Button";
 import { uploadMedia } from "@/lib/upload/client";
 import { UploadError } from "@/lib/upload/errors";
+import { invalidateCache } from "@/lib/api-cache";
 
 const SLOTS = [
   { key: "hero", label: "Homepage — Main Hero", desc: "Large featured image on the left of the hero section. ~1200x800px (16:10).", aspect: "aspect-[16/10]" },
@@ -45,6 +46,7 @@ export function SiteImagesSection() {
     try {
       const result = await uploadMedia(file, "site", { key });
       setImages((prev) => ({ ...prev, [key]: { url: result.url, path: result.path } }));
+      invalidateCache("db:site_images");
       toast.success("Image updated");
     } catch (err) {
       const message = err instanceof UploadError ? err.message : err instanceof Error ? err.message : "Upload failed";
@@ -72,6 +74,7 @@ export function SiteImagesSection() {
           delete next[key];
           return next;
         });
+        invalidateCache("db:site_images");
         toast.success("Image removed");
       } else {
         toast.error("Failed to remove image");

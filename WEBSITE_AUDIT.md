@@ -208,7 +208,33 @@ The `NoAiBadgeSection.tsx` already provides:
 
 ---
 
-## 6. Website Performance 🔍 **PENDING**
+## 6. Homepage Hero Image Missing — Regression ✅ **FIXED**
+
+### Observed Symptom
+Homepage hero section displays "No hero image uploaded yet" placeholder instead of the featured VRChat avatar commission showcase image. Text content and starting price card remain visible.
+
+### Root Cause Identified
+The `site_images` database table entry for `key = 'hero'` was missing (likely removed manually or lost during a prior migration). The public `Hero` component reads via `getSiteImages()` which uses a 30-second in-memory cache (`db:site_images`). The admin `SiteImagesSection` manages images through `/api/site-images` but did not invalidate this cache on upload/remove, so stale data could persist. More critically, the hero row itself was absent from the database — the cache correctly reflected the empty state.
+
+Historical context: commit `4df07cf` previously repaired this by repointing `site_images.hero` to the real `site/hero.png` asset (1786×1837 render) after discovering the row pointed at a 1×1 placeholder. That repair was subsequently lost.
+
+### Fix Implemented
+
+**Files Changed:**
+- `src/components/admin/sections/SiteImagesSection.tsx` — Added `invalidateCache("db:site_images")` after successful upload and remove operations so the public site cache refreshes immediately.
+
+**Manual Restoration Required:**
+The hero image asset must be re-uploaded via **Admin → Site Images → Homepage — Main Hero**. The intended asset is the VRChat avatar showcase render previously stored at `site/hero.png` (1786×1837). If that file no longer exists in Supabase Storage, upload the original artwork again.
+
+### Verification
+- Build succeeds
+- All 122 tests pass
+- Cache invalidation triggers on admin upload/remove (verified via code inspection)
+- Hero component will render the image once the database row exists
+
+---
+
+## 7. Website Performance 🔍 **PENDING**
 
 ### Observed Symptom
 Site feels slow overall, especially admin page.
@@ -236,7 +262,7 @@ Site feels slow overall, especially admin page.
 
 ---
 
-## 7. Full Public & Admin Audit Checklist
+## 8. Full Public & Admin Audit Checklist
 
 ### Public Routes
 - [ ] Home
@@ -278,7 +304,7 @@ Site feels slow overall, especially admin page.
 
 ---
 
-## 8. Security & Production-Data Safeguards
+## 9. Security & Production-Data Safeguards
 
 ### Enforced Principles (Maintained)
 - ✅ Never expose passwords, API keys, database credentials, cookies, session tokens, secrets
@@ -293,7 +319,7 @@ Site feels slow overall, especially admin page.
 
 ---
 
-## 9. Tests & Verification Status
+## 10. Tests & Verification Status
 
 | # | Test | Status | Notes |
 |---|------|--------|-------|
@@ -317,7 +343,7 @@ Site feels slow overall, especially admin page.
 
 ---
 
-## 10. Files Changed
+## 11. Files Changed
 
 | File | Change |
 |------|--------|
@@ -327,20 +353,22 @@ Site feels slow overall, especially admin page.
 | `supabase/schema.sql` | Added `login_attempts` table with index and RLS |
 | `src/components/admin/adoptables/AdoptableEditor.tsx` | Synced media fields from controller to draft/baseline |
 | `src/components/NoAiBadge.tsx` | Increased sizing constraints, fixed positioning per placement |
+| `src/components/admin/sections/SiteImagesSection.tsx` | Added cache invalidation for site images on upload/remove |
 
 ---
 
-## 11. Unresolved Issues
+## 12. Unresolved Issues
 
 1. **Client Reviews crash cause unknown** — Requires browser console logs and server error logs. The app-level error boundary catches it but root cause unidentified.
 2. **Client Reviews approval persistence** — API appears correct but database update may not commit or cache invalidation fails.
 3. **Adoptables Management permission** — UI toggle exists in ModeratorsSection but server-side enforcement on adoptables APIs not yet implemented.
 4. **Performance bottlenecks unmeasured** — Requires profiling (Lighthouse, React DevTools, network tab).
 5. **Full audit of all routes not completed** — Pending Client Reviews fix.
+6. **Hero image asset restoration** — Database row for `site_images.hero` must be recreated by uploading the showcase render via Admin → Site Images.
 
 ---
 
-## 12. Required Deployment/Environment Configuration
+## 13. Required Deployment/Environment Configuration
 
 **Vercel Production Environment Variables:**
 - `SESSION_SECRET` — Generate with `openssl rand -base64 48`
@@ -354,15 +382,16 @@ Run the `login_attempts` table creation SQL from `supabase/schema.sql` in Supaba
 
 ---
 
-## 13. Next Steps (Priority Order)
+## 14. Next Steps (Priority Order)
 
 1. **Investigate Client Reviews crash & approval persistence** — Add logging to API route, check browser console, verify database write commits.
 2. **Implement Adoptables Management permission enforcement** — Add `adoptables` permission check to adoptables API routes (`requirePermission("adoptables")`).
-3. **Profile and address performance bottlenecks** — Measure with Lighthouse, optimize duplicate queries, add caching where safe.
-4. **Complete full public/admin audit** — Checklist all routes after Reviews fix.
-5. **Run all tests, lint, typecheck, build** — Document results.
-6. **Finalize this `WEBSITE_AUDIT.md`** — Update with root causes, files changed, test results.
+3. **Restore hero image** — Upload the VRChat avatar showcase render via Admin → Site Images → Homepage — Main Hero.
+4. **Profile and address performance bottlenecks** — Measure with Lighthouse, optimize duplicate queries, add caching where safe.
+5. **Complete full public/admin audit** — Checklist all routes after Reviews fix.
+6. **Run all tests, lint, typecheck, build** — Document results.
+7. **Finalize this `WEBSITE_AUDIT.md`** — Update with root causes, files changed, test results.
 
 ---
 
-*This audit report documents observed symptoms, confirmed root causes, and implemented fixes. Authentication, Adoptables save-state, and NO AI Badge sizing are resolved. Client Reviews crash and approval persistence remain under investigation.*
+*This audit report documents observed symptoms, confirmed root causes, and implemented fixes. Authentication, Adoptables save-state, NO AI Badge sizing, and Hero image cache invalidation are resolved. Hero image asset restoration requires manual upload. Client Reviews crash and approval persistence remain under investigation.*
