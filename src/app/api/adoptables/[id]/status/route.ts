@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdminSession } from "@/lib/auth/guard";
+import { requirePermission } from "@/lib/auth/guard";
 import { setAdoptableStatus } from "@/lib/adoptables/server";
 import { ADOPTABLE_STATUSES } from "@/lib/adoptables/status";
 
@@ -14,7 +14,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdminSession();
+  const auth = await requirePermission("adoptables");
   if (!auth.ok) return auth.response!;
 
   try {

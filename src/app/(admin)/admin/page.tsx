@@ -121,8 +121,9 @@ export default function AdminPage() {
       try {
         const res = await fetch("/api/auth/me");
         if (!res.ok) return;
-        const { user } = (await res.json()) as { user?: { name?: string; username?: string } };
+        const { user } = (await res.json()) as { user?: { name?: string; username?: string; role?: string } };
         if (cancelled || !user) return;
+        if (user.role !== "owner") return;
         setUserName(user.name || user.username || "Admin");
         setAuthed(true);
       } catch {

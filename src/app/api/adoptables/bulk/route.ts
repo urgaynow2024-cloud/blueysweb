@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdminSession } from "@/lib/auth/guard";
+import { requirePermission } from "@/lib/auth/guard";
 import { deleteAdoptable, setAdoptableStatusBulk } from "@/lib/adoptables/server";
 import { ADOPTABLE_STATUSES } from "@/lib/adoptables/status";
 
@@ -18,7 +18,7 @@ function parseIds(value: unknown): string[] {
  * confirmation; the server still requires an authenticated session.
  */
 export async function PATCH(request: Request) {
-  const auth = await requireAdminSession();
+  const auth = await requirePermission("adoptables");
   if (!auth.ok) return auth.response!;
 
   try {

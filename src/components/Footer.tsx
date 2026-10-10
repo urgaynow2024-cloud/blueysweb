@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
-import NoAiBadge from "@/components/NoAiBadge";
+import { NoAiBadge } from "@/components/NoAiBadge";
 
 export default function Footer() {
   return (

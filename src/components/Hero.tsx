@@ -7,6 +7,7 @@ import Link from "next/link";
 import StorageImage from "@/components/ui/StorageImage";
 import { Zap, ArrowDown, Circle, Sparkles, Award, ShieldCheck, ImageOff } from "lucide-react";
 import { useCommissionStatus } from "@/lib/commission-status";
+import { toSupabaseRenderUrl } from "@/lib/supabase/client";
 
 export default function Hero() {
   const commission = useCommissionStatus();
@@ -19,7 +20,16 @@ export default function Hero() {
     setMounted(true);
     async function load() {
       const images = await getSiteImages();
-      if (images.hero?.url) setHeroImage(images.hero.url);
+      if (images.hero?.url) {
+        // Use Supabase render API for hero image to avoid Next.js optimizer timeouts
+        // on large PNG files. The render API returns an already-optimized WebP.
+        const renderUrl = toSupabaseRenderUrl(images.hero.url, {
+          width: 1200,
+          quality: 75,
+          format: "webp",
+        });
+        setHeroImage(renderUrl);
+      }
     }
     load();
 

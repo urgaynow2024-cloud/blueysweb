@@ -170,6 +170,7 @@ export function isModeratorTableRow(row: any): SessionUser {
       reviews: Boolean(row.permissions?.reviews),
       submissions: Boolean(row.permissions?.submissions),
       hide_content: Boolean(row.permissions?.hide_content),
+      adoptables: Boolean(row.permissions?.adoptables),
     },
   };
 }

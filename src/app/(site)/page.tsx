@@ -10,7 +10,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { getWorkflowSteps, getPricingTiers, getFaqItems, getSiteConfig, getApprovedReviews, getSiteImages, getAdoptables } from "@/lib/db";
 import Link from "next/link";
 import StorageImage from "@/components/ui/StorageImage";
-import NoAiBadge from "@/components/NoAiBadge";
+import { NoAiBadge } from "@/components/NoAiBadge";
 import { Star, Zap, ArrowRight, Check, Sparkles, Clock, ShieldCheck, Rocket, HelpCircle, DollarSign, Palette, Box, Layers, Brush, Wrench } from "lucide-react";
 
 function Stars({ rating, size = "h-4 w-4" }: { rating?: number; size?: string }) {
@@ -183,7 +183,7 @@ export default function Home() {
 
       {/* NO AI status — managed from Admin → NO AI Badge */}
       <div className="container py-8">
-        <NoAiBadge placement="home" />
+        <NoAiBadge />
       </div>
 
       <div className="relative z-10">

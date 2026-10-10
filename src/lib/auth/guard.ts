@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { SESSION_COOKIE, verifySession, type SessionUser } from "./index";
+import { SESSION_COOKIE, verifySession, type SessionUser, type Permission } from "./index";
 import { json } from "./index";
 
 export interface AdminGuardResult {
@@ -26,6 +26,47 @@ export async function requireAdminSession(): Promise<AdminGuardResult> {
     };
   }
   return { ok: true, session };
+}
+
+/**
+ * Require a session that also holds a specific permission.
+ *
+ * Used by every moderation + adoptables write route so a moderator who lacks
+ * the toggle cannot perform the action, regardless of what the UI claims.
+ */
+export async function requirePermission(
+  perm: Permission
+): Promise<AdminGuardResult> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return guard;
+  const session = guard.session!;
+  if (session.role === "owner") return guard;
+  if (!session.perms[perm]) {
+    return {
+      ok: false,
+      response: json(
+        { error: "You do not have permission for this action" },
+        403
+      ),
+    };
+  }
+  return guard;
+}
+
+/**
+ * Require the owner role specifically. Used by settings/migration routes
+ * that must never be reachable by a moderator, even with every toggle on.
+ */
+export async function requireOwnerSession(): Promise<AdminGuardResult> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return guard;
+  if (guard.session!.role !== "owner") {
+    return {
+      ok: false,
+      response: json({ error: "Owner access required" }, 403),
+    };
+  }
+  return guard;
 }
 
 export { json };

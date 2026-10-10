@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "./client";
+import { ensureBuckets } from "./buckets";
 
 export const REQUIRED_BUCKETS = [
   "portfolio-images",
@@ -117,6 +118,14 @@ function testBucketUploadAdmin(bucket: string): Promise<{ success: boolean; erro
   return new Promise((resolve) => {
     (async () => {
       try {
+        // Ensure bucket exists and is public before testing
+        const bucketResults = await ensureBuckets([bucket]);
+        const bucketResult = bucketResults[0];
+        if (!bucketResult.ok) {
+          resolve({ success: false, error: `Bucket not available: ${bucketResult.error}` });
+          return;
+        }
+
         const testPath = `_cors-test-${Date.now()}.txt`;
         const testContent = new Blob(["test"], { type: "text/plain" });
 

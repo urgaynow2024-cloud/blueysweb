@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdminSession } from "@/lib/auth/guard";
+import { ensureBuckets } from "@/lib/supabase/buckets";
 
 const REQUIRED_BUCKETS = ["portfolio-images"] as const;
 
@@ -75,6 +76,13 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Ensure bucket exists and is public before testing
+      const bucketResults = await ensureBuckets([bucket]);
+      const bucketResult = bucketResults[0];
+      if (!bucketResult.ok) {
+        return NextResponse.json({ success: false, error: `Bucket not available: ${bucketResult.error}` });
+      }
+
       const testPath = `_cors-test-${Date.now()}.txt`;
       const testContent = new Blob(["test"], { type: "text/plain" });
 
@@ -87,7 +95,7 @@ export async function POST(request: NextRequest) {
         });
 
       if (error) {
-        return NextResponse.json({ success: false, error: "Upload test failed" });
+        return NextResponse.json({ success: false, error: error.message || "Upload test failed" });
       }
 
       await supabaseAdmin.storage.from(bucket).remove([testPath]);
@@ -96,6 +104,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: false, error: "Invalid action" }, { status: 400 });
   } catch (err: any) {
-    return NextResponse.json({ success: false, error: "Upload test failed" });
+    return NextResponse.json({ success: false, error: err?.message || "Upload test failed" });
   }
 }

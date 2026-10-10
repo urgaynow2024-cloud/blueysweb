@@ -426,13 +426,14 @@ export function useAdoptables(): AdoptablesController {
 
   /* ----------------------------- Media ----------------------------- */
 
-  const uploadMainImage = useCallback(
+const uploadMainImage = useCallback(
     async (id: string, file: File) => {
       setBusy(id, true);
       try {
         const uploaded = await uploadMedia(file, "adoptable-main", { adoptableId: id });
         patchLocal(id, { main_image: uploaded.url, main_image_path: uploaded.path });
-        markDirty(id, false);
+        // Media changes are persisted immediately, but the draft still differs
+        // from the baseline, so the adoptable stays dirty until the owner saves.
         return true;
       } catch (e: any) {
         if (mounted.current) {

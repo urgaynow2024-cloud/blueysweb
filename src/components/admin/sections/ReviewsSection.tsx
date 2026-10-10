@@ -39,7 +39,8 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "approved" }),
       });
-      if (!res.ok) throw new Error("Failed to approve review");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || data.details || "Failed to approve review");
       setReviews(reviews.map((r) => (r.id === review.id ? { ...r, status: "approved" } : r)));
       toast.success("Review approved");
     } catch (e) {
@@ -53,7 +54,8 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
     setDeleting(true);
     try {
       const res = await fetch(`/api/reviews/${review.id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete review");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || data.details || "Failed to delete review");
       setReviews(reviews.filter((r) => r.id !== review.id));
       toast.success("Review deleted");
     } catch (e) {
@@ -71,7 +73,8 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editData),
       });
-      if (!res.ok) throw new Error("Failed to save review");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || data.details || "Failed to save review");
       setReviews(reviews.map((r) => (r.id === review.id ? { ...r, ...editData } : r)));
       setEditing(false);
       toast.success("Review saved");
