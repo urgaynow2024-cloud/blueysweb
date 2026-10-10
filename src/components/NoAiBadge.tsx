@@ -1,66 +1,57 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getSiteConfig, getSiteImages } from "@/lib/db";
-import { NO_AI_HEADING, NO_AI_TAGLINE, showsAtPlacement } from "@/lib/no-ai";
+import { memo, useEffect, useState } from "react";
+import { getSiteConfig } from "@/lib/db";
 
 /**
- * Public NO AI badge.
+ * The "NO AI" badge shown on the site to indicate no AI was used in the work.
  *
- * Reads the badge image (site_images → "no_ai_badge") and
- * its settings (site_config → no_ai_enabled / no_ai_placement)
- * from the same sources as the rest of the site, so the
- * owner manages everything from the admin panel and never
- * touches code.
- *
- * The image is a completely independent asset: it has its
- * own storage path and its own admin upload control, and
- * nothing here reads or replaces any other icon.
+ * The badge is sized by its natural aspect ratio and constrained by the banner
+ * so it never overflows or stretches. It is loaded lazily and only rendered
+ * when the owner has enabled it via the admin dashboard.
  */
-export default function NoAiBadge({ placement }: { placement: "footer" | "home" }) {
-  const [visible, setVisible] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+function NoAiBadgeImpl({ placement: propPlacement }: { placement?: string } = {}) {
+  const [config, setConfig] = useState<Record<string, any> | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const [site, images] = await Promise.all([getSiteConfig(), getSiteImages()]);
-        if (cancelled) return;
-        if (!showsAtPlacement(site, placement)) {
-          setVisible(false);
-          return;
-        }
-        setImageUrl(images.no_ai_badge?.url || null);
-        setVisible(true);
-      } catch {
-        // The badge is decorative status text — a failed
-        // read must never break the page it sits on.
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [placement]);
+    let mounted = true;
+    getSiteConfig()
+      .then((c) => { if (mounted) setConfig(c); })
+      .catch(() => {});
+    return () => { mounted = false; };
+  }, []);
 
-  if (!visible) return null;
+  const enabled = config?.no_ai_badge_enabled === true;
+  const url = config?.no_ai_badge_url;
+  const placement = propPlacement || config?.no_ai_badge_placement || "hero";
+
+  if (!enabled || !url) return null;
+
+  // Sizing per placement: hero/section gets a prominent badge; footer gets a compact strip; sticky uses fixed positioning.
+  const isFooter = placement === "footer";
+  const isSticky = placement === "sticky";
+  const baseClass = "no-ai-badge flex items-center justify-center";
+  const placementClass = isSticky ? "fixed top-0 left-0 right-0 z-50" : "relative";
+  const containerClass = isFooter ? "py-2" : "py-4";
+  const imgClass = isFooter
+    ? "no-ai-badge-img block max-h-[clamp(20px,2.5vh,32px)] max-w-[clamp(100px,25vw,200px)] w-auto h-auto object-contain drop-shadow-sm"
+    : "no-ai-badge-img block max-h-[clamp(40px,6vh,80px)] max-w-[clamp(160px,40vw,480px)] w-auto h-auto object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)]";
 
   return (
-    <div className="no-ai-badge mx-auto flex max-w-md flex-col items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]/70 px-6 py-5 text-center backdrop-blur-sm">
-      {imageUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={imageUrl}
-          alt="NO AI badge"
-          loading="lazy"
-          decoding="async"
-          className="max-h-16 w-auto max-w-[180px] object-contain"
-        />
-      )}
-      <div>
-        <p className="text-sm font-bold tracking-[0.18em] text-white">{NO_AI_HEADING}</p>
-        <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">{NO_AI_TAGLINE}</p>
-      </div>
+    <div
+      className={`${baseClass} ${placementClass} ${containerClass}`}
+      aria-label="No AI was used in this work"
+    >
+      <img
+        src={url}
+        alt="NO AI"
+        loading="lazy"
+        decoding="async"
+        className={imgClass}
+        style={{ aspectRatio: "auto" }}
+      />
     </div>
   );
 }
+
+export const NoAiBadge = memo(NoAiBadgeImpl);

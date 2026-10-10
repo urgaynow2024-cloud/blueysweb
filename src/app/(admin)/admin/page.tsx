@@ -11,6 +11,7 @@ import { Button } from "@/components/admin/Button";
 import { Input } from "@/components/admin/Field";
 
 import { OverviewSection } from "@/components/admin/sections/OverviewSection";
+import { SectionErrorBoundary } from "@/components/admin/SectionErrorBoundary";
 
 /**
  * Sections are code-split so the dashboard's initial JavaScript
@@ -367,6 +368,16 @@ export default function AdminPage() {
         return;
       }
 
+      if (res.status === 429) {
+        const data = await res.json().catch(() => ({}));
+        const retryAfter = res.headers.get("Retry-After");
+        const waitTime = retryAfter ? `${retryAfter}s` : "a while";
+        setLoginError(data.error || `Too many attempts. Try again in ${waitTime}.`);
+        setPw("");
+        pwRef.current?.focus();
+        return;
+      }
+
       setLoginError("Server error. Please try again.");
     } catch {
       setLoginError("Network error. Please check your connection.");
@@ -560,7 +571,11 @@ export default function AdminPage() {
       {tab === "pricing" && <PricingSection value={pricing} onChange={(n) => { setPricing(n); markDirty(); }} />}
       {tab === "faq" && <FaqSection value={faq} onChange={(n) => { setFaq(n); markDirty(); }} />}
       {tab === "workflow" && <WorkflowSection value={workflow} onChange={(n) => { setWorkflow(n); markDirty(); }} />}
-      {tab === "reviews" && <ReviewsSection value={reviews} onChange={(n) => { setReviews(n); markDirty(); }} />}
+      {tab === "reviews" && (
+        <SectionErrorBoundary fallbackLabel="Reviews section failed to load">
+          <ReviewsSection value={reviews} onChange={(n) => { setReviews(n); markDirty(); }} />
+        </SectionErrorBoundary>
+      )}
       {tab === "site-images" && <SiteImagesSection />}
       {tab === "nsfw" && <NsfwSection />}
       {tab === "social-links" && <LinksSection value={links} onChange={(n) => { setLinks(n); markDirty(); }} />}

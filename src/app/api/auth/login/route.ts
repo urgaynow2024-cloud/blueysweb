@@ -17,22 +17,77 @@ const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000;
 
 /**
- * Rate limiting notes.
- *
- * This in-memory Map is per serverless instance, so on Vercel it only limits an
- * attacker who keeps hitting the same warm instance. It is a useful first line
- * of defence but is NOT a complete control.
- *
- * A stronger, still stack-native option is to record failed attempts in
- * Supabase (a `login_attempts` table keyed by IP hash) so the limit is shared
- * across every instance. That requires a schema addition and has deliberately
- * NOT been done here, because it needs a migration and Bluey's approval.
- * Recommended as a follow-up.
+ * Rate limiting using Supabase for distributed rate limiting across Vercel instances.
+ * Falls back to in-memory Map if Supabase is unavailable.
  */
-const attempts = new Map<string, { count: number; lockedUntil: number | null }>();
+const memoryAttempts = new Map<string, { count: number; lockedUntil: number | null }>();
 
-function checkRateLimit(ip: string): { ok: boolean; retryAfter?: number } {
-  const record = attempts.get(ip);
+function hashIP(ip: string): string {
+  const crypto = require("crypto");
+  return crypto.createHash("sha256").update(ip).digest("hex").slice(0, 32);
+}
+
+function getClientIP(req: NextRequest): string {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+  const realIP = req.headers.get("x-real-ip");
+  if (realIP) {
+    return realIP.trim();
+  }
+  const vercelIP = req.headers.get("x-vercel-forwarded-for");
+  if (vercelIP) {
+    return vercelIP.split(",")[0].trim();
+  }
+  return "unknown";
+}
+
+async function checkRateLimitSupabase(ipHash: string): Promise<{ ok: boolean; retryAfter?: number }> {
+  if (!supabaseAdmin) {
+    return checkRateLimitMemory(ipHash);
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("login_attempts")
+      .select("*")
+      .eq("ip_hash", ipHash)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Rate limit check error:", error);
+      return checkRateLimitMemory(ipHash);
+    }
+
+    if (!data) {
+      return { ok: true };
+    }
+
+    const now = new Date();
+    if (data.locked_until && new Date(data.locked_until) > now) {
+      const retryAfter = Math.ceil((new Date(data.locked_until).getTime() - now.getTime()) / 1000);
+      return { ok: false, retryAfter };
+    }
+
+    if (data.attempt_count >= MAX_ATTEMPTS) {
+      const lockedUntil = new Date(now.getTime() + LOCKOUT_MS);
+      await supabaseAdmin
+        .from("login_attempts")
+        .update({ attempt_count: 0, locked_until: lockedUntil.toISOString(), updated_at: now.toISOString() })
+        .eq("ip_hash", ipHash);
+      return { ok: false, retryAfter: Math.ceil(LOCKOUT_MS / 1000) };
+    }
+
+    return { ok: true };
+  } catch (e) {
+    console.error("Rate limit check exception:", e);
+    return checkRateLimitMemory(ipHash);
+  }
+}
+
+function checkRateLimitMemory(ipHash: string): { ok: boolean; retryAfter?: number } {
+  const record = memoryAttempts.get(ipHash);
   if (!record) return { ok: true };
   if (record.lockedUntil && Date.now() < record.lockedUntil) {
     return { ok: false, retryAfter: Math.ceil((record.lockedUntil - Date.now()) / 1000) };
@@ -45,13 +100,71 @@ function checkRateLimit(ip: string): { ok: boolean; retryAfter?: number } {
   return { ok: true };
 }
 
-function recordFailure(ip: string) {
-  const record = attempts.get(ip) || { count: 0, lockedUntil: null };
+async function recordFailureSupabase(ipHash: string): Promise<void> {
+  if (!supabaseAdmin) {
+    recordFailureMemory(ipHash);
+    return;
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("login_attempts")
+      .select("*")
+      .eq("ip_hash", ipHash)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Record failure select error:", error);
+      recordFailureMemory(ipHash);
+      return;
+    }
+
+    const now = new Date();
+    if (!data) {
+      const { error: insertError } = await supabaseAdmin
+        .from("login_attempts")
+        .insert({ ip_hash: ipHash, attempt_count: 1, created_at: now.toISOString(), updated_at: now.toISOString() });
+      if (insertError) {
+        console.error("Record failure insert error:", insertError);
+        recordFailureMemory(ipHash);
+      }
+      return;
+    }
+
+    const newCount = data.attempt_count + 1;
+    if (newCount >= MAX_ATTEMPTS) {
+      const lockedUntil = new Date(now.getTime() + LOCKOUT_MS);
+      const { error: updateError } = await supabaseAdmin
+        .from("login_attempts")
+        .update({ attempt_count: 0, locked_until: lockedUntil.toISOString(), updated_at: now.toISOString() })
+        .eq("ip_hash", ipHash);
+      if (updateError) {
+        console.error("Record failure lock update error:", updateError);
+        recordFailureMemory(ipHash);
+      }
+    } else {
+      const { error: updateError } = await supabaseAdmin
+        .from("login_attempts")
+        .update({ attempt_count: newCount, updated_at: now.toISOString() })
+        .eq("ip_hash", ipHash);
+      if (updateError) {
+        console.error("Record failure count update error:", updateError);
+        recordFailureMemory(ipHash);
+      }
+    }
+  } catch (e) {
+    console.error("Record failure exception:", e);
+    recordFailureMemory(ipHash);
+  }
+}
+
+function recordFailureMemory(ipHash: string): void {
+  const record = memoryAttempts.get(ipHash) || { count: 0, lockedUntil: null };
   record.count++;
   if (record.count >= MAX_ATTEMPTS) {
     record.lockedUntil = Date.now() + LOCKOUT_MS;
   }
-  attempts.set(ip, record);
+  memoryAttempts.set(ipHash, record);
 }
 
 function cookieOpts() {
@@ -65,8 +178,6 @@ function cookieOpts() {
 }
 
 export async function POST(req: NextRequest) {
-  // Fail closed with a clear server-side error rather than attempting to sign
-  // a session with a default secret.
   if (!isSecretConfigured()) {
     console.error("Login rejected: SESSION_SECRET and SUPABASE_SERVICE_ROLE_KEY are both unset.");
     return NextResponse.json(
@@ -76,11 +187,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-      || req.headers.get("x-real-ip")
-      || "unknown";
+    const ip = getClientIP(req);
+    const ipHash = hashIP(ip);
 
-    const rateCheck = checkRateLimit(ip);
+    const rateCheck = await checkRateLimitSupabase(ipHash);
     if (!rateCheck.ok) {
       const res = NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
       res.headers.set("Retry-After", String(rateCheck.retryAfter));
@@ -94,7 +204,7 @@ export async function POST(req: NextRequest) {
 
     if (username === OWNER_USERNAME) {
       if (!safeCompare(password, DEFAULT_OWNER_PASSWORD)) {
-        recordFailure(ip);
+        await recordFailureSupabase(ipHash);
         return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
       }
       const user: SessionUser = {
@@ -120,7 +230,7 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     if (error || !data || !verifyPassword(password, data.password_hash)) {
-      recordFailure(ip);
+      await recordFailureSupabase(ipHash);
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 

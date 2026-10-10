@@ -92,6 +92,7 @@ const DRAFT_FIELDS: readonly (keyof Adoptable)[] = Array.from(
     ...PRICING_FIELDS,
     ...DETAILS_FIELDS,
     ...ADVANCED_FIELDS,
+    "main_image",
   ]),
 );
 
@@ -112,9 +113,21 @@ function sameValue(a: unknown, b: unknown): boolean {
 }
 
 function isDirtyFor(fields: readonly (keyof Adoptable)[], draft: Adoptable, baseline: Adoptable): boolean {
+  if (!draft || !baseline) return false;
   return fields.some((field) => {
     if (field === "category") {
       return normalizeCategory(draft.category) !== normalizeCategory(baseline.category);
+    }
+    if (field === "main_image") {
+      const a = (draft as any).main_image;
+      const b = (baseline as any).main_image;
+      if (a === b) return false;
+      if (!a && !b) return false;
+      if (typeof a === "string" && typeof b === "string") return a.trim() !== b.trim();
+      if (typeof a === "object" && typeof b === "object") {
+        return JSON.stringify(a) !== JSON.stringify(b);
+      }
+      return true;
     }
     return !sameValue(draft[field], baseline[field]);
   });
@@ -130,6 +143,8 @@ export function AdoptableEditor({ open, adoptable, controller, onClose }: Adopta
 
   const loadedId = useRef<string | null>(null);
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const prevLiveMainImage = useRef<string | null>(null);
+  const prevLiveMainImagePath = useRef<string | null>(null);
 
   const id = adoptable?.id ?? null;
   const busy = id ? controller.busyIds.has(id) : false;
@@ -142,6 +157,8 @@ export function AdoptableEditor({ open, adoptable, controller, onClose }: Adopta
       loadedId.current = null;
       setDraft(null);
       setBaseline(null);
+      prevLiveMainImage.current = null;
+      prevLiveMainImagePath.current = null;
       return;
     }
     if (loadedId.current === adoptable.id) return;
@@ -151,6 +168,26 @@ export function AdoptableEditor({ open, adoptable, controller, onClose }: Adopta
     setTab("overview");
     setConfirmingDiscard(false);
   }, [open, adoptable]);
+
+  /* Sync media fields from the controller's live record to draft/baseline.
+     Media uploads (main image, gallery) persist immediately via the controller
+     and update the shared adoptable record. Without this sync, the editor's
+     draft/baseline would stay stale and the dirty check would miss media changes. */
+  useEffect(() => {
+    if (!id || !draft || !baseline) return;
+    const live = controller.adoptables.find((row) => row.id === id);
+    if (!live) return;
+
+    const mainImage = live.main_image ?? null;
+    const mainImagePath = live.main_image_path ?? null;
+
+    if (mainImage !== prevLiveMainImage.current || mainImagePath !== prevLiveMainImagePath.current) {
+      prevLiveMainImage.current = mainImage;
+      prevLiveMainImagePath.current = mainImagePath;
+      setDraft((prev) => (prev ? { ...prev, main_image: mainImage, main_image_path: mainImagePath } : prev));
+      setBaseline((prev) => (prev ? { ...prev, main_image: mainImage, main_image_path: mainImagePath } : prev));
+    }
+  }, [id, draft, baseline, controller.adoptables]);
 
   useEffect(() => {
     if (!open) return;

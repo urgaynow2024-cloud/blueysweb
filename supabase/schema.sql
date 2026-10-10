@@ -686,6 +686,25 @@ CREATE POLICY "Authenticated deletes adoptables" ON storage.objects FOR DELETE U
 -- TRUNCATE TABLE adoptable_before_after, adoptable_gallery, adoptables CASCADE;
 
 -- =============================================================================
+-- LOGIN ATTEMPTS (for distributed rate limiting)
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS login_attempts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ip_hash TEXT NOT NULL,
+  attempt_count INTEGER NOT NULL DEFAULT 0,
+  locked_until TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS login_attempts_ip_hash_idx ON login_attempts (ip_hash);
+
+ALTER TABLE login_attempts ENABLE ROW LEVEL SECURITY;
+
+-- No public policies - only service role can access
+
+-- =============================================================================
 -- MODERATOR / ROLE SYSTEM
 -- =============================================================================
 
