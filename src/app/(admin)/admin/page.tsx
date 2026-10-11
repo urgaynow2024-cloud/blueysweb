@@ -36,7 +36,7 @@ const NoAiBadgeSection = dynamic(() => import("@/components/admin/sections/NoAiB
 
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
-const ADMIN_PASSWORD = "blueyadmin";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "blueyadmin";
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 
