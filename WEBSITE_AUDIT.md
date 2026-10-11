@@ -395,3 +395,22 @@ Run the `login_attempts` table creation SQL from `supabase/schema.sql` in Supaba
 ---
 
 *This audit report documents observed symptoms, confirmed root causes, and implemented fixes. Authentication, Adoptables save-state, NO AI Badge sizing, and Hero image cache invalidation are resolved. Hero image asset restoration requires manual upload. Client Reviews crash and approval persistence remain under investigation.*
+
+## 15. Storage Upload Test (portfolio-images) - 403 Fix
+
+### Problem
+The admin panel upload test for portfolio-images was failing with HTTP 403. The error suggested checking CORS, but the test runs server-side via API using service role key.
+
+### Root Cause
+Storage RLS policies for portfolio-images only allowed auth.role() = authenticated. Service role uses auth.role() = service_role; adding explicit allowance prevents 403s.
+
+### Fixes
+- supabase/schema.sql: Updated storage policies to allow (auth.role() = authenticated OR auth.role() = service_role).
+- src/app/api/storage/status/route.ts: Return 403 status on upload failure.
+
+### Verification
+- npx tsc --noEmit passes.
+- npm run build succeeds.
+
+### Dashboard Action Required
+If not migrated, apply updated policies from supabase/schema.sql in Supabase SQL Editor.

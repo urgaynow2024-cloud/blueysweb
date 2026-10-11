@@ -210,7 +210,7 @@ DROP POLICY IF EXISTS "Public read credits" ON credits;
 DROP POLICY IF EXISTS "Authenticated write credits" ON credits;
 
 CREATE POLICY "Public read credits" ON credits FOR SELECT USING (visible = true);
-CREATE POLICY "Authenticated write credits" ON credits FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write credits" ON credits FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
 
 -- =============================================================================
 -- ADOPTABLES
@@ -598,27 +598,27 @@ CREATE POLICY "Public read social_links" ON social_links FOR SELECT USING (true)
 -- the public anon client, so hiding is enforced in the database and not only in
 -- the UI. Admin reads go through the service-role client, which bypasses RLS.
 CREATE POLICY "Public read adoptables" ON adoptables FOR SELECT USING (visible = true AND availability <> 'hidden');
-CREATE POLICY "Authenticated write adoptables" ON adoptables FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write adoptables" ON adoptables FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
 CREATE POLICY "Public read adoptable_gallery" ON adoptable_gallery FOR SELECT USING (true);
-CREATE POLICY "Authenticated write adoptable_gallery" ON adoptable_gallery FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write adoptable_gallery" ON adoptable_gallery FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
 CREATE POLICY "Public read adoptable_before_after" ON adoptable_before_after FOR SELECT USING (true);
-CREATE POLICY "Authenticated write adoptable_before_after" ON adoptable_before_after FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write adoptable_before_after" ON adoptable_before_after FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
 
 -- TOS sections: public read, authenticated write
 CREATE POLICY "Public read tos_sections" ON tos_sections FOR SELECT USING (true);
-CREATE POLICY "Authenticated write tos_sections" ON tos_sections FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write tos_sections" ON tos_sections FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
 
 -- Allow authenticated users to modify
-CREATE POLICY "Authenticated write portfolio_images" ON portfolio_images FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write reviews" ON reviews FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write pricing_tiers" ON pricing_tiers FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write faq_items" ON faq_items FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write workflow_steps" ON workflow_steps FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write site_config" ON site_config FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write site_images" ON site_images FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write nsfw_portfolio_images" ON nsfw_portfolio_images FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write queue_items" ON queue_items FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write social_links" ON social_links FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated write portfolio_images" ON portfolio_images FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
+CREATE POLICY "Authenticated write reviews" ON reviews FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
+CREATE POLICY "Authenticated write pricing_tiers" ON pricing_tiers FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
+CREATE POLICY "Authenticated write faq_items" ON faq_items FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
+CREATE POLICY "Authenticated write workflow_steps" ON workflow_steps FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
+CREATE POLICY "Authenticated write site_config" ON site_config FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
+CREATE POLICY "Authenticated write site_images" ON site_images FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
+CREATE POLICY "Authenticated write nsfw_portfolio_images" ON nsfw_portfolio_images FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
+CREATE POLICY "Authenticated write queue_items" ON queue_items FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
+CREATE POLICY "Authenticated write social_links" ON social_links FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
 
 -- =============================================================================
 -- STORAGE POLICIES
@@ -645,9 +645,9 @@ DO $$ BEGIN
 END $$;
 
 CREATE POLICY "Public reads portfolio-images" ON storage.objects FOR SELECT USING (bucket_id = 'portfolio-images');
-CREATE POLICY "Authenticated uploads portfolio-images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'portfolio-images' AND auth.role() = 'authenticated');
-CREATE POLICY "Authenticated updates portfolio-images" ON storage.objects FOR UPDATE USING (bucket_id = 'portfolio-images' AND auth.role() = 'authenticated');
-CREATE POLICY "Authenticated deletes portfolio-images" ON storage.objects FOR DELETE USING (bucket_id = 'portfolio-images' AND auth.role() = 'authenticated');
+CREATE POLICY "Authenticated uploads portfolio-images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'portfolio-images' AND (auth.role() = 'authenticated' OR auth.role() = 'service_role'));
+CREATE POLICY "Authenticated updates portfolio-images" ON storage.objects FOR UPDATE USING (bucket_id = 'portfolio-images' AND (auth.role() = 'authenticated' OR auth.role() = 'service_role'));
+CREATE POLICY "Authenticated deletes portfolio-images" ON storage.objects FOR DELETE USING (bucket_id = 'portfolio-images' AND (auth.role() = 'authenticated' OR auth.role() = 'service_role'));
 
 -- Adoptables storage bucket and policies
 DO $$ BEGIN
@@ -667,10 +667,10 @@ DO $$ BEGIN
   DROP POLICY IF EXISTS "Authenticated deletes adoptables" ON storage.objects;
 END $$;
 
-CREATE POLICY "Authenticated reads adoptables" ON storage.objects FOR SELECT USING (bucket_id = 'adoptables' AND auth.role() = 'authenticated');
-CREATE POLICY "Authenticated uploads adoptables" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'adoptables' AND auth.role() = 'authenticated');
-CREATE POLICY "Authenticated updates adoptables" ON storage.objects FOR UPDATE USING (bucket_id = 'adoptables' AND auth.role() = 'authenticated');
-CREATE POLICY "Authenticated deletes adoptables" ON storage.objects FOR DELETE USING (bucket_id = 'adoptables' AND auth.role() = 'authenticated');
+CREATE POLICY "Authenticated reads adoptables" ON storage.objects FOR SELECT USING (bucket_id = 'adoptables' AND (auth.role() = 'authenticated' OR auth.role() = 'service_role'));
+CREATE POLICY "Authenticated uploads adoptables" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'adoptables' AND (auth.role() = 'authenticated' OR auth.role() = 'service_role'));
+CREATE POLICY "Authenticated updates adoptables" ON storage.objects FOR UPDATE USING (bucket_id = 'adoptables' AND (auth.role() = 'authenticated' OR auth.role() = 'service_role'));
+CREATE POLICY "Authenticated deletes adoptables" ON storage.objects FOR DELETE USING (bucket_id = 'adoptables' AND (auth.role() = 'authenticated' OR auth.role() = 'service_role'));
 
 -- =============================================================================
 -- DEFAULT DATA

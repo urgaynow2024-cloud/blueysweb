@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         });
 
       if (error) {
-        return NextResponse.json({ success: false, error: error.message || "Upload test failed" });
+        return NextResponse.json({ success: false, error: error.message || "Upload test failed" }, { status: 403 });
       }
 
       await supabaseAdmin.storage.from(bucket).remove([testPath]);
