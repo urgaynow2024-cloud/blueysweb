@@ -5,51 +5,10 @@ import type { Adoptable, AdoptableStatus } from "@/types/database";
 import { ADOPTABLE_CATEGORIES, normalizeCategory } from "@/lib/adoptables/catalog";
 import { Field, Input, Select } from "@/components/admin/Field";
 import { StatusControl } from "./StatusControl";
+import { ToggleSwitch } from "@/components/admin/ToggleSwitch";
 
-export interface ToggleSwitchProps {
-  checked: boolean;
-  onChange: (next: boolean) => void;
-  label: string;
-  hint?: string;
-  disabled?: boolean;
-}
-
-/** ON/OFF switch shared by the Overview and Publishing tabs. */
-export function ToggleSwitch({ checked, onChange, label, hint, disabled }: ToggleSwitchProps) {
-  const hintId = hint ? `${label.replace(/\s+/g, "-").toLowerCase()}-hint` : undefined;
-
-  return (
-    <div className="flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3.5">
-      <div className="min-w-0">
-        <p className="text-sm font-medium text-white">{label}</p>
-        {hint && (
-          <p id={hintId} className="mt-0.5 text-xs leading-snug text-[var(--text-dim)]">
-            {hint}
-          </p>
-        )}
-      </div>
-      <label className="relative shrink-0 cursor-pointer">
-        <input
-          type="checkbox"
-          role="switch"
-          className="peer sr-only"
-          checked={checked}
-          disabled={disabled}
-          aria-checked={checked}
-          aria-describedby={hintId}
-          onChange={(event) => onChange(event.target.checked)}
-        />
-        <span
-          aria-hidden
-          className="block h-6 w-11 rounded-full border border-[var(--border-strong)] bg-[var(--bg-elevated)] transition-colors peer-checked:border-[var(--accent)] peer-checked:bg-[var(--accent)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--accent)] peer-disabled:opacity-50"
-        >
-          <span className="block h-4 w-4 translate-y-[3px] rounded-full bg-white/70 transition-transform peer-checked:translate-x-[22px]" />
-        </span>
-        <span className="sr-only">{checked ? "On" : "Off"}</span>
-      </label>
-    </div>
-  );
-}
+export { ToggleSwitch } from "@/components/admin/ToggleSwitch";
+export type { ToggleSwitchProps } from "@/components/admin/ToggleSwitch";
 
 export interface OverviewPanelProps {
   value: Adoptable;

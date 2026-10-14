@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { AdoptableArtwork } from "@/components/adoptables/AdoptableArtwork";
 
 /**
@@ -66,5 +66,68 @@ describe("AdoptableArtwork 1x1 placeholder guard", () => {
     render(<AdoptableArtwork url={null} alt="Cedar" wrapperClassName="frame" fallbackLabel="Artwork unavailable" />);
     const region = screen.getByRole("img");
     expect(region).toHaveAttribute("aria-label", "Cedar — Artwork unavailable");
+  });
+
+  it("shows the adoptable name on the fallback when one is supplied", () => {
+    render(
+      <AdoptableArtwork
+        url={null}
+        alt="Thunder"
+        wrapperClassName="frame"
+        fallbackName="Thunder"
+        fallbackDetail="Light Fury"
+      />,
+    );
+    expect(screen.getByText("Thunder")).toBeInTheDocument();
+    expect(screen.getByText("Light Fury")).toBeInTheDocument();
+  });
+
+  it("aborts a stuck load after the timeout instead of spinning forever", () => {
+    jest.useFakeTimers();
+    try {
+      const { container } = render(
+        <AdoptableArtwork
+          url="https://cdn.example.com/slow.webp"
+          alt="Thunder"
+          wrapperClassName="frame"
+          fallbackName="Thunder"
+          timeoutMs={5000}
+        />,
+      );
+      // While the image is still loading, the spinner is shown.
+      expect(container.querySelector(".animate-spin")).toBeInTheDocument();
+      expect(screen.queryByText("Thunder")).not.toBeInTheDocument();
+
+      // Advance past the ceiling — the spinner must be replaced by the fallback.
+      act(() => {
+        jest.advanceTimersByTime(5001);
+      });
+      expect(screen.getByText("Thunder")).toBeInTheDocument();
+      expect(container.querySelector(".animate-spin")).not.toBeInTheDocument();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("keeps showing the image when it arrives before the timeout", () => {
+    jest.useFakeTimers();
+    try {
+      const { container } = render(
+        <AdoptableArtwork
+          url="https://cdn.example.com/arrives.webp"
+          alt="Cedar"
+          wrapperClassName="frame"
+          timeoutMs={5000}
+        />,
+      );
+      loadWithSize(container.querySelector("img")!, 1200, 1500);
+      act(() => {
+        jest.advanceTimersByTime(4999);
+      });
+      expect(screen.queryByText("Artwork unavailable")).not.toBeInTheDocument();
+      expect(container.querySelector("img")).toBeInTheDocument();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

@@ -16,6 +16,7 @@ import {
   Loader2,
   Rocket,
   Save,
+  Send,
   Settings2,
   SlidersHorizontal,
   Tag,
@@ -42,6 +43,8 @@ export interface AdoptableEditorProps {
   /** Null while the drawer is closed. */
   adoptable: Adoptable | null;
   controller: AdoptablesController;
+  /** Session context: a moderator sees "Submit for Review" instead of publishing. */
+  session?: { role?: "owner" | "moderator"; name?: string } | null;
   onClose: () => void;
 }
 
@@ -133,7 +136,13 @@ function isDirtyFor(fields: readonly (keyof Adoptable)[], draft: Adoptable, base
   });
 }
 
-export function AdoptableEditor({ open, adoptable, controller, onClose }: AdoptableEditorProps): ReactElement | null {
+export function AdoptableEditor({
+  open,
+  adoptable,
+  controller,
+  session = null,
+  onClose,
+}: AdoptableEditorProps): ReactElement | null {
   const toast = useToast();
   const [draft, setDraft] = useState<Adoptable | null>(null);
   const [baseline, setBaseline] = useState<Adoptable | null>(null);
@@ -256,8 +265,11 @@ export function AdoptableEditor({ open, adoptable, controller, onClose }: Adopta
       commitImmediate({ availability: status, visible: visibleForStatus(status) });
       toast.success(`${name} is now ${status === "hidden" ? "hidden" : status}`);
     },
-    [commitImmediate, controller, draft, id, toast],
+[commitImmediate, controller, draft, id, toast],
   );
+
+  const isModerator = session?.role === "moderator";
+  const name = draft?.title?.trim() || "Untitled adoptable";
 
   const handleSave = useCallback(async () => {
     if (!id || !draft || !baseline) return;
@@ -286,7 +298,7 @@ export function AdoptableEditor({ open, adoptable, controller, onClose }: Adopta
 
     if (!ok) {
       toast.error(
-        `Could not save ${draft.title?.trim() || "this adoptable"}. Your changes are still here — fix the problem and try again.`,
+        `Could not save ${name}. Your changes are still here — fix the problem and try again.`,
       );
       return;
     }
@@ -295,7 +307,40 @@ export function AdoptableEditor({ open, adoptable, controller, onClose }: Adopta
     setDraft(saved);
     setBaseline(saved);
     toast.success(`${saved.title?.trim() || "Adoptable"} saved`);
-  }, [baseline, controller, draft, id, toast]);
+  }, [baseline, controller, draft, id, name, toast]);
+
+  /**
+   * Submitting a draft for owner review.
+   *
+   * A moderator with Adoptables Management can create and edit drafts, but the
+   * lifecycle decisions — publishing, selling, hiding, deleting — belong to the
+   * owner. This route records the submission in the moderation log and returns
+   * the adoptable's current state so the owner can review it from the same
+   * dashboard. It does NOT change the adoptable's status; the owner still has to
+   * open the editor and publish it, which keeps the two actions firmly
+   * separate.
+   */
+  const handleSubmitForReview = useCallback(async () => {
+    if (!id || !draft) return;
+    // Save any unsaved draft first, so the owner reviews the final version.
+    if (dirty) {
+      const before = controller.dirtyIds.has(id);
+      await handleSave();
+      // If the save failed the controller reverts the optimistic update and the
+      // draft is back to baseline; aborting keeps the owner from reviewing a
+      // half-persisted state.
+      if (controller.dirtyIds.has(id) === before) {
+        toast.error(`Could not save ${name} — fix the errors and try again.`);
+        return;
+      }
+    }
+    const ok = await controller.submitForReview(id);
+    if (ok) {
+      toast.success(`${name} submitted for owner review`);
+    } else {
+      toast.error(`Could not submit ${name} for review.`);
+    }
+  }, [controller, dirty, draft, handleSave, id, name, toast]);
 
   const dirtyTabs = useMemo(() => {
     const map = new Map<TabId, boolean>();
@@ -323,7 +368,6 @@ export function AdoptableEditor({ open, adoptable, controller, onClose }: Adopta
 
   if (!open || !adoptable || !draft || !baseline) return null;
 
-  const name = draft.title?.trim() || "Untitled adoptable";
   const activeTab = TABS.find((entry) => entry.id === tab) ?? TABS[0];
 
   // Media writes straight through the controller, so the main image lives on the
@@ -342,7 +386,7 @@ export function AdoptableEditor({ open, adoptable, controller, onClose }: Adopta
         role="dialog"
         aria-modal="true"
         aria-labelledby="adoptable-editor-title"
-        className="ad-drawer-panel glow-border"
+        className="ad-drawer-panel"
       >
         <header className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--border)] px-4 py-3.5 sm:px-5">
           <div className="min-w-0">
@@ -495,6 +539,17 @@ export function AdoptableEditor({ open, adoptable, controller, onClose }: Adopta
             <Button variant="ghost" onClick={requestClose} disabled={busy || saving}>
               Cancel
             </Button>
+            {isModerator ? (
+              <Button
+                variant="secondary"
+                onClick={() => void handleSubmitForReview()}
+                loading={busy}
+                disabled={saving}
+                leftIcon={<Send className="h-4 w-4" />}
+              >
+                Submit for Review
+              </Button>
+            ) : null}
             <Button
               variant="primary"
               onClick={() => void handleSave()}

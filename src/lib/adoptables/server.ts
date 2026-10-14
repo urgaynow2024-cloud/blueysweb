@@ -171,6 +171,45 @@ async function writeAdoptable(
   return { row: null, error: "Max retries exceeded", skipped: [...skip] };
 }
 
+/**
+ * Lifecycle and ownership fields that a moderator with Adoptables Management
+ * must never write, even though they appear in the writable allow-list.
+ *
+ * The Adoptables Management toggle is about creating and editing content —
+ * naming a character, writing its description, uploading art, setting a price.
+ * Deciding whether the listing is public, whether it is sold, whether it is
+ * featured, and in what order it appears are promotional and ownership
+ * decisions, so they stay with the owner.
+ *
+ * Anything not in this set is a draft field and may be written by a
+ * moderator. The server splits the incoming payload on these keys rather than
+ * trusting the client to omit them, so a moderator cannot elevate themselves by
+ * simply including a protected key in their request.
+ */
+export const PROTECTED_ADOPTABLE_FIELDS = new Set([
+  "availability",
+  "featured",
+  "visible",
+  "sort_order",
+]);
+
+/**
+ * Splits an incoming payload into the draft fields a moderator may write and
+ * the protected fields that must be dropped (or rejected) for non-owner
+ * sessions. Neither side mutates the other.
+ */
+export function splitProtectedFields(
+  body: Record<string, unknown>,
+): { draft: Record<string, unknown>; protected: Record<string, unknown> } {
+  const draft: Record<string, unknown> = {};
+  const protectedFields: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(body)) {
+    if (PROTECTED_ADOPTABLE_FIELDS.has(key)) protectedFields[key] = value;
+    else draft[key] = value;
+  }
+  return { draft, protected: protectedFields };
+}
+
 export async function createAdoptable(body: Record<string, unknown>): Promise<AdoptableWriteResult> {
   if (!supabaseAdmin) return { row: null, error: "Server not configured", skipped: [] };
   const payload = buildAdoptablePayload(body);

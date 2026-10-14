@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requirePermission } from "@/lib/auth/guard";
+import { requireOwnerSession, requirePermission } from "@/lib/auth/guard";
 import { deleteAdoptable, setAdoptableStatusBulk } from "@/lib/adoptables/server";
 import { ADOPTABLE_STATUSES } from "@/lib/adoptables/status";
 
@@ -13,12 +13,13 @@ function parseIds(value: unknown): string[] {
 /**
  * Bulk lifecycle actions for the admin dashboard.
  *
- * `action: "status"` is additive and reversible. `action: "delete"` is
- * destructive and is only reachable after the client has shown its own
- * confirmation; the server still requires an authenticated session.
+ * Both `status` and `delete` are ownership/promotional decisions, so they
+ * require the owner role even for sessions that hold the Adoptables
+ * Management toggle. A moderator can still select multiple adoptables for
+ * draft edits, but the bulk lifecycle and delete controls are owner-only.
  */
 export async function PATCH(request: Request) {
-  const auth = await requirePermission("adoptables");
+  const auth = await requireOwnerSession();
   if (!auth.ok) return auth.response!;
 
   try {

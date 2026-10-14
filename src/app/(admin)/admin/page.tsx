@@ -93,6 +93,7 @@ export default function AdminPage() {
   const [links, setLinks] = useState<any[]>([]);
   const [credits, setCredits] = useState<any[]>([]);
   const [tos, setTos] = useState<any[]>([]);
+  const [adoptableCount, setAdoptableCount] = useState<number>(0);
   const [storageError, setStorageError] = useState<string | null>(null);
   const [corsTestResult, setCorsTestResult] = useState<{ bucket: string; success: boolean; error?: string } | null>(null);
   const [dbHealth, setDbHealth] = useState<{ healthy: boolean; tables: Record<string, { exists: boolean; missingColumns: string[] }>; error?: string } | null>(null);
@@ -100,10 +101,10 @@ export default function AdminPage() {
   const { markDirty, register } = useSave();
   const toast = useToast();
 
-  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links, credits, tos });
+  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links, credits, tos, adoptableCount });
   useEffect(() => {
-    dataRef.current = { site, pricing, faq, workflow, reviews, links, credits, tos };
-  }, [site, pricing, faq, workflow, reviews, links, credits, tos]);
+    dataRef.current = { site, pricing, faq, workflow, reviews, links, credits, tos, adoptableCount };
+  }, [site, pricing, faq, workflow, reviews, links, credits, tos, adoptableCount]);
 
   /**
    * Session restore.
@@ -289,10 +290,16 @@ export default function AdminPage() {
         supabase.from("credits").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: true }).then(({ data }) => {
           if (data && data.length > 0) setCredits(data);
         }),
-        supabase.from("tos_sections").select("*").order("sort_order", { ascending: true }).then(({ data }) => {
-          if (data && data.length > 0) setTos(data);
-        }),
-      ];
+         supabase.from("tos_sections").select("*").order("sort_order", { ascending: true }).then(({ data }) => {
+           if (data && data.length > 0) setTos(data);
+         }),
+         supabase
+           .from("adoptables")
+           .select("id", { count: "exact", head: true })
+           .then(({ count, error }) => {
+             if (!error && count !== null && count !== undefined) setAdoptableCount(count);
+           }),
+       ];
 
       // Fire-and-forget: diagnostics must not hold up content.
       scheduleDiagnostics();
@@ -563,6 +570,7 @@ export default function AdminPage() {
           links={links}
           credits={credits}
           tos={tos}
+          adoptableCount={adoptableCount}
           storageError={storageError}
           dbHealth={dbHealth}
           onSelect={(id) => setTab(id as Tab)}
@@ -582,7 +590,7 @@ export default function AdminPage() {
       {tab === "social-links" && <LinksSection value={links} onChange={(n) => { setLinks(n); markDirty(); }} />}
       {tab === "queue" && <QueueSection />}
       {tab === "moderators" && <ModeratorsSection />}
-      {tab === "adoptables" && <AdoptablesSection />}
+      {tab === "adoptables" && <AdoptablesSection session={{ role: "owner" }} />}
       {tab === "credits" && <CreditsSection value={credits} onChange={(n) => { setCredits(n); markDirty(); }} />}
       {tab === "tos" && <TosSection value={tos} onChange={(n) => { setTos(n); markDirty(); }} />}
       {tab === "site" && <SiteInfoSection value={site} onChange={(n) => { setSite(n); markDirty(); }} />}

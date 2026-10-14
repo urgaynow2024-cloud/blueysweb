@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
-import { requirePermission } from "@/lib/auth/guard";
+import { requireOwnerSession, requirePermission } from "@/lib/auth/guard";
 import { setAdoptableStatus } from "@/lib/adoptables/server";
 import { ADOPTABLE_STATUSES } from "@/lib/adoptables/status";
 
 /**
  * Atomic lifecycle transition for the admin quick-status control.
+ *
+ * Status is a lifecycle/promotional decision — Available, Pending, Reserved,
+ * Sold and Hidden all change what the public site shows — so it is restricted
+ * to the owner even for sessions that hold the Adoptables Management toggle.
+ * A moderator with Adoptables Management can create and edit drafts and submit
+ * them for review, but cannot publish or sell on the owner's behalf.
  *
  * SOLD does not delete anything: the row, its images, description, pricing and
  * character details all stay exactly as they are and simply stop being
@@ -14,7 +20,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requirePermission("adoptables");
+  const auth = await requireOwnerSession();
   if (!auth.ok) return auth.response!;
 
   try {

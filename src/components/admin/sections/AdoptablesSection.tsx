@@ -31,6 +31,12 @@ import { AdoptableEditor } from "@/components/admin/adoptables/AdoptableEditor";
 import { Tooltip } from "@/components/admin/adoptables/Tooltip";
 import { useAdoptables } from "@/components/admin/adoptables/useAdoptables";
 
+/** A session shape the editor needs to know whether to offer "Submit for Review". */
+type SessionUser = {
+  role?: "owner" | "moderator";
+  name?: string;
+};
+
 type StatusFilter = AdoptableStatus | "all";
 type SortKey = "updated" | "name" | "price" | "status";
 type ViewMode = "grid" | "list";
@@ -55,7 +61,7 @@ const FILTER_ICONS: Record<StatusFilter, typeof Layers> = {
 
 const LIST_COLUMNS = "grid grid-cols-[auto_1fr_auto] items-center gap-4";
 
-export function AdoptablesSection() {
+export function AdoptablesSection({ session }: { session?: SessionUser | null }) {
   const controller = useAdoptables();
   const toast = useToast();
 
@@ -280,13 +286,13 @@ export function AdoptablesSection() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="ad-section-card glow-border p-6">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6">
           <div className="skeleton h-6 w-40 rounded" />
           <div className="skeleton mt-3 h-4 w-72 rounded" />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="ad-section-card overflow-hidden">
+            <div key={i} className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-card)]">
               <div className="skeleton aspect-[4/5] w-full" />
               <div className="space-y-3 p-4">
                 <div className="skeleton h-4 w-24 rounded" />
@@ -304,8 +310,8 @@ export function AdoptablesSection() {
   return (
     <div className="space-y-6">
       {/* ---------------------------------------------------------------- Header */}
-      <div className="ad-section-card glow-border relative overflow-hidden p-6">
-        <div className="pointer-events-none absolute -right-20 -top-20 h-[280px] w-[280px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" aria-hidden />
+      <div className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6">
+        <div className="pointer-events-none absolute -right-20 -top-20 h-[280px] w-[280px] rounded-full bg-[var(--accent)]/5 blur-[120px]" aria-hidden />
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
@@ -364,7 +370,7 @@ export function AdoptablesSection() {
       </div>
 
       {/* ------------------------------------------------------ Search + filters */}
-      <div className="ad-section-card p-4">
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
           <div className="relative flex-1">
             <Search
@@ -528,9 +534,9 @@ export function AdoptablesSection() {
         </div>
       )}
 
-      {/* ------------------------------------------------------------- Listing */}
+{/* ------------------------------------------------------------- Listing */}
       {!hasAdoptables ? (
-        <div className="ad-section-card flex flex-col items-center justify-center px-6 py-20 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-card)] px-6 py-20 text-center">
           <div className="mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
             <Package className="h-7 w-7" aria-hidden />
           </div>
@@ -550,14 +556,14 @@ export function AdoptablesSection() {
           </Button>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="ad-section-card flex flex-col items-center justify-center px-6 py-16 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-card)] px-6 py-16 text-center">
           <div className="mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-white/[0.04] text-[var(--text-dim)]">
             <Search className="h-6 w-6" aria-hidden />
           </div>
           <h2 className="text-base font-semibold text-white">No adoptables match</h2>
           <p className="mt-2 max-w-sm text-sm text-[var(--text-secondary)]">
             {query
-              ? `Nothing matches “${query}” with the current status filter.`
+              ? `Nothing matches "${query}" with the current status filter.`
               : "There are no adoptables with this status yet."}
           </p>
           <Button
@@ -617,7 +623,7 @@ export function AdoptablesSection() {
           </div>
         </>
       ) : (
-        <div className="ad-section-card overflow-hidden">
+        <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-card)]">
           <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
             <label className="flex cursor-pointer items-center gap-2 text-xs text-[var(--text-secondary)]">
               <input
@@ -689,7 +695,7 @@ export function AdoptablesSection() {
 
       {/* ------------------------------------------------------------ Danger zone */}
       {hasAdoptables && (
-        <div className="ad-section-card border-[var(--danger-border)]/40 p-5">
+        <div className="rounded-xl border border-[var(--danger-border)]/40 bg-[var(--bg-card)] p-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="min-w-0">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
@@ -719,6 +725,7 @@ export function AdoptablesSection() {
         open={editorId !== null}
         adoptable={editorAdoptable}
         controller={controller}
+        session={session ?? null}
         onClose={() => setEditorId(null)}
       />
 

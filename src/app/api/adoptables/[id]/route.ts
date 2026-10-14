@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { requireAdminSession, requirePermission } from "@/lib/auth/guard";
-import { deleteAdoptable, updateAdoptable } from "@/lib/adoptables/server";
+import { requireAdminSession, requireOwnerSession, requirePermission } from "@/lib/auth/guard";
+import { deleteAdoptable, updateAdoptable, splitProtectedFields } from "@/lib/adoptables/server";
 
 export async function GET(
   _request: Request,
@@ -45,7 +45,18 @@ export async function PUT(
     // Partial updates are supported: only keys present in the body are written,
     // and media columns are never touched unless explicitly supplied. This is
     // what stopped the admin dashboard from wiping `main_image` on every save.
-    const result = await updateAdoptable(id, body ?? {});
+    //
+    // A moderator with Adoptables Management can edit draft fields (name,
+    // description, pricing, media) but not lifecycle/promotional ones. The split
+    // happens server-side from the authenticated role, so a moderator cannot
+    // elevate themselves by including a protected key in their request.
+    let payload = body ?? {};
+    if (auth.session!.role !== "owner") {
+      const { draft, protected: ignored } = splitProtectedFields(payload);
+      payload = draft;
+    }
+
+    const result = await updateAdoptable(id, payload);
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: 500 });
     }
@@ -63,7 +74,9 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requirePermission("adoptables");
+  // Permanent deletion is an ownership decision, not a moderation one, so it
+  // requires the owner role even for sessions holding the Adoptables toggle.
+  const auth = await requireOwnerSession();
   if (!auth.ok) return auth.response!;
 
   const { id } = await params;

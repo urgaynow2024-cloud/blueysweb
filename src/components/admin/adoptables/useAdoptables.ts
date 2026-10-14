@@ -65,9 +65,21 @@ export interface AdoptablesController {
   moveGalleryImage: (id: string, from: number, to: number) => Promise<boolean>;
   removeGalleryImage: (id: string, imageId: string) => Promise<boolean>;
 
-  uploadComparisonSide: (id: string, side: "before" | "after", file: File) => Promise<boolean>;
+uploadComparisonSide: (id: string, side: "before" | "after", file: File) => Promise<boolean>;
   setComparisonLabel: (id: string, comparisonId: string, label: string) => Promise<boolean>;
   removeComparison: (id: string, comparisonId: string) => Promise<boolean>;
+  /**
+   * Submitting a draft for owner review.
+   *
+   * A moderator with Adoptables Management can create and edit drafts, but the
+   * lifecycle decisions — publishing, selling, hiding, deleting — belong to the
+   * owner. This records the submission in the moderation log and returns the
+   * adoptable's current state so the owner can review it from the same
+   * dashboard. It does NOT change the adoptable's status; the owner still has to
+   * open the editor and publish it, which keeps the two actions firmly
+   * separate.
+   */
+  submitForReview: (id: string) => Promise<boolean>;
 }
 
 async function readError(response: Response, fallback: string): Promise<string> {
@@ -715,7 +727,7 @@ const uploadMainImage = useCallback(
     [],
   );
 
-  const removeComparison = useCallback(
+const removeComparison = useCallback(
     async (id: string, comparisonId: string) => {
       const previous = comparisons[id] ?? [];
       setComparisons((prev) => ({ ...prev, [id]: previous.filter((ba) => ba.id !== comparisonId) }));
@@ -732,6 +744,41 @@ const uploadMainImage = useCallback(
       }
     },
     [comparisons],
+  );
+
+  /**
+   * Submitting a draft for owner review.
+   *
+   * A moderator with Adoptables Management can create and edit drafts, but the
+   * lifecycle decisions — publishing, selling, hiding, deleting — belong to the
+   * owner. This route records the submission in the moderation log and returns
+   * the adoptable's current state so the owner can review it from the same
+   * dashboard. It does NOT change the adoptable's status; the owner still has to
+   * open the editor and publish it, which keeps the two actions firmly
+   * separate.
+   */
+  const submitForReview = useCallback(
+    async (id: string, note?: string) => {
+      setBusy(id, true);
+      try {
+        const res = await fetch(`/api/adoptables/${id}/submit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, note: note ?? "" }),
+        });
+        if (!res.ok) {
+          const e = await res.json().catch(() => ({}));
+          throw new Error(e.error || "Failed to submit for review");
+        }
+        return true;
+      } catch (e: any) {
+        if (mounted.current) setError(e?.message || "Failed to submit for review");
+        return false;
+      } finally {
+        setBusy(id, false);
+      }
+    },
+    [setBusy],
   );
 
   return useMemo(
@@ -755,7 +802,7 @@ const uploadMainImage = useCallback(
       removeBulk,
       deleteEverything,
       uploadMainImage,
-removeMainImage,
+      removeMainImage,
       uploadGallery,
       dismissGalleryDraft,
       setGalleryNsfw,
@@ -764,6 +811,7 @@ removeMainImage,
       uploadComparisonSide,
       setComparisonLabel,
       removeComparison,
+      submitForReview,
     }),
     [
       adoptables,
@@ -786,7 +834,7 @@ removeMainImage,
       deleteEverything,
       uploadMainImage,
       removeMainImage,
-uploadGallery,
+      uploadGallery,
       dismissGalleryDraft,
       setGalleryNsfw,
       moveGalleryImage,
@@ -794,6 +842,7 @@ uploadGallery,
       uploadComparisonSide,
       setComparisonLabel,
       removeComparison,
+      submitForReview,
     ],
   );
 }

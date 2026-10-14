@@ -244,17 +244,19 @@ export default function ModeratorPage() {
 
   return (
     <div className="ad-dashboard-bg min-h-screen">
-      <div className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg-elevated)]/85 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] shadow-lg shadow-[var(--accent)]/30">
+      {/* Compact header: name + role, clear nav, no oversized cards. */}
+      <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] shadow-lg shadow-[var(--accent)]/30">
               <ShieldCheck className="h-5 w-5" />
             </div>
-            <div>
-              <p className="font-semibold text-white">Moderator Dashboard</p>
-              <p className="text-xs text-[var(--text-dim)]">
-                Signed in as <span className="text-[var(--text-secondary)]">{session.name}</span>
+            <div className="min-w-0">
+              <p className="truncate text-[15px] font-semibold leading-tight text-white">Moderator Dashboard</p>
+              <p className="truncate text-xs text-[var(--text-dim)]">
+                <span className="text-[var(--text-secondary)]">{session.name}</span>
                 <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-[var(--border-strong)] px-2 py-0.5 text-[10px] uppercase tracking-wider text-[var(--accent)]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" aria-hidden />
                   {session.role}
                 </span>
               </p>
@@ -264,28 +266,39 @@ export default function ModeratorPage() {
             Sign Out
           </Button>
         </div>
-        <div className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 pb-2 sm:px-6">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
-                tab === t.id ? "bg-[var(--accent-soft)] text-white" : "text-[var(--text-secondary)] hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              {t.icon}
-              {t.label}
-              {typeof t.count === "number" && t.count > 0 && (
-                <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[var(--accent)] px-1.5 text-[10px] font-bold text-[#04060a]">
-                  {t.count}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
 
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        {/* Tab bar: horizontal scroll on mobile, equal-width tiles on desktop. */}
+        <div className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 sm:px-6">
+          {tabs.map((t) => {
+            const active = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                aria-current={active ? "page" : undefined}
+                className={`group relative flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition-colors ${
+                  active
+                    ? "bg-[var(--accent-soft)] text-white"
+                    : "text-[var(--text-secondary)] hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                <span className={`transition-colors ${active ? "text-[var(--accent)]" : "group-hover:text-white"}`}>
+                  {t.icon}
+                </span>
+                <span className="hidden sm:inline">{t.label}</span>
+                {typeof t.count === "number" && t.count > 0 && (
+                  <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[var(--accent)] px-1.5 text-[10px] font-bold text-[#04060a]">
+                    {t.count}
+                  </span>
+                )}
+                {active && <span className="absolute inset-x-3 -bottom-2 h-px bg-[var(--accent)]" aria-hidden />}
+              </button>
+            );
+          })}
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         <PermissionSummary session={session} />
 
         {tab === "queue" && (
@@ -356,7 +369,7 @@ export default function ModeratorPage() {
         )}
 
         {tab === "log" && <LogSection log={log} loading={loadingData} />}
-        {tab === "adoptables" && canAdoptables && <AdoptablesSection />}
+        {tab === "adoptables" && canAdoptables && <AdoptablesSection session={session} />}
       </div>
 
       <Modal
@@ -459,27 +472,27 @@ function QueueSection<T extends { id: string }>({
 }) {
   return (
     <div>
-      <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+      <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
         {icon}
         {title}
         <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-[var(--text-dim)]">{items.length}</span>
       </div>
       {loading ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {[1, 2].map((i) => (
-            <div key={i} className="ad-section-card h-32 animate-pulse opacity-60" />
+            <div key={i} className="ad-section-card h-24 animate-pulse opacity-60" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] py-10 text-center text-sm text-[var(--text-dim)]">
+        <div className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] py-8 text-center text-sm text-[var(--text-dim)]">
           {empty}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {items.map((item) => (
-            <Card key={item.id} className="p-5">
+            <Card key={item.id} className="p-4">
               {render(item)}
-              <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--border)] pt-4">
+              <div className="mt-3 flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
                 {hidden ? (
                   <Button size="sm" variant="secondary" onClick={() => onUnhide?.(item)} leftIcon={<Eye className="h-4 w-4" />}>
                     Restore

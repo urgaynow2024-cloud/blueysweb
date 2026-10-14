@@ -111,7 +111,7 @@ export function AdoptableCard({
 
   return (
     <article
-      className={`ad-opt-card group relative flex flex-col overflow-hidden rounded-2xl border transition-all duration-300 ${
+      className={`group relative flex flex-col overflow-hidden rounded-2xl border transition-all duration-300 ${
         selected
           ? "border-[var(--accent)]/60 bg-[var(--accent-soft)]"
           : "border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--border-hover)]"
@@ -126,6 +126,8 @@ export function AdoptableCard({
           wrapperClassName="h-full w-full"
           className="h-full w-full object-cover"
           fallbackLabel={mediaProblem ?? "No artwork uploaded"}
+          fallbackName={adoptable.title || undefined}
+          fallbackDetail={adoptable.species || undefined}
         />
 
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
