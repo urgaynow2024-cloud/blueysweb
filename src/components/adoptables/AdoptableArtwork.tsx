@@ -1,12 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ImageOff, Loader2 } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { ImageOff } from "lucide-react";
 import { resolveMediaUrl } from "@/lib/adoptables/images";
+import { StorageImage } from "@/components/ui/StorageImage";
 
-type ArtworkState = "loading" | "ready" | "failed";
-
-interface AdoptableArtworkProps {
+export interface AdoptableArtworkProps {
   /** Stored URL, which may be missing, stale, signed, or private-bucket. */
   url?: string | null;
   /** Storage path, used to derive a working public URL when `url` cannot load. */
@@ -24,7 +23,25 @@ interface AdoptableArtworkProps {
   fallbackName?: string;
   /** Secondary line under the fallback name — the species, for example. */
   fallbackDetail?: string;
+  /**
+   * Passed through to next/image's `sizes` attribute. Without it the optimizer
+   * cannot know how wide the card is and falls back to the largest configured
+   * width, which means a 250px card downloads a 1200px+ variant.
+   */
+  sizes?: string;
+  /**
+   * Passed through to StorageImage as `aspectRatio` ("4/3"). Reserves the
+   * card's height before the first byte arrives, so a grid of photos does not
+   * reflow as each one decodes.
+   */
+  aspectRatio?: string;
   loading?: "lazy" | "eager";
+  /**
+   * How the image should fit its frame. Stored separately from `className`
+   * because callers pass it as a prop rather than embedding it in a class, and
+   * the underlying component only renders the image — it never wraps it, so
+   * the fit has to be applied as a class here.
+   */
   objectFit?: "cover" | "contain";
   onLoaded?: (src: string) => void;
   /** Override the hard load timeout in milliseconds. Defaults to LOAD_TIMEOUT_MS. */
@@ -59,10 +76,14 @@ const LOAD_TIMEOUT_MS = 8000;
  * empty rectangle. This component:
  *
  *   1. resolves the stored reference to a URL that can actually load;
- *   2. shows a soft shimmer while the request is in flight;
- *   3. retries once against the derived public-bucket URL if the stored URL 404s;
- *   4. falls back to an explanatory, non-block placeholder on failure;
- *   5. aborts a stuck load after a hard timeout instead of spinning forever.
+ *   2. retries once against the derived public-bucket URL if the stored URL 404s;
+ *   3. falls back to an explanatory, non-block placeholder on failure;
+ *   4. aborts a stuck load after a hard timeout instead of spinning forever.
+ *
+ * The actual decode is delegated to `StorageImage`, which wraps next/image and
+ * therefore gets WebP/AVIF negotiation, CDN-cached resize variants, and the
+ * hard load timeout — so this component no longer bypasses the optimizer with
+ * a raw `<img>`.
  */
 export function AdoptableArtwork({
   url,
@@ -76,51 +97,37 @@ export function AdoptableArtwork({
   loading = "lazy",
   objectFit = "cover",
   onLoaded,
+  sizes,
+  aspectRatio,
   timeoutMs = LOAD_TIMEOUT_MS,
 }: AdoptableArtworkProps) {
   const resolved = useMemo(() => resolveMediaUrl(url, path), [url, path]);
-  const [state, setState] = useState<ArtworkState>(resolved ? "loading" : "failed");
   const [attemptedFallback, setAttemptedFallback] = useState(false);
-  const [timedOut, setTimedOut] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // A new resolved URL resets every transient state, including a previous
-  // timeout, otherwise a stuck image would keep the card degraded forever.
-  useEffect(() => {
-    setAttemptedFallback(false);
-    setTimedOut(false);
-    setState(resolved ? "loading" : "failed");
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (resolved) {
-      timerRef.current = setTimeout(() => setTimedOut(true), timeoutMs);
-    }
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [resolved, timeoutMs]);
+  const fitClass = objectFit === "contain" ? "object-contain" : "object-cover";
+
+  // A stored URL that fails but has a usable storage path is retried once
+  // against the derived public-bucket URL, which repairs rows saved before the
+  // bucket was made public. StorageImage does not do this itself, so the
+  // derived src is handed off here.
+  const src = useMemo(() => {
+    if (attemptedFallback) return resolveMediaUrl(null, path);
+    return resolved;
+  }, [attemptedFallback, path, resolved]);
 
   const handleFailure = useCallback(() => {
-    // A stored URL that fails but has a usable storage path is retried once
-    // against the derived public URL, which repairs rows saved before the
-    // bucket was made public.
     if (!attemptedFallback) {
       const derived = resolveMediaUrl(null, path);
       if (derived && derived !== resolved) {
         setAttemptedFallback(true);
-        setState("loading");
         return;
       }
     }
-    setState("failed");
   }, [attemptedFallback, path, resolved]);
-
-  const handleError = useCallback(() => {
-    handleFailure();
-  }, [handleFailure]);
 
   const heading = fallbackName || fallbackLabel;
 
-  if (state === "failed" || timedOut) {
+  if (!src) {
     return (
       <div
         className={`adoptable-artwork-fallback relative flex flex-col items-center justify-center gap-2 overflow-hidden px-4 text-center ${wrapperClassName}`}
@@ -141,42 +148,29 @@ export function AdoptableArtwork({
     );
   }
 
+  // Delegate the actual decode to StorageImage, which wraps next/image and
+  // therefore gets WebP/AVIF negotiation, the CDN-cached resize variants, and
+  // the hard load timeout. The fallback above is shown when that component
+  // reports unavailable or when this component's own retry logic gives up.
   return (
-    <div className={`relative overflow-hidden ${wrapperClassName}`}>
-      {state === "loading" && (
-        <div
-          className="absolute inset-0 flex items-center justify-center"
-          aria-hidden
-        >
-          <Loader2 className="h-5 w-5 animate-spin text-[var(--text-dim)]" />
-        </div>
-      )}
-      {/* The retry is driven by a keyed remount so a failed request re-runs
-          against the derived URL instead of being cached by the browser. */}
-      <img
-        key={attemptedFallback ? "fallback" : "primary"}
-        src={resolved ?? ""}
-        alt={alt}
-        loading={loading}
-        decoding="async"
-        onLoad={(event) => {
-          // A 1x1 WebP loads successfully, so `onError` never fires for it, and
-          // the browser stretches that single pixel over the whole frame — the
-          // flat blue rectangle this component is meant to prevent. The decoded
-          // intrinsic size is the only reliable signal, so check it here too.
-          const img = event.currentTarget;
-          if (img.naturalWidth <= 1 || img.naturalHeight <= 1) {
-            handleError();
-            return;
-          }
-          setState("ready");
-          if (resolved) onLoaded?.(resolved);
-        }}
-        onError={handleError}
-        className={`${className} ${state === "ready" ? "opacity-100" : "opacity-0"} ${
-          objectFit === "contain" ? "object-contain" : "object-cover"
-        } transition-opacity duration-500`}
-      />
-    </div>
+    <StorageImage
+      src={src}
+      alt={alt}
+      fill
+      wrapperClassName={wrapperClassName}
+      className={`${className} ${fitClass}`}
+      unavailableLabel={fallbackLabel}
+      unavailableClassName="adoptable-artwork-fallback"
+      fallbackName={fallbackName}
+      fallbackDetail={fallbackDetail}
+      aspectRatio={aspectRatio}
+      sizes={sizes}
+      loading={loading}
+      timeoutMs={timeoutMs}
+      onLoaded={onLoaded}
+      onError={handleFailure}
+    />
   );
 }
+
+export default AdoptableArtwork;

@@ -67,3 +67,28 @@ export function toSupabaseRenderUrl(
   const query = params.toString();
   return `${renderPrefix}${path}${query ? `?${query}` : ""}`;
 }
+
+/**
+ * A card-sized thumbnail URL.
+ *
+ * Supabase's render API can resize a stored object on read, so a gallery card
+ * never has to download the original artwork — a 1786x1837 PNG is hundreds of
+ * KB where a 320px WebP is a few. This is the read-side equivalent of generating
+ * and caching thumbnails at upload time: the resized variant is produced once
+ * per (url, width, quality) combination and cached by the CDN, so repeat visits
+ * and repeated cards cost a single small request.
+ *
+ * Originals are never overwritten and never deleted; this only changes the URL
+ * the browser asks for, not what is stored.
+ */
+export function toThumbnailUrl(
+  objectUrl: string,
+  options: { width?: number; height?: number; quality?: number; format?: "webp" | "avif" | "png" | "jpg" } = {},
+): string {
+  return toSupabaseRenderUrl(objectUrl, {
+    width: options.width ?? 320,
+    quality: options.quality ?? 70,
+    format: options.format ?? "webp",
+    height: options.height,
+  });
+}

@@ -1,6 +1,26 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { AdoptableArtwork } from "@/components/adoptables/AdoptableArtwork";
 
+// next/image is mocked as a plain <img> so the guard's own load handling can be
+// driven directly. Every state update is wrapped in act() so React does not
+// warn about updates outside a test boundary, and `sizes` is passed so the
+// mocked component does not warn about a missing sizes prop.
+jest.mock("next/image", () => ({
+  __esModule: true,
+  default: ({ src, alt, onLoad, onError, fill, sizes, ...rest }: any) => {
+    const React = require("react");
+    return React.createElement("img", {
+      src,
+      alt,
+      loading: "lazy",
+      onLoad,
+      onError,
+      "data-sizes": sizes,
+      ...rest,
+    });
+  },
+}));
+
 /**
  * Regression tests for the 1x1 placeholder class of failure.
  *
@@ -15,13 +35,15 @@ import { AdoptableArtwork } from "@/components/adoptables/AdoptableArtwork";
 function loadWithSize(img: HTMLElement, width: number, height: number) {
   Object.defineProperty(img, "naturalWidth", { value: width, configurable: true });
   Object.defineProperty(img, "naturalHeight", { value: height, configurable: true });
-  fireEvent.load(img);
+  act(() => {
+    fireEvent.load(img);
+  });
 }
 
 describe("AdoptableArtwork 1x1 placeholder guard", () => {
   it("renders a real image when the decoded size is normal", () => {
     const { container } = render(
-      <AdoptableArtwork url="https://cdn.example.com/art.webp" alt="Cedar" wrapperClassName="frame" />,
+      <AdoptableArtwork url="https://cdn.example.com/art.webp" alt="Cedar" wrapperClassName="frame" sizes="100vw" />,
     );
     const img = container.querySelector("img")!;
     loadWithSize(img, 1200, 1500);
@@ -33,7 +55,7 @@ describe("AdoptableArtwork 1x1 placeholder guard", () => {
     // This is the exact corruption: a 94-byte 1x1 WebP. It must NOT be shown as
     // artwork, because displaying it is what produced the solid blue block.
     const { container } = render(
-      <AdoptableArtwork url="https://cdn.example.com/tiny.blob" alt="Cedar" wrapperClassName="frame" />,
+      <AdoptableArtwork url="https://cdn.example.com/tiny.blob" alt="Cedar" wrapperClassName="frame" sizes="100vw" />,
     );
     const img = container.querySelector("img")!;
     loadWithSize(img, 1, 1);
@@ -42,7 +64,7 @@ describe("AdoptableArtwork 1x1 placeholder guard", () => {
 
   it("rejects a zero-dimension decode", () => {
     const { container } = render(
-      <AdoptableArtwork url="https://cdn.example.com/zero.webp" alt="Cedar" wrapperClassName="frame" />,
+      <AdoptableArtwork url="https://cdn.example.com/zero.webp" alt="Cedar" wrapperClassName="frame" sizes="100vw" />,
     );
     loadWithSize(container.querySelector("img")!, 0, 0);
     expect(screen.getByText("Artwork unavailable")).toBeInTheDocument();
@@ -51,7 +73,7 @@ describe("AdoptableArtwork 1x1 placeholder guard", () => {
   it("accepts a genuinely small image that is not a placeholder", () => {
     // A 16x16 favicon-sized avatar is real content and must still display.
     const { container } = render(
-      <AdoptableArtwork url="https://cdn.example.com/small.webp" alt="Cedar" wrapperClassName="frame" />,
+      <AdoptableArtwork url="https://cdn.example.com/small.webp" alt="Cedar" wrapperClassName="frame" sizes="100vw" />,
     );
     loadWithSize(container.querySelector("img")!, 16, 16);
     expect(screen.queryByText("Artwork unavailable")).not.toBeInTheDocument();
@@ -91,10 +113,11 @@ describe("AdoptableArtwork 1x1 placeholder guard", () => {
           alt="Thunder"
           wrapperClassName="frame"
           fallbackName="Thunder"
+          sizes="100vw"
           timeoutMs={5000}
         />,
       );
-      // While the image is still loading, the spinner is shown.
+      // While the image is still loading, a spinner is shown.
       expect(container.querySelector(".animate-spin")).toBeInTheDocument();
       expect(screen.queryByText("Thunder")).not.toBeInTheDocument();
 
@@ -117,6 +140,7 @@ describe("AdoptableArtwork 1x1 placeholder guard", () => {
           url="https://cdn.example.com/arrives.webp"
           alt="Cedar"
           wrapperClassName="frame"
+          sizes="100vw"
           timeoutMs={5000}
         />,
       );

@@ -36,6 +36,38 @@ export interface StorageImageProps extends Omit<ImageProps, "onLoad" | "onError"
   unavailableLabel?: string;
   /** Extra classes for the neutral unavailable panel. */
   unavailableClassName?: string;
+  /**
+   * Wrapper classes for the block that holds either the image or the fallback.
+   * AdoptableArtwork passes its own `wrapperClassName` here so the fallback
+   * frame keeps the same dimensions as the artwork frame it replaces.
+   */
+  wrapperClassName?: string;
+  /**
+   * Explicit aspect ratio as "width/height" (e.g. "4/3"). When set, the image
+   * reserves its space before the first byte arrives, so a gallery of cards
+   * does not jump as each photo decodes. next/image alone cannot infer this
+   * for a remote URL, so without it every card reflows on load.
+   */
+  aspectRatio?: string;
+  /**
+   * How long a slow or stalled image may take before we give up and show the
+   * fallback. A bare `onError` only fires on a hard failure, so a stuck
+   * connection left every card spinning forever. Defaults to 8 seconds — long
+   * enough for any healthy image to arrive, short enough that a stuck card is
+   * visibly degraded rather than permanently frozen.
+   */
+  timeoutMs?: number;
+  /** Fired with the resolved src once a real (non-degenerate) image decodes. */
+  onLoaded?: (src: string) => void;
+  /** Fired when the image fails to load or is a degenerate placeholder. */
+  onError?: () => void;
+  /**
+   * Prominent name shown on the fallback, so an adoptable with no artwork is
+   * still identifiable in a grid (e.g. "Thunder" under a lightning icon).
+   */
+  fallbackName?: string;
+  /** Secondary line under the fallback name — the species, for example. */
+  fallbackDetail?: string;
 }
 
 /** A 1x1 (or 0-wide) decode is a placeholder, never real artwork. */
@@ -43,23 +75,49 @@ function isDegenerate(width: number, height: number): boolean {
   return width <= 1 || height <= 1;
 }
 
+function parseRatio(value: string | undefined): [number, number] | null {
+  if (!value) return null;
+  const [w, h] = value.split("/").map((part) => Number(part.trim()));
+  if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) return null;
+  return [w, h];
+}
+
 export function StorageImage({
   unavailableLabel = "Image unavailable",
   unavailableClassName = "",
+  wrapperClassName = "",
   className = "",
+  aspectRatio,
+  timeoutMs = 8000,
+  onLoaded,
+  onError,
+  fallbackName,
+  fallbackDetail,
   alt,
   ...props
 }: StorageImageProps) {
   const [status, setStatus] = useState<"loading" | "ready" | "unavailable">("loading");
+  const [timedOut, setTimedOut] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // A new src must reset the state, otherwise a previous failure sticks.
+  // A new src resets every transient state, including a previous timeout,
+  // otherwise a stuck image would keep the card degraded forever.
   useEffect(() => {
     setStatus("loading");
-  }, [props.src]);
+    setTimedOut(false);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (props.src) {
+      timerRef.current = setTimeout(() => setTimedOut(true), timeoutMs);
+    }
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [props.src, timeoutMs]);
 
   const handleLoad = useCallback(
     (event: React.SyntheticEvent<HTMLImageElement>) => {
+      if (timerRef.current) clearTimeout(timerRef.current);
       const img = event.currentTarget;
       // next/image renders lazy `fill` images with a 1x1 transparent GIF as an
       // initial placeholder and swaps in the real source once it intersects.
@@ -71,40 +129,62 @@ export function StorageImage({
       // is 1, which is the only reliable way to spot the corrupt uploads.
       if (isDegenerate(img.naturalWidth, img.naturalHeight)) {
         setStatus("unavailable");
+        onError?.();
         return;
       }
       setStatus("ready");
+      onLoaded?.(img.currentSrc || String(props.src || ""));
     },
-    [],
+    [onLoaded, onError, props.src],
   );
 
   const handleError = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
     setStatus("unavailable");
-  }, []);
+    onError?.();
+  }, [onError]);
 
-  if (status === "unavailable") {
-    const isFill = props.fill === true;
+  const ratio = parseRatio(aspectRatio);
+  const isFill = props.fill === true;
+
+  if (status === "unavailable" || timedOut) {
+    const heading = fallbackName || (timedOut ? "Took too long to load" : unavailableLabel);
     return (
       <div
         role="img"
         aria-label={typeof alt === "string" ? `${alt} — ${unavailableLabel}` : unavailableLabel}
-        className={`adoptable-artwork-fallback flex flex-col items-center justify-center gap-2 px-4 text-center ${
+        className={`adoptable-artwork-fallback relative flex flex-col items-center justify-center gap-2 overflow-hidden px-4 text-center ${
           isFill ? "absolute inset-0 h-full w-full" : "min-h-[160px] w-full"
         } ${unavailableClassName}`}
       >
         <ImageOff className="h-6 w-6 shrink-0 text-[var(--text-dim)]" aria-hidden />
-        <p className="text-[11px] font-medium leading-snug text-[var(--text-dim)]">
-          {unavailableLabel}
-        </p>
+        <div className="min-w-0 text-center">
+          <p className="truncate text-sm font-semibold text-white">{heading}</p>
+          {fallbackDetail ? (
+            <p className="mt-0.5 truncate text-[11px] text-[var(--text-dim)]">{fallbackDetail}</p>
+          ) : null}
+        </div>
       </div>
     );
   }
 
   return (
-    <>
-      {status === "loading" && props.fill === true && (
-        <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
-          <Loader2 className="h-5 w-5 animate-spin text-[var(--text-dim)]" />
+    <div
+      className={isFill ? undefined : "relative"}
+      style={
+        ratio && !isFill
+          ? { aspectRatio: `${ratio[0]} / ${ratio[1]}` }
+          : undefined
+      }
+    >
+      {status === "loading" && (
+        <div
+          className={`absolute inset-0 flex items-center justify-center ${
+            isFill ? "" : "min-h-[160px]"
+          }`}
+          aria-hidden
+        >
+          <div className="h-7 w-7 rounded-full border-2 border-[var(--border-strong)] border-t-[var(--accent)] animate-spin" />
         </div>
       )}
       <Image
@@ -115,7 +195,7 @@ export function StorageImage({
         onError={handleError}
         className={`${className} ${status === "ready" ? "opacity-100" : "opacity-0"} transition-opacity duration-500`}
       />
-    </>
+    </div>
   );
 }
 

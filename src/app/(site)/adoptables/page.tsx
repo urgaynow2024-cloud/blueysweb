@@ -85,6 +85,8 @@ function AdoptableCard({
               blurArtwork ? "blur-[8px] scale-105" : ""
             }`}
             fallbackLabel="Artwork coming soon"
+            sizes="(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 20vw"
+            aspectRatio="3/4"
           />
 
           {blurArtwork && (

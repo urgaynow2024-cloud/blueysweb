@@ -128,6 +128,8 @@ export function AdoptableCard({
           fallbackLabel={mediaProblem ?? "No artwork uploaded"}
           fallbackName={adoptable.title || undefined}
           fallbackDetail={adoptable.species || undefined}
+          sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+          aspectRatio="4/5"
         />
 
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
