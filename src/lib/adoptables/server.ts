@@ -73,6 +73,18 @@ export function buildAdoptablePayload(
     if (!WRITABLE.has(key) || skip.has(key)) continue;
     if (raw === undefined) continue;
 
+    if (key === "title") {
+      // `title` is the NOT NULL identity column. A non-empty value is trimmed
+      // and stored; an empty value is dropped so clearing the field in the
+      // editor never overwrites a name that is already saved. (It is handled
+      // here rather than in NULLABLE_TEXT because that set maps empties to
+      // null, which the column rejects.)
+      if (typeof raw !== "string") continue;
+      const trimmed = raw.trim();
+      if (trimmed.length > 0) payload.title = trimmed;
+      continue;
+    }
+
     if (NULLABLE_TEXT.has(key)) {
       if (typeof raw !== "string") continue;
       const trimmed = raw.trim();
@@ -163,7 +175,12 @@ export async function createAdoptable(body: Record<string, unknown>): Promise<Ad
   if (!supabaseAdmin) return { row: null, error: "Server not configured", skipped: [] };
   const payload = buildAdoptablePayload(body);
   if (!("title" in payload)) {
-    payload.title = typeof body.title === "string" ? body.title.trim() : "";
+    // The title column is NOT NULL, so a brand-new adoptable must always carry
+    // one. A blank editor default is normalised to the same placeholder the
+    // client sends, rather than letting the insert fail with a constraint
+    // violation that reads as an unrelated server error.
+    const raw = typeof body.title === "string" ? body.title.trim() : "";
+    payload.title = raw.length > 0 ? raw : "Untitled adoptable";
   }
   return writeAdoptable(
     (p) => supabaseAdmin!.from("adoptables").insert([p]).select(),
