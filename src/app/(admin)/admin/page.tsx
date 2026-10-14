@@ -97,6 +97,24 @@ export default function AdminPage() {
   const [storageError, setStorageError] = useState<string | null>(null);
   const [corsTestResult, setCorsTestResult] = useState<{ bucket: string; success: boolean; error?: string } | null>(null);
   const [dbHealth, setDbHealth] = useState<{ healthy: boolean; tables: Record<string, { exists: boolean; missingColumns: string[] }>; error?: string } | null>(null);
+  /**
+   * True while the session cookie is being verified on mount.
+   *
+   * Without this the page renders the login form for one tick on every
+   * refresh, which reads as "I got logged out" even when the session is
+   * still valid. The check is fast (a signed-cookie read), so a spinner
+   * here is brief and honest.
+   */
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  /**
+   * Set when content loading fails for a reason other than "not
+   * authenticated". Previously every Supabase error was swallowed inside
+   * `Promise.all(... .catch(() => {}))`, so a dashboard whose queries
+   * failed rendered the topbar and empty sections with no explanation and
+   * no way to retry — the "topbar only" symptom.
+   */
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadingData, setLoadingData] = useState(false);
 
   const { markDirty, register } = useSave();
   const toast = useToast();
@@ -129,6 +147,8 @@ export default function AdminPage() {
         setAuthed(true);
       } catch {
         // No valid session — show the login form.
+      } finally {
+        if (!cancelled) setCheckingAuth(false);
       }
     })();
     return () => {
@@ -241,9 +261,10 @@ export default function AdminPage() {
     }
   }
 
-  async function loadAllData() {
+async function loadAllData() {
     setStorageError(null);
-    setCorsTestResult(null);
+    setLoadError(null);
+    setLoadingData(true);
     try {
       if (!isSupabaseConfigured || !supabase) {
         const stored = localStorage.getItem("adminData");
@@ -264,49 +285,72 @@ export default function AdminPage() {
       // Content loads first, in parallel. Each result is applied
       // as soon as it resolves, so the dashboard fills in
       // progressively instead of waiting for the slowest query.
+      //
+      // Failures are collected rather than swallowed: a dashboard whose
+      // queries all fail used to render the topbar and empty sections with
+      // no explanation and no retry, because every `.catch(() => {})`
+      // discarded the error. Surfacing the first failure gives the owner
+      // something actionable instead of a silent blank dashboard.
+      const failures: string[] = [];
       const jobs: PromiseLike<void>[] = [
-        supabase.from("site_config").select("*").then(({ data }) => {
-          if (data && data.length > 0) {
+        supabase.from("site_config").select("*").then(({ data, error }) => {
+          if (error) failures.push(`site_config: ${error.message}`);
+          else if (data && data.length > 0) {
             const s: any = { ...defaultSite };
             data.forEach((row: any) => { s[row.key] = row.value; });
             setSite(s);
           }
         }),
-        supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }).then(({ data }) => {
-          if (data && data.length > 0) setPricing(data);
+        supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }).then(({ data, error }) => {
+          if (error) failures.push(`pricing_tiers: ${error.message}`);
+          else if (data && data.length > 0) setPricing(data);
         }),
-        supabase.from("faq_items").select("*").order("sort_order", { ascending: true }).then(({ data }) => {
-          if (data && data.length > 0) setFaq(data);
+        supabase.from("faq_items").select("*").order("sort_order", { ascending: true }).then(({ data, error }) => {
+          if (error) failures.push(`faq_items: ${error.message}`);
+          else if (data && data.length > 0) setFaq(data);
         }),
-        supabase.from("workflow_steps").select("*").order("sort_order", { ascending: true }).then(({ data }) => {
-          if (data && data.length > 0) setWorkflow(data);
+        supabase.from("workflow_steps").select("*").order("sort_order", { ascending: true }).then(({ data, error }) => {
+          if (error) failures.push(`workflow_steps: ${error.message}`);
+          else if (data && data.length > 0) setWorkflow(data);
         }),
-        supabase.from("reviews").select("*").order("created_at", { ascending: false }).then(({ data }) => {
-          if (data && data.length > 0) setReviews(data);
+        supabase.from("reviews").select("*").order("created_at", { ascending: false }).then(({ data, error }) => {
+          if (error) failures.push(`reviews: ${error.message}`);
+          else if (data && data.length > 0) setReviews(data);
         }),
-        supabase.from("social_links").select("*").order("sort_order", { ascending: true }).then(({ data }) => {
-          if (data && data.length > 0) setLinks(data);
+        supabase.from("social_links").select("*").order("sort_order", { ascending: true }).then(({ data, error }) => {
+          if (error) failures.push(`social_links: ${error.message}`);
+          else if (data && data.length > 0) setLinks(data);
         }),
-        supabase.from("credits").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: true }).then(({ data }) => {
-          if (data && data.length > 0) setCredits(data);
+        supabase.from("credits").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: true }).then(({ data, error }) => {
+          if (error) failures.push(`credits: ${error.message}`);
+          else if (data && data.length > 0) setCredits(data);
         }),
-         supabase.from("tos_sections").select("*").order("sort_order", { ascending: true }).then(({ data }) => {
-           if (data && data.length > 0) setTos(data);
-         }),
-         supabase
-           .from("adoptables")
-           .select("id", { count: "exact", head: true })
-           .then(({ count, error }) => {
-             if (!error && count !== null && count !== undefined) setAdoptableCount(count);
-           }),
-       ];
+        supabase.from("tos_sections").select("*").order("sort_order", { ascending: true }).then(({ data, error }) => {
+          if (error) failures.push(`tos_sections: ${error.message}`);
+          else if (data && data.length > 0) setTos(data);
+        }),
+        supabase
+          .from("adoptables")
+          .select("id", { count: "exact", head: true })
+          .then(({ count, error }) => {
+            if (error) failures.push(`adoptables count: ${error.message}`);
+            else if (count !== null && count !== undefined) setAdoptableCount(count);
+          }),
+      ];
 
       // Fire-and-forget: diagnostics must not hold up content.
       scheduleDiagnostics();
 
-      await Promise.all(jobs.map((job) => Promise.resolve(job).catch(() => {})));
+      await Promise.all(jobs.map((job) => Promise.resolve(job)));
+
+      if (failures.length > 0) {
+        setLoadError(`Could not load content from the database: ${failures[0]}`);
+      }
     } catch (e) {
       console.error("Failed to load data:", e);
+      setLoadError("Network error while loading dashboard content.");
+    } finally {
+      setLoadingData(false);
     }
   }
 
@@ -420,6 +464,17 @@ export default function AdminPage() {
     markDirty();
   }
 
+  if (checkingAuth) {
+    return (
+      <div className="grid min-h-screen place-items-center">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <Loader2 className="h-7 w-7 animate-spin text-[var(--accent)]" />
+          <p className="text-sm text-[var(--text-secondary)]">Restoring your session…</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!authed) {
     const isLocked = Boolean(lockedUntil && Date.now() < lockedUntil);
     const remainingSeconds = isLocked ? Math.ceil((lockedUntil! - Date.now()) / 1000) : 0;
@@ -524,6 +579,24 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+      {loadError && (
+        <div className="mx-auto mb-6 max-w-3xl rounded-xl border border-[var(--danger-border)] bg-[var(--danger-soft)] p-4 text-sm text-white">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--danger)]" />
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">Could not load dashboard content</p>
+              <p className="mt-1 break-words text-xs text-[var(--text-secondary)]">{loadError}</p>
+              <button
+                type="button"
+                onClick={() => void loadAllData()}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-[var(--danger)]/20 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[var(--danger)]/35"
+              >
+                <RotateCcw className="h-3.5 w-3.5" /> Retry loading
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {dbHealth && !dbHealth.healthy && (
         <div className="mx-auto mb-6 max-w-3xl rounded-xl border border-[var(--warning-border)] bg-[var(--warning-soft)] p-4 text-sm text-[var(--warning)]">
           <div className="flex items-start gap-3">
@@ -543,19 +616,17 @@ export default function AdminPage() {
           </div>
         </div>
       )}
-      {corsTestResult && (
-        <div className={`mx-auto mb-6 max-w-3xl rounded-xl border p-4 text-sm ${corsTestResult.success ? "border-[var(--success-border)] bg-[var(--success-soft)] text-[var(--success)]" : "border-[var(--danger-border)] bg-[var(--danger-soft)] text-[var(--danger)]"}`}>
+      {corsTestResult && !corsTestResult.success && (
+        <div className="mx-auto mb-6 max-w-3xl rounded-xl border border-[var(--danger-border)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--danger)]">
           <div className="flex items-start gap-3">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
-              <p className="font-semibold">{corsTestResult.success ? `Upload test passed for "${corsTestResult.bucket}"` : `Upload test failed for "${corsTestResult.bucket}"`}</p>
+              <p className="font-semibold">Upload test failed for "{corsTestResult.bucket}"</p>
               {corsTestResult.error && <p className="mt-1 whitespace-pre-line text-xs opacity-90">{corsTestResult.error}</p>}
-              {!corsTestResult.success && (
-                <p className="mt-2 text-xs opacity-90">
-                  Check CORS settings in Supabase Dashboard → Storage → {corsTestResult.bucket} → Configuration → CORS.
-                  Make sure your domain is allowed and methods include GET, POST, PUT, DELETE, OPTIONS.
-                </p>
-              )}
+              <p className="mt-2 text-xs opacity-90">
+                Check CORS settings in Supabase Dashboard → Storage → {corsTestResult.bucket} → Configuration → CORS.
+                Make sure your domain is allowed and methods include GET, POST, PUT, DELETE, OPTIONS.
+              </p>
             </div>
           </div>
         </div>

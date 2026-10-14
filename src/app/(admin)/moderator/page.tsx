@@ -18,6 +18,7 @@ import {
   UserCog,
   AlertCircle,
   Package,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/admin/Button";
 import { Card, CardHeader } from "@/components/admin/Card";
@@ -94,12 +95,20 @@ export default function ModeratorPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [log, setLog] = useState<LogEntry[]>([]);
   const [loadingData, setLoadingData] = useState(false);
+  /**
+   * Set when the moderation queue/log fail to load for a reason other than
+   * "not authenticated". Previously both fetches threw and were caught by an
+   * empty catch, so a dashboard whose API calls failed rendered the topbar
+   * and empty sections with no explanation — the "topbar only" symptom.
+   */
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [reject, setReject] = useState<{ type: "review" | "submission"; id: string; label: string } | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
   const loadData = useCallback(async () => {
     setLoadingData(true);
+    setLoadError(null);
     try {
       const [q, l] = await Promise.all([
         fetch("/api/moderation/queue").then((r) => r.json()),
@@ -108,12 +117,13 @@ export default function ModeratorPage() {
       setReviews(q.reviews || []);
       setSubmissions(q.submissions || []);
       setLog(l.log || []);
-    } catch {
-      toast.error("Failed to load moderation data");
+    } catch (e: any) {
+      console.error("Failed to load moderation data:", e);
+      setLoadError(e?.message || "Network error while loading moderation data.");
     } finally {
       setLoadingData(false);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -300,6 +310,25 @@ export default function ModeratorPage() {
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         <PermissionSummary session={session} />
+
+        {loadError && (
+          <div className="mx-auto mt-4 max-w-3xl rounded-xl border border-[var(--danger-border)] bg-[var(--danger-soft)] p-4 text-sm text-white">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--danger)]" />
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold">Could not load moderation data</p>
+                <p className="mt-1 break-words text-xs text-[var(--text-secondary)]">{loadError}</p>
+                <button
+                  type="button"
+                  onClick={() => void loadData()}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-[var(--danger)]/20 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[var(--danger)]/35"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" /> Retry loading
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {tab === "queue" && (
           <div className="mt-6 space-y-8">
