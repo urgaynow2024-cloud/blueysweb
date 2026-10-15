@@ -93,7 +93,7 @@ export default function AdminPage() {
   const [links, setLinks] = useState<any[]>([]);
   const [credits, setCredits] = useState<any[]>([]);
   const [tos, setTos] = useState<any[]>([]);
-  const [adoptableCount, setAdoptableCount] = useState<number>(0);
+
   const [storageError, setStorageError] = useState<string | null>(null);
   const [corsTestResult, setCorsTestResult] = useState<{ bucket: string; success: boolean; error?: string } | null>(null);
   const [dbHealth, setDbHealth] = useState<{ healthy: boolean; tables: Record<string, { exists: boolean; missingColumns: string[] }>; error?: string } | null>(null);
@@ -119,10 +119,10 @@ export default function AdminPage() {
   const { markDirty, register } = useSave();
   const toast = useToast();
 
-  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links, credits, tos, adoptableCount });
+  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links, credits, tos });
   useEffect(() => {
-    dataRef.current = { site, pricing, faq, workflow, reviews, links, credits, tos, adoptableCount };
-  }, [site, pricing, faq, workflow, reviews, links, credits, tos, adoptableCount]);
+    dataRef.current = { site, pricing, faq, workflow, reviews, links, credits, tos };
+  }, [site, pricing, faq, workflow, reviews, links, credits, tos]);
 
   /**
    * Session restore.
@@ -334,7 +334,7 @@ async function loadAllData() {
           .select("id", { count: "exact", head: true })
           .then(({ count, error }) => {
             if (error) failures.push(`adoptables count: ${error.message}`);
-            else if (count !== null && count !== undefined) setAdoptableCount(count);
+            // else if (count !== null && count !== undefined) setAdoptableCount(count);
           }),
       ];
 
@@ -632,20 +632,7 @@ async function loadAllData() {
         </div>
       )}
       {tab === "overview" && (
-        <OverviewSection
-          site={site}
-          pricing={pricing}
-          faq={faq}
-          workflow={workflow}
-          reviews={reviews}
-          links={links}
-          credits={credits}
-          tos={tos}
-          adoptableCount={adoptableCount}
-          storageError={storageError}
-          dbHealth={dbHealth}
-          onSelect={(id) => setTab(id as Tab)}
-        />
+        <OverviewSection site={site} pricing={pricing} faq={faq} workflow={workflow} reviews={reviews} links={links} credits={credits} tos={tos} storageError={storageError} dbHealth={dbHealth} onSelect={(id) => setTab(id as Tab)} />
       )}
       {tab === "portfolio" && <PortfolioSection />}
       {tab === "pricing" && <PricingSection value={pricing} onChange={(n) => { setPricing(n); markDirty(); }} />}
