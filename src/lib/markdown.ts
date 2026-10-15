@@ -27,6 +27,3 @@ export function renderMarkdown(markdown: string): string {
   
   return sanitized;
 }
-
-// Export the marked parser for advanced usage if needed
-export { marked };
