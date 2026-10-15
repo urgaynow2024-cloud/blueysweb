@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getSiteConfig } from "@/lib/db";
+import { renderMarkdown } from "@/lib/markdown";
 
 import Link from "next/link";
 import { FileText, ShieldCheck, Clock, Sparkles, List, X } from "lucide-react";
@@ -23,26 +24,6 @@ interface TosSection {
   visible: boolean;
 }
 
-function renderMarkdown(text: string): string {
-  if (!text) return "";
-  let html = text
-    .replace(/<(?!br|hr)\/?>[^<]*/gi, "")
-    .replace(/'''/g, "''")
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/(?:\r\n|\r|\n){3,}/g, "\n\n")
-    .replace(/^### (.*$)/gm, "<h3 class='text-base font-semibold text-white mb-3 mt-6 first:mt-0'>$1</h3>")
-    .replace(/^## (.*$)/gm, "<h2 class='text-lg font-semibold text-white mb-3 mt-6 first:mt-0'>$2</h2>")
-    .replace(/^# (.*$)/gm, "<h1 class='text-2xl font-bold text-white mb-4'>$1</h1>")
-    .split("\n\n")
-    .map((para) => {
-      para = para.trim();
-      if (!para) return "";
-      if (para.startsWith("<h") || para.startsWith("<str")) return para;
-      return `<p class='mb-3 last:mb-0 leading-relaxed'>${para.replace(/\n/g, "<br />")}</p>`;
-    })
-    .join("");
-  return html;
-}
 
 function SectionContent({ section }: { section: TosSection }) {
   if (section.section_type === "paragraphs" && section.content) {
