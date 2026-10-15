@@ -1,46 +1,50 @@
 {
-  "name": "bluey-commissions",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.49.1",
-    "@tailwindcss/postcss": "^4.3.2",
-    "@vercel/og": "^1.0.0",
-    "browser-image-compression": "^2.0.2",
-    "dompurify": "^3.4.17",
-    "lucide-react": "^0.468.0",
-    "marked": "^12.0.2",
-    "next": "^16.2.10",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7"
-  },
-  "devDependencies": {
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.3",
-    "@testing-library/user-event": "^14.6.7",
-    "@types/jest": "^30.0.0",
-    "@types/marked": "^5.0.2",
-    "@types/node": "26.1.1",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "autoprefixer": "^10.4.16",
-    "identity-obj-proxy": "^3.0.0",
-    "jest": "^30.5.1",
-    "jest-environment-jsdom": "^30.5.1",
-    "jsdom": "^29.1.1",
-    "postcss": "^8.4.32",
-    "tailwindcss": "^4.0.0",
-    "ts-jest": "^29.4.12",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.7.2"
-  }
+    "name":  "bluey-commissions",
+    "version":  "0.1.0",
+    "private":  true,
+    "scripts":  {
+                    "dev":  "next dev",
+                    "build":  "next build",
+                    "start":  "next start",
+                    "lint":  "next lint",
+                    "test":  "jest",
+                    "test:watch":  "jest --watch",
+                    "test:coverage":  "jest --coverage"
+                },
+    "dependencies":  {
+                         "@supabase/supabase-js":  "^2.49.1",
+                         "@tailwindcss/postcss":  "^4.3.2",
+                         "@vercel/og":  "^1.0.0",
+                         "browser-image-compression":  "^2.0.2",
+                         "dompurify":  "^3.4.17",
+                         "lucide-react":  "^0.468.0",
+                         "marked":  "^12.0.2",
+                         "next":  "^16.2.10",
+                         "react":  "^19.2.7",
+                         "react-dom":  "^19.2.7"
+                     },
+    "devDependencies":  {
+                            "@testing-library/jest-dom":  "^6.9.1",
+                            "@testing-library/react":  "^16.3.3",
+                            "@testing-library/user-event":  "^14.6.7",
+                            "@types/jest":  "^30.0.0",
+                            "@types/marked":  "^5.0.2",
+                            "@types/node":  "26.1.1",
+                            "@types/react":  "^19.3.0",
+                            "@types/react-dom":  "^19.3.0",
+                            "autoprefixer":  "^10.4.16",
+                            "identity-obj-proxy":  "^3.0.0",
+                            "jest":  "^30.5.1",
+                            "jest-environment-jsdom":  "^30.5.1",
+                            "jsdom":  "^29.1.1",
+                            "postcss":  "^8.4.32",
+                            "tailwindcss":  "^4.0.0",
+                            "ts-jest":  "^29.4.12",
+                            "ts-node":  "^10.9.2",
+                            "typescript":  "^5.7.2"
+                        },
+    "engines":  {
+                    "node":  "\u003e=18.0.0"
+                }
 }
+
