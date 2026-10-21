@@ -31,7 +31,11 @@ export const siteConfig = {
     { href: "/credits", label: "Credits" },
     { href: "/links", label: "Links" },
   ],
-  /** Age-restricted page. Kept out of primary nav. */
+  /**
+   * Overflow menu: the desktop "More" dropdown and the mobile overflow.
+   * The age-restricted page and the policy page both stay out of the
+   * primary nav so it does not overflow on smaller desktops.
+   */
   moreMenu: [
     { href: "/wont-do", label: "What I Won't Do" },
     { href: "/nsfw", label: "NSFW" },
@@ -50,7 +54,6 @@ export const siteConfig = {
     { href: "/nsfw", label: "NSFW" },
     { href: "/contact", label: "Contact" },
     { href: "/tos", label: "Terms" },
-    { href: "/wont-do", label: "What I Won't Do" },
     { href: "/privacy", label: "Privacy" },
     { href: "/credits", label: "Credits" },
     { href: "/links", label: "Links" },
