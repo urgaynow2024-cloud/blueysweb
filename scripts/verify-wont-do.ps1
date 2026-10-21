@@ -51,10 +51,17 @@ $hmac.Key = [System.Text.Encoding]::UTF8.GetBytes($secret)
 $cookie = "bc_session=$payloadB64." + (B64Url ($hmac.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($payloadB64))))
 
 function Hit($method, $url, $body) {
-  $args = @("-s", "-w", "`n%{http_code}", "-b", $cookie, "-X", $method)
-  if ($body) { $args += @("-H", "Content-Type: application/json", "-d", $body) }
-  $args += $url
-  $out = & curl.exe @args
+  # The JSON body is written to a file and passed with --data-binary: passing it
+  # inline lets PowerShell's native argument handling mangle the quotes, which
+  # produced a 400 "Invalid request body" on an otherwise valid request.
+  $bodyFile = Join-Path $env:TEMP "wont-do-body.json"
+  $curlArgs = @("-s", "-L", "-w", "`n%{http_code}", "-b", $cookie, "-X", $method)
+  if ($body) {
+    [System.IO.File]::WriteAllText($bodyFile, $body, (New-Object System.Text.UTF8Encoding($false)))
+    $curlArgs += @("-H", "Content-Type: application/json", "--data-binary", "@$bodyFile")
+  }
+  $curlArgs += $url
+  $out = & curl.exe @curlArgs
   $text = ($out -join "`n")
   $code = [int]($text -split "`n")[-1]
   $json = $text -replace "`n\d+$", ""
