@@ -21,9 +21,9 @@
 --   renumbering step is skipped, the insert is skipped and the repair step leaves
 --   the row where it is. It does not delete or recreate any other data.
 --
--- It does NOT touch the FAQ. See the optional block at the bottom: the published
--- FAQ answer for "What files do I get?" still implies source files are handed over
--- on request, which is flagged for the owner's decision rather than changed here.
+-- It aligns the FAQ answer for "What files do I get?" with the new section (see
+-- step 5). The "Completed Work" wording in Definitions is left untouched and is
+-- kept as an optional block at the bottom.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -119,23 +119,26 @@ END $$;
 UPDATE site_config SET value = '2.1',        updated_at = NOW() WHERE key = 'tos_version';
 UPDATE site_config SET value = 'October 2026', updated_at = NOW() WHERE key = 'tos_last_updated';
 
+-- -----------------------------------------------------------------------------
+-- 5. FAQ alignment: "What files do I get?"
+--    The published answer was "Unity-ready VRChat avatar files. Blender source
+--    files on request." "on request" reads as a standing offer and does not
+--    mention that source files are not included in the price or that an extra
+--    fee may apply, so it is brought in line with the new section.
+--    (Applied to the live database on 2026-10-21; kept here so the patch still
+--    reproduces the intended end state on a fresh or restored database.)
+-- -----------------------------------------------------------------------------
+UPDATE faq_items
+SET answer = 'Unity-ready VRChat avatar files. Source and project files are not included by default; they are provided at our discretion and may require an additional fee agreed upon in advance.'
+WHERE question = 'What files do I get?';
+
 -- =============================================================================
 -- OPTIONAL - NOT APPLIED BY THIS SCRIPT
 -- =============================================================================
--- Two further clauses conflict with the new section. They are left untouched so
--- the owner decides whether to change them. Uncomment the block you want.
+-- One further clause can be read as conflicting with the new section. It is
+-- left untouched on purpose; uncomment the block if you want it changed.
 --
--- (a) FAQ, "What files do I get?"
---     Current answer: "Unity-ready VRChat avatar files. Blender source files on
---     request."
---     "on request" reads as a standing offer and does not mention that source
---     files are not included in the price or that an extra fee may apply.
--- -----------------------------------------------------------------------------
--- UPDATE faq_items
--- SET answer = 'Unity-ready VRChat avatar files. Source and project files are not included by default; they are provided at our discretion and may require an additional fee agreed upon in advance.'
--- WHERE question = 'What files do I get?';
---
--- (b) Definitions, "Completed Work"
+-- (a) Definitions, "Completed Work"
 --     Current wording: "...including all digital files, edits, and modifications."
 --     "all digital files" can be read as including working files. The new section
 --     already limits the Completed Work to the agreed deliverables; this edit

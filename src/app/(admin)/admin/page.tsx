@@ -66,7 +66,7 @@ const defaultFaq: any[] = [
   { question: "Do you work on Quest?", answer: "Quest compatibility depends on the tier. Overhauls include Quest optimisation.", sort_order: 2 },
   { question: "What payment methods?", answer: "PayPal and Payhip only. 50% deposit before work begins.", sort_order: 3 },
   { question: "Can I request NSFW work?", answer: "Limited NSFW commissions are accepted case-by-case for 18+ clients. See NSFW page for details.", sort_order: 4 },
-  { question: "What files do I get?", answer: "Unity-ready VRChat avatar files. Blender source files on request.", sort_order: 5 },
+  { question: "What files do I get?", answer: "Unity-ready VRChat avatar files. Source and project files are not included by default; they are provided at our discretion and may require an additional fee agreed upon in advance.", sort_order: 5 },
 ];
 const defaultWorkflow: any[] = [];
 
