@@ -1494,6 +1494,41 @@ select.field option {
   height: 0.9rem;
 }
 
+.nav-policy-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s var(--ease-out), background 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+}
+
+.nav-policy-button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-hover);
+}
+
+.nav-policy-button.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.nav-policy-button-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex: none;
+}
+
 .nav-menu-button {
   display: grid;
   place-items: center;

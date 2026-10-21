@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X, ArrowUpRight, ChevronDown } from "lucide-react";
+import { Menu, X, ArrowUpRight, ChevronDown, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
 
@@ -137,6 +137,17 @@ export default function Navbar() {
               </>
             )}
           </div>
+
+          {/* The policy page gets its own button next to the More menu so it
+              does not have to be hunted for in the overflow. */}
+          <Link
+            href="/wont-do"
+            className={`nav-policy-button ${isActive(pathname, "/wont-do") ? "active" : ""}`}
+            aria-current={isActive(pathname, "/wont-do") ? "page" : undefined}
+          >
+            <ShieldAlert className="nav-policy-button-icon" aria-hidden="true" />
+            <span>What I Won&rsquo;t Do</span>
+          </Link>
         </div>
 
         <Link href={siteConfig.commissionPath} className="nav-cta">
