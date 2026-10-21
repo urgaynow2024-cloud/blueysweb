@@ -1018,16 +1018,31 @@ If delays are expected, we will communicate with you proactively. Time is not of
 - Client-side technical issues
 
 It is your responsibility to download and verify the Completed Work upon delivery. Once the work is delivered and you have confirmed satisfaction (or completed the revision process), the Commission is considered complete.', '{}', '', 'info', NULL, 20, TRUE),
+('11111111-1111-1111-1111-111111111146', 'Source Files and Project Files', '📂', 'paragraphs', 'Source and working files are not included in the price of a Commission unless this is explicitly agreed upon in advance.
+
+Bluey Commissions is not obligated to provide any of the following, and none of these are supplied with a Commission unless we agree to include them:
+
+- Blender `.blend` files
+- Unity project files
+- Editable source files
+- Layered textures
+- Scene files, rig files, or any other working files
+
+You receive only the final deliverables that were explicitly agreed upon for your Commission. The digital files that make up the Completed Work are limited to those agreed deliverables, and never include source or working files unless we agree to provide them.
+
+Providing source or project files is at our sole discretion. Where we agree to supply them, an additional fee may apply, and that fee must be agreed upon in advance before any files are handed over.
+
+Purchasing a Commission does not transfer ownership of our source files, working files, or intellectual property rights beyond the usage rights granted to you under the Licence Granted to Clients section. All source files remain the property of Bluey Commissions unless ownership is explicitly transferred to you in writing.', '{}', 'Source and project files are not included in a Commission unless agreed in advance, and may be subject to an additional fee.', 'warning', 'Source Files Not Included', 21, TRUE),
 ('11111111-1111-1111-1111-111111111132', 'Acceptance of Completed Work', '✅', 'paragraphs', 'Upon delivery of the Completed Work, you have 48 hours to review and confirm acceptance. If no feedback or objection is received within 48 hours, the work is considered accepted and the Commission is deemed complete.
 
-If you wish to request revisions or report issues, you must do so within 48 hours of delivery. Failure to provide feedback within this window waives your right to revisions for that delivery.', '{}', 'Work is considered accepted if no feedback is received within 48 hours of delivery.', 'warning', 'Acceptance Window', 21, TRUE),
+If you wish to request revisions or report issues, you must do so within 48 hours of delivery. Failure to provide feedback within this window waives your right to revisions for that delivery.', '{}', 'Work is considered accepted if no feedback is received within 48 hours of delivery.', 'warning', 'Acceptance Window', 22, TRUE),
 ('11111111-1111-1111-1111-111111111133', 'Support After Delivery', '🎧', 'paragraphs', 'Bluey''s Creation provides limited support after delivery of the Completed Work:
 
 - **Bug fixes**: Minor bugs or issues related to the delivered files (incorrect imports, missing components, etc.) will be fixed at no additional cost within 7 days of delivery.
 - **Guidance**: Basic guidance on how to use or import the files will be provided upon request.
 - **Major issues**: Significant problems or feature additions are treated as new revisions and may incur additional fees.
 
-Support is provided through Discord or email and is subject to availability. We are not obligated to provide ongoing or indefinite support.', '{}', '', 'info', NULL, 22, TRUE),
+Support is provided through Discord or email and is subject to availability. We are not obligated to provide ongoing or indefinite support.', '{}', '', 'info', NULL, 23, TRUE),
 ('11111111-1111-1111-1111-111111111134', 'Refusal of Service', '🚫', 'paragraphs', 'Bluey''s Creation reserves the right to refuse or cancel any Commission, in whole or in part, at our sole discretion, for any reason, including but not limited to:
 
 - Violation of these Terms
@@ -1038,7 +1053,7 @@ Support is provided through Discord or email and is subject to availability. We 
 - Inability to verify asset ownership
 - Current high workload or unavailability
 
-If a Commission is refused before work begins, any deposit paid will be refunded in full. If a Commission is cancelled after work has begun, the refund policy in the Refund Policy section applies.', '{}', '', 'info', NULL, 23, TRUE),
+If a Commission is refused before work begins, any deposit paid will be refunded in full. If a Commission is cancelled after work has begun, the refund policy in the Refund Policy section applies.', '{}', '', 'info', NULL, 24, TRUE),
 ('11111111-1111-1111-1111-111111111135', 'Client Conduct', '👥', 'paragraphs', 'Bluey''s Creation expects all Clients to communicate respectfully and professionally throughout the Commission process. Unacceptable behaviour includes, but is not limited to:
 
 - Harassment, bullying, or abusive language directed at Bluey''s Creation or other clients
@@ -1048,7 +1063,7 @@ If a Commission is refused before work begins, any deposit paid will be refunded
 - Sharing of personal information without consent
 - Disruptive behaviour in Discord servers or other communication channels
 
-Any violation of this conduct policy may result in immediate cancellation of the Commission, refusal of future services, and permanent blacklisting.', '{}', 'Respectful communication is expected at all times.', 'warning', 'Code of Conduct', 24, TRUE),
+Any violation of this conduct policy may result in immediate cancellation of the Commission, refusal of future services, and permanent blacklisting.', '{}', 'Respectful communication is expected at all times.', 'warning', 'Code of Conduct', 25, TRUE),
 ('11111111-1111-1111-1111-111111111136', 'Blacklisting Policy', '🚫', 'paragraphs', 'Bluey''s Creation maintains the right to permanently blacklist any Client from future services. Grounds for blacklisting include, but are not limited to:
 
 - Harassment of Bluey''s Creation or staff
@@ -1067,7 +1082,7 @@ Any violation of this conduct policy may result in immediate cancellation of the
 - Repeated breaches of these Terms of Service
 - Attempting to scam or deceive Bluey''s Creation in any way
 
-Blacklisted clients will be refused service permanently and may be reported to relevant platforms or authorities if illegal activity is suspected.', '{}', 'We reserve the right to blacklist anyone who violates these Terms or engages in harmful behaviour.', 'error', 'Strict Enforcement', 25, TRUE),
+Blacklisted clients will be refused service permanently and may be reported to relevant platforms or authorities if illegal activity is suspected.', '{}', 'We reserve the right to blacklist anyone who violates these Terms or engages in harmful behaviour.', 'error', 'Strict Enforcement', 26, TRUE),
 ('11111111-1111-1111-1111-111111111137', 'Privacy', '🔐', 'paragraphs', 'Bluey''s Creation respects your privacy. This Privacy section summarises how we collect, use, and protect your information:
 
 - **Data collected**: Name, Discord handle, email, commission details, and reference materials.
@@ -1077,7 +1092,7 @@ Blacklisted clients will be refused service permanently and may be reported to r
 - **Cookies**: This site may use cookies for basic functionality. No personal tracking cookies are used.
 - **Third-party services**: We may use third-party platforms (Discord and PayPal) for communication and payment processing. Your data is subject to their respective privacy policies.
 
-For full privacy information, please contact us directly.', '{}', '', 'info', NULL, 26, TRUE),
+For full privacy information, please contact us directly.', '{}', '', 'info', NULL, 27, TRUE),
 ('11111111-1111-1111-1111-111111111138', 'Limitation of Liability', '⚖️', 'paragraphs', 'To the fullest extent permitted by law, Bluey''s Creation''s total liability to you for any claim arising from or related to these Terms or the Services, whether in contract, tort (including negligence), breach of statutory duty, or otherwise, shall be limited to the amount you paid to Bluey''s Creation for the Commission giving rise to the claim.
 
 Bluey''s Creation shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation:
@@ -1086,7 +1101,7 @@ Bluey''s Creation shall not be liable for any indirect, incidental, special, con
 - Any indirect or intangible losses
 - Damage to reputation or loss of goodwill
 
-These limitations apply even if Bluey''s Creation has been advised of the possibility of such damages.', '{}', '', 'info', NULL, 27, TRUE),
+These limitations apply even if Bluey''s Creation has been advised of the possibility of such damages.', '{}', '', 'info', NULL, 28, TRUE),
 ('11111111-1111-1111-1111-111111111139', 'Disclaimer', '⚠️', 'paragraphs', 'The Services are provided on an "as is" and "as available" basis. Bluey''s Creation makes no warranties of any kind, whether express, implied, statutory, or otherwise.
 
 Bluey''s Creation does not warrant that:
@@ -1095,7 +1110,7 @@ Bluey''s Creation does not warrant that:
 - Any defects will be corrected
 - The Services will meet your specific requirements
 
-While we strive for high quality in all deliverables, we cannot guarantee specific outcomes, compatibility with all platforms, or freedom from technical issues. You acknowledge that you use the Services at your own risk.', '{}', '', 'info', NULL, 28, TRUE),
+While we strive for high quality in all deliverables, we cannot guarantee specific outcomes, compatibility with all platforms, or freedom from technical issues. You acknowledge that you use the Services at your own risk.', '{}', '', 'info', NULL, 29, TRUE),
 ('11111111-1111-1111-1111-111111111140', 'Force Majeure', '🌪️', 'paragraphs', 'Bluey''s Creation shall not be liable for any failure or delay in performing any obligation under these Terms that is caused by circumstances beyond our reasonable control, including but not limited to:
 
 - Acts of God (earthquakes, floods, storms, fires, pandemics)
@@ -1107,23 +1122,23 @@ While we strive for high quality in all deliverables, we cannot guarantee specif
 - Hardware or software failures
 - Other events beyond reasonable control
 
-If a force majeure event occurs, we will make reasonable efforts to notify you and minimise disruption to the Commission.', '{}', '', 'info', NULL, 29, TRUE),
+If a force majeure event occurs, we will make reasonable efforts to notify you and minimise disruption to the Commission.', '{}', '', 'info', NULL, 30, TRUE),
 ('11111111-1111-1111-1111-111111111141', 'Changes to the Terms', '📝', 'paragraphs', 'Bluey''s Creation reserves the right to modify or replace these Terms of Service at any time, at our sole discretion. When we do, we will update the "Last Updated" date at the top of this page and, where appropriate, the version number.
 
 It is your responsibility to review these Terms periodically. Your continued engagement with Bluey''s Creation after any changes constitutes acceptance of the revised Terms. If you do not agree with any change, you must discontinue using our Services and must not submit further commission requests.
 
-Material changes will be communicated via the website or Discord.', '{}', '', 'info', NULL, 30, TRUE),
+Material changes will be communicated via the website or Discord.', '{}', '', 'info', NULL, 31, TRUE),
 ('11111111-1111-1111-1111-111111111142', 'Governing Law', '🏛️', 'paragraphs', 'These Terms are governed by and construed in accordance with the laws of England and Wales. Any disputes arising from or in connection with these Terms or the Services will be subject to the exclusive jurisdiction of the courts of England and Wales.
 
-If any provision of these Terms is found to be invalid or unenforceable by a court of competent jurisdiction, the remaining provisions will remain in full force and effect.', '{}', '', 'info', NULL, 31, TRUE),
-('11111111-1111-1111-1111-111111111143', 'Severability', '✂️', 'paragraphs', 'If any provision of these Terms is held by a court of competent jurisdiction to be invalid, illegal, or unenforceable, the remaining provisions will remain in full force and effect. The invalid, illegal, or unenforceable provision shall be replaced by a valid, legal, and enforceable provision that most closely reflects the parties'' original intent.', '{}', '', 'info', NULL, 32, TRUE),
+If any provision of these Terms is found to be invalid or unenforceable by a court of competent jurisdiction, the remaining provisions will remain in full force and effect.', '{}', '', 'info', NULL, 32, TRUE),
+('11111111-1111-1111-1111-111111111143', 'Severability', '✂️', 'paragraphs', 'If any provision of these Terms is held by a court of competent jurisdiction to be invalid, illegal, or unenforceable, the remaining provisions will remain in full force and effect. The invalid, illegal, or unenforceable provision shall be replaced by a valid, legal, and enforceable provision that most closely reflects the parties'' original intent.', '{}', '', 'info', NULL, 33, TRUE),
 ('11111111-1111-1111-1111-111111111144', 'Entire Agreement', '📜', 'paragraphs', 'These Terms, together with any policies or documents referenced herein, constitute the entire agreement between you and Bluey''s Creation with respect to the subject matter hereof and supersede any and all prior or contemporaneous communications, representations, agreements, or understandings, whether oral or written, whether electronic, or by any means of communication.
 
-These Terms are not intended to confer any rights or benefits upon any third party, and no provision of these Terms will be construed as conferring any right or benefit to any third party.', '{}', '', 'info', NULL, 33, TRUE),
+These Terms are not intended to confer any rights or benefits upon any third party, and no provision of these Terms will be construed as conferring any right or benefit to any third party.', '{}', '', 'info', NULL, 34, TRUE),
 ('11111111-1111-1111-1111-111111111145', 'Contact Information', '📧', 'paragraphs', 'If you have any questions about these Terms of Service, or wish to contact Bluey''s Creation for any reason, please contact us through the following methods:
 
 - **Discord**: @BlueyBarks
 - **Website**: https://www.blueycomissions.website/
 
-We will respond to your inquiry within a reasonable timeframe.', '{}', '', 'info', NULL, 34, TRUE)
+We will respond to your inquiry within a reasonable timeframe.', '{}', '', 'info', NULL, 35, TRUE)
 ON CONFLICT (id) DO NOTHING;
