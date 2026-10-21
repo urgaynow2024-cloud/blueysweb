@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { LayoutDashboard, Tag, HelpCircle, Workflow, Star, Image as ImageIcon, Link as LinkIcon, Info, BarChart3, ShieldAlert, LogOut, Lock, UserCog, Package, GitCompare, FileText, Sparkles, Users, BadgeCheck } from "lucide-react";
+import { LayoutDashboard, Tag, HelpCircle, Workflow, Star, Image as ImageIcon, Link as LinkIcon, Info, BarChart3, ShieldAlert, LogOut, Lock, UserCog, Package, GitCompare, FileText, Sparkles, Users, BadgeCheck, Ban } from "lucide-react";
 
 export interface NavItem {
   id: string;
@@ -28,6 +28,7 @@ export const ADMIN_NAV: NavGroup[] = [
       { id: "credits", label: "Credits", icon: <Users className="ad-sidebar-icon h-[18px] w-[18px]" /> },
       { id: "reviews", label: "Reviews", icon: <Star className="ad-sidebar-icon h-[18px] w-[18px]" /> },
       { id: "tos", label: "Terms of Service", icon: <FileText className="ad-sidebar-icon h-[18px] w-[18px]" /> },
+      { id: "wont-do", label: "What I Won't Do", icon: <Ban className="ad-sidebar-icon h-[18px] w-[18px]" /> },
     ],
   },
   {

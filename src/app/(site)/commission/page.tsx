@@ -8,7 +8,7 @@ import CommissionTierCard from "@/components/ui/CommissionTierCard";
 import ContactCommissionForm from "@/components/ContactCommissionForm";
 import { siteConfig, pricingTiers, additionalServices, faqItems } from "@/config/site";
 import { getPricingTiers } from "@/lib/db";
-import { Zap, ArrowRight, ShieldCheck, Check, Sparkles, MessageCircle, Clock, FileText, DollarSign, Send, HelpCircle } from "lucide-react";
+import { Zap, ArrowRight, ShieldCheck, Check, Sparkles, MessageCircle, Clock, FileText, DollarSign, Send, HelpCircle, Ban } from "lucide-react";
 
 const ALLOWED_TIERS = ["Light Blender Work", "Standard Avatar Work", "Advanced Avatar Work"];
 
@@ -166,6 +166,19 @@ export default function CommissionPage() {
               <div className="mt-5">
                 <Link href="/tos" className="btn-secondary inline-flex items-center gap-2">
                   Read the full Terms of Service
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+            <div className="mx-auto mt-4 max-w-2xl rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-7 text-center">
+              <Ban className="mx-auto h-6 w-6 text-[var(--accent-2)]" />
+              <p className="mx-auto mt-3 max-w-md text-sm text-[var(--text-secondary)]">
+                Some commissions and requests are not ones I take on at all. Check
+                the list before you send a request so neither of us wastes time.
+              </p>
+              <div className="mt-5">
+                <Link href="/wont-do" className="btn-secondary inline-flex items-center gap-2">
+                  See what I won't do
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>

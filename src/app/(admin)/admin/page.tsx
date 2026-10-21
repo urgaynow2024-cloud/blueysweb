@@ -33,6 +33,7 @@ const AdoptablesSection = dynamic(() => import("@/components/admin/sections/Adop
 const TosSection = dynamic(() => import("@/components/admin/sections/TosSection").then((m) => ({ default: m.TosSection })), { ssr: false });
 const CreditsSection = dynamic(() => import("@/components/admin/sections/CreditsSection").then((m) => ({ default: m.CreditsSection })), { ssr: false });
 const NoAiBadgeSection = dynamic(() => import("@/components/admin/sections/NoAiBadgeSection").then((m) => ({ default: m.NoAiBadgeSection })), { ssr: false });
+const WontDoSection = dynamic(() => import("@/components/admin/sections/WontDoSection").then((m) => ({ default: m.WontDoSection })), { ssr: false });
 
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -70,7 +71,7 @@ const defaultFaq: any[] = [
 ];
 const defaultWorkflow: any[] = [];
 
-  type Tab = "overview" | "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "adoptables" | "credits" | "tos" | "no-ai";
+  type Tab = "overview" | "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "adoptables" | "credits" | "tos" | "no-ai" | "wont-do";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -653,6 +654,7 @@ async function loadAllData() {
       {tab === "tos" && <TosSection value={tos} onChange={(n) => { setTos(n); markDirty(); }} />}
       {tab === "site" && <SiteInfoSection value={site} onChange={(n) => { setSite(n); markDirty(); }} />}
       {tab === "no-ai" && <NoAiBadgeSection site={site} onChange={(n) => { setSite(n); markDirty(); }} />}
+{tab === "wont-do" && <WontDoSection />}
 
       <Modal
         open={resetOpen}

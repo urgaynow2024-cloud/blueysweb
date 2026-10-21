@@ -26,12 +26,16 @@ export const siteConfig = {
   footerLinks: [
     { href: "/contact", label: "Contact" },
     { href: "/tos", label: "Terms" },
+    { href: "/wont-do", label: "What I Won't Do" },
     { href: "/privacy", label: "Privacy" },
     { href: "/credits", label: "Credits" },
     { href: "/links", label: "Links" },
   ],
   /** Age-restricted page. Kept out of primary nav. */
-  moreMenu: [{ href: "/nsfw", label: "NSFW" }],
+  moreMenu: [
+    { href: "/wont-do", label: "What I Won't Do" },
+    { href: "/nsfw", label: "NSFW" },
+  ],
   /**
    * Mobile menu = primary + secondary + CTA. Derived, never hand-maintained.
    */
@@ -46,6 +50,7 @@ export const siteConfig = {
     { href: "/nsfw", label: "NSFW" },
     { href: "/contact", label: "Contact" },
     { href: "/tos", label: "Terms" },
+    { href: "/wont-do", label: "What I Won't Do" },
     { href: "/privacy", label: "Privacy" },
     { href: "/credits", label: "Credits" },
     { href: "/links", label: "Links" },
@@ -63,6 +68,7 @@ export const siteConfig = {
   footerInfo: [
     { href: "/contact", label: "Contact" },
     { href: "/tos", label: "Terms" },
+    { href: "/wont-do", label: "What I Won't Do" },
     { href: "/privacy", label: "Privacy" },
     { href: "/credits", label: "Credits" },
     { href: "/links", label: "Links" },

@@ -94,6 +94,35 @@ CREATE TABLE IF NOT EXISTS tos_sections (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- =============================================================================
+-- "What I Won't Do" page (editable from admin)
+-- =============================================================================
+-- Categories are the headings on the page, items are the individual
+-- refusals underneath them. Items carry their own `visible` flag so the
+-- owner can unpublish a line without deleting it.
+
+CREATE TABLE IF NOT EXISTS wont_do_categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS wont_do_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  category_id UUID NOT NULL REFERENCES wont_do_categories(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  sort_order INTEGER DEFAULT 0,
+  visible BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS wont_do_items_category_idx ON wont_do_items (category_id);
+
 -- Workflow / process steps
 CREATE TABLE IF NOT EXISTS workflow_steps (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -548,6 +577,8 @@ ALTER TABLE adoptables ENABLE ROW LEVEL SECURITY;
 ALTER TABLE adoptable_gallery ENABLE ROW LEVEL SECURITY;
 ALTER TABLE adoptable_before_after ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tos_sections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wont_do_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wont_do_items ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies before recreating
 DO $$ BEGIN
@@ -577,8 +608,12 @@ DO $$ BEGIN
     DROP POLICY IF EXISTS "Authenticated write adoptable_gallery" ON adoptable_gallery;
     DROP POLICY IF EXISTS "Public read adoptable_before_after" ON adoptable_before_after;
     DROP POLICY IF EXISTS "Authenticated write adoptable_before_after" ON adoptable_before_after;
-   DROP POLICY IF EXISTS "Public read tos_sections" ON tos_sections;
-   DROP POLICY IF EXISTS "Authenticated write tos_sections" ON tos_sections;
+    DROP POLICY IF EXISTS "Public read tos_sections" ON tos_sections;
+    DROP POLICY IF EXISTS "Authenticated write tos_sections" ON tos_sections;
+    DROP POLICY IF EXISTS "Public read wont_do_categories" ON wont_do_categories;
+    DROP POLICY IF EXISTS "Authenticated write wont_do_categories" ON wont_do_categories;
+    DROP POLICY IF EXISTS "Public read wont_do_items" ON wont_do_items;
+    DROP POLICY IF EXISTS "Authenticated write wont_do_items" ON wont_do_items;
 END $$;
 
 -- Public read access for all tables
@@ -607,6 +642,14 @@ CREATE POLICY "Authenticated write adoptable_before_after" ON adoptable_before_a
 -- TOS sections: public read, authenticated write
 CREATE POLICY "Public read tos_sections" ON tos_sections FOR SELECT USING (true);
 CREATE POLICY "Authenticated write tos_sections" ON tos_sections FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
+
+-- "What I Won't Do": categories are public, items are public only while
+-- published. Unpublished items stay in the database but are unreachable by
+-- anon clients, so the public page can never leak a draft.
+CREATE POLICY "Public read wont_do_categories" ON wont_do_categories FOR SELECT USING (true);
+CREATE POLICY "Authenticated write wont_do_categories" ON wont_do_categories FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
+CREATE POLICY "Public read wont_do_items" ON wont_do_items FOR SELECT USING (visible = true);
+CREATE POLICY "Authenticated write wont_do_items" ON wont_do_items FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
 
 -- Allow authenticated users to modify
 CREATE POLICY "Authenticated write portfolio_images" ON portfolio_images FOR ALL USING ((auth.role() = 'authenticated' OR auth.role() = 'service_role'));
