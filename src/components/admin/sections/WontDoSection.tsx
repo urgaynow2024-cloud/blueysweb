@@ -374,9 +374,7 @@ export function WontDoSection() {
                           )
                         }
                         onBlur={(e) => {
-                          if (e.target.value.trim() !== category.title) {
-                            void saveCategory(category.id, { title: e.target.value });
-                          }
+                          void saveCategory(category.id, { title: e.target.value });
                         }}
                       />
                       <Textarea
@@ -394,11 +392,9 @@ export function WontDoSection() {
                           )
                         }
                         onBlur={(e) => {
-                          if (e.target.value !== category.description) {
-                            void saveCategory(category.id, {
-                              description: e.target.value,
-                            });
-                          }
+                          void saveCategory(category.id, {
+                            description: e.target.value,
+                          });
                         }}
                       />
                     </div>
@@ -463,9 +459,7 @@ export function WontDoSection() {
                                 )
                               }
                               onBlur={(e) => {
-                                if (e.target.value.trim() !== item.title) {
-                                  void saveItem(item.id, { title: e.target.value });
-                                }
+                                void saveItem(item.id, { title: e.target.value });
                               }}
                             />
                             <Textarea
@@ -482,13 +476,11 @@ export function WontDoSection() {
                                   )
                                 )
                               }
-                              onBlur={(e) => {
-                                if (e.target.value !== item.description) {
-                                  void saveItem(item.id, {
-                                    description: e.target.value,
-                                  });
-                                }
-                              }}
+                            onBlur={(e) => {
+                              void saveItem(item.id, {
+                                description: e.target.value,
+                              });
+                            }}
                             />
                             {categories.length > 1 && (
                               <Select
@@ -612,3 +604,5 @@ export function WontDoSection() {
     </div>
   );
 }
+
+
