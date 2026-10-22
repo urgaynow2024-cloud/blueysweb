@@ -47,7 +47,6 @@ export function buildPublicTree(
   const views: WontDoCategoryView[] = [];
   for (const category of sortByOrder(categories)) {
     const own = sortByOrder(byCategory.get(category.id) ?? []);
-    if (own.length === 0) continue;
     views.push({ ...category, items: own });
   }
   return views;

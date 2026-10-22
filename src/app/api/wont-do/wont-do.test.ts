@@ -162,7 +162,7 @@ describe("GET /api/wont-do (public)", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.categories).toHaveLength(1);
+    expect(body.categories).toHaveLength(2);
     expect(body.categories[0].title).toBe("Content");
     expect(body.categories[0].items.map((i: any) => i.id)).toEqual([ITEM_ID]);
   });
@@ -378,3 +378,4 @@ describe("reorder", () => {
     expect(res.status).toBe(400);
   });
 });
+

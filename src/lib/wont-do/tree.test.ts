@@ -63,12 +63,12 @@ describe("buildPublicTree", () => {
     expect(tree[0].items.map((i) => i.id)).toEqual(["i1"]);
   });
 
-  it("drops categories that have no published items", () => {
+  it("keeps categories even without published items", () => {
     const tree = buildPublicTree(
       [category(CAT_A, 0), category(CAT_B, 1)],
       [item("i1", CAT_A, 0, true), item("i2", CAT_B, 1, false)]
     );
-    expect(tree.map((c) => c.id)).toEqual([CAT_A]);
+    expect(tree.map((c) => c.id)).toEqual([CAT_A, CAT_B]);
   });
 
   it("orders categories and their items", () => {
@@ -76,13 +76,13 @@ describe("buildPublicTree", () => {
       [category(CAT_B, 1), category(CAT_A, 0)],
       [item("i2", CAT_A, 1), item("i1", CAT_A, 0)]
     );
-    expect(tree.map((c) => c.id)).toEqual([CAT_A]);
+    expect(tree.map((c) => c.id)).toEqual([CAT_A, CAT_B]);
     expect(tree[0].items.map((i) => i.id)).toEqual(["i1", "i2"]);
   });
 
   it("ignores items whose category is missing", () => {
     const tree = buildPublicTree([category(CAT_A, 0)], [item("i1", "missing", 0)]);
-    expect(tree).toHaveLength(0);
+    expect(tree).toHaveLength(1);
   });
 
   it("returns an empty list when there is nothing published", () => {
@@ -124,3 +124,5 @@ describe("renumber", () => {
     expect(renumber(rows).map((r) => r.sort_order)).toEqual([0, 1]);
   });
 });
+
+
