@@ -114,48 +114,52 @@ export default function WontDoPage() {
               </ButtonLink>
             </div>
           ) : (
-            <div className="space-y-5">
-              {categories.map((category) => (
-                <article
-                  key={category.id}
-                  className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] glass p-6 md:p-7"
-                >
-                  <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
-                    {category.title}
-                  </h2>
-                  {category.description ? (
-                    <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
-                      {category.description}
-                    </p>
-                  ) : null}
+            <div className="grid gap-4 sm:grid-cols-2">
+              {categories
+                .filter((c) => (c.items?.length ?? 0) > 0 || !!c.description)
+                .map((category) => (
+                  <article
+                    key={category.id}
+                    className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] glass p-5"
+                  >
+                    <h2 className="text-lg font-semibold tracking-tight text-white">
+                      {category.title}
+                    </h2>
+                    {category.description ? (
+                      <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">
+                        {category.description}
+                      </p>
+                    ) : null}
 
-                  <ul className="mt-5 space-y-3">
-                    {category.items.map((item) => (
-                      <li
-                        key={item.id}
-                        className="flex items-start gap-3 rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4"
-                      >
-                        <span
-                          className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md bg-[var(--accent-2)]/12 text-[var(--accent-2)]"
-                          aria-hidden="true"
-                        >
-                          <Ban className="h-3.5 w-3.5" />
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-white">
-                            {item.title}
-                          </p>
-                          {item.description ? (
-                            <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">
-                              {item.description}
-                            </p>
-                          ) : null}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
-              ))}
+                    {category.items?.length ? (
+                      <ul className="mt-3 divide-y divide-[var(--border)]">
+                        {category.items.map((item) => (
+                          <li
+                            key={item.id}
+                            className="flex items-start gap-2 py-2"
+                          >
+                            <span
+                              className="mt-0.5 shrink-0 text-red-400"
+                              aria-hidden="true"
+                            >
+                              🚫
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-white">
+                                {item.title}
+                              </p>
+                              {item.description ? (
+                                <p className="mt-0.5 text-xs leading-relaxed text-[var(--text-secondary)]">
+                                  {item.description}
+                                </p>
+                              ) : null}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </article>
+                ))}
             </div>
           )}
 
