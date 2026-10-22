@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { buildPublicTree } from "@/lib/wont-do/tree";
@@ -42,3 +43,4 @@ export async function GET() {
     categories: buildPublicTree(categoriesResult.data ?? [], itemsResult.data ?? []),
   });
 }
+

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdminSession } from "@/lib/auth/guard";
@@ -42,3 +43,4 @@ export async function GET() {
     items: itemsResult.data ?? [],
   });
 }
+
