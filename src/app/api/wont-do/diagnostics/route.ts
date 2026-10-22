@@ -32,3 +32,51 @@ export async function GET() {
   return NextResponse.json({ env, database: { ok: true, categories: catCount ?? 0, items: itemCount ?? 0 } });
 }
 
+
+export async function POST() {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return guard.response!;
+
+  if (!supabaseAdmin) {
+    return NextResponse.json({ ok: false, error: "supabaseAdmin not initialized" }, { status: 500 });
+  }
+
+  const tempTitle = "DIAGNOSTIC-TEMP-DELETE-ME";
+  const { data: created, error: createError } = await supabaseAdmin
+    .from("wont_do_categories")
+    .insert({ title: tempTitle, description: "diagnostic", sort_order: 9999 })
+    .select()
+    .single();
+  if (createError || !created) {
+    return NextResponse.json({ ok: false, step: "create", error: createError?.message }, { status: 500 });
+  }
+
+  const { data: readBack, error: readError } = await supabaseAdmin
+    .from("wont_do_categories")
+    .select("*")
+    .eq("id", created.id)
+    .maybeSingle();
+  if (readError || !readBack) {
+    await supabaseAdmin.from("wont_do_categories").delete().eq("id", created.id);
+    return NextResponse.json({ ok: false, step: "read", error: readError?.message }, { status: 500 });
+  }
+
+  const { error: updateError } = await supabaseAdmin
+    .from("wont_do_categories")
+    .update({ title: tempTitle + "-UPDATED" })
+    .eq("id", created.id);
+  if (updateError) {
+    await supabaseAdmin.from("wont_do_categories").delete().eq("id", created.id);
+    return NextResponse.json({ ok: false, step: "update", error: updateError.message }, { status: 500 });
+  }
+
+  const { error: deleteError } = await supabaseAdmin
+    .from("wont_do_categories")
+    .delete()
+    .eq("id", created.id);
+  if (deleteError) {
+    return NextResponse.json({ ok: false, step: "delete", error: deleteError.message, leftoverId: created.id }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true, message: "create/read/update/delete succeeded" });
+}
