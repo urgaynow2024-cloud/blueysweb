@@ -46,9 +46,9 @@ export default function WontDoPage() {
       <div className="bg-nebula" />
       <div className="bg-cosmic-fog" />
 
-      <section className="relative overflow-hidden pt-20 sm:pt-24 md:pt-28">
+      <section className="relative overflow-hidden pt-12 sm:pt-16">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-30" />
-        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent-2)] opacity-[0.05] blur-[130px] orb-slow" />
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-60 w-[600px] -translate-x-1/2 rounded-full bg-[var(--accent-2)] opacity-[0.05] blur-[120px] orb-slow" />
 
         <div className="container max-w-3xl">
           <div className="mx-auto max-w-2xl text-center">
@@ -56,8 +56,8 @@ export default function WontDoPage() {
               <Ban className="h-3.5 w-3.5 text-[var(--accent-2)]" />
               Scope &amp; Limits
             </span>
-            <h1 className="display-xl mt-5 text-white">What I Won&rsquo;t Do</h1>
-            <p className="lead mx-auto mt-4">
+            <h1 className="display-xl mt-3 text-white">What I Won&rsquo;t Do</h1>
+            <p className="lead mx-auto mt-3">
               A clear list of the commissions, requests and content I do not take
               on. Checking this first saves us both time.
             </p>
@@ -163,16 +163,16 @@ export default function WontDoPage() {
             </div>
           )}
 
-          <div className="mt-14 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-7 text-center">
+          <div className="mt-8 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-5 text-center">
             <p className="text-sm font-semibold text-white">
               Something on this list still sounds like a good fit?
             </p>
-            <p className="mx-auto mt-2 max-w-md text-sm text-[var(--text-secondary)]">
+            <p className="mx-auto mt-1 max-w-md text-sm text-[var(--text-secondary)]">
               Rules are not deal breakers if the request is reasonable. Send a
               commission request and I will tell you honestly whether it is
               something I can take on.
             </p>
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
               <ButtonLink href="/commission" rightIcon={<ArrowRight className="h-4 w-4" />}>
                 Start a commission
               </ButtonLink>
