@@ -72,7 +72,7 @@ export default function Lightbox({ images, index, onClose, onPrev, onNext }: Lig
       role="dialog"
       aria-modal="true"
       aria-label={`Image ${index + 1} of ${images.length}`}
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -94,13 +94,13 @@ export default function Lightbox({ images, index, onClose, onPrev, onNext }: Lig
             controls
             preload="metadata"
             playsInline
-            className="max-h-[80vh] max-w-full rounded-2xl border border-white/10 object-contain shadow-2xl shadow-black/60"
+            className="max-h-[88vh] max-w-full rounded-xl border border-white/10 object-contain shadow-2xl shadow-black/70"
           />
         ) : (
           <img
             src={current.url}
             alt={current.caption || current.title || `Portfolio ${index + 1}`}
-            className="max-h-[80vh] max-w-full rounded-2xl border border-white/10 object-contain shadow-2xl shadow-black/60"
+            className="max-h-[88vh] max-w-full rounded-xl border border-white/10 object-contain shadow-2xl shadow-black/70"
           />
         )}
 

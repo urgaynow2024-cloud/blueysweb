@@ -95,7 +95,7 @@ export default function PortfolioPage() {
                     role="button"
                     tabIndex={0}
                     aria-label="View featured artwork full size"
-                    className="portfolio-card portfolio-hero group relative mb-8 cursor-pointer overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[var(--shadow-lg)]"
+                    className="portfolio-card portfolio-hero group relative mb-8 cursor-pointer overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] transition-all duration-200 hover:border-[var(--border-hover)]"
                   >
                     <div className="portfolio-image relative aspect-[16/9] w-full">
                       <StorageImage
@@ -104,7 +104,7 @@ export default function PortfolioPage() {
                         fill
                         priority
                         sizes="(max-width: 1024px) 100vw, 900px"
-                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.015]"
                       />                    </div>
                     <div className="absolute inset-0 flex items-end justify-end bg-gradient-to-t from-black/50 via-transparent to-transparent p-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                       <span className="grid h-12 w-12 place-items-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition-transform duration-300 group-hover:scale-110">
@@ -158,7 +158,7 @@ export default function PortfolioPage() {
                       role="button"
                       tabIndex={0}
                       aria-label={`View portfolio image ${i + 1} full size`}
-                      className="portfolio-card group relative overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] cursor-pointer transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[var(--shadow-md)]"
+                      className="portfolio-card group relative overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] cursor-pointer transition-all duration-200 hover:border-[var(--border-hover)]"
                     >
                       <div className="portfolio-image relative aspect-[4/3] w-full">
                         <StorageImage
@@ -166,7 +166,7 @@ export default function PortfolioPage() {
                           alt={`Portfolio ${i + 1}`}
                           fill
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                          className="h-full w-full object-cover transition-transform duration-400 group-hover:scale-[1.015]"
                         />
                       </div>
                       <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
