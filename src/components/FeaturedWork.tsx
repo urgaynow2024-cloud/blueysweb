@@ -17,7 +17,16 @@ export default function FeaturedWork() {
       setLoading(true);
       try {
         const siteImages = await getSiteImages();
-        if (siteImages.hero?.url) setHeroImage(siteImages.hero.url);
+        if (siteImages.hero?.url) {
+          // Use render URL for consistency and to avoid optimizer issues
+          const { toSupabaseRenderUrl } = await import("@/lib/supabase/client");
+          const renderUrl = toSupabaseRenderUrl(siteImages.hero.url, {
+            width: 1200,
+            quality: 75,
+            format: "webp",
+          });
+          setHeroImage(renderUrl || siteImages.hero.url);
+        }
 
         const allImages = await getPortfolioImages();
         setImages((allImages || []).slice(0, 6).map((img: { id: string; url: string }) => img.url));

@@ -19,16 +19,21 @@ export default function Hero() {
   useEffect(() => {
     setMounted(true);
     async function load() {
-      const images = await getSiteImages();
-      if (images.hero?.url) {
-        // Use Supabase render API for hero image to avoid Next.js optimizer timeouts
-        // on large PNG files. The render API returns an already-optimized WebP.
-        const renderUrl = toSupabaseRenderUrl(images.hero.url, {
-          width: 1200,
-          quality: 75,
-          format: "webp",
-        });
-        setHeroImage(renderUrl);
+      try {
+        const images = await getSiteImages();
+        if (images.hero?.url) {
+          // Use Supabase render API for hero image to avoid Next.js optimizer timeouts
+          // on large PNG files. The render API returns an already-optimized WebP.
+          const renderUrl = toSupabaseRenderUrl(images.hero.url, {
+            width: 1200,
+            quality: 75,
+            format: "webp",
+          });
+          // Prefer render URL if different; fall back to original if render fails
+          setHeroImage(renderUrl || images.hero.url);
+        }
+      } catch (e) {
+        console.error("Failed to load hero image:", e);
       }
     }
     load();
@@ -79,6 +84,7 @@ export default function Hero() {
                       fill
                       priority
                       fetchPriority="high"
+                      loading="eager"
                       sizes="(max-width: 1024px) 100vw, 50vw"
                       className="h-full min-h-[340px] max-h-[60vh] w-full object-cover transition-transform duration-700 ease-out hover:scale-[1.02]"
                     />
