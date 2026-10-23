@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { CheckCircle2, Trash2, Edit2, X, ImageIcon, Loader2 } from "lucide-react";
+import { CheckCircle2, Trash2, Edit2, X, ImageIcon, Loader2, AlertCircle } from "lucide-react";
 import StarRating from "@/components/StarRating";
-import { uploadImage } from "@/lib/db";
+import { uploadMedia } from "@/lib/upload/client";
+import { UploadError } from "@/lib/upload/errors";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { Card, CardHeader } from "../Card";
 import { Field, Input, Textarea } from "../Field";
 import { Button } from "../Button";
+import { useToast } from "../Toast";
 
 interface Props {
   value: any[];
@@ -23,7 +25,65 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
     image_url: review.image_url || null,
   });
   const [uploading, setUploading] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const toast = useToast();
+
+  async function handleApprove() {
+    setApproving(true);
+    try {
+      const res = await fetch(`/api/reviews/${review.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "approved" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || data.details || "Failed to approve review");
+      setReviews(reviews.map((r) => (r.id === review.id ? { ...r, status: "approved" } : r)));
+      toast.success("Review approved");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to approve review");
+    } finally {
+      setApproving(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/reviews/${review.id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || data.details || "Failed to delete review");
+      setReviews(reviews.filter((r) => r.id !== review.id));
+      toast.success("Review deleted");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete review");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/reviews/${review.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editData),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || data.details || "Failed to save review");
+      setReviews(reviews.map((r) => (r.id === review.id ? { ...r, ...editData } : r)));
+      setEditing(false);
+      toast.success("Review saved");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save review");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -31,9 +91,11 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
     if (!file.type.startsWith("image/")) return;
     setUploading(true);
     try {
-      const url = await uploadImage(file, "reviews");
-      if (url) setEditData((d) => ({ ...d, image_url: url }));
-    } catch {
+      const result = await uploadMedia(file, "review");
+      if (result?.url) setEditData((d) => ({ ...d, image_url: result.url }));
+    } catch (e) {
+      const msg = e instanceof UploadError ? e.message : "Upload failed";
+      console.error("Review image upload error:", msg);
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -49,14 +111,14 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
         </span>
         <div className="flex gap-2">
           {review.status !== "approved" && (
-            <Button size="sm" variant="ghost" onClick={() => setReviews(reviews.map((r) => (r.id === review.id ? { ...r, status: "approved" } : r)))} className="!text-emerald-400 hover:!bg-emerald-500/10">
+            <Button size="sm" variant="ghost" onClick={handleApprove} loading={approving} className="!text-emerald-400 hover:!bg-emerald-500/10" disabled={approving}>
               <CheckCircle2 className="h-4 w-4" /> Approve
             </Button>
           )}
           <Button size="sm" variant="ghost" onClick={() => setEditing((v) => !v)} className={editing ? "!text-white" : "!text-[var(--accent)]"}>
             <Edit2 className="h-4 w-4" /> {editing ? "Cancel" : "Edit"}
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setReviews(reviews.filter((r) => r.id !== review.id))} className="!text-[var(--danger)] hover:!bg-[var(--danger-soft)]">
+          <Button size="sm" variant="ghost" onClick={handleDelete} loading={deleting} className="!text-[var(--danger)] hover:!bg-[var(--danger-soft)]" disabled={deleting}>
             <Trash2 className="h-4 w-4" /> Delete
           </Button>
         </div>
@@ -74,7 +136,7 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
             <Textarea rows={3} value={editData.review_text} onChange={(e) => setEditData({ ...editData, review_text: e.target.value })} />
           </Field>
           <Field label="Review image (optional)">
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+            <input ref={fileInputRef} type="file" accept="image/*,video/mp4,video/webm" onChange={handleImageUpload} className="hidden" />
             {editData.image_url ? (
               <div className="group relative w-fit">
                 <img src={editData.image_url} alt="Review preview" className="h-40 rounded-xl border border-[var(--border)] object-cover" />
@@ -100,10 +162,10 @@ function ReviewCard({ review, index, reviews, setReviews }: { review: any; index
             )}
           </Field>
           <div className="flex gap-2">
-            <Button size="sm" variant="primary" onClick={() => { setReviews(reviews.map((r) => (r.id === review.id ? { ...r, ...editData } : r))); setEditing(false); }}>
+            <Button size="sm" variant="primary" onClick={handleSave} loading={saving} disabled={saving}>
               Save
             </Button>
-            <Button size="sm" variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
+            <Button size="sm" variant="secondary" onClick={() => setEditing(false)} disabled={saving}>Cancel</Button>
           </div>
         </div>
       ) : (
@@ -134,32 +196,35 @@ export function ReviewsSection({ value, onChange }: Props) {
   const approved = value.filter((r) => r.status === "approved");
 
   return (
-    <div className="space-y-6">
-      <CardHeader title="Client Reviews" description="Approve, edit, or remove client reviews." />
+    <div className="space-y-6 relative">
+      <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" />
+      <div className="relative z-10">
+        <CardHeader title="Client Reviews" description="Approve, edit, or remove client reviews." />
 
-      <div>
-        <p className="mb-4 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Pending ({pending.length})</p>
-        <div className="space-y-4">
-          {pending.length > 0 ? (
-            pending.map((review, idx) => <ReviewCard key={review.id || idx} review={review} index={idx} reviews={value} setReviews={onChange} />)
-          ) : (
-            <div className="ad-empty rounded-[var(--r-md)] border border-dashed border-[var(--border)]">
-              <p className="text-sm text-[var(--text-secondary)]">No pending reviews</p>
-            </div>
-          )}
+        <div>
+          <p className="mb-4 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Pending ({pending.length})</p>
+          <div className="space-y-4">
+            {pending.length > 0 ? (
+              pending.map((review, idx) => <ReviewCard key={review.id || idx} review={review} index={idx} reviews={value} setReviews={onChange} />)
+            ) : (
+              <div className="ad-empty rounded-[var(--r-md)] border border-dashed border-[var(--border)]">
+                <p className="text-sm text-[var(--text-secondary)]">No pending reviews</p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div>
-        <p className="mb-4 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Approved ({approved.length})</p>
-        <div className="space-y-4">
-          {approved.length > 0 ? (
-            approved.map((review, idx) => <ReviewCard key={review.id || idx} review={review} index={idx} reviews={value} setReviews={onChange} />)
-          ) : (
-            <div className="ad-empty rounded-[var(--r-md)] border border-dashed border-[var(--border)]">
-              <p className="text-sm text-[var(--text-secondary)]">No approved reviews yet</p>
-            </div>
-          )}
+        <div>
+          <p className="mb-4 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Approved ({approved.length})</p>
+          <div className="space-y-4">
+            {approved.length > 0 ? (
+              approved.map((review, idx) => <ReviewCard key={review.id || idx} review={review} index={idx} reviews={value} setReviews={onChange} />)
+            ) : (
+              <div className="ad-empty rounded-[var(--r-md)] border border-dashed border-[var(--border)]">
+                <p className="text-sm text-[var(--text-secondary)]">No approved reviews yet</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

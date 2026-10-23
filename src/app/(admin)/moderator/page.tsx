@@ -16,19 +16,28 @@ import {
   Loader2,
   KeyRound,
   UserCog,
+  AlertCircle,
+  Package,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/admin/Button";
 import { Card, CardHeader } from "@/components/admin/Card";
 import { Modal } from "@/components/admin/Modal";
 import { Field, Input, Textarea } from "@/components/admin/Field";
 import { useToast } from "@/components/admin/Toast";
+import dynamic from "next/dynamic";
+
+const AdoptablesSection = dynamic(
+  () => import("@/components/admin/sections/AdoptablesSection").then((m) => ({ default: m.AdoptablesSection })),
+  { ssr: false }
+);
 
 type SessionUser = {
   id: string;
   username: string;
   name: string;
   role: "owner" | "moderator";
-  perms: { reviews: boolean; submissions: boolean; hide_content: boolean };
+  perms: { reviews: boolean; submissions: boolean; hide_content: boolean; adoptables: boolean };
 };
 
 type Review = {
@@ -70,7 +79,7 @@ type LogEntry = {
   created_at: string;
 };
 
-type Tab = "queue" | "hidden" | "log";
+type Tab = "queue" | "hidden" | "log" | "adoptables";
 
 export default function ModeratorPage() {
   const toast = useToast();
@@ -86,12 +95,20 @@ export default function ModeratorPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [log, setLog] = useState<LogEntry[]>([]);
   const [loadingData, setLoadingData] = useState(false);
+  /**
+   * Set when the moderation queue/log fail to load for a reason other than
+   * "not authenticated". Previously both fetches threw and were caught by an
+   * empty catch, so a dashboard whose API calls failed rendered the topbar
+   * and empty sections with no explanation — the "topbar only" symptom.
+   */
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [reject, setReject] = useState<{ type: "review" | "submission"; id: string; label: string } | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
   const loadData = useCallback(async () => {
     setLoadingData(true);
+    setLoadError(null);
     try {
       const [q, l] = await Promise.all([
         fetch("/api/moderation/queue").then((r) => r.json()),
@@ -100,12 +117,13 @@ export default function ModeratorPage() {
       setReviews(q.reviews || []);
       setSubmissions(q.submissions || []);
       setLog(l.log || []);
-    } catch {
-      toast.error("Failed to load moderation data");
+    } catch (e: any) {
+      console.error("Failed to load moderation data:", e);
+      setLoadError(e?.message || "Network error while loading moderation data.");
     } finally {
       setLoadingData(false);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -186,31 +204,32 @@ export default function ModeratorPage() {
 
   if (!session) {
     return (
-      <div className="relative grid min-h-screen place-items-center overflow-hidden px-4">
+      <div className="ad-login-bg relative grid min-h-screen place-items-center overflow-hidden px-4">
         <div className="pointer-events-none absolute inset-0 bg-dots opacity-30" />
-        <div className="pointer-events-none absolute left-1/2 top-1/3 h-72 w-[500px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.06] blur-[120px]" />
-        <form onSubmit={doLogin} className="ad-panel relative w-full max-w-sm p-8">
-          <div className="mx-auto mb-6 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] shadow-lg shadow-[var(--accent)]/20">
+        <form onSubmit={doLogin} className="ad-login-card relative">
+          <div className="ad-login-icon">
             <ShieldCheck className="h-7 w-7" />
           </div>
-          <h1 className="text-center text-2xl font-bold text-white">Moderator Access</h1>
-          <p className="mb-6 mt-1.5 text-center text-sm text-[var(--text-dim)]">
-            Sign in with your moderator or owner account.
-          </p>
-          <Field label="Username">
-            <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" autoFocus />
-          </Field>
-          <Field label="Password" className="mt-4">
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
-          </Field>
-          {loginError && (
-            <p className="mt-4 rounded-lg border border-[var(--danger-border)] bg-[var(--danger-soft)] px-3 py-2 text-sm text-[var(--danger)]">
-              {loginError}
-            </p>
-          )}
-          <Button type="submit" className="mt-5 w-full" size="md" leftIcon={<KeyRound className="h-4 w-4" />}>
-            Sign In
-          </Button>
+          <h1 className="ad-login-title">Moderator Access</h1>
+          <p className="ad-login-subtitle">Sign in with your moderator or owner account.</p>
+
+          <div className="ad-login-form">
+            <Field label="Username">
+              <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" autoFocus />
+            </Field>
+            <Field label="Password">
+              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
+            </Field>
+            {loginError && (
+              <div className="ad-login-error" role="alert">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>{loginError}</span>
+              </div>
+            )}
+            <Button type="submit" className="w-full" size="md" leftIcon={<KeyRound className="h-4 w-4" />}>
+              Sign In
+            </Button>
+          </div>
         </form>
       </div>
     );
@@ -219,6 +238,7 @@ export default function ModeratorPage() {
   const canReviews = session.perms.reviews;
   const canSubmissions = session.perms.submissions;
   const canHide = session.perms.hide_content;
+  const canAdoptables = session.perms.adoptables;
 
   const pendingReviews = reviews.filter((r) => r.status === "pending" && !r.hidden);
   const hiddenReviews = reviews.filter((r) => r.hidden);
@@ -229,21 +249,24 @@ export default function ModeratorPage() {
     { id: "queue", label: "Approval Queue", icon: <Inbox className="h-4 w-4" />, count: pendingReviews.length + pendingSubmissions.length },
     { id: "hidden", label: "Hidden Content", icon: <EyeOff className="h-4 w-4" />, count: hiddenReviews.length + hiddenSubmissions.length },
     { id: "log", label: "Moderation Log", icon: <History className="h-4 w-4" /> },
+    ...(canAdoptables ? [{ id: "adoptables" as Tab, label: "Adoptables", icon: <Package className="h-4 w-4" /> }] : []),
   ];
 
   return (
-    <div className="min-h-screen">
-      <div className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg-elevated)]/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a]">
+    <div className="ad-dashboard-bg min-h-screen">
+      {/* Compact header: name + role, clear nav, no oversized cards. */}
+      <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] shadow-lg shadow-[var(--accent)]/30">
               <ShieldCheck className="h-5 w-5" />
             </div>
-            <div>
-              <p className="font-semibold text-white">Moderator Dashboard</p>
-              <p className="text-xs text-[var(--text-dim)]">
-                Signed in as <span className="text-[var(--text-secondary)]">{session.name}</span>
+            <div className="min-w-0">
+              <p className="truncate text-[15px] font-semibold leading-tight text-white">Moderator Dashboard</p>
+              <p className="truncate text-xs text-[var(--text-dim)]">
+                <span className="text-[var(--text-secondary)]">{session.name}</span>
                 <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-[var(--border-strong)] px-2 py-0.5 text-[10px] uppercase tracking-wider text-[var(--accent)]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" aria-hidden />
                   {session.role}
                 </span>
               </p>
@@ -253,29 +276,59 @@ export default function ModeratorPage() {
             Sign Out
           </Button>
         </div>
-        <div className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 pb-2 sm:px-6">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
-                tab === t.id ? "bg-[var(--accent-soft)] text-white" : "text-[var(--text-secondary)] hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              {t.icon}
-              {t.label}
-              {typeof t.count === "number" && t.count > 0 && (
-                <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[var(--accent)] px-1.5 text-[10px] font-bold text-[#04060a]">
-                  {t.count}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
 
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        {/* Tab bar: horizontal scroll on mobile, equal-width tiles on desktop. */}
+        <div className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 sm:px-6">
+          {tabs.map((t) => {
+            const active = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                aria-current={active ? "page" : undefined}
+                className={`group relative flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition-colors ${
+                  active
+                    ? "bg-[var(--accent-soft)] text-white"
+                    : "text-[var(--text-secondary)] hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                <span className={`transition-colors ${active ? "text-[var(--accent)]" : "group-hover:text-white"}`}>
+                  {t.icon}
+                </span>
+                <span className="hidden sm:inline">{t.label}</span>
+                {typeof t.count === "number" && t.count > 0 && (
+                  <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[var(--accent)] px-1.5 text-[10px] font-bold text-[#04060a]">
+                    {t.count}
+                  </span>
+                )}
+                {active && <span className="absolute inset-x-3 -bottom-2 h-px bg-[var(--accent)]" aria-hidden />}
+              </button>
+            );
+          })}
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         <PermissionSummary session={session} />
+
+        {loadError && (
+          <div className="mx-auto mt-4 max-w-3xl rounded-xl border border-[var(--danger-border)] bg-[var(--danger-soft)] p-4 text-sm text-white">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--danger)]" />
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold">Could not load moderation data</p>
+                <p className="mt-1 break-words text-xs text-[var(--text-secondary)]">{loadError}</p>
+                <button
+                  type="button"
+                  onClick={() => void loadData()}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-[var(--danger)]/20 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[var(--danger)]/35"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" /> Retry loading
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {tab === "queue" && (
           <div className="mt-6 space-y-8">
@@ -345,6 +398,7 @@ export default function ModeratorPage() {
         )}
 
         {tab === "log" && <LogSection log={log} loading={loadingData} />}
+        {tab === "adoptables" && canAdoptables && <AdoptablesSection session={session} />}
       </div>
 
       <Modal
@@ -387,6 +441,7 @@ function PermissionSummary({ session }: { session: SessionUser }) {
     { key: "reviews", label: "Review moderation", on: session.perms.reviews },
     { key: "submissions", label: "Submission moderation", on: session.perms.submissions },
     { key: "hide_content", label: "Hide content", on: session.perms.hide_content },
+    { key: "adoptables", label: "Adoptables Management", on: session.perms.adoptables },
   ];
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4">
@@ -446,27 +501,27 @@ function QueueSection<T extends { id: string }>({
 }) {
   return (
     <div>
-      <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+      <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
         {icon}
         {title}
         <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-[var(--text-dim)]">{items.length}</span>
       </div>
       {loading ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {[1, 2].map((i) => (
-            <div key={i} className="ad-panel h-32 animate-pulse opacity-60" />
+            <div key={i} className="ad-section-card h-24 animate-pulse opacity-60" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] py-10 text-center text-sm text-[var(--text-dim)]">
+        <div className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] py-8 text-center text-sm text-[var(--text-dim)]">
           {empty}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {items.map((item) => (
-            <Card key={item.id} className="p-5">
+            <Card key={item.id} className="p-4">
               {render(item)}
-              <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--border)] pt-4">
+              <div className="mt-3 flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
                 {hidden ? (
                   <Button size="sm" variant="secondary" onClick={() => onUnhide?.(item)} leftIcon={<Eye className="h-4 w-4" />}>
                     Restore
@@ -579,7 +634,7 @@ function SubmissionBody({ submission }: { submission: Submission }) {
 
 function LogSection({ log, loading }: { log: LogEntry[]; loading: boolean }) {
   if (loading) {
-    return <div className="ad-panel h-40 animate-pulse opacity-60" />;
+    return <div className="ad-section-card h-40 animate-pulse opacity-60" />;
   }
   if (log.length === 0) {
     return (

@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     .order("created_at", { ascending: false })
     .limit(100);
 
-  if (error) return json({ error: error.message }, 500);
+  if (error) return json({ error: "Failed to load moderation log" }, 500);
 
   return NextResponse.json({ log: data || [] });
 }

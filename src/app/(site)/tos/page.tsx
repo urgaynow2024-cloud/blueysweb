@@ -3,8 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getSiteConfig } from "@/lib/db";
-import { tosSections } from "@/data/site";
-import { FileText, ShieldCheck, Clock } from "lucide-react";
+import { renderMarkdown } from "@/lib/markdown";
+
+import Link from "next/link";
+import { FileText, ShieldCheck, Clock, Sparkles, List, X } from "lucide-react";
 
 interface TosSection {
   id?: string;
@@ -22,26 +24,6 @@ interface TosSection {
   visible: boolean;
 }
 
-function renderMarkdown(text: string): string {
-  if (!text) return "";
-  let html = text
-    .replace(/<(?!br|hr)\/?>[^<]*/gi, "")
-    .replace(/'''/g, "''")
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/(?:\r\n|\r|\n){3,}/g, "\n\n")
-    .replace(/^### (.*$)/gm, "<h3 class='text-base font-semibold text-white mb-3 mt-6 first:mt-0'>$1</h3>")
-    .replace(/^## (.*$)/gm, "<h2 class='text-lg font-semibold text-white mb-3 mt-6 first:mt-0'>$1</h2>")
-    .replace(/^# (.*$)/gm, "<h1 class='text-2xl font-bold text-white mb-4'>$1</h1>")
-    .split("\n\n")
-    .map((para) => {
-      para = para.trim();
-      if (!para) return "";
-      if (para.startsWith("<h") || para.startsWith("<str")) return para;
-      return `<p class='mb-3 last:mb-0 leading-relaxed'>${para.replace(/\n/g, "<br />")}</p>`;
-    })
-    .join("");
-  return html;
-}
 
 function SectionContent({ section }: { section: TosSection }) {
   if (section.section_type === "paragraphs" && section.content) {
@@ -57,7 +39,7 @@ function SectionContent({ section }: { section: TosSection }) {
       <ul className="space-y-3 text-sm text-[var(--text-secondary)]">
         {section.items.map((item: string, j: number) => (
           <li key={j} className="flex items-start gap-3">
-            <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
             <span>{item}</span>
           </li>
         ))}
@@ -67,40 +49,67 @@ function SectionContent({ section }: { section: TosSection }) {
   return null;
 }
 
+function TosSkeleton() {
+  return (
+    <div className="animate-pulse space-y-3 py-4">
+      <div className="h-4 w-32 rounded bg-[var(--border)]" />
+      <div className="h-3 w-full rounded bg-[var(--border)]" />
+      <div className="h-3 w-5/6 rounded bg-[var(--border)]" />
+    </div>
+  );
+}
+
 export default function ToSPage() {
   const [sections, setSections] = useState<TosSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [version, setVersion] = useState<string>("");
+  const [tocOpen, setTocOpen] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
+      setLoadFailed(false);
       try {
-        if (isSupabaseConfigured) {
-          const res = await fetch("/api/tos-sections");
-          if (res.ok) {
-            const data = await res.json();
-            setSections(data);
-          } else {
-            setSections(tosSections as TosSection[]);
-          }
-        } else {
-          setSections(tosSections as TosSection[]);
-        }
+        // The database is the canonical Terms of Service.
+        //
+        // A previous version fell back to the shorter, differently-worded
+        // `tosSections` copy in src/config/site.ts whenever the request failed
+        // or returned nothing. That meant a Supabase outage silently published a
+        // DIFFERENT legal document to visitors — including different payment,
+        // refund and revision terms. That is not acceptable for legal content.
+        //
+        // The fallback copy is intentionally NOT used as a display fallback any
+        // more. If the canonical terms cannot be loaded, the page shows an
+        // explicit error instead. The two conflicts between the two versions
+        // (accepted payment methods, and the revision request window) are still
+        // awaiting the owner's decision.
         if (!isSupabaseConfigured) {
-          const fallbackConfig: any = { tos_last_updated: "August 2025", tos_version: "2.0" };
-          setLastUpdated(fallbackConfig.tos_last_updated || "August 2025");
-          setVersion(fallbackConfig.tos_version || "2.0");
-        } else {
-          const config = await getSiteConfig();
-          setLastUpdated((config as any).tos_last_updated || "August 2025");
-          setVersion((config as any).tos_version || "2.0");
+          setLoadFailed(true);
+          return;
         }
+
+        const res = await fetch("/api/tos-sections");
+        if (!res.ok) {
+          setLoadFailed(true);
+          return;
+        }
+
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) {
+          setLoadFailed(true);
+          return;
+        }
+        setSections(data);
+
+        const config = await getSiteConfig();
+        setLastUpdated((config as any).tos_last_updated || "August 2025");
+        setVersion((config as any).tos_version || "2.0");
       } catch (e) {
         console.error("Failed to load TOS:", e);
-        setSections(tosSections as TosSection[]);
+        setLoadFailed(true);
       } finally {
         setLoading(false);
       }
@@ -108,21 +117,60 @@ export default function ToSPage() {
     load();
   }, []);
 
+  const tocItems = sections.map((s, i) => ({
+    id: s.id || `toc-${i}`,
+    num: s.number || String(i + 1).padStart(2, "0"),
+    title: s.title,
+  }));
+
+  if (loadFailed) {
+    return (
+      <div className="relative">
+        <div className="bg-nebula" />
+        <div className="bg-cosmic-fog" />
+        <section className="section">
+          <div className="container max-w-2xl">
+            <div className="empty-state">
+              <div className="empty-state-icon">
+                <ShieldCheck className="h-7 w-7" />
+              </div>
+              <h1 className="empty-state-title">Terms are temporarily unavailable</h1>
+              <p className="empty-state-desc">
+                We couldn&rsquo;t load the current Terms of Service. We don&rsquo;t show a
+                different version, because the terms in force are the ones published in the
+                database.
+              </p>
+              <p className="mt-4 text-sm text-[var(--text-dim)]">
+                Please try again shortly, or{" "}
+                <Link href="/contact" className="text-[var(--accent)] underline underline-offset-4">
+                  get in touch
+                </Link>{" "}
+                if you need the terms in the meantime.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="relative" ref={contentRef}>
+      <div className="bg-nebula" />
+      <div className="bg-cosmic-fog" />
       <section className="relative overflow-hidden pt-20 sm:pt-24 md:pt-28">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-40" />
-        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px]" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-30" />
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px] orb-slow" />
 
-        <div className="container">
-          <div className="mx-auto max-w-3xl text-center">
-            <span className="eyebrow">
+        <div className="container max-w-3xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="eyebrow justify-center">
               <FileText className="h-3.5 w-3.5 text-[var(--accent)]" />
               Terms of Service
             </span>
             <h1 className="display-xl mt-5 text-white">Terms of Service</h1>
             <p className="lead mx-auto mt-4">
-              These Terms govern commissions, services, and interactions with Bluey Commissions. Please read them carefully before engaging our services.
+              These Terms govern commissions, services, and interactions with Bluey's Creation. Please read them carefully before engaging our services.
             </p>
             <div className="mt-6 flex items-center justify-center gap-4 text-sm text-[var(--text-dim)]">
               <div className="flex items-center gap-1.5">
@@ -138,22 +186,52 @@ export default function ToSPage() {
         </div>
       </section>
 
-      <section className="!pt-0">
+      {/* TOC bar */}
+      <div className="sticky top-[4.5rem] z-30">
+        <div className="container max-w-3xl">
+          <button
+            type="button"
+            onClick={() => setTocOpen(!tocOpen)}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)]/90 px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] backdrop-blur-sm hover:text-white hover:border-[var(--accent)] transition-colors"
+            aria-expanded={tocOpen}
+          >
+            <List className="h-3.5 w-3.5" />
+            {tocOpen ? <X className="h-3.5 w-3.5" /> : null}
+            Table of Contents
+          </button>
+          {tocOpen && (
+            <div className="mt-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-3 backdrop-blur-sm">
+              <ol className="space-y-1 max-h-48 overflow-y-auto">
+                {tocItems.map((item) => (
+                  <li key={item.id}>
+                    <a
+                      href={`#${item.id}`}
+                      onClick={() => setTocOpen(false)}
+                      className="flex items-center gap-2 rounded px-2 py-1 text-xs text-[var(--text-secondary)] hover:text-white hover:bg-[var(--accent-soft)] transition-colors"
+                    >
+                      <span className="text-[var(--accent)] tabular-nums font-semibold">{item.num}</span>
+                      {item.title}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <section className="!pt-12">
         <div className="container max-w-3xl">
           {loading ? (
             <div className="space-y-6">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-32 animate-pulse rounded-2xl bg-[var(--bg-elevated)]" />
+                <TosSkeleton key={i} />
               ))}
             </div>
           ) : sections.length > 0 ? (
-            <div>
+            <div className="space-y-10">
               {sections.map((section, i) => (
-                <div
-                  key={section.id || i}
-                  id={section.id || ""}
-                  className={i > 0 ? "mt-10 md:mt-12 pt-10 md:pt-12 border-t border-[var(--border)]" : ""}
-                >
+                <div key={section.id || i} id={section.id || `section-${i}`}>
                   <div className="flex items-baseline gap-4 mb-4">
                     <span className="text-sm font-bold text-[var(--accent)] tabular-nums">
                       {section.number || String(i + 1).padStart(2, "0")}
@@ -161,12 +239,15 @@ export default function ToSPage() {
                     <h2 className="text-xl md:text-2xl font-bold text-white">{section.title}</h2>
                   </div>
                   {section.description && (
-                    <p className="text-sm text-[var(--text-dim)] mb-5 max-w-2xl">{section.description}</p>
+                    <p className="mb-5 text-sm text-[var(--text-dim)] max-w-2xl">{section.description}</p>
                   )}
                   <div>
                     {section.highlight_box && (
                       <div className="mb-5 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
-                        <p className="text-sm text-[var(--text-secondary)]">{section.highlight_box}</p>
+                        <div className="flex items-start gap-2.5">
+                          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
+                          <p className="text-sm text-[var(--text-secondary)]">{section.highlight_box}</p>
+                        </div>
                       </div>
                     )}
 
@@ -194,18 +275,30 @@ export default function ToSPage() {
 
       <section className="section !pt-4 md:!pt-6">
         <div className="container max-w-3xl text-center">
-          <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] p-6 md:p-10">
-            <div className="mb-4 flex items-center justify-center gap-2 text-sm text-[var(--text-dim)]">
-              <Clock className="h-4 w-4" />
-              Last Updated: {lastUpdated || "—"}
-              <span className="mx-2 text-[var(--border)]">|</span>
-              <ShieldCheck className="h-4 w-4" />
-              Version: {version || "—"}
+          <div className="border-b border-[var(--border)] pb-8 mb-8">
+            <div className="mb-4 flex items-center justify-center gap-4 text-sm text-[var(--text-dim)]">
+              <div className="flex items-center gap-1.5">
+                <Clock className="h-4 w-4" />
+                Last Updated: {lastUpdated || "—"}
+              </div>
+              <span className="text-[var(--border)]">|</span>
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4" />
+                Version: {version || "—"}
+              </div>
             </div>
             <p className="text-sm text-[var(--text-secondary)]">
-              These Terms of Service constitute the entire agreement between you and Bluey Commissions regarding the use of our services. By commissioning work, you acknowledge that you have read, understood, and agreed to these Terms.
+              These Terms of Service constitute the entire agreement between you and Bluey's Creation regarding the use of our services. By commissioning work, you acknowledge that you have read, understood, and agreed to these Terms.
             </p>
           </div>
+
+          <Link href="/contact" className="btn-primary inline-flex items-center gap-2">
+            <Sparkles className="h-4 w-4" />
+            Start a Commission
+          </Link>
+          <p className="mt-4 text-xs text-[var(--text-dim)]">
+            By proceeding with a commission, you confirm you have read and agree to these Terms.
+          </p>
         </div>
       </section>
     </div>

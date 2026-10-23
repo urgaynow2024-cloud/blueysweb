@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getPortfolioImages } from "@/lib/db";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { deleteFromSupabaseStorage } from "@/lib/supabase/storage";
 import { useSave } from "../SaveProvider";
 import { useToast } from "../Toast";
 import { Card, CardHeader } from "../Card";
@@ -10,6 +11,8 @@ import { UploadArea } from "../UploadArea";
 import { PortfolioGrid, type PortfolioImage } from "../PortfolioGrid";
 import { Modal } from "../Modal";
 import { Button } from "../Button";
+import { uploadMedia } from "@/lib/upload/client";
+import { UploadError } from "@/lib/upload/errors";
 
 export function PortfolioSection() {
   const [images, setImages] = useState<PortfolioImage[]>([]);
@@ -65,13 +68,13 @@ export function PortfolioSection() {
   }, [register, savePortfolio]);
 
   async function uploadOne(file: File): Promise<{ id: string; url: string; path: string } | null> {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("folder", "portfolio");
-    const res = await fetch("/api/portfolio/upload", { method: "POST", body: formData });
-    const result = await res.json();
-    if (res.ok && result.id) return { id: result.id, url: result.url, path: result.path };
-    throw new Error(result.error || "Upload failed");
+    return uploadMedia(file, "portfolio");
+  }
+
+  function describeError(e: unknown): string {
+    if (e instanceof UploadError) return e.details ? `${e.message} (${e.details})` : e.message;
+    if (e instanceof Error) return e.message;
+    return "Upload failed";
   }
 
   async function handleFiles(files: FileList | null) {
@@ -84,9 +87,10 @@ export function PortfolioSection() {
         const uploaded = await uploadOne(file);
         setImages((prev) => prev.map((img) => (img === temp ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path } : img)));
         toast.success("Image uploaded");
-      } catch (e: any) {
-        setImages((prev) => prev.map((img) => (img === temp ? { ...img, uploading: false, error: e.message || "Upload failed" } : img)));
-        toast.error("Failed to upload image");
+      } catch (e) {
+        const msg = describeError(e);
+        setImages((prev) => prev.map((img) => (img === temp ? { ...img, uploading: false, error: msg } : img)));
+        toast.error(msg);
       }
     }
   }
@@ -94,7 +98,7 @@ export function PortfolioSection() {
   async function retryUpload(index: number) {
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = "image/*";
+    input.accept = "image/*,video/mp4,video/webm";
     input.onchange = async (e: any) => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -103,9 +107,10 @@ export function PortfolioSection() {
         const uploaded = await uploadOne(file);
         setImages((prev) => prev.map((img, i) => (i === index ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path, uploading: false, retrying: false, error: undefined } : img)));
         toast.success("Image uploaded");
-      } catch {
-        setImages((prev) => prev.map((img, i) => (i === index ? { ...img, uploading: false, retrying: false, error: "Upload failed" } : img)));
-        toast.error("Failed to upload image");
+      } catch (e) {
+        const msg = describeError(e);
+        setImages((prev) => prev.map((img, i) => (i === index ? { ...img, uploading: false, retrying: false, error: msg } : img)));
+        toast.error(msg);
       }
     };
     input.click();
@@ -116,6 +121,9 @@ export function PortfolioSection() {
     setImages((prev) => prev.filter((_, i) => i !== index));
     if (image.id) {
       try {
+        if (image.path) {
+          await deleteFromSupabaseStorage("portfolio-images", image.path);
+        }
         await fetch("/api/portfolio", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
@@ -140,6 +148,9 @@ export function PortfolioSection() {
     const old = images[index];
     try {
       const uploaded = await uploadOne(file);
+      if (uploaded && old?.id && old.path) {
+        await deleteFromSupabaseStorage("portfolio-images", old.path);
+      }
       setImages((prev) => prev.map((img, i) => (i === index ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path } : img)));
       if (old?.id) {
         await fetch("/api/portfolio", {
@@ -149,8 +160,9 @@ export function PortfolioSection() {
         });
       }
       toast.success("Image replaced");
-    } catch {
-      toast.error("Failed to replace image");
+    } catch (e) {
+const msg = describeError(e);
+    toast.error(msg);
     }
   }
 
@@ -171,10 +183,11 @@ export function PortfolioSection() {
   }
 
   return (
-    <div className="space-y-6">
-      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onReplaceFile} />
-
-      <Card className="p-8">
+    <div className="space-y-6 relative">
+      <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" />
+      <input ref={fileInputRef} type="file" accept="image/*,video/mp4,video/webm" className="hidden" onChange={onReplaceFile} />
+      <Card className="p-8 relative overflow-hidden">
+        <div className="pointer-events-none absolute -top-10 -right-10 h-[200px] w-[200px] rounded-full bg-[var(--accent-2)]/5 blur-[100px] orb-med" />
         <CardHeader
           title="Portfolio Images"
           description="Upload artwork. Drag cards to reorder — your arrangement is saved with the global Save button."

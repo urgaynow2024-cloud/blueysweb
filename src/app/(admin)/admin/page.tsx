@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { LayoutDashboard, LogOut, RotateCcw, Loader2 } from "lucide-react";
+import dynamic from "next/dynamic";
+import { LogOut, RotateCcw, Loader2, Lock, Eye, EyeOff, AlertCircle, ShieldCheck } from "lucide-react";
 import { useSave } from "@/components/admin/SaveProvider";
 import { useToast } from "@/components/admin/Toast";
 import { DashboardLayout } from "@/components/admin/DashboardLayout";
@@ -9,40 +10,81 @@ import { Modal } from "@/components/admin/Modal";
 import { Button } from "@/components/admin/Button";
 import { Input } from "@/components/admin/Field";
 
-import { PortfolioSection } from "@/components/admin/sections/PortfolioSection";
-import { PricingSection } from "@/components/admin/sections/PricingSection";
-import { FaqSection } from "@/components/admin/sections/FaqSection";
-import { WorkflowSection } from "@/components/admin/sections/WorkflowSection";
-import { ReviewsSection } from "@/components/admin/sections/ReviewsSection";
-import { SiteImagesSection } from "@/components/admin/sections/SiteImagesSection";
-import { NsfwSection } from "@/components/admin/sections/NsfwSection";
-import { LinksSection } from "@/components/admin/sections/LinksSection";
-import { QueueSection } from "@/components/admin/sections/QueueSection";
-import { SiteInfoSection } from "@/components/admin/sections/SiteInfoSection";
-import { ModeratorsSection } from "@/components/admin/sections/ModeratorsSection";
-import { FbxMashupSection } from "@/components/admin/sections/FbxMashupSection";
-import { TosSection } from "@/components/admin/sections/TosSection";
+import { OverviewSection } from "@/components/admin/sections/OverviewSection";
+import { SectionErrorBoundary } from "@/components/admin/SectionErrorBoundary";
+
+/**
+ * Sections are code-split so the dashboard's initial JavaScript
+ * only contains the Overview. Each tab's chunk loads the first
+ * time it is opened instead of bloating the first paint.
+ */
+const PortfolioSection = dynamic(() => import("@/components/admin/sections/PortfolioSection").then((m) => ({ default: m.PortfolioSection })), { ssr: false });
+const PricingSection = dynamic(() => import("@/components/admin/sections/PricingSection").then((m) => ({ default: m.PricingSection })), { ssr: false });
+const FaqSection = dynamic(() => import("@/components/admin/sections/FaqSection").then((m) => ({ default: m.FaqSection })), { ssr: false });
+const WorkflowSection = dynamic(() => import("@/components/admin/sections/WorkflowSection").then((m) => ({ default: m.WorkflowSection })), { ssr: false });
+const ReviewsSection = dynamic(() => import("@/components/admin/sections/ReviewsSection").then((m) => ({ default: m.ReviewsSection })), { ssr: false });
+const SiteImagesSection = dynamic(() => import("@/components/admin/sections/SiteImagesSection").then((m) => ({ default: m.SiteImagesSection })), { ssr: false });
+const NsfwSection = dynamic(() => import("@/components/admin/sections/NsfwSection").then((m) => ({ default: m.NsfwSection })), { ssr: false });
+const LinksSection = dynamic(() => import("@/components/admin/sections/LinksSection").then((m) => ({ default: m.LinksSection })), { ssr: false });
+const QueueSection = dynamic(() => import("@/components/admin/sections/QueueSection").then((m) => ({ default: m.QueueSection })), { ssr: false });
+const SiteInfoSection = dynamic(() => import("@/components/admin/sections/SiteInfoSection").then((m) => ({ default: m.SiteInfoSection })), { ssr: false });
+const ModeratorsSection = dynamic(() => import("@/components/admin/sections/ModeratorsSection").then((m) => ({ default: m.ModeratorsSection })), { ssr: false });
+const AdoptablesSection = dynamic(() => import("@/components/admin/sections/AdoptablesSection").then((m) => ({ default: m.AdoptablesSection })), { ssr: false });
+const TosSection = dynamic(() => import("@/components/admin/sections/TosSection").then((m) => ({ default: m.TosSection })), { ssr: false });
+const CreditsSection = dynamic(() => import("@/components/admin/sections/CreditsSection").then((m) => ({ default: m.CreditsSection })), { ssr: false });
+const NoAiBadgeSection = dynamic(() => import("@/components/admin/sections/NoAiBadgeSection").then((m) => ({ default: m.NoAiBadgeSection })), { ssr: false });
+const WontDoSection = dynamic(() => import("@/components/admin/sections/WontDoSection").then((m) => ({ default: m.WontDoSection })), { ssr: false });
 
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
-const ADMIN_PASSWORD = "blueyadmin";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "blueyadmin";
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 
-const defaultSite: Record<string, string> = {};
+/**
+ * Diagnostics (storage bucket status, the CORS upload probe,
+ * database schema health) change rarely but used to run on
+ * every dashboard load — including a real upload+delete cycle
+ * in storage. Results are cached in sessionStorage for this
+ * long so repeat visits render instantly and the write probe
+ * only happens once per window.
+ */
+const DIAG_CACHE_TTL_MS = 10 * 60 * 1000;
 
+const defaultSite: Record<string, string> = {
+  name: "Bluey's Creations",
+  queue_status: "open",
+  queue_slots_total: "8",
+  queue_slots_used: "3",
+  queue_wait_time: "2-3 weeks",
+  no_ai_enabled: "true",
+  no_ai_placement: "all",
+};
 const defaultPricing: any[] = [];
-
-const defaultFaq: any[] = [];
-
+const defaultFaq: any[] = [
+  { question: "What do I need to provide?", answer: "What you want done, avatar base name, reference images, and any required assets provided.", sort_order: 0 },
+  { question: "How long does a commission take?", answer: "Depends on the tier and complexity. Light work is faster, full overhauls take longer.", sort_order: 1 },
+  { question: "Do you work on Quest?", answer: "Quest compatibility depends on the tier. Overhauls include Quest optimisation.", sort_order: 2 },
+  { question: "What payment methods?", answer: "PayPal and Payhip only. 50% deposit before work begins.", sort_order: 3 },
+  { question: "Can I request NSFW work?", answer: "Limited NSFW commissions are accepted case-by-case for 18+ clients. See NSFW page for details.", sort_order: 4 },
+  { question: "What files do I get?", answer: "Unity-ready VRChat avatar files. Source and project files are not included by default; they are provided at our discretion and may require an additional fee agreed upon in advance.", sort_order: 5 },
+];
 const defaultWorkflow: any[] = [];
 
-type Tab = "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "fbx-mashups" | "tos";
+  type Tab = "overview" | "portfolio" | "pricing" | "faq" | "workflow" | "reviews" | "site-images" | "nsfw" | "social-links" | "queue" | "site" | "moderators" | "adoptables" | "credits" | "tos" | "no-ai" | "wont-do";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [pw, setPw] = useState("");
-  const [tab, setTab] = useState<Tab>("portfolio");
-  const [loading, setLoading] = useState(true);
+  const [showPw, setShowPw] = useState(false);
+  const [tab, setTab] = useState<Tab>("overview");
   const [resetOpen, setResetOpen] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+  const [userName, setUserName] = useState("Admin");
+  const pwRef = useRef<HTMLInputElement>(null);
 
   const [site, setSite] = useState<any>(defaultSite);
   const [pricing, setPricing] = useState<any[]>(defaultPricing);
@@ -50,29 +92,187 @@ export default function AdminPage() {
   const [workflow, setWorkflow] = useState<any[]>(defaultWorkflow);
   const [reviews, setReviews] = useState<any[]>([]);
   const [links, setLinks] = useState<any[]>([]);
+  const [credits, setCredits] = useState<any[]>([]);
   const [tos, setTos] = useState<any[]>([]);
+
+  const [storageError, setStorageError] = useState<string | null>(null);
+  const [corsTestResult, setCorsTestResult] = useState<{ bucket: string; success: boolean; error?: string } | null>(null);
+  const [dbHealth, setDbHealth] = useState<{ healthy: boolean; tables: Record<string, { exists: boolean; missingColumns: string[] }>; error?: string } | null>(null);
+  /**
+   * True while the session cookie is being verified on mount.
+   *
+   * Without this the page renders the login form for one tick on every
+   * refresh, which reads as "I got logged out" even when the session is
+   * still valid. The check is fast (a signed-cookie read), so a spinner
+   * here is brief and honest.
+   */
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  /**
+   * Set when content loading fails for a reason other than "not
+   * authenticated". Previously every Supabase error was swallowed inside
+   * `Promise.all(... .catch(() => {}))`, so a dashboard whose queries
+   * failed rendered the topbar and empty sections with no explanation and
+   * no way to retry — the "topbar only" symptom.
+   */
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadingData, setLoadingData] = useState(false);
 
   const { markDirty, register } = useSave();
   const toast = useToast();
 
-  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links, tos });
+  const dataRef = useRef({ site, pricing, faq, workflow, reviews, links, credits, tos });
   useEffect(() => {
-    dataRef.current = { site, pricing, faq, workflow, reviews, links, tos };
-  }, [site, pricing, faq, workflow, reviews, links, tos]);
+    dataRef.current = { site, pricing, faq, workflow, reviews, links, credits, tos };
+  }, [site, pricing, faq, workflow, reviews, links, credits, tos]);
+
+  /**
+   * Session restore.
+   *
+   * The login session lives in an httpOnly cookie that survives
+   * refreshes, but the page always started at the login screen.
+   * Checking /api/auth/me on mount lets a returning owner skip
+   * the password step entirely; the API still verifies the
+   * signed cookie on every request, so this does not weaken
+   * the auth flow.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (!res.ok) return;
+        const { user } = (await res.json()) as { user?: { name?: string; username?: string; role?: string } };
+        if (cancelled || !user) return;
+        if (user.role !== "owner") return;
+        setUserName(user.name || user.username || "Admin");
+        setAuthed(true);
+      } catch {
+        // No valid session — show the login form.
+      } finally {
+        if (!cancelled) setCheckingAuth(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (authed) loadAllData();
   }, [authed]);
 
-  async function loadAllData() {
-    setLoading(true);
+  useEffect(() => {
+    if (lockedUntil && Date.now() < lockedUntil) {
+      const timer = setTimeout(() => setLockedUntil(lockedUntil), 1000);
+      return () => clearTimeout(timer);
+    } else if (lockedUntil && Date.now() >= lockedUntil) {
+      setLockedUntil(null);
+      setAttempts(0);
+    }
+  }, [lockedUntil]);
+
+  function readDiagCache(key: string): any | null {
+    if (typeof sessionStorage === "undefined") return null;
+    try {
+      const raw = sessionStorage.getItem(`bc_diag_${key}`);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (typeof parsed?.ts !== "number" || Date.now() - parsed.ts > DIAG_CACHE_TTL_MS) return null;
+      return parsed.value ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  function writeDiagCache(key: string, value: any) {
+    if (typeof sessionStorage === "undefined") return;
+    try {
+      sessionStorage.setItem(`bc_diag_${key}`, JSON.stringify({ value, ts: Date.now() }));
+    } catch {
+      // sessionStorage can be unavailable (private browsing);
+      // diagnostics simply run again on the next visit.
+    }
+  }
+
+  /**
+   * Diagnostics: storage bucket status, the CORS upload probe and
+   * database schema health.
+   *
+   * These used to run — sequentially — before any dashboard
+   * content was allowed to render, and the CORS probe performed a
+   * real upload-then-delete in storage on every single visit.
+   *
+   * They are now (a) deferred until after the dashboard has
+   * painted, and (b) cached in sessionStorage for
+   * DIAG_CACHE_TTL_MS, so a repeat visit does zero diagnostic
+   * round-trips. The upload probe still runs, just once per
+   * cache window instead of every load.
+   */
+  async function runDiagnostics() {
+    const { checkStorageBuckets, getMissingBucketMessage, testBucketUpload } = await import("@/lib/supabase/check");
+
+    const cachedBuckets = readDiagCache("storage_buckets");
+    if (cachedBuckets) {
+      setStorageError(getMissingBucketMessage(cachedBuckets));
+    } else {
+      checkStorageBuckets()
+        .then((statuses: any[]) => {
+          writeDiagCache("storage_buckets", statuses);
+          setStorageError(getMissingBucketMessage(statuses));
+
+          const mainBucket = statuses.find((s: any) => s.exists)?.name;
+          if (!mainBucket) return;
+
+          const cachedCors = readDiagCache(`cors:${mainBucket}`);
+          if (cachedCors) {
+            setCorsTestResult({ bucket: mainBucket, ...cachedCors });
+            return;
+          }
+          return testBucketUpload(mainBucket).then((result: any) => {
+            writeDiagCache(`cors:${mainBucket}`, result);
+            setCorsTestResult({ bucket: mainBucket, ...result });
+          });
+        })
+        .catch(() => {});
+    }
+
+    const cachedHealth = readDiagCache("db_health");
+    if (cachedHealth) {
+      setDbHealth(cachedHealth);
+      return;
+    }
+    fetch("/api/database/health")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          writeDiagCache("db_health", data);
+          setDbHealth(data);
+        }
+      })
+      .catch(() => {});
+  }
+
+  function scheduleDiagnostics() {
+    // Yield so the dashboard shell and overview paint first.
+    const run = () => runDiagnostics();
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(run, { timeout: 1500 });
+    } else {
+      setTimeout(run, 100);
+    }
+  }
+
+async function loadAllData() {
+    setStorageError(null);
+    setLoadError(null);
+    setLoadingData(true);
     try {
       if (!isSupabaseConfigured || !supabase) {
         const stored = localStorage.getItem("adminData");
         if (stored) {
           try {
             const data = JSON.parse(stored);
-          if (data.site) setSite(data.site);
+            if (data.site) setSite(data.site);
             if (data.pricing) setPricing(data.pricing);
             if (data.faq) setFaq(data.faq);
             if (data.workflow) setWorkflow(data.workflow);
@@ -80,38 +280,83 @@ export default function AdminPage() {
             if (data.links) setLinks(data.links);
           } catch {}
         }
-        setLoading(false);
         return;
       }
-      const [{ data: siteData }, { data: pricingData }, { data: faqData }, { data: workflowData }, { data: reviewsData }, { data: linksData }, { data: tosData }] = await Promise.all([
-        supabase.from("site_config").select("*"),
-        supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }),
-        supabase.from("faq_items").select("*").order("sort_order", { ascending: true }),
-        supabase.from("workflow_steps").select("*").order("sort_order", { ascending: true }),
-        supabase.from("reviews").select("*").order("created_at", { ascending: false }),
-        supabase.from("social_links").select("*").order("sort_order", { ascending: true }),
-        supabase.from("tos_sections").select("*").order("sort_order", { ascending: true }),
-      ]);
-      if (siteData && siteData.length > 0) {
-        const s: any = { ...defaultSite };
-        siteData.forEach((row: any) => { s[row.key] = row.value; });
-        setSite(s);
+
+      // Content loads first, in parallel. Each result is applied
+      // as soon as it resolves, so the dashboard fills in
+      // progressively instead of waiting for the slowest query.
+      //
+      // Failures are collected rather than swallowed: a dashboard whose
+      // queries all fail used to render the topbar and empty sections with
+      // no explanation and no retry, because every `.catch(() => {})`
+      // discarded the error. Surfacing the first failure gives the owner
+      // something actionable instead of a silent blank dashboard.
+      const failures: string[] = [];
+      const jobs: PromiseLike<void>[] = [
+        supabase.from("site_config").select("*").then(({ data, error }) => {
+          if (error) failures.push(`site_config: ${error.message}`);
+          else if (data && data.length > 0) {
+            const s: any = { ...defaultSite };
+            data.forEach((row: any) => { s[row.key] = row.value; });
+            setSite(s);
+          }
+        }),
+        supabase.from("pricing_tiers").select("*").order("sort_order", { ascending: true }).then(({ data, error }) => {
+          if (error) failures.push(`pricing_tiers: ${error.message}`);
+          else if (data && data.length > 0) setPricing(data);
+        }),
+        supabase.from("faq_items").select("*").order("sort_order", { ascending: true }).then(({ data, error }) => {
+          if (error) failures.push(`faq_items: ${error.message}`);
+          else if (data && data.length > 0) setFaq(data);
+        }),
+        supabase.from("workflow_steps").select("*").order("sort_order", { ascending: true }).then(({ data, error }) => {
+          if (error) failures.push(`workflow_steps: ${error.message}`);
+          else if (data && data.length > 0) setWorkflow(data);
+        }),
+        supabase.from("reviews").select("*").order("created_at", { ascending: false }).then(({ data, error }) => {
+          if (error) failures.push(`reviews: ${error.message}`);
+          else if (data && data.length > 0) setReviews(data);
+        }),
+        supabase.from("social_links").select("*").order("sort_order", { ascending: true }).then(({ data, error }) => {
+          if (error) failures.push(`social_links: ${error.message}`);
+          else if (data && data.length > 0) setLinks(data);
+        }),
+        supabase.from("credits").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: true }).then(({ data, error }) => {
+          if (error) failures.push(`credits: ${error.message}`);
+          else if (data && data.length > 0) setCredits(data);
+        }),
+        supabase.from("tos_sections").select("*").order("sort_order", { ascending: true }).then(({ data, error }) => {
+          if (error) failures.push(`tos_sections: ${error.message}`);
+          else if (data && data.length > 0) setTos(data);
+        }),
+        supabase
+          .from("adoptables")
+          .select("id", { count: "exact", head: true })
+          .then(({ count, error }) => {
+            if (error) failures.push(`adoptables count: ${error.message}`);
+            // else if (count !== null && count !== undefined) setAdoptableCount(count);
+          }),
+      ];
+
+      // Fire-and-forget: diagnostics must not hold up content.
+      scheduleDiagnostics();
+
+      await Promise.all(jobs.map((job) => Promise.resolve(job)));
+
+      if (failures.length > 0) {
+        setLoadError(`Could not load content from the database: ${failures[0]}`);
       }
-      if (pricingData && pricingData.length > 0) setPricing(pricingData);
-      if (faqData && faqData.length > 0) setFaq(faqData);
-      if (workflowData && workflowData.length > 0) setWorkflow(workflowData);
-      if (reviewsData && reviewsData.length > 0) setReviews(reviewsData);
-      if (linksData && linksData.length > 0) setLinks(linksData);
-      if (tosData && tosData.length > 0) setTos(tosData);
     } catch (e) {
       console.error("Failed to load data:", e);
+      setLoadError("Network error while loading dashboard content.");
     } finally {
-      setLoading(false);
+      setLoadingData(false);
     }
   }
 
   const contentSaver = useCallback(async () => {
-    const { site, pricing, faq, workflow, reviews, links, tos } = dataRef.current;
+    const { site, pricing, faq, workflow, reviews, links, credits, tos } = dataRef.current;
     const res = await fetch("/api/admin/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -129,29 +374,80 @@ export default function AdminPage() {
 
   async function doLogin(e: React.FormEvent) {
     e.preventDefault();
-    // Establish an owner session (sets the httpOnly cookie used by moderator APIs).
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: "owner", password: pw }),
-    });
-    if (res.ok) {
-      setAuthed(true);
+    setLoginError("");
+
+    if (lockedUntil && Date.now() < lockedUntil) {
+      const remaining = Math.ceil((lockedUntil - Date.now()) / 1000);
+      setLoginError(`Account locked. Try again in ${remaining}s.`);
       return;
     }
-    if (res.status === 401) {
-      toast.error("Incorrect password");
+
+    if (!pw) {
+      setLoginError("Password is required");
+      pwRef.current?.focus();
       return;
     }
-    // Fallback for local/demo mode (Supabase not configured): use the hardcoded check.
-    if (pw === ADMIN_PASSWORD) {
-      setAuthed(true);
-    } else {
-      toast.error("Incorrect password");
+
+    setLoginLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: "owner", password: pw }),
+      });
+
+      if (res.ok) {
+        setAuthed(true);
+        setAttempts(0);
+        return;
+      }
+
+      if (res.status === 401) {
+        const newAttempts = attempts + 1;
+        setAttempts(newAttempts);
+
+        if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+          const lockUntil = Date.now() + LOCKOUT_DURATION_MS;
+          setLockedUntil(lockUntil);
+          setLoginError(`Too many failed attempts. Account locked for 15 minutes.`);
+          toast.error("Account locked due to too many failed attempts");
+        } else {
+          const remaining = MAX_LOGIN_ATTEMPTS - newAttempts;
+          setLoginError(`Incorrect password. ${remaining} attempt${remaining !== 1 ? "s" : ""} remaining.`);
+        }
+        setPw("");
+        pwRef.current?.focus();
+        return;
+      }
+
+      if (res.status === 429) {
+        const data = await res.json().catch(() => ({}));
+        const retryAfter = res.headers.get("Retry-After");
+        const waitTime = retryAfter ? `${retryAfter}s` : "a while";
+        setLoginError(data.error || `Too many attempts. Try again in ${waitTime}.`);
+        setPw("");
+        pwRef.current?.focus();
+        return;
+      }
+
+      setLoginError("Server error. Please try again.");
+    } catch {
+      setLoginError("Network error. Please check your connection.");
+    } finally {
+      setLoginLoading(false);
     }
   }
 
-  function doLogout() {
+  async function doLogout() {
+    // The session cookie is httpOnly, so clearing client state is not enough —
+    // without this the cookie survives and the admin API stays writable.
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Log out locally regardless: the UI must never stay in a signed-in
+      // state because the network call failed.
+    }
     localStorage.removeItem("adminData");
     setAuthed(false);
   }
@@ -169,36 +465,95 @@ export default function AdminPage() {
     markDirty();
   }
 
-  if (!authed) {
+  if (checkingAuth) {
     return (
-      <div className="relative grid min-h-screen place-items-center overflow-hidden px-4">
-        <div className="pointer-events-none absolute inset-0 bg-dots opacity-30" />
-        <div className="pointer-events-none absolute left-1/2 top-1/3 h-72 w-[500px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.06] blur-[120px]" />
-        <form
-          onSubmit={doLogin}
-          className="ad-panel relative w-full max-w-sm p-8"
-        >
-          <div className="mx-auto mb-6 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] shadow-lg shadow-[var(--accent)]/20">
-            <LayoutDashboard className="h-7 w-7" />
-          </div>
-          <h1 className="text-center text-2xl font-bold text-white">Admin Access</h1>
-          <p className="mb-6 mt-1.5 text-center text-sm text-[var(--text-dim)]">Enter the admin password to continue.</p>
-          <Input type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Password" autoFocus />
-          <Button type="submit" className="mt-4 w-full" size="md">
-            Login
-          </Button>
-          <p className="mt-5 text-center text-xs text-[var(--text-dim)]">Default: blueyadmin</p>
-        </form>
+      <div className="grid min-h-screen place-items-center">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <Loader2 className="h-7 w-7 animate-spin text-[var(--accent)]" />
+          <p className="text-sm text-[var(--text-secondary)]">Restoring your session…</p>
+        </div>
       </div>
     );
   }
 
-  if (loading) {
+  if (!authed) {
+    const isLocked = Boolean(lockedUntil && Date.now() < lockedUntil);
+    const remainingSeconds = isLocked ? Math.ceil((lockedUntil! - Date.now()) / 1000) : 0;
+
     return (
-      <div className="grid min-h-screen place-items-center">
-        <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-          <Loader2 className="h-5 w-5 animate-spin text-[var(--accent)]" /> Loading dashboard…
-        </div>
+      <div className="ad-login-bg relative grid min-h-screen place-items-center overflow-hidden px-4">
+        <div className="pointer-events-none absolute inset-0 bg-cosmic-fog" />
+        <div className="pointer-events-none absolute inset-0 bg-dots opacity-30" />
+        <div className="pointer-events-none absolute -top-32 -left-32 h-[500px] w-[500px] rounded-full bg-[var(--accent)]/15 blur-[180px] orb-slow" />
+        <div className="pointer-events-none absolute -bottom-32 -right-32 h-[400px] w-[400px] rounded-full bg-[var(--accent-2)]/10 blur-[140px] orb-med" />
+        <form
+          onSubmit={doLogin}
+          className="ad-login-card relative"
+          noValidate
+        >
+          <div className="ad-login-icon">
+            <ShieldCheck className="h-7 w-7" />
+          </div>
+          <h1 className="ad-login-title">Admin Access</h1>
+          <p className="ad-login-subtitle">Enter the admin password to continue.</p>
+
+          {loginError && (
+            <div className="ad-login-error mt-5" role="alert">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>{loginError}</span>
+            </div>
+          )}
+
+          <div className="ad-login-form">
+            <div className="ad-login-field">
+              <Input
+                ref={pwRef}
+                type={showPw ? "text" : "password"}
+                value={pw}
+                onChange={(e) => {
+                  setPw(e.target.value);
+                  setLoginError("");
+                }}
+                placeholder="Password"
+                autoFocus
+                disabled={isLocked}
+                aria-label="Admin password"
+                aria-describedby={loginError ? "login-error" : undefined}
+                aria-invalid={!!loginError}
+                className={loginError ? "border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20" : ""}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw(!showPw)}
+                className="ad-login-toggle"
+                aria-label={showPw ? "Hide password" : "Show password"}
+                tabIndex={0}
+              >
+                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full"
+              size="md"
+              disabled={isLocked || loginLoading}
+              loading={loginLoading}
+            >
+              {loginLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Signing in…
+                </>
+              ) : (
+                <>
+                  <Lock className="h-4 w-4" />
+                  Sign In
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
       </div>
     );
   }
@@ -206,6 +561,7 @@ export default function AdminPage() {
   return (
     <DashboardLayout
       active={tab}
+      userName={userName}
       onSelect={(id) => {
         if (id === "__reset") setResetOpen(true);
         else setTab(id as Tab);
@@ -213,19 +569,92 @@ export default function AdminPage() {
       onLogout={doLogout}
       onReset={() => setResetOpen(true)}
     >
+      {storageError && (
+        <div className="mx-auto mb-6 max-w-3xl rounded-xl border border-[var(--warning-border)] bg-[var(--warning-soft)] p-4 text-sm text-[var(--warning)]">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <p className="font-semibold">Storage buckets missing</p>
+              <p className="mt-1 whitespace-pre-line text-xs opacity-90">{storageError}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      {loadError && (
+        <div className="mx-auto mb-6 max-w-3xl rounded-xl border border-[var(--danger-border)] bg-[var(--danger-soft)] p-4 text-sm text-white">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--danger)]" />
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">Could not load dashboard content</p>
+              <p className="mt-1 break-words text-xs text-[var(--text-secondary)]">{loadError}</p>
+              <button
+                type="button"
+                onClick={() => void loadAllData()}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-[var(--danger)]/20 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[var(--danger)]/35"
+              >
+                <RotateCcw className="h-3.5 w-3.5" /> Retry loading
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {dbHealth && !dbHealth.healthy && (
+        <div className="mx-auto mb-6 max-w-3xl rounded-xl border border-[var(--warning-border)] bg-[var(--warning-soft)] p-4 text-sm text-[var(--warning)]">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <p className="font-semibold">Database schema incomplete</p>
+              <p className="mt-1 whitespace-pre-line text-xs opacity-90">
+                {dbHealth.error || "Some required tables or columns are missing. Run the database setup to fix this."}
+                {"\n\n"}
+                {Object.entries(dbHealth.tables).filter(([_, t]) => !t.exists || t.missingColumns.length > 0).map(([table, t]) => {
+                  if (!t.exists) return `- Table "${table}" is missing`;
+                  if (t.missingColumns.length > 0) return `- Table "${table}" is missing columns: ${t.missingColumns.join(", ")}`;
+                  return null;
+                }).filter(Boolean).join("\n")}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      {corsTestResult && !corsTestResult.success && (
+        <div className="mx-auto mb-6 max-w-3xl rounded-xl border border-[var(--danger-border)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--danger)]">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <p className="font-semibold">Upload test failed for "{corsTestResult.bucket}"</p>
+              {corsTestResult.error && <p className="mt-1 whitespace-pre-line text-xs opacity-90">{corsTestResult.error}</p>}
+              <p className="mt-2 text-xs opacity-90">
+                Check CORS settings in Supabase Dashboard → Storage → {corsTestResult.bucket} → Configuration → CORS.
+                Make sure your domain is allowed and methods include GET, POST, PUT, DELETE, OPTIONS.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      {tab === "overview" && (
+        <OverviewSection site={site} pricing={pricing} faq={faq} workflow={workflow} reviews={reviews} links={links} credits={credits} tos={tos} storageError={storageError} dbHealth={dbHealth} onSelect={(id) => setTab(id as Tab)} />
+      )}
       {tab === "portfolio" && <PortfolioSection />}
       {tab === "pricing" && <PricingSection value={pricing} onChange={(n) => { setPricing(n); markDirty(); }} />}
       {tab === "faq" && <FaqSection value={faq} onChange={(n) => { setFaq(n); markDirty(); }} />}
       {tab === "workflow" && <WorkflowSection value={workflow} onChange={(n) => { setWorkflow(n); markDirty(); }} />}
-      {tab === "reviews" && <ReviewsSection value={reviews} onChange={(n) => { setReviews(n); markDirty(); }} />}
+      {tab === "reviews" && (
+        <SectionErrorBoundary fallbackLabel="Reviews section failed to load">
+          <ReviewsSection value={reviews} onChange={(n) => { setReviews(n); markDirty(); }} />
+        </SectionErrorBoundary>
+      )}
       {tab === "site-images" && <SiteImagesSection />}
       {tab === "nsfw" && <NsfwSection />}
       {tab === "social-links" && <LinksSection value={links} onChange={(n) => { setLinks(n); markDirty(); }} />}
       {tab === "queue" && <QueueSection />}
       {tab === "moderators" && <ModeratorsSection />}
-      {tab === "fbx-mashups" && <FbxMashupSection />}
+      {tab === "adoptables" && <AdoptablesSection session={{ role: "owner" }} />}
+      {tab === "credits" && <CreditsSection value={credits} onChange={(n) => { setCredits(n); markDirty(); }} />}
       {tab === "tos" && <TosSection value={tos} onChange={(n) => { setTos(n); markDirty(); }} />}
       {tab === "site" && <SiteInfoSection value={site} onChange={(n) => { setSite(n); markDirty(); }} />}
+      {tab === "no-ai" && <NoAiBadgeSection site={site} onChange={(n) => { setSite(n); markDirty(); }} />}
+{tab === "wont-do" && <WontDoSection />}
 
       <Modal
         open={resetOpen}

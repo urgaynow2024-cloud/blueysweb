@@ -128,8 +128,10 @@ export function QueueSection() {
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="p-8">
+    <div className="space-y-6 relative">
+      <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" />
+      <Card className="p-8 relative overflow-hidden">
+        <div className="pointer-events-none absolute -top-10 -right-10 h-[200px] w-[200px] rounded-full bg-[var(--accent-2)]/5 blur-[100px] orb-med" />
         <CardHeader title="Queue Settings" description="Public availability shown on the queue page." />
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label="Status">
@@ -154,7 +156,8 @@ export function QueueSection() {
         </div>
       </Card>
 
-      <Card className="p-8">
+      <Card className="p-8 relative overflow-hidden">
+        <div className="pointer-events-none absolute -top-10 -right-10 h-[200px] w-[200px] rounded-full bg-[var(--accent-2)]/5 blur-[100px] orb-med" />
         <CardHeader
           title="Queue Items"
           description="Track individual commissions through your pipeline."
@@ -166,7 +169,7 @@ export function QueueSection() {
         />
         <div className="mt-6 space-y-4">
           {items.map((item, i) => (
-            <div key={item.id || i} className="ad-panel ad-panel-hover p-5">
+            <div key={item.id || i} className="ad-section-card ad-section-card-hover p-5">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Field label="Title">
                   <Input value={item.title} onChange={(e) => updateItem(i, "title", e.target.value)} placeholder="VRChat Avatar Edit" />

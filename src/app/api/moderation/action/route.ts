@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     .select("*")
     .eq("id", id)
     .maybeSingle();
-  if (fetchError) return json({ error: fetchError.message }, 500);
+  if (fetchError) return json({ error: "Failed to fetch item" }, 500);
   if (!row) return json({ error: "Item not found" }, 404);
 
   const entityLabel =
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { error: updateError } = await supabaseAdmin.from(table).update(update).eq("id", id);
-  if (updateError) return json({ error: updateError.message }, 500);
+  if (updateError) return json({ error: "Failed to update item" }, 500);
 
   await logAction(actor, ACTION_LABEL[action!], type!, id!, entityLabel, action === "reject" ? reasonText : reasonText || null);
 

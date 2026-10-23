@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdminSession } from "@/lib/auth/guard";
 
 const tosFields = ["title", "icon", "section_type", "content", "items", "highlight_box", "box_type", "box_title", "sort_order", "visible"] as const;
 const skipFields = new Set<string>();
@@ -29,12 +30,14 @@ export async function GET() {
     .eq("visible", true)
     .order("sort_order", { ascending: true });
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: "Failed to save TOS section" }, { status: 500 });
   }
   return NextResponse.json(data || []);
 }
 
 export async function POST(request: Request) {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return guard.response!;
   try {
     const body = await request.json();
 
@@ -58,7 +61,7 @@ export async function POST(request: Request) {
         continue;
       }
 
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load TOS sections" }, { status: 500 });
     }
 
     return NextResponse.json({ error: "Max retries exceeded" }, { status: 500 });

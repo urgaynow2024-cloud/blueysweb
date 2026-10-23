@@ -58,7 +58,7 @@ export function PortfolioGrid({
 
   if (images.length === 0) {
     return (
-      <div className="ad-panel ad-empty">
+      <div className="ad-section-card ad-empty">
         <p className="text-sm text-[var(--text-secondary)]">No images yet</p>
         <p className="text-xs text-[var(--text-dim)]">Upload your first artwork using the area above.</p>
       </div>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdminSession } from "@/lib/auth/guard";
 
 export async function GET() {
   try {
@@ -26,6 +27,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return guard.response!;
   try {
     const body = await request.json();
     const { name, url, description } = body;

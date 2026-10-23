@@ -3,9 +3,13 @@
 import { useState, useEffect } from "react";
 import { Upload, Trash2, Loader2, Image as ImageIcon } from "lucide-react";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { deleteFromSupabaseStorage } from "@/lib/supabase/storage";
 import { useToast } from "../Toast";
 import { Card, CardHeader } from "../Card";
 import { Button } from "../Button";
+import { uploadMedia } from "@/lib/upload/client";
+import { UploadError } from "@/lib/upload/errors";
+import { invalidateCache } from "@/lib/api-cache";
 
 const SLOTS = [
   { key: "hero", label: "Homepage — Main Hero", desc: "Large featured image on the left of the hero section. ~1200x800px (16:10).", aspect: "aspect-[16/10]" },
@@ -40,19 +44,13 @@ export function SiteImagesSection() {
   async function handleUpload(key: string, file: File) {
     setSaving(key);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("key", key);
-      const res = await fetch("/api/site-images", { method: "POST", body: formData });
-      const result = await res.json();
-      if (res.ok && result.url) {
-        setImages((prev) => ({ ...prev, [key]: { url: result.url, path: result.path } }));
-        toast.success("Image updated");
-      } else {
-        toast.error(result.error || "Upload failed");
-      }
-    } catch {
-      toast.error("Network error during upload");
+      const result = await uploadMedia(file, "site", { key });
+      setImages((prev) => ({ ...prev, [key]: { url: result.url, path: result.path } }));
+      invalidateCache("db:site_images");
+      toast.success("Image updated");
+    } catch (err) {
+      const message = err instanceof UploadError ? err.message : err instanceof Error ? err.message : "Upload failed";
+      toast.error(message);
     } finally {
       setSaving(null);
     }
@@ -62,6 +60,9 @@ export function SiteImagesSection() {
     const image = images[key];
     if (!image) return;
     try {
+      if (image.path) {
+        await deleteFromSupabaseStorage("portfolio-images", image.path);
+      }
       const res = await fetch("/api/site-images", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
@@ -73,6 +74,7 @@ export function SiteImagesSection() {
           delete next[key];
           return next;
         });
+        invalidateCache("db:site_images");
         toast.success("Image removed");
       } else {
         toast.error("Failed to remove image");
@@ -112,14 +114,15 @@ export function SiteImagesSection() {
   }
 
   return (
-    <Card className="p-8">
+    <Card className="p-8 relative overflow-hidden">
+      <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" />
       <CardHeader title="Site Images" description="Managed images used around the public site. Changes apply immediately." />
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
         {SLOTS.map((slot) => {
           const image = images[slot.key];
           const isUploading = saving === slot.key;
           return (
-            <div key={slot.key} className="ad-panel ad-panel-hover p-5">
+            <div key={slot.key} className="ad-section-card ad-section-card-hover p-5">
               <div className="mb-3">
                 <h3 className="text-sm font-semibold text-white">{slot.label}</h3>
                 <p className="mt-1 text-xs leading-relaxed text-[var(--text-dim)]">{slot.desc}</p>
@@ -127,7 +130,19 @@ export function SiteImagesSection() {
               <div className={`relative ${slot.aspect} overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]`}>
                 {image ? (
                   <>
-                    <img src={image.url} alt={slot.label} className="h-full w-full object-cover" />
+                    <img
+                      src={image.url}
+                      alt={slot.label}
+                      className="h-full w-full object-cover"
+                      onLoad={(e) => {
+                        // Guard against a 1x1 placeholder WebP, which loads
+                        // without error but renders as a flat solid block.
+                        const el = e.currentTarget;
+                        if (el.naturalWidth <= 1 || el.naturalHeight <= 1) {
+                          el.style.display = "none";
+                        }
+                      }}
+                    />
                     <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/55 opacity-0 transition-opacity duration-300 hover:opacity-100">
                       <Button size="sm" variant="secondary" onClick={() => triggerUpload(slot.key)} disabled={isUploading}>
                         {isUploading ? "Uploading…" : "Replace"}

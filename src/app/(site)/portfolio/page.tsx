@@ -1,36 +1,42 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import StorageImage from "@/components/ui/StorageImage";
+import { getPortfolioImages } from "@/lib/db";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { Images, Maximize2 } from "lucide-react";
+import { Maximize2, Sparkles } from "lucide-react";
+
+const CATEGORIES = ["All", "Characters", "Environments", "Customizations"];
+
+function getCategory(url: string, index: number): string {
+  const hash = url.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0) + index;
+  const idx = hash % 3;
+  return ["Characters", "Environments", "Customizations"][idx];
+}
+
+type PortfolioImage = { id: string; url: string; category: string; caption?: string };
 
 export default function PortfolioPage() {
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<PortfolioImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [activeCategory, setActiveCategory] = useState("All");
 
-  useEffect(() => {
+   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-        if (!isSupabaseConfigured || !supabase) {
-          const stored = localStorage.getItem("adminData");
-          if (stored) {
-            try {
-              const data = JSON.parse(stored);
-              if (data.portfolioImages && data.portfolioImages.length > 0) {
-                setImages(data.portfolioImages);
-              }
-            } catch (e) {}
-          }
-          setLoading(false);
-          return;
-        }
-        const { data } = await supabase.from("portfolio_images").select("url").order("sort_order", { ascending: true });
-        if (data && data.length > 0) setImages(data.map((img) => img.url));
+        const data = await getPortfolioImages();
+        setImages(
+          data.map((img: { id: string; url: string; caption?: string }, i) => ({
+            id: img.id,
+            url: img.url,
+            category: getCategory(img.url, i),
+            caption: img.caption || undefined,
+          }))
+        );
       } catch (e) {
         console.error("Failed to load portfolio:", e);
       } finally {
@@ -40,84 +46,163 @@ export default function PortfolioPage() {
     load();
   }, []);
 
+  const filteredImages = useMemo(() => {
+    if (activeCategory === "All") return images;
+    return images.filter((img) => img.category === activeCategory);
+  }, [images, activeCategory]);
+
+  const featuredImage = filteredImages.length > 0 ? filteredImages[0] : null;
+  const masonryImages = filteredImages.slice(1);
+
+  const lightboxImages = filteredImages.map((i: PortfolioImage) => ({ url: i.url, caption: i.caption, title: `Portfolio Image` }));
+
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+
+  const openLightboxAt = (idx: number) => setLightboxIndex(idx);
+
   return (
     <div className="relative">
-      <section className="page relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-dots opacity-30" />
-        <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-[700px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.04] blur-[130px]" />
-        <div className="pointer-events-none absolute -bottom-32 right-0 h-60 w-[500px] rounded-full bg-[var(--accent-2)] opacity-[0.03] blur-[100px]" />
-
-        <div className="container">
+      <section id="portfolio" className="section">
+        <div className="container-wide">
           <SectionHeading
-            align="center"
             eyebrow="Portfolio"
-            icon={<Images className="h-4 w-4 text-[var(--accent)]" />}
-            title="My Work"
-            subtitle="Browse avatar commissions and edits — click any piece to view it full size."
+            title="Featured Work"
+            subtitle="Recent avatar commissions and customisations."
           />
 
           {loading ? (
-            <div className="columns-1 space-y-4 sm:columns-2 lg:columns-3">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
-                  <div className="h-[220px] w-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-[var(--bg)] via-[var(--border)] to-[var(--bg)] bg-[length:200%_100%]" />
-                </div>
-              ))}
-            </div>
-          ) : images.length > 0 ? (
-            <div className="columns-1 space-y-4 sm:columns-2 lg:columns-3">
-              {images.map((url, i) => (
-                <Reveal key={i} delay={(i % 3) * 60}>
-                  <div
-                    onClick={() => setLightboxIndex(i)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setLightboxIndex(i);
-                      }
-                    }}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`View portfolio image ${i + 1} full size`}
-                    className="sheen group relative mb-4 block aspect-[4/3] cursor-pointer overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all duration-500 hover:border-[var(--border-hover)] hover:shadow-2xl hover:shadow-black/40"
-                  >
-                    <img
-                      src={url}
-                      alt={`Portfolio ${i + 1}`}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/70 via-black/0 to-black/0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-                      <span className="grid h-12 w-12 place-items-center rounded-full border border-white/20 bg-white/15 text-white backdrop-blur transition-transform duration-300 group-hover:scale-110">
-                        <Maximize2 className="h-5 w-5" />
-                      </span>
-                    </div>
+            <div className="mt-12 gallery-masonry">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <Reveal key={i} delay={(i % 4) * 50}>
+                  <div className="gallery-masonry-item">
+                    <div className="aspect-[4/3] w-full rounded-[var(--r-md)] skeleton" />
                   </div>
                 </Reveal>
               ))}
             </div>
-          ) : (
-            <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-20 text-center">
-              <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                <Images className="h-6 w-6" />
+          ) : filteredImages.length > 0 ? (
+            <>
+              {featuredImage && (
+                <Reveal>
+                  <div
+                    onClick={() => openLightboxAt(filteredImages.findIndex((img) => img.id === featuredImage.id))}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openLightboxAt(filteredImages.findIndex((img) => img.id === featuredImage.id));
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="View featured artwork full size"
+                    className="portfolio-card portfolio-hero group relative mb-8 cursor-pointer overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-card)] transition-all duration-200 hover:border-[var(--border-hover)]"
+                  >
+                    <div className="portfolio-image relative aspect-[16/9] w-full">
+                      <StorageImage
+                        src={featuredImage.url}
+                        alt="Featured portfolio artwork"
+                        fill
+                        priority
+                        sizes="(max-width: 1024px) 100vw, 900px"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.015]"
+                      />                    </div>
+                    <div className="absolute inset-0 flex items-end justify-end bg-gradient-to-t from-black/50 via-transparent to-transparent p-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                      <span className="grid h-12 w-12 place-items-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition-transform duration-300 group-hover:scale-110">
+                        <Maximize2 className="h-5 w-5" />
+                      </span>
+                    </div>
+                    <div className="pointer-events-none absolute bottom-4 left-6">
+                      <span className="section-eyebrow !text-white/70">Featured</span>
+                    </div>
+                  </div>
+                </Reveal>
+              )}
+
+              <div className="mb-8 flex flex-wrap gap-2">
+                {CATEGORIES.map((cat) => {
+                  const isActive = activeCategory === cat;
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveCategory(cat)}
+                      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[12px] font-semibold transition-all duration-300 ${
+                        isActive
+                          ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
+                          : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-white"
+                      }`}
+                    >
+                      {cat}
+                      {isActive && <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />}
+                    </button>
+                  );
+                })}
               </div>
-              <p className="mx-auto max-w-md text-lg text-[var(--text-dim)]">
-                Portfolio images will appear here after upload.
+
+              {activeCategory !== "All" && (
+                <p className="mb-6 text-sm text-[var(--text-secondary)]">
+                  Showing {masonryImages.length} artwork{masonryImages.length !== 1 ? "s" : ""} in {activeCategory}
+                </p>
+              )}
+
+              <div className="mt-4 gallery-masonry">
+                {masonryImages.map((item, i) => (
+                  <Reveal key={item.id || i} delay={(i % 4) * 50}>
+                    <div
+                      onClick={() => openLightboxAt(filteredImages.findIndex((img) => img.id === item.id))}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          openLightboxAt(filteredImages.findIndex((img) => img.id === item.id));
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`View portfolio image ${i + 1} full size`}
+                      className="portfolio-card group relative overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] cursor-pointer transition-all duration-200 hover:border-[var(--border-hover)]"
+                    >
+                      <div className="portfolio-image relative aspect-[4/3] w-full">
+                        <StorageImage
+                          src={item.url}
+                          alt={`Portfolio ${i + 1}`}
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          className="h-full w-full object-cover transition-transform duration-400 group-hover:scale-[1.015]"
+                        />
+                      </div>
+                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                        <span className="grid h-10 w-10 place-items-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition-transform duration-300 group-hover:scale-110">
+                          <Maximize2 className="h-4 w-4" />
+                        </span>
+                      </div>
+                    </div>
+                  </Reveal>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="mt-16 empty-state">
+              <div className="empty-state-icon">
+                <Sparkles className="h-7 w-7" />
+              </div>
+              <h3 className="empty-state-title">No portfolio pieces yet</h3>
+              <p className="empty-state-desc">
+                Portfolio pieces will appear here after client approval.
               </p>
             </div>
           )}
         </div>
       </section>
 
-      {lightboxIndex !== null && (
+      {lightboxIndex !== null && lightboxImages.length > 0 && (
         <PortfolioLightbox
-          images={images}
+          images={lightboxImages}
           index={lightboxIndex}
-          onClose={() => setLightboxIndex(null)}
-          onPrev={() => setLightboxIndex((lightboxIndex - 1 + images.length) % images.length)}
-          onNext={() => setLightboxIndex((lightboxIndex + 1) % images.length)}
+          onClose={closeLightbox}
+          onPrev={() => setLightboxIndex((lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length)}
+          onNext={() => setLightboxIndex((lightboxIndex + 1) % lightboxImages.length)}
         />
       )}
     </div>
   );
 }
+

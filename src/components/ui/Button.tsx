@@ -1,6 +1,6 @@
 import { ReactNode, ButtonHTMLAttributes } from "react";
 
-type Variant = "primary" | "secondary" | "outline" | "ghost";
+type Variant = "primary" | "secondary" | "outline" | "ghost" | "destructive";
 type Size = "sm" | "md" | "lg";
 
 const variantClass: Record<Variant, string> = {
@@ -8,12 +8,13 @@ const variantClass: Record<Variant, string> = {
   secondary: "btn-secondary",
   outline: "btn-outline",
   ghost: "btn-ghost",
+  destructive: "btn-destructive",
 };
 
 const sizeClass: Record<Size, string> = {
-  sm: "!py-2 !px-4 !text-sm",
-  md: "!py-2.5 !px-6",
-  lg: "!py-3.5 !px-8 !text-base",
+  sm: "btn-sm",
+  md: "btn-md",
+  lg: "btn-lg",
 };
 
 export function Button({
@@ -34,7 +35,7 @@ export function Button({
 }) {
   return (
     <button
-      className={`${variantClass[variant]} ${sizeClass[size]} ${className} inline-flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
+      className={`btn-base ${variantClass[variant]} ${sizeClass[size]} ${className} inline-flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] disabled:opacity-50 disabled:cursor-not-allowed`}
       disabled={props.disabled || loading}
       aria-busy={loading}
       {...props}
@@ -73,33 +74,26 @@ export function ButtonLink({
   rightIcon?: ReactNode;
   external?: boolean;
 }) {
-  const cls = `${variantClass[variant]} ${sizeClass[size]} ${className} inline-flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:opacity-50`;
+  const cls = `btn-base ${variantClass[variant]} ${sizeClass[size]} ${className} inline-flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] disabled:opacity-50`;
+  const inner = loading ? (
+    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+  ) : (
+    <>
+      {leftIcon && <span className="flex items-center">{leftIcon}</span>}
+      {children}
+      {rightIcon && <span className="flex items-center">{rightIcon}</span>}
+    </>
+  );
   if (external) {
     return (
       <a href={href} target="_blank" rel="noopener noreferrer" className={cls} aria-busy={loading}>
-        {loading ? (
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-        ) : (
-          <>
-            {leftIcon && <span className="flex items-center">{leftIcon}</span>}
-            {children}
-            {rightIcon && <span className="flex items-center">{rightIcon}</span>}
-          </>
-        )}
+        {inner}
       </a>
     );
   }
   return (
     <a href={href} className={cls} aria-busy={loading}>
-      {loading ? (
-        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-      ) : (
-        <>
-          {leftIcon && <span className="flex items-center">{leftIcon}</span>}
-          {children}
-          {rightIcon && <span className="flex items-center">{rightIcon}</span>}
-        </>
-      )}
+      {inner}
     </a>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { X } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import { AdminTopbar } from "./AdminTopbar";
 import { AdminSidebar } from "./AdminSidebar";
 import { useSave } from "./SaveProvider";
@@ -42,11 +42,17 @@ export function DashboardLayout({ active, onSelect, onLogout, onReset, userName,
   }, [sidebarOpen]);
 
   return (
-    <div className="admin-shell flex min-h-screen flex-col">
+    <div className="ad-dashboard-bg flex min-h-screen flex-col">
+      <div className="pointer-events-none fixed inset-0 bg-cosmic-fog" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="orb orb-slow bg-[var(--accent)]/8 blur-[180px] w-[600px] h-[600px] -top-40 left-10" />
+        <div className="orb orb-med bg-[var(--accent-2)]/6 blur-[140px] w-[500px] h-[500px] bottom-0 right-10" />
+        <div className="orb orb-fast bg-[var(--accent-3)]/5 blur-[100px] w-[350px] h-[350px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+      </div>
       <AdminTopbar onToggleSidebar={() => setSidebarOpen(true)} onLogout={onLogout} userName={userName} />
 
-      <div className="admin-body">
-        <aside className="hidden w-[280px] shrink-0 border-r border-[var(--border)] bg-[var(--bg-elevated)] lg:block">
+      <div className="ad-main">
+        <aside className="ad-sidebar hidden w-[260px] shrink-0 border-r border-[var(--border)] lg:block glass">
           <div className="sticky top-[72px] h-[calc(100vh-72px)]">
             <AdminSidebar active={active} onSelect={onSelect} onLogout={onLogout} onReset={onReset} />
           </div>
@@ -55,9 +61,12 @@ export function DashboardLayout({ active, onSelect, onLogout, onReset, userName,
         {sidebarOpen && (
           <div className="fixed inset-0 z-[60] lg:hidden">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-            <div className="absolute left-0 top-0 h-full w-[280px] border-r border-[var(--border)] bg-[var(--bg-elevated)] shadow-2xl shadow-black/60">
+            <div className="absolute left-0 top-0 h-full w-[260px] border-r border-[var(--border)] bg-[var(--bg-elevated)] shadow-2xl shadow-black/60 glass-strong">
               <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-3">
-                <span className="px-2 text-sm font-semibold text-white">Menu</span>
+                <span className="px-2 text-sm font-semibold text-white flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-[var(--accent)]" />
+                  Menu
+                </span>
                 <button
                   type="button"
                   onClick={() => setSidebarOpen(false)}
@@ -86,8 +95,8 @@ export function DashboardLayout({ active, onSelect, onLogout, onReset, userName,
           </div>
         )}
 
-        <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
-          <div className="mx-auto max-w-[1100px]">{children}</div>
+        <main className="ad-main-inner relative z-10">
+          {children}
         </main>
       </div>
     </div>

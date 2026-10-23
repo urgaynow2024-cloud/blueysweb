@@ -3,11 +3,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getNsfwPortfolioImages } from "@/lib/db";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { deleteFromSupabaseStorage } from "@/lib/supabase/storage";
 import { useSave } from "../SaveProvider";
 import { useToast } from "../Toast";
 import { Card, CardHeader } from "../Card";
 import { UploadArea } from "../UploadArea";
 import { PortfolioGrid, type PortfolioImage } from "../PortfolioGrid";
+import { uploadMedia } from "@/lib/upload/client";
+import { UploadError } from "@/lib/upload/errors";
 
 export function NsfwSection() {
   const [images, setImages] = useState<PortfolioImage[]>([]);
@@ -62,17 +65,15 @@ export function NsfwSection() {
   }, [register, saveNsfw]);
 
   async function uploadOne(file: File) {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/nsfw/upload", { method: "POST", body: formData });
-    let result: any;
     try {
-      result = await res.json();
-    } catch {
-      result = {};
+      return await uploadMedia(file, "nsfw");
+    } catch (err) {
+      if (err instanceof UploadError) {
+        throw new Error(err.message);
+      }
+      const message = err instanceof Error ? err.message : "Upload failed";
+      throw new Error(message);
     }
-    if (res.ok && result.id) return { id: result.id, url: result.url, path: result.path };
-    throw new Error(result.error || result.details || `Upload failed (${res.status})`);
   }
 
   async function handleFiles(files: FileList | null) {
@@ -87,7 +88,7 @@ export function NsfwSection() {
         toast.success("NSFW image uploaded");
       } catch (err) {
         console.error("NSFW upload error:", err);
-        const message = err instanceof Error ? err.message : "Upload failed";
+        const message = err instanceof UploadError ? err.message : err instanceof Error ? err.message : "Upload failed";
         setImages((prev) => prev.map((img) => (img === temp ? { ...img, uploading: false, error: message } : img)));
         toast.error(message);
       }
@@ -99,6 +100,9 @@ export function NsfwSection() {
     setImages((prev) => prev.filter((_, i) => i !== index));
     if (image.id) {
       try {
+        if (image.path) {
+          await deleteFromSupabaseStorage("portfolio-images", image.path);
+        }
         await fetch("/api/nsfw", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
@@ -124,6 +128,9 @@ export function NsfwSection() {
     const old = images[index];
     try {
       const uploaded = await uploadOne(file);
+      if (uploaded && old?.id && old.path) {
+        await deleteFromSupabaseStorage("portfolio-images", old.path);
+      }
       setImages((prev) => prev.map((img, i) => (i === index ? { id: uploaded!.id, url: uploaded!.url, path: uploaded!.path } : img)));
       if (old?.id) {
         await fetch("/api/nsfw", {
@@ -135,7 +142,7 @@ export function NsfwSection() {
       toast.success("NSFW image replaced");
     } catch (err) {
       console.error("NSFW replace error:", err);
-      const message = err instanceof Error ? err.message : "Replace failed";
+      const message = err instanceof UploadError ? err.message : err instanceof Error ? err.message : "Replace failed";
       toast.error(message);
     }
   }
@@ -150,9 +157,11 @@ export function NsfwSection() {
   }
 
   return (
-    <div className="space-y-6">
-      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onReplaceFile} />
-      <Card className="p-8">
+    <div className="space-y-6 relative">
+      <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" />
+      <input ref={fileInputRef} type="file" accept="image/*,video/mp4,video/webm" className="hidden" onChange={onReplaceFile} />
+      <Card className="p-8 relative overflow-hidden">
+        <div className="pointer-events-none absolute -top-10 -right-10 h-[200px] w-[200px] rounded-full bg-[var(--accent-2)]/5 blur-[100px] orb-med" />
         <CardHeader
           title="NSFW Portfolio"
           description="Age-gated adult content. Visible only to verified 18+ visitors. Drag to reorder."

@@ -24,7 +24,8 @@ export function WorkflowSection({ value, onChange }: Props) {
   }
 
   return (
-    <Card className="p-8">
+    <Card className="p-8 relative overflow-hidden">
+      <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" />
       <CardHeader
         title="Process Steps"
         description="The commission workflow shown on the process section."
@@ -36,7 +37,7 @@ export function WorkflowSection({ value, onChange }: Props) {
       />
       <div className="mt-6 space-y-4">
         {value.map((step, i) => (
-          <div key={step.id || i} className="ad-panel ad-panel-hover p-6">
+          <div key={step.id || i} className="ad-section-card ad-section-card-hover p-6">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-white">Step {i + 1}</h3>
               <Button size="sm" variant="ghost" onClick={() => remove(i)} leftIcon={<Trash2 className="h-4 w-4" />} className="!text-[var(--danger)] hover:!bg-[var(--danger-soft)]">

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdminSession } from "@/lib/auth/guard";
 
 const tosFields = ["title", "icon", "section_type", "content", "items", "highlight_box", "box_type", "box_title", "sort_order", "visible"] as const;
 const skipFields = new Set<string>();
@@ -33,7 +34,7 @@ export async function GET(
     .eq("id", id)
     .single();
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 404 });
+    return NextResponse.json({ error: "TOS section not found" }, { status: 404 });
   }
   return NextResponse.json(data);
 }
@@ -42,6 +43,9 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return guard.response!;
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -69,7 +73,7 @@ export async function PUT(
         continue;
       }
 
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: "Failed to update TOS section" }, { status: 500 });
     }
 
     return NextResponse.json({ error: "Max retries exceeded" }, { status: 500 });
@@ -83,6 +87,9 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return guard.response!;
+
   const { id } = await params;
   if (!supabaseAdmin) {
     return NextResponse.json({ error: "Server not configured" }, { status: 500 });
@@ -91,8 +98,8 @@ export async function DELETE(
     .from("tos_sections")
     .delete()
     .eq("id", id);
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+    if (error) {
+      return NextResponse.json({ error: "Failed to delete TOS section" }, { status: 500 });
+    }
   return NextResponse.json({ success: true });
 }

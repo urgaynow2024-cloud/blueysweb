@@ -1,0 +1,153 @@
+import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import { requireAdminSession } from "@/lib/auth/guard";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const SCHEMA_PATH = join(__dirname, "../../../../../supabase/schema.sql");
+const SETUP_FLAG_KEY = "db_setup_completed";
+
+export const runtime = "nodejs";
+
+/**
+ * Read-only readiness probe.
+ *
+ * This used to answer from a single `db_setup_completed` row that is only ever
+ * written by the owner-only POST handler below. A database initialised by
+ * pasting `supabase/schema.sql` into the SQL Editor never has that row, so this
+ * reported `needsSetup: true` for a database whose tables were all present and
+ * readable — which is what made the public Adoptables page claim it was not set
+ * up. It now probes the actual tables instead of trusting a bookkeeping flag.
+ */
+export async function GET() {
+  if (!supabaseAdmin) {
+    return NextResponse.json({ needsSetup: true, reason: "not_configured" });
+  }
+
+  // The adoptables tables defined in supabase/schema.sql and read by the
+  // public site. This is the authoritative list — it is deliberately not
+  // guessed, because a name that does not exist in the schema would report a
+  // healthy database as broken.
+  const required = ["adoptables", "adoptable_gallery", "adoptable_before_after"];
+
+  try {
+    // `head: true` issues SELECT 1 LIMIT 0, so a missing relation still errors
+    // while an existing one costs nothing.
+    const results = await Promise.all(
+      required.map((table) =>
+        supabaseAdmin!.from(table).select("*", { head: true, count: "exact" })
+      )
+    );
+
+    // PostgREST reports a relation it cannot resolve as PGRST205 ("not found in
+    // the schema cache"), which is not the same as Postgres' own 42P01. Both
+    // mean the table is genuinely absent, so both count as missing.
+    const isMissing = (error: { code?: string; message?: string } | null) =>
+      !!error &&
+      (error.code === "42P01" ||
+        error.code === "PGRST205" ||
+        /does not exist|not find .* in the schema cache|schema cache/i.test(
+          error.message ?? ""
+        ));
+
+    const missing = required.filter((_, i) => isMissing(results[i].error));
+
+    const failed = results
+      .map((r, i) => ({ table: required[i], error: r.error }))
+      .filter((r) => r.error && !missing.includes(r.table));
+
+    if (failed.length > 0) {
+      return NextResponse.json(
+        {
+          needsSetup: true,
+          reason: "probe_failed",
+          detail: failed.map((f) => `${f.table}: ${f.error?.code ?? ""} ${f.error?.message ?? ""}`),
+        },
+        { status: 200 }
+      );
+    }
+
+    return NextResponse.json({
+      needsSetup: missing.length > 0,
+      reason: missing.length > 0 ? "missing_tables" : "ready",
+      missing,
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { needsSetup: true, reason: "probe_error", detail: String(error?.message ?? error) },
+      { status: 200 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // This executes the entire schema against the project using a management
+    // token. It must never be reachable anonymously.
+    const guard = await requireAdminSession();
+    if (!guard.ok) return guard.response!;
+    if (guard.session?.role !== "owner") {
+      return NextResponse.json({ error: "Owner access required" }, { status: 403 });
+    }
+
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+    }
+
+    const { data: existing } = await supabaseAdmin
+      .from("site_config")
+      .select("value")
+      .eq("key", SETUP_FLAG_KEY)
+      .maybeSingle();
+
+    if (existing?.value === "true") {
+      return NextResponse.json({ success: true, message: "Database already set up" });
+    }
+
+    const schemaSql = readFileSync(SCHEMA_PATH, "utf-8");
+
+    const managementToken = process.env.SUPABASE_ACCESS_TOKEN;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+
+    let result: { success: boolean; message: string; rowsAffected?: number };
+
+    if (managementToken && supabaseUrl) {
+      try {
+        const projectRef = supabaseUrl.replace(/^https?:\/\//, "").split(".")[0];
+        const mgmtUrl = `https://api.supabase.com/v1/projects/${projectRef}/database/query`;
+
+        const mgmtResponse = await fetch(mgmtUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${managementToken}`,
+          },
+          body: JSON.stringify({ query: schemaSql }),
+        });
+
+        if (mgmtResponse.ok) {
+          const data = await mgmtResponse.json();
+          result = { success: true, message: "Schema executed via Management API", rowsAffected: Array.isArray(data) ? data.length : 0 };
+        } else {
+          const errText = await mgmtResponse.text();
+          result = { success: false, message: `Management API ${mgmtResponse.status}: ${errText.slice(0, 200)}` };
+        }
+      } catch (mgmtError: any) {
+        result = { success: false, message: "Management API error" };
+      }
+    } else {
+      result = { success: false, message: "SUPABASE_ACCESS_TOKEN not configured. Run schema.sql manually in Supabase SQL Editor." };
+    }
+
+    if (result.success) {
+      await supabaseAdmin.from("site_config").upsert({ key: SETUP_FLAG_KEY, value: "true" }, { onConflict: "key" });
+    }
+
+    return NextResponse.json(result);
+  } catch (error: any) {
+    console.error("Database setup error:", error);
+    return NextResponse.json({ error: "Setup failed" }, { status: 500 });
+  }
+}

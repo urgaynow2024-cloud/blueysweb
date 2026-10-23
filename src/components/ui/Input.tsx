@@ -44,12 +44,6 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
           <input
             ref={ref}
             className={`field ${className} ${error ? "error" : ""}`}
-            style={{
-              background: "linear-gradient(160deg, rgba(255,255,255,0.025), transparent 45%), var(--bg-card)",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.4)",
-              transition:
-                "border-color 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out), background 0.4s, transform 0.2s",
-            }}
             {...props}
           />
         </Field>
@@ -59,12 +53,6 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
       <input
         ref={ref}
         className={`field ${className}`}
-        style={{
-          background: "linear-gradient(160deg, rgba(255,255,255,0.025), transparent 45%), var(--bg-card)",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.4)",
-          transition:
-            "border-color 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out), background 0.4s, transform 0.2s",
-        }}
         {...props}
       />
     );
@@ -80,12 +68,6 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
             ref={ref}
             rows={rows}
             className={`field resize-y ${className} ${error ? "error" : ""}`}
-            style={{
-              background: "linear-gradient(160deg, rgba(255,255,255,0.025), transparent 45%), var(--bg-card)",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.4)",
-              transition:
-                "border-color 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out), background 0.4s, transform 0.2s",
-            }}
             {...props}
           />
         </Field>
@@ -96,12 +78,6 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
         ref={ref}
         rows={rows}
         className={`field resize-y ${className}`}
-        style={{
-          background: "linear-gradient(160deg, rgba(255,255,255,0.025), transparent 45%), var(--bg-card)",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.4)",
-          transition:
-            "border-color 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out), background 0.4s, transform 0.2s",
-        }}
         {...props}
       />
     );
@@ -113,12 +89,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
     return (
       <select
         ref={ref}
-        className={`field appearance-none bg-[var(--bg-elevated)] ${className}`}
-        style={{
-          background: "linear-gradient(160deg, rgba(255,255,255,0.025), transparent 45%), var(--bg-card)",
-          paddingRight: "2.5rem",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.4)",
-        }}
+        className={`field appearance-none ${className}`}
         {...props}
       >
         {children}
@@ -135,7 +106,7 @@ export const InputGroup = ({
   className?: string;
 }) => (
   <div
-    className={`flex items-center gap-2 rounded-[var(--r-xs)] border border-[var(--border)] bg-[var(--bg-card)] px-3 transition-all duration-300 focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_3px_var(--accent-soft),_0_0_30px_-8px_var(--accent-glow)] ${className}`}
+    className={`flex items-center gap-2 rounded-[var(--r-xs)] border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-3 transition-all duration-300 focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_3px_var(--accent-soft),_0_0_30px_-8px_var(--accent-glow)] ${className}`}
   >
     {children}
   </div>
@@ -152,20 +123,6 @@ export const InputIcon = ({
   clickable?: boolean;
   onClick?: () => void;
 }) => {
-  if (position === "right") {
-    return (
-      <span
-        className={`flex shrink-0 items-center text-[var(--text-dim)] transition-colors ${
-          clickable
-            ? "cursor-pointer text-[var(--text-secondary)] hover:text-[var(--accent)]"
-            : ""
-        }`}
-        onClick={clickable ? onClick : undefined}
-      >
-        {icon}
-      </span>
-    );
-  }
   return (
     <span
       className={`flex shrink-0 items-center text-[var(--text-dim)] transition-colors ${

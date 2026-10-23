@@ -85,8 +85,8 @@ export function PortfolioCard({
         e.preventDefault();
         onDrop(index);
       }}
-      className={`ad-panel group mb-6 block break-inside-avoid overflow-hidden transition-[opacity,transform,box-shadow] duration-300 ${
-        isDragging ? "ad-drag-source" : "ad-panel-hover"
+      className={`ad-section-card group mb-6 block break-inside-avoid overflow-hidden transition-[opacity,transform,box-shadow] duration-300 ${
+        isDragging ? "ad-drag-source" : "ad-section-card-hover"
       } ${isDragging ? "ad-drag-active" : ""}`}
     >
       {isOver && !isDragging && <div className="ad-drop-line mx-3 mt-3" />}

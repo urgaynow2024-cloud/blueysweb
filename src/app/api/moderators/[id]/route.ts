@@ -57,7 +57,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     .select()
     .single();
 
-  if (error) return json({ error: error.message }, 500);
+  if (error) return json({ error: "Failed to update moderator" }, 500);
 
   return NextResponse.json({ moderator: sanitize(data) });
 }
@@ -72,7 +72,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (id === auth.session!.id) return json({ error: "You cannot remove your own account" }, 403);
 
   const { error } = await supabaseAdmin.from("moderators").delete().eq("id", id);
-  if (error) return json({ error: error.message }, 500);
+  if (error) return json({ error: "Failed to delete moderator" }, 500);
 
   return NextResponse.json({ ok: true });
 }

@@ -133,8 +133,9 @@ export function TosSection({ value, onChange }: Props) {
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="p-8">
+    <div className="space-y-6 relative">
+      <Card className="p-8 relative overflow-hidden">
+        <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-[var(--accent)]/5 blur-[120px] orb-slow" />
         <CardHeader
           title="Terms of Service Sections"
           description="Manage the sections shown on the Terms of Service page. Use the global Save to persist changes. Sections with 'paragraphs' type allow rich text content; 'bullets' type uses item lists."
@@ -147,7 +148,7 @@ export function TosSection({ value, onChange }: Props) {
 
         <div className="mt-6 space-y-4">
           {sections.map((section, i) => (
-            <div key={section.id || i} className="ad-panel ad-panel-hover p-5">
+            <div key={section.id || i} className="ad-section-card ad-section-card-hover p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <button type="button" onClick={() => moveSection(i, -1)} disabled={i === 0} className="grid h-7 w-7 place-items-center rounded-lg text-[var(--text-dim)] hover:text-white disabled:opacity-30" aria-label="Move up">
@@ -227,7 +228,7 @@ export function TosSection({ value, onChange }: Props) {
           ))}
 
           {sections.length === 0 && (
-            <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] py-16 text-center">
+            <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-card)] glass py-16 text-center">
               <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
                 <FileText className="h-6 w-6" />
               </div>

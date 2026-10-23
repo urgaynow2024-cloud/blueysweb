@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { LayoutDashboard, Save, Eye, Menu, LogOut, ChevronDown, User, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { LayoutDashboard, Save, Eye, Menu, LogOut, ChevronDown, User, CheckCircle2, AlertCircle, Loader2, Sparkles } from "lucide-react";
 import { Button } from "./Button";
 import { useSave } from "./SaveProvider";
 
@@ -27,19 +27,19 @@ export function AdminTopbar({ onToggleSidebar, onLogout, userName = "Admin" }: T
   }, [menuOpen]);
 
   return (
-    <header className="ad-topbar sticky top-0 z-50 flex items-center gap-3 border-b border-[var(--border)] px-4 lg:px-6">
+    <header className="ad-topbar sticky top-0 z-50 flex items-center gap-3 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-xl px-4 lg:px-6">
       <button
         type="button"
         onClick={onToggleSidebar}
         aria-label="Toggle navigation"
-        className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[var(--border)] text-white transition-colors hover:bg-white/10 lg:hidden"
+        className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[var(--border)] text-white transition-all hover:bg-white/10 hover:border-[var(--border-hover)] lg:hidden"
       >
         <Menu className="h-5 w-5" />
       </button>
 
       <div className="flex min-w-0 items-center gap-3">
-        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] shadow-lg shadow-[var(--accent)]/20">
-          <LayoutDashboard className="h-[18px] w-[18px]" />
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-[#04060a] shadow-lg shadow-[var(--accent)]/30 glow-border">
+          <Sparkles className="h-[18px] w-[18px]" />
         </div>
         <div className="min-w-0">
           <h1 className="truncate text-[15px] font-semibold leading-tight text-white">Admin Dashboard</h1>
@@ -51,7 +51,7 @@ export function AdminTopbar({ onToggleSidebar, onLogout, userName = "Admin" }: T
         <Link
           href="/"
           target="_blank"
-          className="ad-btn ad-btn-secondary ad-btn-sm hidden sm:inline-flex"
+          className="ad-btn ad-btn-secondary ad-btn-sm hidden sm:inline-flex items-center gap-2"
         >
           <Eye className="h-4 w-4" />
           Preview Website
@@ -75,9 +75,9 @@ export function AdminTopbar({ onToggleSidebar, onLogout, userName = "Admin" }: T
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             aria-label="User menu"
-            className="flex items-center gap-2 rounded-xl border border-[var(--border)] p-1 pr-2 transition-colors hover:bg-white/5"
+            className="flex items-center gap-2 rounded-xl border border-[var(--border)] p-1 pr-2.5 transition-all hover:bg-white/5 hover:border-[var(--border-hover)]"
           >
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-sm font-bold text-[#04060a]">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] text-sm font-bold text-[#04060a] shadow-md shadow-[var(--accent)]/20">
               B
             </span>
             <span className="hidden text-sm font-medium text-white md:inline">{userName}</span>
@@ -87,7 +87,7 @@ export function AdminTopbar({ onToggleSidebar, onLogout, userName = "Admin" }: T
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-[calc(100%+8px)] w-52 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-float)] p-1.5 shadow-[var(--shadow-lg)] backdrop-blur-xl"
+              className="absolute right-0 top-[calc(100%+8px)] w-52 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-float)] p-1.5 shadow-[var(--shadow-lg)] backdrop-blur-xl glass-strong"
             >
               <div className="flex items-center gap-2.5 rounded-lg px-2.5 py-2">
                 <User className="h-4 w-4 text-[var(--text-dim)]" />

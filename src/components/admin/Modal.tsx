@@ -37,7 +37,7 @@ export function Modal({ open, onClose, title, description, children, footer, clo
         if (closeOnBackdrop && e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="ad-modal" role="dialog" aria-modal="true" aria-label={typeof title === "string" ? title : undefined}>
+      <div className="ad-modal glow-border" role="dialog" aria-modal="true" aria-label={typeof title === "string" ? title : undefined}>
         {(title || description) && (
           <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] p-6">
             <div className="min-w-0">
